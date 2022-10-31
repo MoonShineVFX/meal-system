@@ -1,0 +1,51 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+enum TransactionType {
+  TOP_UP
+  TRANSFER
+}
+
+enum Role {
+  SERVER
+  ADMIN
+  STAFF
+  USER
+}
+
+model User {
+  id                String        @id
+  name              String        @db.VarChar(255)
+  role              Role          @default(USER)
+  createdAt         DateTime      @default(now())
+  points            Int           @default(500)
+  credits           Int           @default(0)
+  sourceTransaction Transaction[] @relation("Source")
+  targetTransaction Transaction[] @relation("Target")
+}
+
+model Transaction {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  sourceUser   User     @relation("Source", fields: [sourceUserId], references: [id])
+  sourceUserId String
+  targetUser   User     @relation("Target", fields: [targetUserId], references: [id])
+  targetUserId String
+
+  @@index(sourceUserId)
+  @@index(targetUserId)
+}
+
+model Setting {
+  id            Int      @id @default(autoincrement())
+  lastTopUpDate DateTime @default(now())
+  topUpValue    Int      @default(500)
+}
