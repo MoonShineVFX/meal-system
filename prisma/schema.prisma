@@ -9,9 +9,16 @@ datasource db {
   relationMode = "prisma"
 }
 
+enum CurrencyType {
+  POINT
+  CREDIT
+}
+
 enum TransactionType {
-  TOP_UP
-  TRANSFER
+  RECHARGE
+  ORDER
+  RESERVE
+  REFUND
 }
 
 enum Role {
@@ -37,16 +44,19 @@ model User {
   credits           Int           @default(0)
   sourceTransaction Transaction[] @relation("Source")
   targetTransaction Transaction[] @relation("Target")
-  AuthToken         AuthToken[]
+  authTokens        AuthToken[]
 }
 
 model Transaction {
-  id           Int      @id @default(autoincrement())
-  createdAt    DateTime @default(now())
-  sourceUser   User     @relation("Source", fields: [sourceUserId], references: [id])
+  id           Int             @id @default(autoincrement())
+  createdAt    DateTime        @default(now())
+  sourceUser   User            @relation("Source", fields: [sourceUserId], references: [id])
   sourceUserId String
-  targetUser   User     @relation("Target", fields: [targetUserId], references: [id])
+  targetUser   User            @relation("Target", fields: [targetUserId], references: [id])
   targetUserId String
+  type         TransactionType
+  amount       Int
+  currency     CurrencyType
 
   @@index(sourceUserId)
   @@index(targetUserId)

@@ -1,5 +1,6 @@
+import '@/styles/globals.css'
+import trpc from '@/utils/trpc'
 import type { AppType } from 'next/app'
-import { trpc } from '@/utils/trpcClient'
 
 const PageApp: AppType = ({ Component, pageProps }) => {
   return <Component {...pageProps} />
