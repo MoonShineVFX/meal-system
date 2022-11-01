@@ -1,11 +1,27 @@
 import { authProcedure, publicProcedure, router } from '@/trpc/init'
-import { createAuthToken, ensureUser } from '@/utils/database'
+import { createAuthToken, ensureUser, getUserInfo } from '@/utils/database'
+import { settings, generateCookie } from '@/utils/settings'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 export const UserRouter = router({
   info: authProcedure.query(async ({ ctx }) => {
-    return ctx.user
+    const user = await getUserInfo(ctx.userLite.id)
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `User not found: ${ctx.userLite.id}`,
+      })
+    }
+
+    // Extend cookie duration
+    ctx.res.setHeader(
+      'Set-Cookie',
+      generateCookie(ctx.req.cookies[settings.COOKIE_NAME]!)
+    )
+
+    return user
   }),
   login: publicProcedure
     .input(
@@ -17,7 +33,7 @@ export const UserRouter = router({
     .mutation(async ({ input, ctx }) => {
       // TODO: AD integration
 
-      // if AD invalid
+      // If AD invalid
       if (input.username === 'error') {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -26,15 +42,10 @@ export const UserRouter = router({
         return
       }
 
-      // generate token
+      // Generate token and set cookie
       const user = await ensureUser('wang', '王小明')
       const token = await createAuthToken(user.id)
-      ctx.res.setHeader(
-        'Set-Cookie',
-        `meal_token=${token}; Expires=${new Date(
-          new Date().getTime() + 86409000
-        ).toUTCString()}; Path=/`
-      )
+      ctx.res.setHeader('Set-Cookie', generateCookie(token))
 
       return
     }),

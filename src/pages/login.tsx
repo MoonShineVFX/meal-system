@@ -13,6 +13,7 @@ interface LoginFormElement extends HTMLFormElement {
 
 export default function PageLogin() {
   const loginMutation = trpc.user.login.useMutation()
+  const trpcContext = trpc.useContext()
   const router = useRouter()
 
   const handleLogin = async (event: FormEvent<LoginFormElement>) => {
@@ -23,7 +24,11 @@ export default function PageLogin() {
         password: event.currentTarget.elements.password.value,
       },
       {
-        onSuccess: () => router.push('/'),
+        // If the login is successful, redirect to the home page
+        onSuccess: async () => {
+          await trpcContext.user.info.invalidate()
+          router.push('/')
+        },
       }
     )
   }

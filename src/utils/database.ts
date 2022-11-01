@@ -41,7 +41,7 @@ export async function createAuthToken(userId: string) {
 
   tokenCache.add(authToken.id, user)
 
-  // limit tokens per user
+  // Limit tokens per user
   if (userAuthTokens.length > settings.TOKEN_COUNT_PER_USER) {
     const toDeleteTokenIds = userAuthTokens
       .slice(0, userAuthTokens.length - settings.TOKEN_COUNT_PER_USER)
@@ -57,20 +57,27 @@ export async function createAuthToken(userId: string) {
 }
 
 export async function validateAuthToken(token: string) {
-  // find cached tokens first
+  // Find cached tokens first
   if (tokenCache.has(token)) return tokenCache.getUser(token)
 
-  // if not found, find in db
+  // If not found, find in db
   const authToken = await prisma.authToken.findUnique({
     where: { id: token },
     include: { user: { select: { id: true, name: true, role: true } } },
   })
   if (!authToken) return null
 
-  // cache token and purge old tokens
+  // Cache token and purge old tokens
   tokenCache.add(authToken.id, authToken.user)
 
   return authToken.user
+}
+
+export async function getUserInfo(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  })
+  return user
 }
 
 /* Global */

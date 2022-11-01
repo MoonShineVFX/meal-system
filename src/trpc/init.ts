@@ -16,8 +16,8 @@ const authMiddleware = t.middleware(async ({ next, ctx }) => {
     })
   }
 
-  const user = await validateAuthToken(ctx.req.cookies.meal_token!)
-  if (!user) {
+  const userLite = await validateAuthToken(ctx.req.cookies.meal_token!)
+  if (!userLite) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'Token is invalid',
@@ -26,7 +26,7 @@ const authMiddleware = t.middleware(async ({ next, ctx }) => {
 
   return next({
     ctx: {
-      user,
+      userLite,
     },
   })
 })
