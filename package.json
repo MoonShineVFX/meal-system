@@ -19,6 +19,8 @@
     "@trpc/next": "^10.0.0-proxy-beta.26",
     "@trpc/react-query": "^10.0.0-proxy-beta.26",
     "@trpc/server": "^10.0.0-proxy-beta.26",
+    "@types/node": "^18.11.8",
+    "@types/react": "18.0.24",
     "autoprefixer": "^10.4.13",
     "next": "^13.0.0",
     "next-superjson-plugin": "^0.4.8",
@@ -32,8 +34,6 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
-    "@types/node": "^18.11.8",
-    "@types/react": "18.0.24",
     "ts-node": "^10.9.1"
   }
 }

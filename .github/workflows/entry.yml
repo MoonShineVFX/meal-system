@@ -1,0 +1,25 @@
+name: Entry
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  apply-env:
+    name: Apply env
+    runs-on: ubuntu-latest
+    outputs:
+      env_var: ${{ steps.var.outputs.env_var }}
+    steps:
+      - id: var
+        run: echo "::set-output name=env_var::$GITHUB_REF_NAME"
+  call-workflow:
+    needs:
+      - apply-env
+    name: Call workflow
+    secrets: inherit
+    uses: ./.github/workflows/build-and-deploy.yml
+    with:
+      env_input: ${{ needs.apply-env.outputs.env_var }}
