@@ -14,7 +14,7 @@ jobs:
       env_var: ${{ steps.var.outputs.env_var }}
     steps:
       - id: var
-        run: echo "::set-output name=env_var::$GITHUB_REF_NAME"
+        run: echo "env_var=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
   call-workflow:
     needs:
       - apply-env
