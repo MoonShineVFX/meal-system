@@ -10,7 +10,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
       <div className="flex justify-center gap-8 m-8">
         <Link href="/">home</Link>
         <Link href="/pay">pay</Link>
-        <Link href="/login">login</Link>
+        <Link href="/recharge">recharge</Link>
         <UserData />
       </div>
       <Component {...pageProps} />

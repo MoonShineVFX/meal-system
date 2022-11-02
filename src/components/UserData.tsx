@@ -4,22 +4,25 @@ import { useRouter } from 'next/router'
 import { generateCookie } from '@/utils/settings'
 
 export default function UserData() {
-  const user = trpc.user.info.useQuery(undefined, { retry: false })
+  const userInfoQuery = trpc.user.info.useQuery(undefined, {
+    retry: false,
+    refetchOnMount: false,
+  })
   const router = useRouter()
   const trpcContext = trpc.useContext()
 
   // If the user is not logged in, redirect to the login page
   useEffect(() => {
-    if (user.status === 'error' && router.pathname !== '/login')
+    if (userInfoQuery.status === 'error' && router.pathname !== '/login')
       router.push('/login')
-  }, [user.status, router.pathname])
+  }, [userInfoQuery.status, router.pathname])
 
   const handleLogout = () => {
     document.cookie = generateCookie(undefined) // Remove the cookie
     trpcContext.user.info.invalidate()
   }
 
-  if (user.status === 'success')
+  if (userInfoQuery.status === 'success')
     return (
       <div>
         <div
@@ -28,8 +31,8 @@ export default function UserData() {
         >
           logout
         </div>
-        <div>points: {user.data.points}</div>
-        <div>credits: {user.data.credits}</div>
+        <div>points: {userInfoQuery.data.points}</div>
+        <div>credits: {userInfoQuery.data.credits}</div>
       </div>
     )
 

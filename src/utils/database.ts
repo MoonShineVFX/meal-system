@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 import { tokenCache } from './cached'
 import { settings } from './settings'
 
@@ -78,6 +78,38 @@ export async function getUserInfo(userId: string) {
     where: { id: userId },
   })
   return user
+}
+
+export async function rechargeCredits(
+  sourceUserId: string,
+  targetUserId: string,
+  amount: number
+) {
+  // Recharge target user
+  try {
+    await prisma.user.update({
+      where: { id: targetUserId },
+      data: { credits: { increment: amount } },
+    })
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return error
+    }
+    throw error
+  }
+
+  // Create recharge record
+  await prisma.transaction.create({
+    data: {
+      sourceUserId: sourceUserId,
+      targetUserId: targetUserId,
+      amount: amount,
+      type: 'RECHARGE',
+      currency: 'CREDIT',
+    },
+  })
+
+  return true
 }
 
 /* Global */
