@@ -1,8 +1,19 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient, Prisma, Role } from '@prisma/client'
 import { tokenCache } from './cached'
 import { settings } from './settings'
 
 /* Functions */
+export async function validateRole(sourceRole: Role, targetRole: Role) {
+  const roleWeight = {
+    [Role.SERVER]: 1000,
+    [Role.ADMIN]: 100,
+    [Role.STAFF]: 50,
+    [Role.USER]: 10,
+  }
+
+  return roleWeight[sourceRole] >= roleWeight[targetRole]
+}
+
 export async function ensureUser(userId: string, name: string) {
   const user = await prisma.user.findUnique({
     where: {

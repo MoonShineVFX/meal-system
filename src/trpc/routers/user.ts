@@ -1,11 +1,11 @@
-import { authProcedure, publicProcedure, router } from '@/trpc/init'
+import { userProcedure, publicProcedure, router } from '@/trpc/init'
 import { createAuthToken, ensureUser, getUserInfo } from '@/utils/database'
 import { settings, generateCookie } from '@/utils/settings'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 export const UserRouter = router({
-  info: authProcedure.query(async ({ ctx }) => {
+  info: userProcedure.query(async ({ ctx }) => {
     const user = await getUserInfo(ctx.userLite.id)
 
     if (!user) {

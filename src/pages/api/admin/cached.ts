@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { tokenCache } from '@/utils/cached'
 import superjson from 'superjson'
 import { settings } from '@/utils/settings'
-import { validateAuthToken } from '@/utils/database'
+import { validateAuthToken, validateRole } from '@/utils/database'
+import { Role } from '@prisma/client'
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,7 +20,7 @@ export default async function handler(
     return
   }
 
-  if (user.role !== 'ADMIN') {
+  if (!(await validateRole(user.role, Role.ADMIN))) {
     res.status(403).send('Forbidden: ADMIN only')
   }
 
