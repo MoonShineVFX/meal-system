@@ -1,13 +1,10 @@
-import trpc from '@/utils/trpc'
+import trpc from '@/trpc/client/client'
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { generateCookie } from '@/utils/settings'
 
 export default function UserData() {
-  const userInfoQuery = trpc.user.info.useQuery(undefined, {
-    retry: false,
-    refetchOnMount: false,
-  })
+  const userInfoQuery = trpc.user.info.useQuery(undefined)
   const router = useRouter()
   const trpcContext = trpc.useContext()
 

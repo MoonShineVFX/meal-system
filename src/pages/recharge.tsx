@@ -1,4 +1,4 @@
-import trpc from '@/utils/trpc'
+import trpc from '@/trpc/client/client'
 import { FormEvent } from 'react'
 
 interface RechargeFormElements extends HTMLFormControlsCollection {
@@ -11,22 +11,14 @@ interface RechargeFormElement extends HTMLFormElement {
 }
 
 export default function PageRecharge() {
-  const userInfoQuery = trpc.user.info.useQuery(undefined, {
-    retry: false,
-    refetchOnMount: false,
-  })
+  const userInfoQuery = trpc.user.info.useQuery(undefined)
   const rechargeMutation = trpc.trade.recharge.useMutation()
 
   const handleRecharge = async (event: FormEvent<RechargeFormElement>) => {
     event.preventDefault()
     const targetUserId = event.currentTarget.elements.targetUserId.value
     const amount = event.currentTarget.elements.amount.value
-    rechargeMutation.mutate(
-      { targetUserId, amount: parseInt(amount) },
-      {
-        onSuccess: async () => userInfoQuery.refetch(),
-      }
-    )
+    rechargeMutation.mutate({ targetUserId, amount: parseInt(amount) })
   }
 
   if (userInfoQuery.status !== 'success') return <div>loading</div>

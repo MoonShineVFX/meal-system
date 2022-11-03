@@ -1,4 +1,4 @@
-import { router } from '../app'
+import { router } from '../server'
 import { UserRouter } from './user'
 import { TradeRouter } from './trade'
 

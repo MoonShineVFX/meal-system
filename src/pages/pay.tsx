@@ -1,10 +1,7 @@
-import trpc from '@/utils/trpc'
+import trpc from '@/trpc/client/client'
 
 export default function PagePay() {
-  const userInfoQuery = trpc.user.info.useQuery(undefined, {
-    retry: false,
-    refetchOnMount: false,
-  })
+  const userInfoQuery = trpc.user.info.useQuery(undefined)
 
   if (userInfoQuery.status !== 'success') return <div>loading</div>
 
