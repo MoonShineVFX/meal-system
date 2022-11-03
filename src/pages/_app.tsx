@@ -3,22 +3,9 @@ import trpc from '@/trpc/client/client'
 import type { AppType } from 'next/app'
 import Link from 'next/link'
 import UserData from '@/components/UserData'
-import { useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import EventData from '@/components/EventData'
 
 const PageApp: AppType = ({ Component, pageProps }) => {
-  const queryClient = useQueryClient()
-
-  // Default tanstack query client settings
-  useEffect(() => {
-    queryClient.setDefaultOptions({
-      queries: {
-        retry: false,
-        refetchOnMount: false,
-      },
-    })
-  }, [])
-
   return (
     <>
       <div className="flex justify-center gap-8 m-8">
@@ -28,6 +15,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         <UserData />
       </div>
       <Component {...pageProps} />
+      <EventData />
     </>
   )
 }

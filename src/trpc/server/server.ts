@@ -2,7 +2,8 @@ import { validateAuthToken, validateRole } from '@/utils/database'
 import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
 import { Role } from '@prisma/client'
-import { UserLite } from '@/utils/settings'
+import { settings, UserLite } from '@/utils/settings'
+import superjson from 'superjson'
 
 /* Context */
 export async function createContext({
@@ -10,8 +11,8 @@ export async function createContext({
   res,
 }: trpcNext.CreateNextContextOptions) {
   let userLite = null
-  if ('meal_token' in req.cookies) {
-    userLite = await validateAuthToken(req.cookies.meal_token!)
+  if (settings.COOKIE_TOKEN_NAME in req.cookies) {
+    userLite = await validateAuthToken(req.cookies[settings.COOKIE_TOKEN_NAME]!)
   }
 
   return {
@@ -24,7 +25,7 @@ export async function createContext({
 export type Context = inferAsyncReturnType<typeof createContext>
 
 /* Procedures */
-const t = initTRPC.context<Context>().create()
+const t = initTRPC.context<Context>().create({ transformer: superjson })
 export const router = t.router
 
 async function validateUserLite(

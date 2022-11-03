@@ -1,6 +1,13 @@
-import { PrismaClient, Prisma, Role } from '@prisma/client'
+import {
+  PrismaClient,
+  Prisma,
+  Role,
+  TransactionType,
+  CurrencyType,
+} from '@prisma/client'
 import { tokenCache } from './cached'
 import { settings } from './settings'
+import { eventsCentral } from './event'
 
 /* Functions */
 export async function validateRole(sourceRole: Role, targetRole: Role) {
@@ -50,7 +57,7 @@ export async function createAuthToken(userId: string) {
 
   const { authTokens: userAuthTokens, ...user } = authToken.user
 
-  tokenCache.add(authToken.id, user)
+  await tokenCache.add(authToken.id, user)
 
   // Limit tokens per user
   if (userAuthTokens.length > settings.TOKEN_COUNT_PER_USER) {
@@ -69,7 +76,7 @@ export async function createAuthToken(userId: string) {
 
 export async function validateAuthToken(token: string) {
   // Find cached tokens first
-  if (tokenCache.has(token)) return tokenCache.getUser(token)
+  if (await tokenCache.has(token)) return await tokenCache.getUser(token)
 
   // If not found, find in db
   const authToken = await prisma.authToken.findUnique({
@@ -79,7 +86,7 @@ export async function validateAuthToken(token: string) {
   if (!authToken) return null
 
   // Cache token and purge old tokens
-  tokenCache.add(authToken.id, authToken.user)
+  await tokenCache.add(authToken.id, authToken.user)
 
   return authToken.user
 }
@@ -115,9 +122,14 @@ export async function rechargeCredits(
       sourceUserId: sourceUserId,
       targetUserId: targetUserId,
       amount: amount,
-      type: 'RECHARGE',
-      currency: 'CREDIT',
+      type: TransactionType.RECHARGE,
+      currency: CurrencyType.CREDIT,
     },
+  })
+  eventsCentral.add({
+    sourceUserId: sourceUserId,
+    targetUserId: targetUserId,
+    type: TransactionType.RECHARGE,
   })
 
   return true

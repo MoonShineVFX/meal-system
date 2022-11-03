@@ -36,7 +36,12 @@ export default function PageLogin() {
   return (
     <div className="w-full flex flex-col items-center p-8">
       <form className="flex flex-col gap-8" onSubmit={handleLogin}>
-        <input type="text" name="username" placeholder="username" />
+        <input
+          type="text"
+          name="username"
+          placeholder="username"
+          defaultValue="wang"
+        />
         <input type="password" name="password" placeholder="password" />
         <button
           disabled={loginMutation.isLoading}

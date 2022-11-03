@@ -2,29 +2,28 @@ import { settings, UserLite } from './settings'
 
 /* Define */
 class TokenCache {
-  private _data: { [token: string]: UserLite }
+  private _data: { [token: string]: UserLite } = {}
 
-  constructor() {
-    this._data = {}
-  }
-
-  /* Functions */
-  public has(token: string) {
+  // Check if token exists
+  public async has(token: string) {
     return token in this._data
   }
 
-  public getUser(token: string) {
+  // Get user by token
+  public async getUser(token: string) {
     return this._data[token]
   }
 
-  public add(token: string, user: UserLite) {
+  // Add a token
+  public async add(token: string, user: UserLite) {
     this._data[token] = user
     if (Object.keys(this._data).length > settings.CACHED_MAX_LENGTH) {
       this.purge()
     }
   }
 
-  public purge() {
+  // Purge old tokens
+  private async purge() {
     const keys = Object.keys(this._data)
     const purgeKeys = keys.slice(0, settings.PURGE_AMOUNT)
     purgeKeys.forEach((key) => {
@@ -32,7 +31,7 @@ class TokenCache {
     })
   }
 
-  public listAll() {
+  public async listAll() {
     return this._data
   }
 }

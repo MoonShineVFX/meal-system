@@ -18,7 +18,7 @@ export const UserRouter = router({
     // Extend cookie duration
     ctx.res.setHeader(
       'Set-Cookie',
-      generateCookie(ctx.req.cookies[settings.COOKIE_NAME]!)
+      generateCookie(ctx.req.cookies[settings.COOKIE_TOKEN_NAME]!)
     )
 
     return user
@@ -43,7 +43,7 @@ export const UserRouter = router({
       }
 
       // Generate token and set cookie
-      const user = await ensureUser('wang', '王小明')
+      const user = await ensureUser(input.username, '王小明')
       const token = await createAuthToken(user.id)
       ctx.res.setHeader('Set-Cookie', generateCookie(token))
 
