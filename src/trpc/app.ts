@@ -23,7 +23,7 @@ export async function createContext({
 
 export type Context = inferAsyncReturnType<typeof createContext>
 
-/* Routers and Procedures */
+/* Procedures */
 const t = initTRPC.context<Context>().create()
 export const router = t.router
 

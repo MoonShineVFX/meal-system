@@ -1,4 +1,4 @@
-import { router } from '@/trpc/init'
+import { router } from '../app'
 import { UserRouter } from './user'
 import { TradeRouter } from './trade'
 

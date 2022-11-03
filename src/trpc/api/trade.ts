@@ -1,4 +1,4 @@
-import { adminProcedure, router } from '@/trpc/init'
+import { adminProcedure, router } from '@/trpc/app'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { rechargeCredits } from '@/utils/database'

@@ -1,4 +1,4 @@
-import { userProcedure, publicProcedure, router } from '@/trpc/init'
+import { userProcedure, publicProcedure, router } from '@/trpc/app'
 import { createAuthToken, ensureUser, getUserInfo } from '@/utils/database'
 import { settings, generateCookie } from '@/utils/settings'
 import { TRPCError } from '@trpc/server'
