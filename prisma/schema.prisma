@@ -16,7 +16,7 @@ enum CurrencyType {
 
 enum TransactionType {
   RECHARGE
-  ORDER
+  PAYMENT
   RESERVE
   REFUND
 }

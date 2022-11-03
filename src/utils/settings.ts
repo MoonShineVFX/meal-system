@@ -13,6 +13,7 @@ export const settings = {
   EVENT_EXPIRE_MINS: 10,
   /* Database */
   TOKEN_COUNT_PER_USER: 10,
+  SERVER_USER_ID: '_server',
 }
 
 /* Types */

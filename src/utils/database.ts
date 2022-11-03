@@ -1,6 +1,5 @@
 import {
   PrismaClient,
-  Prisma,
   Role,
   TransactionType,
   CurrencyType,
@@ -98,38 +97,99 @@ export async function getUserInfo(userId: string) {
   return user
 }
 
-export async function rechargeCredits(
+export async function rechargeUserCredits(
   sourceUserId: string,
   targetUserId: string,
   amount: number
 ) {
-  // Recharge target user
+  // Recharge target user and create recharge record
   try {
-    await prisma.user.update({
-      where: { id: targetUserId },
-      data: { credits: { increment: amount } },
-    })
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: targetUserId },
+        data: { credits: { increment: amount } },
+      }),
+      prisma.transaction.create({
+        data: {
+          sourceUserId: sourceUserId,
+          targetUserId: targetUserId,
+          amount: amount,
+          type: TransactionType.RECHARGE,
+          currency: CurrencyType.CREDIT,
+        },
+      }),
+    ])
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      return error
-    }
-    throw error
+    return error
   }
 
   // Create recharge record
-  await prisma.transaction.create({
-    data: {
-      sourceUserId: sourceUserId,
-      targetUserId: targetUserId,
-      amount: amount,
-      type: TransactionType.RECHARGE,
-      currency: CurrencyType.CREDIT,
-    },
-  })
   eventsCentral.add({
     sourceUserId: sourceUserId,
     targetUserId: targetUserId,
     type: TransactionType.RECHARGE,
+  })
+
+  return true
+}
+
+export async function chargeUserBalance(
+  userId: string,
+  amount: number,
+  currency: CurrencyType
+) {
+  // Check user has enough balance
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  })
+  if (!user) return Error('User not found')
+
+  if (currency === CurrencyType.CREDIT) {
+    if (user.credits < amount) return Error('Insufficient credits')
+  } else if (currency === CurrencyType.POINT) {
+    if (user.points < amount) return Error('Insufficient points')
+  } else {
+    return Error('Invalid currency')
+  }
+
+  // Charge user and create charge record
+  try {
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: {
+          credits: { decrement: currency === CurrencyType.CREDIT ? amount : 0 },
+          points: { decrement: currency === CurrencyType.POINT ? amount : 0 },
+        },
+      }),
+      prisma.user.update({
+        where: { id: settings.SERVER_USER_ID },
+        data: {
+          credits: {
+            increment: currency === CurrencyType.CREDIT ? amount : 0,
+          },
+          points: { increment: currency === CurrencyType.POINT ? amount : 0 },
+        },
+      }),
+      prisma.transaction.create({
+        data: {
+          sourceUserId: userId,
+          targetUserId: settings.SERVER_USER_ID,
+          amount: amount,
+          type: TransactionType.PAYMENT,
+          currency: currency,
+        },
+      }),
+    ])
+  } catch (error) {
+    return error
+  }
+
+  // Add event
+  eventsCentral.add({
+    sourceUserId: userId,
+    targetUserId: settings.SERVER_USER_ID,
+    type: TransactionType.PAYMENT,
   })
 
   return true
