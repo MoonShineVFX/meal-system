@@ -216,12 +216,12 @@ export async function getTransactions(
         },
       ],
     }
-  } else if (role == Role.STAFF) {
+  } else if (role === Role.STAFF) {
     whereQuery = {
       targetUserId: settings.SERVER_USER_ID,
       type: TransactionType.PAYMENT,
     }
-  } else if (role == Role.ADMIN) {
+  } else if (role === Role.ADMIN || role === Role.SERVER) {
     whereQuery = {
       NOT: {
         sourceUserId: settings.SERVER_USER_ID,
@@ -243,6 +243,18 @@ export async function getTransactions(
     },
     orderBy: {
       id: 'desc',
+    },
+    include: {
+      sourceUser: {
+        select: {
+          name: true,
+        },
+      },
+      targetUser: {
+        select: {
+          name: true,
+        },
+      },
     },
     take: settings.RECORDS_PER_PAGE + 1,
     cursor: cursor ? { id: cursor } : undefined,

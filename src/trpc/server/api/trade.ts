@@ -60,7 +60,7 @@ export const TradeRouter = router({
       z.object({
         cursor: z.number().int().positive().optional(),
         until: z.number().int().positive().optional(),
-        role: z.enum([Role.USER, Role.STAFF, Role.ADMIN]),
+        role: z.enum([Role.USER, Role.STAFF, Role.ADMIN, Role.SERVER]),
       })
     )
     .query(async ({ input, ctx }) => {

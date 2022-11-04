@@ -7,17 +7,15 @@ export default function EventListener() {
   const [eventDate, setEventDate] = useState(new Date())
   const userInfoQuery = trpc.user.info.useQuery(undefined)
 
-  const updateUserRecords = async () => {
-    const data = trpcContext.trade.listTransactions.getInfiniteData({
-      role: Role.USER,
-    })
+  const updateTranscations = async (role: Role) => {
+    const data = trpcContext.trade.listTransactions.getInfiniteData({ role })
     if (!data || data.pages.length === 0 || data.pages[0].records.length === 0)
       return
 
     const { records: newRecords } =
       await trpcContext.trade.listTransactions.fetch({
         until: data.pages[0].records[0].id,
-        role: Role.USER,
+        role,
       })
     trpcContext.trade.listTransactions.setInfiniteData(
       (data) => {
@@ -32,7 +30,7 @@ export default function EventListener() {
           pageParams: data!.pageParams,
         }
       },
-      { role: Role.USER }
+      { role }
     )
   }
 
@@ -47,8 +45,10 @@ export default function EventListener() {
         /* Handle events */
         // revalidate userinfo
         trpcContext.user.info.invalidate()
-        // update records
-        updateUserRecords()
+        // update transcations
+        for (const role of Object.keys(Role)) {
+          updateTranscations(role as Role)
+        }
 
         // set event date to latest
         setEventDate(data[data.length - 1].date)
