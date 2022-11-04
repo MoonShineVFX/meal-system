@@ -3,7 +3,10 @@
 module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    data: {
+      active: 'ui~="active"',
+      main: 'ui~="main"',
+    },
   },
   plugins: [],
 }

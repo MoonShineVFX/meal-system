@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@heroicons/react": "^2.0.13",
     "@prisma/client": "^4.5.0",
     "@tanstack/react-query": "^4.13.5",
     "@trpc/client": "^10.0.0-proxy-beta.26",
@@ -34,6 +35,8 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
+    "prettier": "^2.7.1",
+    "prettier-plugin-tailwindcss": "^0.1.13",
     "ts-node": "^10.9.1"
   }
 }
