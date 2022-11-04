@@ -14,6 +14,8 @@ export const settings = {
   /* Database */
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
+  /* Trade */
+  RECORDS_PER_PAGE: 10,
 }
 
 /* Types */

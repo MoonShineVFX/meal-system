@@ -3,6 +3,7 @@ import {
   Role,
   TransactionType,
   CurrencyType,
+  Prisma,
 } from '@prisma/client'
 import { tokenCache } from './cached'
 import { settings } from './settings'
@@ -193,6 +194,60 @@ export async function chargeUserBalance(
   })
 
   return true
+}
+
+export async function getTransactions(
+  userId: string | undefined,
+  cursor: number | undefined,
+  until: number | undefined,
+  role: Role
+) {
+  let whereQuery: Prisma.TransactionWhereInput
+  if (role === Role.USER) {
+    whereQuery = {
+      OR: [
+        {
+          sourceUserId: userId,
+          type: { in: [TransactionType.PAYMENT, TransactionType.RESERVE] },
+        },
+        {
+          targetUserId: userId,
+          type: { in: [TransactionType.RECHARGE, TransactionType.REFUND] },
+        },
+      ],
+    }
+  } else if (role == Role.STAFF) {
+    whereQuery = {
+      targetUserId: settings.SERVER_USER_ID,
+      type: TransactionType.PAYMENT,
+    }
+  } else if (role == Role.ADMIN) {
+    whereQuery = {
+      NOT: {
+        sourceUserId: settings.SERVER_USER_ID,
+        type: TransactionType.RECHARGE,
+      },
+    }
+  } else {
+    throw Error('Invalid role')
+  }
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      AND: [
+        whereQuery,
+        {
+          id: until ? { gt: until } : undefined,
+        },
+      ],
+    },
+    orderBy: {
+      id: 'desc',
+    },
+    take: settings.RECORDS_PER_PAGE + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+  })
+  return transactions
 }
 
 /* Global */

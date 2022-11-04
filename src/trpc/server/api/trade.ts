@@ -1,8 +1,13 @@
 import { adminProcedure, userProcedure, router } from '../server'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { rechargeUserCredits, chargeUserBalance } from '@/utils/database'
-import { CurrencyType } from '@prisma/client'
+import {
+  rechargeUserCredits,
+  chargeUserBalance,
+  getTransactions,
+} from '@/utils/database'
+import { CurrencyType, Role } from '@prisma/client'
+import { settings } from '@/utils/settings'
 
 export const TradeRouter = router({
   recharge: adminProcedure
@@ -47,6 +52,31 @@ export const TradeRouter = router({
           code: 'INTERNAL_SERVER_ERROR',
           message: result.message,
         })
+      }
+    }),
+  // Get transaction records, use until arg to update new records
+  listTransactions: userProcedure
+    .input(
+      z.object({
+        cursor: z.number().int().positive().optional(),
+        until: z.number().int().positive().optional(),
+        role: z.enum([Role.USER, Role.STAFF, Role.ADMIN]),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const records = await getTransactions(
+        ctx.userLite.id,
+        input.cursor,
+        input.until,
+        input.role
+      )
+      let nextCursor: number | undefined = undefined
+      if (!input.until && records.length > settings.RECORDS_PER_PAGE) {
+        nextCursor = records.pop()!.id
+      }
+      return {
+        records,
+        nextCursor,
       }
     }),
 })
