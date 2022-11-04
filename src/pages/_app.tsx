@@ -13,6 +13,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         <Link href="/">home</Link>
         <Link href="/pay">pay</Link>
         <Link href="/recharge">recharge</Link>
+        <Link href="/records">records</Link>
         <UserData />
       </div>
       <Component {...pageProps} />

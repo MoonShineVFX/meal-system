@@ -49,4 +49,5 @@ export const UserRouter = router({
 
       return
     }),
+  // records: userProcedure TODO: query records
 })
