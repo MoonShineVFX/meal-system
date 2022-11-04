@@ -3,7 +3,8 @@ import trpc from '@/trpc/client/client'
 import type { AppType } from 'next/app'
 import Link from 'next/link'
 import UserData from '@/components/UserData'
-import EventData from '@/components/EventData'
+import EventListener from '@/components/EventListener'
+import AuthListener from '@/components/AuthListener'
 
 const PageApp: AppType = ({ Component, pageProps }) => {
   return (
@@ -15,7 +16,8 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         <UserData />
       </div>
       <Component {...pageProps} />
-      <EventData />
+      <EventListener />
+      <AuthListener />
     </>
   )
 }

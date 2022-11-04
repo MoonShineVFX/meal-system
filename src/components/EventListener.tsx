@@ -1,7 +1,7 @@
 import trpc from '@/trpc/client/client'
 import { useState } from 'react'
 
-export default function EventData() {
+export default function EventListener() {
   const trpcContext = trpc.useContext()
   const [eventDate, setEventDate] = useState(new Date())
   const userInfoQuery = trpc.user.info.useQuery(undefined)
@@ -22,5 +22,5 @@ export default function EventData() {
       },
     }
   )
-  return <></>
+  return null
 }
