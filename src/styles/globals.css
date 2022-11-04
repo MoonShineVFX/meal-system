@@ -4,5 +4,5 @@
 
 html,
 body {
-  @apply bg-gray-500;
+  @apply bg-stone-100;
 }

@@ -8,8 +8,12 @@ import Menu from '@/components/Menu'
 const PageApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
-      <Component {...pageProps} />
-      <Menu />
+      <div className='grid max-w-6xl grid-cols-1 md:grid-cols-[12rem_1fr]'>
+        <Menu />
+        <div>
+          <Component {...pageProps} />
+        </div>
+      </div>
       <EventListener />
       <AuthListener />
     </>
