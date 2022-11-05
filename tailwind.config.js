@@ -6,7 +6,11 @@ module.exports = {
     data: {
       active: 'ui~="active"',
       main: 'ui~="main"',
+      loading: 'ui~="loading"',
     },
   },
   plugins: [],
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 }

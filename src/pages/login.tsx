@@ -1,6 +1,7 @@
 import trpc from '@/trpc/client/client'
 import { useRouter } from 'next/router'
-import { FormEvent } from 'react'
+import { FormEvent, useEffect } from 'react'
+import { generateCookie } from '@/utils/settings'
 
 interface LoginFormElements extends HTMLFormControlsCollection {
   username: HTMLInputElement
@@ -16,6 +17,12 @@ export default function PageLogin() {
   const trpcContext = trpc.useContext()
   const router = useRouter()
 
+  useEffect(() => {
+    // Logout the user when enter the page
+    document.cookie = generateCookie(undefined) // Remove the cookie
+    trpcContext.user.info.invalidate()
+  }, [])
+
   const handleLogin = async (event: FormEvent<LoginFormElement>) => {
     event.preventDefault()
     loginMutation.mutate(
@@ -29,24 +36,24 @@ export default function PageLogin() {
           await trpcContext.user.info.invalidate()
           router.push('/')
         },
-      }
+      },
     )
   }
 
   return (
-    <div className="w-full flex flex-col items-center p-8">
-      <form className="flex flex-col gap-8" onSubmit={handleLogin}>
+    <div className='flex w-full flex-col items-center p-8'>
+      <form className='flex flex-col gap-8' onSubmit={handleLogin}>
         <input
-          type="text"
-          name="username"
-          placeholder="username"
-          defaultValue="wang"
+          type='text'
+          name='username'
+          placeholder='username'
+          defaultValue='wang'
         />
-        <input type="password" name="password" placeholder="password" />
+        <input type='password' name='password' placeholder='password' />
         <button
           disabled={loginMutation.isLoading}
-          className="border-2 p-1 rounded-md"
-          type="submit"
+          className='rounded-md border-2 p-1'
+          type='submit'
         >
           login
         </button>

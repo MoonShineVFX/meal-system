@@ -4,5 +4,14 @@
 
 html,
 body {
-  @apply bg-stone-100;
+  @apply bg-amber-400;
+}
+
+#nprogress .bar {
+  @apply h-[3px] bg-stone-800 md:h-[0.15rem] md:rounded;
+  box-shadow: 0 0 8px theme('colors.stone.800/50'),
+    0 0 5px theme('colors.stone.800');
+}
+#nprogress .peg {
+  display: none;
 }

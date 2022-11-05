@@ -30,10 +30,11 @@ export default function EventListener() {
           pageParams: data!.pageParams,
         }
       },
-      { role }
+      { role },
     )
   }
 
+  // Polling for new events
   trpc.events.useQuery(
     { eventDate: eventDate },
     {
@@ -53,7 +54,7 @@ export default function EventListener() {
         // set event date to latest
         setEventDate(data[data.length - 1].date)
       },
-    }
+    },
   )
   return null
 }
