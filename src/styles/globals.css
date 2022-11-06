@@ -4,13 +4,13 @@
 
 html,
 body {
-  @apply bg-amber-400;
+  @apply bg-stone-100;
 }
 
 #nprogress .bar {
-  @apply h-[3px] bg-stone-800 md:h-[0.15rem] md:rounded;
-  box-shadow: 0 0 8px theme('colors.stone.800/50'),
-    0 0 5px theme('colors.stone.800');
+  @apply h-[3px] bg-violet-400 md:h-[0.15rem] md:rounded;
+  box-shadow: 0 0 8px theme('colors.violet.400/50'),
+    0 0 5px theme('colors.violet.400');
 }
 #nprogress .peg {
   display: none;

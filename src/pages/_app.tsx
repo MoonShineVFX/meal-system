@@ -15,7 +15,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         <div className='hidden md:block'></div>
         {/* Main */}
         <div className='flex w-full justify-center md:h-screen md:overflow-y-auto md:px-8'>
-          <div className='relative mx-auto w-full max-w-2xl'>
+          <div className='mx-auto w-full max-w-2xl'>
             <Component {...pageProps} />
           </div>
         </div>
