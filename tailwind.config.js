@@ -9,7 +9,7 @@ module.exports = {
       loading: 'ui~="loading"',
     },
   },
-  plugins: [],
+  plugins: [require('@headlessui/tailwindcss')],
   future: {
     hoverOnlyWhenSupported: true,
   },

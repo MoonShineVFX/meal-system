@@ -13,6 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@headlessui/react": "^1.7.4",
+    "@headlessui/tailwindcss": "^0.1.1",
     "@heroicons/react": "^2.0.13",
     "@prisma/client": "^4.5.0",
     "@tanstack/react-query": "^4.13.5",

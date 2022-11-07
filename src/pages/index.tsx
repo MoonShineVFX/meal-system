@@ -1,14 +1,16 @@
-import trpc from '@/trpc/client/client'
+import { CurrencyType, Role, TransactionType } from '@prisma/client'
+import Link from 'next/link'
+import { Fragment } from 'react'
 import { CircleStackIcon } from '@heroicons/react/20/solid'
 import { BanknotesIcon } from '@heroicons/react/24/solid'
 import { CurrencyDollarIcon } from '@heroicons/react/24/solid'
-import { CurrencyType, Role, TransactionType } from '@prisma/client'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
-import CountUp from 'react-countup'
-import { Fragment } from 'react'
 import { ChevronUpIcon } from '@heroicons/react/24/outline'
-import Link from 'next/link'
+import CountUp from 'react-countup'
+import { Popover } from '@headlessui/react'
+
 import { settings } from '@/utils/settings'
+import trpc from '@/trpc/client/client'
 
 export default function PageIndex() {
   const { data: userData } = trpc.user.info.useQuery(undefined)
@@ -29,10 +31,18 @@ export default function PageIndex() {
       <div className='fixed top-0 -z-10 flex h-4/5 w-full max-w-lg flex-col gap-8 bg-amber-400 p-6'>
         {/* Prifile */}
         <div className='flex justify-end'>
-          <button className='flex items-center gap-1 text-stone-700'>
-            {userData?.name}
-            <ChevronDownIcon className='w-5' />
-          </button>
+          <Popover className='relative'>
+            <Popover.Button className='flex items-center gap-1 rounded-md p-1 text-stone-800 hover:bg-stone-800/10 focus:outline-none'>
+              {userData?.name}
+              <ChevronDownIcon className='w-5 ui-open:hidden' />
+              <ChevronUpIcon className='w-5 ui-not-open:hidden' />
+            </Popover.Button>
+            <Popover.Panel className='absolute right-1 mt-2 w-20 rounded-md bg-stone-100 py-2 px-1 shadow-lg'>
+              <div className='flex flex-col rounded-md p-1 text-center hover:bg-stone-200'>
+                <Link href='/login'>登出</Link>
+              </div>
+            </Popover.Panel>
+          </Popover>
         </div>
         {/* Balance */}
         <div className='mx-auto'>
@@ -71,7 +81,7 @@ export default function PageIndex() {
           <ChevronUpIcon className='w-8 text-stone-600' />
         </div>
         {hasTransactions ? (
-          <div className='flex flex-col gap-4'>
+          <div className='flex flex-col gap-6'>
             {transcationsData?.pages.map((page, idx) =>
               idx === 0 ? (
                 <Fragment key={page.nextCursor}>
