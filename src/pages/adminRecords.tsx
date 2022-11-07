@@ -8,32 +8,35 @@ export default function PageRecords() {
       { role: Role.ADMIN },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
-      }
+      },
     )
 
   return (
     <>
-      <h1 className="text-3xl text-center">admin records</h1>
-      <div className="flex flex-col items-center mt-8">
+      <h1 className='text-center text-3xl'>admin records</h1>
+      <div className='mt-8 flex flex-col items-center'>
         {data?.pages.map((page) => (
           <Fragment key={page.nextCursor}>
-            {page.records.map((record) => (
-              <div key={record.id} className="flex gap-4 items-center mb-4">
-                <h2 className="text-lg bg-teal-800 p-2 rounded-xl">
-                  {record.id}
+            {page.transactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                className='mb-4 flex items-center gap-4'
+              >
+                <h2 className='rounded-xl bg-teal-800 p-2 text-lg'>
+                  {transaction.id}
                 </h2>
-                <div>{record.sourceUser.name}</div>
-                <div>{record.type}</div>
-                <div>{record.currency}</div>
-                <div>{record.amount}</div>
-                <div>{record.targetUser.name}</div>
+                <div>{transaction.sourceUser.name}</div>
+                <div>{transaction.type}</div>
+                <div>{transaction.currency}</div>
+                <div>{transaction.amount}</div>
+                <div>{transaction.targetUser.name}</div>
               </div>
             ))}
           </Fragment>
         ))}
         {hasNextPage && (
           <button
-            className="border-2 p-2 mt-4"
+            className='mt-4 border-2 p-2'
             disabled={isFetchingNextPage}
             onClick={() => fetchNextPage()}
           >
