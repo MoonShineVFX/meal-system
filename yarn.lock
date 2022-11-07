@@ -217,6 +217,13 @@
   resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.5.tgz#5f19d2b85a98e9558036f6a3cacc8819420f05cf"
   integrity sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==
 
+"@types/react-countup@^4.3.1":
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/@types/react-countup/-/react-countup-4.3.1.tgz#5bba8e11c18549c92f9a6efe07e406c92c970f89"
+  integrity sha512-8KwOdVVKhMOdtXJoOg3YXZwWxnFnZtPojNs/DZRlhHTpOYIb1If+9+rVPnwnXDhNhphj5diUCds9E26VtVK8IA==
+  dependencies:
+    react-countup "*"
+
 "@types/react@18.0.24":
   version "18.0.24"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.24.tgz#2f79ed5b27f08d05107aab45c17919754cc44c20"
@@ -729,7 +736,7 @@ quick-lru@^5.1.1:
   resolved "https://registry.yarnpkg.com/quick-lru/-/quick-lru-5.1.1.tgz#366493e6b3e42a3a6885e2e99d18f80fb7a8c932"
   integrity sha512-WuyALRjWPDGtt/wzJiadO5AXY+8hZ80hVpe6MyivgraREW751X3SbhRvG3eLKOYN+8VEvqLcf3wdnt44Z4S4SA==
 
-react-countup@^6.3.2:
+react-countup@*, react-countup@^6.3.2:
   version "6.3.2"
   resolved "https://registry.yarnpkg.com/react-countup/-/react-countup-6.3.2.tgz#37359bb4262c2af52ae1e0ad36d2d0feff01d278"
   integrity sha512-ID3344D1Yo0X5CWQiJYXBpiPCYLwMOw1VvNP9geJE+PqpdDmx6iuoMhxXAqjpdaRWiD6zUnLRK6rrnGgDg09pg==

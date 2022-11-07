@@ -9,17 +9,12 @@ import '@/styles/globals.css'
 const PageApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
-      <div className='mx-auto md:grid md:grid-cols-[12rem_1fr]'>
-        {/* Menu */}
-        <Menu />
-        <div className='hidden md:block'></div>
-        {/* Main */}
-        <div className='w-full md:h-screen md:overflow-y-auto md:px-8'>
-          <div className='mx-auto w-full max-w-2xl'>
-            <Component {...pageProps} />
-          </div>
-        </div>
+      {/* Main */}
+      <div className='mx-auto max-w-lg'>
+        <Component {...pageProps} />
       </div>
+      {/* Menu */}
+      <Menu />
       <RouterProgress />
       <EventListener />
       <AuthListener />

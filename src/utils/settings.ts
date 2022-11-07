@@ -1,4 +1,4 @@
-import { User } from '@prisma/client'
+import { User, TransactionType } from '@prisma/client'
 
 /* Settings */
 export const settings = {
@@ -14,6 +14,12 @@ export const settings = {
   /* Database */
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
+  TRANSACTION_NAME: {
+    [TransactionType.RECHARGE]: '儲值',
+    [TransactionType.PAYMENT]: '消費',
+    [TransactionType.REFUND]: '退款',
+    [TransactionType.RESERVE]: '預訂',
+  },
   /* Trade */
   RECORDS_PER_PAGE: 10,
 }

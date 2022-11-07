@@ -101,7 +101,7 @@ export async function getUserInfo(userId: string) {
 export async function rechargeUserCredits(
   sourceUserId: string,
   targetUserId: string,
-  amount: number
+  amount: number,
 ) {
   // Recharge target user and create recharge record
   try {
@@ -137,7 +137,7 @@ export async function rechargeUserCredits(
 export async function chargeUserBalance(
   userId: string,
   amount: number,
-  currency: CurrencyType
+  currency: CurrencyType,
 ) {
   // Check user has enough balance
   const user = await prisma.user.findUnique({
@@ -200,7 +200,7 @@ export async function getTransactions(
   userId: string | undefined,
   cursor: number | undefined,
   until: number | undefined,
-  role: Role
+  role: Role,
 ) {
   let whereQuery: Prisma.TransactionWhereInput
   if (role === Role.USER) {
