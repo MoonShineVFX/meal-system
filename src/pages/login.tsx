@@ -48,8 +48,14 @@ export default function PageLogin() {
           name='username'
           placeholder='username'
           defaultValue='wang'
+          autoComplete='username'
         />
-        <input type='password' name='password' placeholder='password' />
+        <input
+          type='password'
+          name='password'
+          placeholder='password'
+          autoComplete='password'
+        />
         <button
           disabled={loginMutation.isLoading}
           className='rounded-md border-2 p-1'

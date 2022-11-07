@@ -1,6 +1,5 @@
-import { CurrencyType, Role, TransactionType } from '@prisma/client'
 import Link from 'next/link'
-import { Fragment } from 'react'
+import { Role } from '@prisma/client'
 import { CircleStackIcon } from '@heroicons/react/20/solid'
 import { BanknotesIcon } from '@heroicons/react/24/solid'
 import { CurrencyDollarIcon } from '@heroicons/react/24/solid'
@@ -9,12 +8,12 @@ import { ChevronUpIcon } from '@heroicons/react/24/outline'
 import CountUp from 'react-countup'
 import { Popover } from '@headlessui/react'
 
-import { settings } from '@/utils/settings'
+import TransactionList from '@/components/TransactionList'
 import trpc from '@/trpc/client/client'
 
 export default function PageIndex() {
   const { data: userData } = trpc.user.info.useQuery(undefined)
-  const { data: transcationsData, hasNextPage } =
+  const { data: transactionsData, hasNextPage } =
     trpc.trade.listTransactions.useInfiniteQuery(
       { role: Role.USER },
       {
@@ -23,7 +22,7 @@ export default function PageIndex() {
     )
 
   const hasTransactions =
-    (transcationsData?.pages[0].transactions.length ?? 0) > 0
+    (transactionsData?.pages[0].transactions.length ?? 0) > 0
 
   return (
     <div className=''>
@@ -80,69 +79,11 @@ export default function PageIndex() {
         <div className='flex justify-center py-4'>
           <ChevronUpIcon className='w-8 text-stone-600' />
         </div>
-        {hasTransactions ? (
-          <div className='flex flex-col gap-6'>
-            {transcationsData?.pages.map((page, idx) =>
-              idx === 0 ? (
-                <Fragment key={page.nextCursor}>
-                  {page.transactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className='flex items-center gap-4 rounded-lg px-4 py-2 hover:bg-gray-200'
-                    >
-                      <div className='h-2 w-2 rounded-full bg-stone-800'></div>
-                      {/* Date */}
-                      <div className='flex w-[10ch] flex-col'>
-                        <div className='text-lg tracking-widest'>
-                          {transaction.createdAt.toLocaleTimeString('zh-TW', {
-                            hourCycle: 'h23',
-                          })}
-                        </div>
-                      </div>
-                      {/* Type */}
-                      <div className=''>
-                        {settings.TRANSACTION_NAME[transaction.type]}
-                      </div>
-                      {/* Balance change */}
-                      <div className='flex grow flex-col items-end min-[460px]:flex-row min-[460px]:items-center min-[460px]:gap-2'>
-                        <div
-                          data-ui={
-                            [
-                              TransactionType.RECHARGE as string,
-                              TransactionType.REFUND as string,
-                            ].includes(transaction.type as string) && 'active'
-                          }
-                          className='grow text-right text-3xl font-bold before:content-["-"] data-active:text-green-500 data-active:before:content-["+"]'
-                        >
-                          {transaction.amount}
-                        </div>
-                        <div className='max-w-[8ch] grow text-left text-xs text-stone-500'>
-                          {transaction.currency === CurrencyType.CREDIT
-                            ? '夢想幣'
-                            : '福利點數'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </Fragment>
-              ) : null,
-            )}
-            {hasNextPage && (
-              <div className='col-span-full flex justify-center p-8'>
-                <Link
-                  className='rounded-xl bg-stone-800 text-stone-100 hover:bg-amber-900'
-                  href={'/records'}
-                >
-                  <p className='p-4'>更多交易紀錄</p>
-                </Link>{' '}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className='my-8 text-center'>
-            <p>還沒有交易紀錄</p>
-          </div>
-        )}
+        <TransactionList
+          transactionsData={transactionsData}
+          isIndex={true}
+          hasNextPage={hasNextPage}
+        />
       </div>
     </div>
   )
