@@ -23,6 +23,7 @@
     "@types/node": "^18.11.8",
     "@types/nprogress": "^0.2.0",
     "@types/react": "18.0.24",
+    "@types/react-countup": "^4.3.1",
     "autoprefixer": "^10.4.13",
     "next": "^13.0.0",
     "next-superjson-plugin": "^0.4.8",

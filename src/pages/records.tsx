@@ -17,7 +17,7 @@ export default function PageRecords() {
       <div className='mt-8 flex flex-col items-center'>
         {data?.pages.map((page) => (
           <Fragment key={page.nextCursor}>
-            {page.records.map((record) => (
+            {page.transactions.map((record) => (
               <div key={record.id} className='mb-4 flex items-center gap-4'>
                 <h2 className='rounded-xl bg-teal-800 p-2 text-lg'>
                   {record.id}

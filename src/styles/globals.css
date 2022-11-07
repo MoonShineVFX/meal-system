@@ -2,13 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
 body {
-  @apply bg-amber-400;
+  @apply bg-stone-100 lg:overflow-y-scroll;
 }
 
 #nprogress .bar {
-  @apply h-[3px] bg-stone-800 md:h-[0.15rem] md:rounded;
+  @apply h-[3px] bg-stone-800;
   box-shadow: 0 0 8px theme('colors.stone.800/50'),
     0 0 5px theme('colors.stone.800');
 }

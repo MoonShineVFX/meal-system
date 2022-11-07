@@ -9,12 +9,16 @@ export default function EventListener() {
 
   const updateTranscations = async (role: Role) => {
     const data = trpcContext.trade.listTransactions.getInfiniteData({ role })
-    if (!data || data.pages.length === 0 || data.pages[0].records.length === 0)
+    if (
+      !data ||
+      data.pages.length === 0 ||
+      data.pages[0].transactions.length === 0
+    )
       return
 
-    const { records: newRecords } =
+    const { transactions: newTransactions } =
       await trpcContext.trade.listTransactions.fetch({
-        until: data.pages[0].records[0].id,
+        until: data.pages[0].transactions[0].id,
         role,
       })
     trpcContext.trade.listTransactions.setInfiniteData(
@@ -23,7 +27,7 @@ export default function EventListener() {
           pages: data!.pages.map((page, i) => {
             if (i !== 0) return page
             return {
-              records: [...newRecords, ...page.records],
+              transactions: [...newTransactions, ...page.transactions],
               nextCursor: page.nextCursor,
             }
           }),
