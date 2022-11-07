@@ -65,7 +65,7 @@ export default function PageIndex() {
       {/* Trasactions Area */}
       <div
         data-ui={hasTransactions && 'active'}
-        className='group fixed bottom-0 top-0 mt-[360px] rounded-t-3xl bg-stone-100 px-4 pb-20 shadow-xl data-active:static data-active:min-h-screen'
+        className='group fixed bottom-0 top-0 mt-[360px] w-full rounded-t-3xl bg-stone-100 px-4 pb-20 shadow-xl data-active:static data-active:min-h-screen'
       >
         <div className='flex justify-center py-4'>
           <ChevronUpIcon className='w-8 text-stone-600' />
@@ -82,7 +82,7 @@ export default function PageIndex() {
                     >
                       <div className='h-2 w-2 rounded-full bg-stone-800'></div>
                       {/* Date */}
-                      <div className='flex flex-col'>
+                      <div className='flex w-[10ch] flex-col'>
                         <div className='text-lg tracking-widest'>
                           {transaction.createdAt.toLocaleTimeString('zh-TW', {
                             hourCycle: 'h23',
@@ -129,7 +129,7 @@ export default function PageIndex() {
             )}
           </div>
         ) : (
-          <div className='text-center'>
+          <div className='my-8 text-center'>
             <p>還沒有交易紀錄</p>
           </div>
         )}
