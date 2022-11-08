@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Role } from '@prisma/client'
 import { CircleStackIcon } from '@heroicons/react/20/solid'
 import { BanknotesIcon } from '@heroicons/react/24/solid'
 import { CurrencyDollarIcon } from '@heroicons/react/24/solid'
@@ -13,15 +12,6 @@ import trpc from '@/trpc/client/client'
 
 export default function PageIndex() {
   const { data: userData } = trpc.user.info.useQuery(undefined)
-  const { data: transactionsData, hasNextPage } =
-    trpc.trade.listTransactions.useInfiniteQuery(
-      { role: Role.USER },
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-      },
-    )
-  const hasTransactions =
-    (transactionsData?.pages[0].transactions.length ?? 0) > 0
 
   return (
     <div className=''>
@@ -32,8 +22,7 @@ export default function PageIndex() {
           <Popover className='relative'>
             <Popover.Button className='flex items-center gap-1 rounded-md p-1 tracking-wider text-stone-800 hover:bg-stone-800/10 focus:outline-none ui-open:rounded-b-none ui-open:bg-stone-100 ui-open:text-stone-400'>
               {userData?.name}
-              <ChevronDownIcon className='w-5 ui-open:hidden' />
-              <ChevronUpIcon className='w-5 ui-not-open:hidden' />
+              <ChevronDownIcon className='w-5 ui-open:rotate-180' />
             </Popover.Button>
             <Popover.Panel className='absolute right-0 left-0 overflow-hidden rounded-b-md bg-stone-100 pt-2 shadow-lg'>
               <Link
@@ -68,23 +57,16 @@ export default function PageIndex() {
         </div>
         {/* Operation */}
         <div className='mx-auto grid w-full max-w-md grid-cols-2 place-items-center gap-8'>
-          <IndexButton icon={BanknotesIcon} text='儲值' />
-          <IndexButton icon={CurrencyDollarIcon} text='付款' />
+          <IndexButton icon={BanknotesIcon} text='儲值' path='/recharge' />
+          <IndexButton icon={CurrencyDollarIcon} text='付款' path='/pay' />
         </div>
       </div>
       {/* Trasactions Area */}
-      <div
-        data-ui={hasTransactions && 'active'}
-        className='group fixed bottom-0 top-0 mt-[360px] w-full max-w-lg rounded-t-3xl bg-stone-100 px-4 pb-20 shadow-xl data-active:static data-active:min-h-screen'
-      >
+      <div className='mt-[360px] min-h-screen w-full max-w-lg rounded-t-3xl bg-stone-100 px-4 pb-20 shadow-xl'>
         <div className='flex justify-center py-4'>
           <ChevronUpIcon className='w-8 text-stone-600' />
         </div>
-        <TransactionList
-          transactionsData={transactionsData}
-          isIndex={true}
-          hasNextPage={hasNextPage}
-        />
+        <TransactionList isIndex={true} />
       </div>
     </div>
   )
@@ -93,12 +75,16 @@ export default function PageIndex() {
 function IndexButton(props: {
   icon: React.FC<React.ComponentProps<'svg'>>
   text: string
+  path: string
 }) {
   return (
-    <button className='flex w-full max-w-[10rem] items-center justify-between rounded-xl bg-stone-800 py-4 px-5 shadow-lg hover:bg-amber-900'>
+    <Link
+      href={props.path}
+      className='flex w-full max-w-[10rem] items-center justify-between rounded-xl bg-stone-800 py-4 px-5 shadow-lg hover:bg-amber-900'
+    >
       <props.icon className='h-8 w-8 text-stone-100' />
       <div className='tracking-[0.5ch] text-stone-100'>{props.text}</div>
-    </button>
+    </Link>
   )
 }
 

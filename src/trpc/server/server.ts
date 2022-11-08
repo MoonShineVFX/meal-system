@@ -1,9 +1,10 @@
-import { validateAuthToken, validateRole } from '@/utils/database'
+import { validateAuthToken } from '@/utils/database'
 import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
 import { Role } from '@prisma/client'
 import { settings, UserLite } from '@/utils/settings'
 import superjson from 'superjson'
+import { validateRole } from '@/utils/settings'
 
 /* Context */
 export async function createContext({
@@ -31,9 +32,9 @@ export const router = t.router
 async function validateUserLite(
   userLite: UserLite | null,
   targetRole: Role,
-  path: string | string[] | undefined
+  path: string | string[] | undefined,
 ) {
-  if (!userLite || !(await validateRole(userLite.role, targetRole))) {
+  if (!userLite || !validateRole(userLite.role, targetRole)) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: `Only ${targetRole} can access ${path}`,
@@ -45,21 +46,21 @@ export const adminProcedure = t.procedure.use(
   t.middleware(async ({ next, ctx }) => {
     await validateUserLite(ctx.userLite, Role.ADMIN, ctx.req.query.trpc)
     return next({ ctx: { userLite: ctx.userLite! } })
-  })
+  }),
 )
 
 export const staffProcedure = t.procedure.use(
   t.middleware(async ({ next, ctx }) => {
     await validateUserLite(ctx.userLite, Role.STAFF, ctx.req.query.trpc)
     return next({ ctx: { userLite: ctx.userLite! } })
-  })
+  }),
 )
 
 export const userProcedure = t.procedure.use(
   t.middleware(async ({ next, ctx }) => {
     await validateUserLite(ctx.userLite, Role.USER, ctx.req.query.trpc)
     return next({ ctx: { userLite: ctx.userLite! } })
-  })
+  }),
 )
 
 export const publicProcedure = t.procedure

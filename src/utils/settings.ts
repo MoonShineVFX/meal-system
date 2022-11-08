@@ -1,4 +1,4 @@
-import { User, TransactionType } from '@prisma/client'
+import { User, TransactionType, Role } from '@prisma/client'
 
 /* Settings */
 export const settings = {
@@ -29,8 +29,18 @@ export const settings = {
 export type UserLite = Pick<User, 'id' | 'name' | 'role'>
 
 /* Functions */
-
 export function generateCookie(token: string | undefined) {
   const expireTime = token ? settings.COOKIE_EXPIRE_DAYS * 24 * 60 * 60 : 0
   return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict; HttpOnlyl`
+}
+
+export function validateRole(sourceRole: Role, targetRole: Role) {
+  const roleWeight = {
+    [Role.SERVER]: 1000,
+    [Role.ADMIN]: 100,
+    [Role.STAFF]: 50,
+    [Role.USER]: 10,
+  }
+
+  return roleWeight[sourceRole] >= roleWeight[targetRole]
 }

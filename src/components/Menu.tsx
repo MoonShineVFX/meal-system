@@ -17,7 +17,7 @@ export default function Menu() {
       <div className='flex w-full max-w-xl items-center justify-evenly rounded-t-xl bg-stone-100 drop-shadow-2xl'>
         <MenuButton path='/pay' icon={CalendarDaysIcon} />
         <MenuButton path='/' icon={HomeIcon} activeIcon={CurrencyDollarIcon} />
-        <MenuButton path='/records' icon={ListBulletIcon} />
+        <MenuButton path='/transactions' icon={ListBulletIcon} />
       </div>
     </div>
   )
@@ -34,7 +34,10 @@ export function MenuButton(props: {
   const Icon = props.activeIcon && isActive ? props.activeIcon : props.icon
 
   return (
-    <Link className={props.className} href={props.path}>
+    <Link
+      className={props.className}
+      href={isActive && props.activeIcon ? '/pay' : props.path} // Use activeIcon to define main
+    >
       <div
         data-ui={[isActive && 'active', props.activeIcon && 'main'].join(' ')}
         className='group flex items-center gap-4 rounded-full p-3 hover:bg-stone-200 data-main:mb-4 data-main:bg-stone-100 data-main:shadow  data-main:hover:bg-stone-200 data-active:data-main:bg-amber-400 data-active:data-main:hover:bg-amber-300'

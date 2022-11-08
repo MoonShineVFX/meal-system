@@ -10,17 +10,6 @@ import { settings } from './settings'
 import { eventsCentral } from './event'
 
 /* Functions */
-export async function validateRole(sourceRole: Role, targetRole: Role) {
-  const roleWeight = {
-    [Role.SERVER]: 1000,
-    [Role.ADMIN]: 100,
-    [Role.STAFF]: 50,
-    [Role.USER]: 10,
-  }
-
-  return roleWeight[sourceRole] >= roleWeight[targetRole]
-}
-
 export async function ensureUser(userId: string, name: string) {
   const user = await prisma.user.findUnique({
     where: {

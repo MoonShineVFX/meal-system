@@ -16,7 +16,7 @@ export default function RouterProgress() {
         if (isLoading) {
           NProgress.start()
         }
-      }, 500)
+      }, 100)
     }
     const handleRouterDone = () => {
       NProgress.done()
