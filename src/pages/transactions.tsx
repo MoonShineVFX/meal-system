@@ -16,7 +16,7 @@ export default function PageTransactions() {
   return (
     <div className=''>
       <Tab.Group>
-        <Tab.List className='fixed top-0 w-full max-w-lg border-b-2 bg-amber-400 px-4 pt-0 xs:rounded-b-xl'>
+        <Tab.List className='fixed top-0 w-full max-w-lg border-b-2 bg-amber-400 px-4 pt-4 xs:rounded-b-xl'>
           <TransactionsTab text='交易紀錄' />
           {isStaff && <TransactionsTab text='收款紀錄' />}
           {isAdmin && <TransactionsTab text='全部' />}

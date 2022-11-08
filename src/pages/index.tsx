@@ -16,7 +16,7 @@ export default function PageIndex() {
   return (
     <div className=''>
       {/* Fixed Area */}
-      <div className='fixed top-0 -z-10 flex h-4/5 w-full max-w-lg flex-col gap-8 bg-amber-400 p-6'>
+      <div className='fixed top-0 -z-10 flex h-4/5 w-full max-w-lg flex-col gap-8 bg-amber-400 p-4'>
         {/* Profile */}
         <div className='flex justify-end'>
           <Popover className='relative'>
@@ -62,7 +62,7 @@ export default function PageIndex() {
         </div>
       </div>
       {/* Trasactions Area */}
-      <div className='mt-[360px] min-h-screen w-full max-w-lg rounded-t-3xl bg-stone-100 px-4 pb-20 shadow-xl'>
+      <div className='mt-[352px] min-h-screen w-full max-w-lg rounded-t-3xl bg-stone-100 px-4 pb-20 shadow-xl'>
         <div className='flex justify-center py-4'>
           <ChevronUpIcon className='w-8 text-stone-600' />
         </div>
