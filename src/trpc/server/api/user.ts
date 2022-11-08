@@ -75,6 +75,15 @@ export const UserRouter = router({
 
       // Generate token and set cookie
       const user = await ensureUser(input.username, userAdData.truename)
+
+      if (user.isArchived) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: '用戶已停用',
+        })
+        return
+      }
+
       const token = await createAuthToken(user.id)
       ctx.res.setHeader('Set-Cookie', generateCookie(token))
 

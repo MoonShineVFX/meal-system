@@ -45,6 +45,7 @@ model User {
   sourceTransaction Transaction[] @relation("Source")
   targetTransaction Transaction[] @relation("Target")
   authTokens        AuthToken[]
+  isArchived        Boolean       @default(false)
 }
 
 model Transaction {
