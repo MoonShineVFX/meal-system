@@ -26,15 +26,15 @@ export default function PageRecharge() {
     return <div>you are not an admin</div>
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <h1 className="text-center text-3xl">Recharge</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleRecharge}>
-        <select name="targetUserId">
-          <option value="wang">王小明</option>
-          <option value="mei">孫小美</option>
+    <div className='flex flex-col items-center gap-8'>
+      <h1 className='text-center text-3xl'>Recharge</h1>
+      <form className='flex flex-col gap-4' onSubmit={handleRecharge}>
+        <select name='targetUserId'>
+          <option value='wang'>王小明</option>
+          <option value='eli.hung'>洪健淇</option>
         </select>
-        <input name="amount" type="number" min={1} max={1000000} />
-        <button type="submit" className="p-2 border-2">
+        <input name='amount' type='number' min={1} max={1000000} />
+        <button type='submit' className='border-2 p-2'>
           Charge
         </button>
       </form>

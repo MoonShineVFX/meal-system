@@ -8,8 +8,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 
 export default function Menu() {
+  const router = useRouter()
+
+  if (router.pathname === '/login') return null
+
   return (
-    <div className='fixed bottom-0 z-50 flex h-16 w-full justify-center'>
+    <div className='fixed bottom-0 z-40 flex h-16 w-full justify-center'>
       <div className='flex w-full max-w-xl items-center justify-evenly rounded-t-xl bg-stone-100 drop-shadow-2xl'>
         <MenuButton path='/pay' icon={CalendarDaysIcon} />
         <MenuButton path='/' icon={HomeIcon} activeIcon={CurrencyDollarIcon} />

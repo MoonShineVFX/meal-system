@@ -3,6 +3,7 @@ import { User, TransactionType } from '@prisma/client'
 /* Settings */
 export const settings = {
   /* Auth */
+  AUTH_API_URL: process.env.AUTH_API_URL,
   COOKIE_TOKEN_NAME: 'meal_token',
   COOKIE_EVENT_DATE_NAME: 'event_date',
   COOKIE_EXPIRE_DAYS: 14,

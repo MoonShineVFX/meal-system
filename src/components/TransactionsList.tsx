@@ -28,7 +28,7 @@ export default function TransactionList(props: {
 
   if (!hasTransactions)
     return (
-      <div className='my-8 text-center'>
+      <div className='my-8 text-center tracking-widest'>
         <p>還沒有交易紀錄</p>
       </div>
     )
@@ -54,7 +54,6 @@ export default function TransactionList(props: {
                 /* Date */
                 dateDivider = (
                   <div
-                    key={thisDateString}
                     data-ui={dateDividerData ? 'active' : 'not-active'}
                     className='ml-3 w-fit rounded-md bg-stone-200 py-1 px-2 text-lg font-bold tracking-widest data-active:mt-4'
                   >
@@ -64,12 +63,9 @@ export default function TransactionList(props: {
                 dateDividerData = thisDateString
               }
               return (
-                <>
+                <Fragment key={transaction.id}>
                   {dateDivider}
-                  <div
-                    key={transaction.id}
-                    className='flex items-center gap-4 rounded-lg px-4 py-2 hover:bg-stone-200'
-                  >
+                  <div className='flex items-center gap-4 rounded-lg px-4 py-2 hover:bg-stone-200'>
                     <div className='h-2 w-2 rounded-full bg-stone-800'></div>
                     {/* Time */}
                     <div className='flex w-[10ch] flex-col'>
@@ -104,7 +100,7 @@ export default function TransactionList(props: {
                       </div>
                     </div>
                   </div>
-                </>
+                </Fragment>
               )
             })}
           </Fragment>

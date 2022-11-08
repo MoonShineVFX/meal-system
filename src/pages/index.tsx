@@ -20,7 +20,6 @@ export default function PageIndex() {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
       },
     )
-
   const hasTransactions =
     (transactionsData?.pages[0].transactions.length ?? 0) > 0
 
@@ -28,10 +27,10 @@ export default function PageIndex() {
     <div className=''>
       {/* Fixed Area */}
       <div className='fixed top-0 -z-10 flex h-4/5 w-full max-w-lg flex-col gap-8 bg-amber-400 p-6'>
-        {/* Prifile */}
+        {/* Profile */}
         <div className='flex justify-end'>
           <Popover className='relative'>
-            <Popover.Button className='flex items-center gap-1 rounded-md p-1 text-stone-800 hover:bg-stone-800/10 focus:outline-none ui-open:rounded-b-none ui-open:bg-stone-100'>
+            <Popover.Button className='flex items-center gap-1 rounded-md p-1 tracking-wider text-stone-800 hover:bg-stone-800/10 focus:outline-none ui-open:rounded-b-none ui-open:bg-stone-100 ui-open:text-stone-400'>
               {userData?.name}
               <ChevronDownIcon className='w-5 ui-open:hidden' />
               <ChevronUpIcon className='w-5 ui-not-open:hidden' />
@@ -55,10 +54,8 @@ export default function PageIndex() {
             currencyIcon={'$'}
           />
           {/* Points */}
-          <div className='mt-4 flex items-center justify-center gap-2'>
-            <div className='flex h-8 w-8 items-center justify-center rounded-full bg-stone-800'>
-              <CircleStackIcon className='h-5 w-5 text-stone-100' />
-            </div>
+          <div className='mt-4 flex w-full grow items-center justify-center gap-2'>
+            <CircleStackIcon className='h-4 w-4 text-amber-800' />
             <p className='text-lg font-semibold'>
               <CountUp
                 end={userData?.points ?? 0}
@@ -66,6 +63,7 @@ export default function PageIndex() {
                 preserveValue={true}
               />
             </p>
+            <div className='w-4'></div>
           </div>
         </div>
         {/* Operation */}
@@ -77,7 +75,7 @@ export default function PageIndex() {
       {/* Trasactions Area */}
       <div
         data-ui={hasTransactions && 'active'}
-        className='group fixed bottom-0 top-0 mt-[360px] w-full rounded-t-3xl bg-stone-100 px-4 pb-20 shadow-xl data-active:static data-active:min-h-screen'
+        className='group fixed bottom-0 top-0 mt-[360px] w-full max-w-lg rounded-t-3xl bg-stone-100 px-4 pb-20 shadow-xl data-active:static data-active:min-h-screen'
       >
         <div className='flex justify-center py-4'>
           <ChevronUpIcon className='w-8 text-stone-600' />
@@ -117,7 +115,7 @@ function BalanceIndicator(props: {
       </h3>
       <div className='relaitve flex justify-center'>
         <h1 className='text-6xl font-semibold tracking-widest text-stone-800'>
-          <div className='absolute -translate-x-full text-3xl text-amber-800'>
+          <div className='absolute translate-y-3 -translate-x-full text-3xl text-amber-800'>
             {props.currencyIcon}
           </div>
           <CountUp end={props.balance} duration={0.5} preserveValue={true} />
