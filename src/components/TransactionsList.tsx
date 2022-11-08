@@ -36,19 +36,30 @@ export default function TransactionList(props: {
   let dateDividerData: string | undefined = undefined
 
   return (
-    <div className='flex flex-col gap-6'>
+    <div className='flex flex-col gap-4'>
       {props.transactionsData?.pages.map((page, pageIdx) => {
         if (pageIdx !== 0 && props.isIndex) return null
         return (
           <Fragment key={page.nextCursor}>
             {page.transactions.map((transaction) => {
               let dateDivider: JSX.Element | null = null
-              const thisDateString = transaction.createdAt.toLocaleDateString()
+              const thisDateString = transaction.createdAt.toLocaleDateString(
+                'zh-TW',
+                { month: 'short', day: 'numeric' },
+              )
               if (
                 dateDividerData === undefined ||
                 dateDividerData !== thisDateString
               ) {
-                dateDivider = <div key={thisDateString}>{thisDateString}</div>
+                /* Date */
+                dateDivider = (
+                  <div
+                    key={thisDateString}
+                    className='ml-3 mt-4 w-fit rounded-md bg-stone-200 py-1 px-2 text-lg font-bold tracking-widest'
+                  >
+                    {thisDateString}
+                  </div>
+                )
                 dateDividerData = thisDateString
               }
               return (
@@ -59,11 +70,12 @@ export default function TransactionList(props: {
                     className='flex items-center gap-4 rounded-lg px-4 py-2 hover:bg-gray-200'
                   >
                     <div className='h-2 w-2 rounded-full bg-stone-800'></div>
-                    {/* Date */}
+                    {/* Time */}
                     <div className='flex w-[10ch] flex-col'>
-                      <div className='text-lg tracking-widest'>
-                        {transaction.createdAt.toLocaleTimeString('zh-TW', {
-                          hourCycle: 'h23',
+                      <div className='text-base '>
+                        {transaction.createdAt.toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </div>
                     </div>
@@ -72,7 +84,7 @@ export default function TransactionList(props: {
                       {settings.TRANSACTION_NAME[transaction.type]}
                     </div>
                     {/* Balance change */}
-                    <div className='flex grow flex-col items-end min-[460px]:flex-row min-[460px]:items-center min-[460px]:gap-2'>
+                    <div className='flex grow flex-col items-end min-[460px]:flex-row min-[460px]:items-center min-[460px]:gap-3'>
                       <div
                         data-ui={
                           [
@@ -80,7 +92,7 @@ export default function TransactionList(props: {
                             TransactionType.REFUND as string,
                           ].includes(transaction.type as string) && 'active'
                         }
-                        className='grow text-right text-3xl font-bold before:content-["-"] data-active:text-green-500 data-active:before:content-["+"]'
+                        className='grow text-right text-2xl font-bold before:content-["-"] data-active:text-green-500 data-active:before:content-["+"]'
                       >
                         {transaction.amount}
                       </div>
@@ -103,7 +115,7 @@ export default function TransactionList(props: {
             className='rounded-xl bg-stone-800 text-stone-100 hover:bg-amber-900'
             href={'/records'}
           >
-            <p className='p-4'>更多交易紀錄</p>
+            <p className='p-4 tracking-widest'>更多交易紀錄</p>
           </Link>{' '}
         </div>
       )}

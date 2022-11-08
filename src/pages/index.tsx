@@ -8,7 +8,7 @@ import { ChevronUpIcon } from '@heroicons/react/24/outline'
 import CountUp from 'react-countup'
 import { Popover } from '@headlessui/react'
 
-import TransactionList from '@/components/TransactionList'
+import TransactionList from '@/components/TransactionsList'
 import trpc from '@/trpc/client/client'
 
 export default function PageIndex() {
