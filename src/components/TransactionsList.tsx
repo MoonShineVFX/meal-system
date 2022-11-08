@@ -55,7 +55,8 @@ export default function TransactionList(props: {
                 dateDivider = (
                   <div
                     key={thisDateString}
-                    className='ml-3 mt-4 w-fit rounded-md bg-stone-200 py-1 px-2 text-lg font-bold tracking-widest'
+                    data-ui={dateDividerData ? 'active' : 'not-active'}
+                    className='ml-3 w-fit rounded-md bg-stone-200 py-1 px-2 text-lg font-bold tracking-widest data-active:mt-4'
                   >
                     {thisDateString}
                   </div>
