@@ -68,7 +68,7 @@ export default function TransactionList(props: {
                   {dateDivider}
                   <div
                     key={transaction.id}
-                    className='flex items-center gap-4 rounded-lg px-4 py-2 hover:bg-gray-200'
+                    className='flex items-center gap-4 rounded-lg px-4 py-2 hover:bg-stone-200'
                   >
                     <div className='h-2 w-2 rounded-full bg-stone-800'></div>
                     {/* Time */}

@@ -31,15 +31,18 @@ export default function PageIndex() {
         {/* Prifile */}
         <div className='flex justify-end'>
           <Popover className='relative'>
-            <Popover.Button className='flex items-center gap-1 rounded-md p-1 text-stone-800 hover:bg-stone-800/10 focus:outline-none'>
+            <Popover.Button className='flex items-center gap-1 rounded-md p-1 text-stone-800 hover:bg-stone-800/10 focus:outline-none ui-open:rounded-b-none ui-open:bg-stone-100'>
               {userData?.name}
               <ChevronDownIcon className='w-5 ui-open:hidden' />
               <ChevronUpIcon className='w-5 ui-not-open:hidden' />
             </Popover.Button>
-            <Popover.Panel className='absolute right-1 mt-2 w-20 rounded-md bg-stone-100 py-2 px-1 shadow-lg'>
-              <div className='flex flex-col rounded-md p-1 text-center hover:bg-stone-200'>
-                <Link href='/login'>登出</Link>
-              </div>
+            <Popover.Panel className='absolute right-0 left-0 overflow-hidden rounded-b-md bg-stone-100 pt-2 shadow-lg'>
+              <Link
+                href='/login'
+                className='flex flex-col p-2 text-center hover:bg-stone-200'
+              >
+                登出
+              </Link>
             </Popover.Panel>
           </Popover>
         </div>
@@ -54,7 +57,7 @@ export default function PageIndex() {
           {/* Points */}
           <div className='mt-4 flex items-center justify-center gap-2'>
             <div className='flex h-8 w-8 items-center justify-center rounded-full bg-stone-800'>
-              <CircleStackIcon className='h-5 w-5 text-amber-100' />
+              <CircleStackIcon className='h-5 w-5 text-stone-100' />
             </div>
             <p className='text-lg font-semibold'>
               <CountUp
