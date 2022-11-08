@@ -1,3 +1,4 @@
+import { User } from '@prisma/client'
 import { userProcedure, publicProcedure, router } from '../server'
 import { createAuthToken, ensureUser, getUserInfo } from '@/utils/database'
 import { settings, generateCookie } from '@/utils/settings'
@@ -41,47 +42,58 @@ export const UserRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const adTokenResponse = await fetch(`${settings.AUTH_API_URL}/login`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${Buffer.from(
-            `${input.username}:${input.password}`,
-          ).toString('base64')}`,
-        },
-      })
+      let user: User
 
-      if (!adTokenResponse.ok) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: '錯誤的帳號或密碼',
+      // Use mock user if dev mode
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        ['_user', '_staff', '_admin'].includes(input.username)
+      ) {
+        user = await ensureUser(input.username, input.username)
+      } else {
+        // Validate from LDAP
+        const adTokenResponse = await fetch(`${settings.AUTH_API_URL}/login`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${Buffer.from(
+              `${input.username}:${input.password}`,
+            ).toString('base64')}`,
+          },
         })
-        return
+
+        if (!adTokenResponse.ok) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: '錯誤的帳號或密碼',
+          })
+        }
+
+        const adToken = await adTokenResponse.text()
+        const userAdDataResponse = await fetch(
+          `${settings.AUTH_API_URL}/user`,
+          {
+            headers: { Authorization: `auth_token ${adToken}` },
+          },
+        )
+
+        if (!userAdDataResponse.ok) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: '找不到用戶資訊',
+          })
+        }
+
+        const userAdData = (await userAdDataResponse.json()) as UserAdData
+
+        // Generate token and set cookie
+        user = await ensureUser(input.username, userAdData.truename)
       }
-
-      const adToken = await adTokenResponse.text()
-      const userAdDataResponse = await fetch(`${settings.AUTH_API_URL}/user`, {
-        headers: { Authorization: `auth_token ${adToken}` },
-      })
-
-      if (!userAdDataResponse.ok) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: '找不到用戶資訊',
-        })
-        return
-      }
-
-      const userAdData = (await userAdDataResponse.json()) as UserAdData
-
-      // Generate token and set cookie
-      const user = await ensureUser(input.username, userAdData.truename)
 
       if (user.isArchived) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
           message: '用戶已停用',
         })
-        return
       }
 
       const token = await createAuthToken(user.id)

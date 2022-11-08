@@ -10,7 +10,11 @@ export const appRouter = router({
   events: userProcedure
     .input(z.object({ eventDate: z.date().optional() }))
     .query(async ({ ctx, input }) => {
-      return await eventsCentral.getEvents(ctx.userLite.id, input.eventDate)
+      return await eventsCentral.getEvents(
+        ctx.userLite.id,
+        input.eventDate,
+        ctx.userLite.role,
+      )
     }),
 })
 

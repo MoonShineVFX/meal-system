@@ -15,10 +15,10 @@ export default function TransactionList(props: {
   const displayRole = props.role || Role.USER
   const {
     data: transactionsData,
-    fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
     isLoading,
+    // fetchNextPage,
+    // isFetchingNextPage,
   } = trpc.trade.listTransactions.useInfiniteQuery(
     { role: displayRole },
     {

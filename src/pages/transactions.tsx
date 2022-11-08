@@ -16,7 +16,7 @@ export default function PageTransactions() {
   return (
     <div className=''>
       <Tab.Group>
-        <Tab.List className='fixed top-0 w-full max-w-lg border-b-2 bg-amber-400 px-4 pt-4 xs:rounded-b-xl'>
+        <Tab.List className='fixed top-0 w-full max-w-lg border-b-2 bg-amber-400 px-4 pt-0 xs:rounded-b-xl'>
           <TransactionsTab text='交易紀錄' />
           {isStaff && <TransactionsTab text='收款紀錄' />}
           {isAdmin && <TransactionsTab text='全部' />}
@@ -46,8 +46,8 @@ export default function PageTransactions() {
 
 function TransactionsTab(props: { text: string }) {
   return (
-    <Tab className='px-2 py-1 text-lg tracking-widest text-stone-800/75 focus:outline-none ui-selected:border-b-4 ui-selected:border-stone-800 ui-selected:font-bold ui-selected:text-stone-800'>
-      <div className='rounded-lg py-1 px-2 hover:bg-stone-800/10'>
+    <Tab className='px-2 py-2 text-lg tracking-widest text-stone-800/75 focus:outline-none ui-selected:border-b-4 ui-selected:border-stone-800 ui-selected:font-bold ui-selected:text-stone-800'>
+      <div className='rounded-lg py-2 px-2 hover:bg-stone-800/10'>
         {props.text}
       </div>
     </Tab>

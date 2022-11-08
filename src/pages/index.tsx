@@ -20,7 +20,7 @@ export default function PageIndex() {
         {/* Profile */}
         <div className='flex justify-end'>
           <Popover className='relative'>
-            <Popover.Button className='flex items-center gap-1 rounded-md p-1 tracking-wider text-stone-800 hover:bg-stone-800/10 focus:outline-none ui-open:rounded-b-none ui-open:bg-stone-100 ui-open:text-stone-400'>
+            <Popover.Button className='flex items-center rounded-md p-1 tracking-widest text-stone-800 hover:bg-stone-800/10 focus:outline-none ui-open:rounded-b-none ui-open:bg-stone-100 ui-open:text-stone-400'>
               {userData?.name}
               <ChevronDownIcon className='w-5 ui-open:rotate-180' />
             </Popover.Button>

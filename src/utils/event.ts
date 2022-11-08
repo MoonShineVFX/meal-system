@@ -1,5 +1,5 @@
-import { TransactionType } from '@prisma/client'
-import { settings } from './settings'
+import { TransactionType, Role } from '@prisma/client'
+import { settings, validateRole } from './settings'
 
 type Event = {
   date: Date
@@ -18,11 +18,20 @@ export default class EventsCentral {
   }
 
   // Get events for a user which are not expired
-  public async getEvents(userId: string, date: Date | undefined) {
+  public async getEvents(userId: string, date: Date | undefined, role: Role) {
+    // Get all events if admin
+    if (validateRole(role, Role.ADMIN))
+      return this._events.filter((event) =>
+        date ? event.date.getTime() > date.getTime() : true,
+      )
     return this._events.filter(
       (event) =>
-        (event.sourceUserId === userId || event.targetUserId === userId) &&
-        (date ? event.date.getTime() > date.getTime() : true)
+        (event.sourceUserId === userId ||
+          event.targetUserId === userId ||
+          // Get events for staff
+          (validateRole(role, Role.STAFF) &&
+            event.targetUserId === settings.SERVER_USER_ID)) &&
+        (date ? event.date.getTime() > date.getTime() : true),
     )
   }
 
