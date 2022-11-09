@@ -40,7 +40,7 @@ export function MenuButton(props: {
     >
       <div
         data-ui={[isActive && 'active', props.activeIcon && 'main'].join(' ')}
-        className='group flex items-center gap-4 rounded-full p-3 hover:bg-stone-200 data-main:mb-4 data-main:bg-stone-100 data-main:shadow  data-main:hover:bg-stone-200 data-active:data-main:bg-amber-400 data-active:data-main:hover:bg-amber-300'
+        className='group flex items-center gap-4 rounded-full p-3 hover:bg-stone-200 data-main:bg-stone-100 data-main:hover:bg-stone-200 data-active:data-main:bg-amber-400 data-active:data-main:hover:bg-amber-300'
       >
         <Icon className='h-7 w-7 stroke-1 text-stone-600 group-data-active:stroke-[1.5px] group-data-active:text-stone-800 group-data-main:h-8 group-data-main:w-8 group-data-main:text-stone-600  group-data-main:group-data-active:text-stone-800' />
       </div>

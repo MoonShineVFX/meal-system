@@ -71,7 +71,10 @@ export const TradeRouter = router({
         input.role,
       )
       let nextCursor: number | undefined = undefined
-      if (!input.until && transactions.length > settings.RECORDS_PER_PAGE) {
+      if (
+        !input.until &&
+        transactions.length > settings.TRANSACTIONS_PER_PAGE
+      ) {
         nextCursor = transactions.pop()!.id
       }
       return {

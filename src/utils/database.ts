@@ -245,7 +245,7 @@ export async function getTransactions(
         },
       },
     },
-    take: settings.RECORDS_PER_PAGE + 1,
+    take: settings.TRANSACTIONS_PER_PAGE + 1,
     cursor: cursor ? { id: cursor } : undefined,
   })
   return transactions

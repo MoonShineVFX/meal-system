@@ -22,7 +22,7 @@ export const settings = {
     [TransactionType.RESERVE]: '預訂',
   },
   /* Trade */
-  RECORDS_PER_PAGE: 10,
+  TRANSACTIONS_PER_PAGE: 20,
 }
 
 /* Types */
