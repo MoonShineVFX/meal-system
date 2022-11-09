@@ -46,8 +46,8 @@ export default function PageTransactions() {
 
 function TransactionsTab(props: { text: string }) {
   return (
-    <Tab className='px-1 py-1 text-lg tracking-widest text-stone-800/75 focus:outline-none ui-selected:border-b-4 ui-selected:border-stone-800 ui-selected:font-bold ui-selected:text-stone-800'>
-      <div className='rounded-lg py-3 px-3 group-hover:bg-stone-800/10'>
+    <Tab className='group select-none px-1 py-1 text-lg tracking-widest text-stone-800/75 focus:outline-none ui-selected:border-b-4 ui-selected:border-stone-800 ui-selected:font-bold ui-selected:text-stone-800'>
+      <div className='rounded-lg py-3 px-3 group-hover:bg-stone-800/10 group-active:bg-stone-800/10'>
         {props.text}
       </div>
     </Tab>

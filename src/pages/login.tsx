@@ -76,7 +76,7 @@ export default function PageLogin() {
         />
         <button
           disabled={isBusy}
-          className='flex h-14 items-center justify-center rounded-xl bg-stone-800 text-lg tracking-widest text-stone-100 shadow-lg hover:bg-amber-900 disabled:opacity-75 disabled:hover:bg-stone-800'
+          className='flex h-14 items-center justify-center rounded-xl bg-stone-800 text-lg tracking-widest text-stone-100 shadow-lg hover:bg-amber-900 active:bg-amber-900 disabled:opacity-75 disabled:hover:bg-stone-800'
           type='submit'
         >
           {loginMutation.isSuccess ? (

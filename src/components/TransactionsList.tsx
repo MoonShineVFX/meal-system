@@ -58,7 +58,7 @@ export default function TransactionList(props: {
       nextPageElement = (
         <div className='col-span-full flex justify-center p-8'>
           <Link
-            className='rounded-xl bg-stone-800 text-stone-100 hover:bg-amber-900'
+            className='select-none rounded-xl bg-stone-800 text-stone-100 hover:bg-amber-900 active:bg-amber-900'
             href={'/transactions'}
           >
             <p className='p-4 tracking-widest'>更多交易紀錄</p>

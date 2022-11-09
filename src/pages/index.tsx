@@ -6,28 +6,39 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { ChevronUpIcon } from '@heroicons/react/24/outline'
 import CountUp from 'react-countup'
 import { Popover } from '@headlessui/react'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 
 import TransactionList from '@/components/TransactionsList'
 import trpc from '@/trpc/client/client'
+import Payment from '@/components/Payment'
 
 export default function PageIndex() {
   const { data: userData } = trpc.user.info.useQuery(undefined)
+  const router = useRouter()
+  const [isOpenPayment, setIsOpenPayment] = useState(false)
+
+  useEffect(() => {
+    setIsOpenPayment(router.query.pay === '')
+  }, [router.query.pay])
 
   return (
     <div className=''>
+      {/* Payment */}
+      <Payment isOpen={isOpenPayment} />
       {/* Fixed Area */}
       <div className='fixed top-0 -z-10 flex h-4/5 w-full max-w-lg flex-col gap-8 bg-amber-400 p-4'>
         {/* Profile */}
         <div className='flex justify-end'>
           <Popover className='relative'>
-            <Popover.Button className='flex items-center rounded-md p-1 tracking-widest text-stone-800 hover:bg-stone-800/10 focus:outline-none ui-open:rounded-b-none ui-open:bg-stone-100 ui-open:text-stone-400'>
+            <Popover.Button className='flex select-none items-center rounded-md p-1 tracking-widest text-stone-800 hover:bg-stone-800/10 focus:outline-none active:bg-stone-800/10 ui-open:rounded-b-none ui-open:bg-stone-100 ui-open:text-stone-400'>
               {userData?.name}
               <ChevronDownIcon className='w-5 ui-open:rotate-180' />
             </Popover.Button>
             <Popover.Panel className='absolute right-0 left-0 overflow-hidden rounded-b-md bg-stone-100 pt-2 shadow-lg'>
               <Link
                 href='/login'
-                className='flex flex-col p-2 text-center hover:bg-stone-200'
+                className='flex flex-col p-2 text-center hover:bg-stone-200 active:bg-stone-200'
               >
                 登出
               </Link>
@@ -58,7 +69,7 @@ export default function PageIndex() {
         {/* Operation */}
         <div className='mx-auto grid w-full max-w-md grid-cols-2 place-items-center gap-8'>
           <IndexButton icon={BanknotesIcon} text='儲值' path='/recharge' />
-          <IndexButton icon={CurrencyDollarIcon} text='付款' path='/pay' />
+          <IndexButton icon={CurrencyDollarIcon} text='付款' path='/?pay' />
         </div>
       </div>
       {/* Trasactions Area */}
@@ -80,7 +91,8 @@ function IndexButton(props: {
   return (
     <Link
       href={props.path}
-      className='flex w-full max-w-[10rem] items-center justify-between rounded-xl bg-stone-800 py-4 px-5 shadow-lg hover:bg-amber-900'
+      shallow={props.path.startsWith('/?')}
+      className='flex w-full max-w-[10rem] items-center justify-between rounded-xl bg-stone-800 py-4 px-5 shadow-lg hover:bg-amber-900 active:bg-amber-900'
     >
       <props.icon className='h-8 w-8 text-stone-100' />
       <div className='tracking-[0.5ch] text-stone-100'>{props.text}</div>

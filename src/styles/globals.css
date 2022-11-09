@@ -14,3 +14,7 @@ body {
 #nprogress .peg {
   display: none;
 }
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}

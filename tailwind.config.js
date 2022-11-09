@@ -10,7 +10,9 @@ module.exports = {
     },
     data: {
       active: 'ui~="active"',
+      'not-active': 'ui~="not-active"',
       main: 'ui~="main"',
+      'not-main': 'ui~="not-main"',
       loading: 'ui~="loading"',
     },
   },
