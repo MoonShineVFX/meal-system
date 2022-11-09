@@ -21,7 +21,7 @@ export default function PageTransactions() {
           {isStaff && <TransactionsTab text='收款紀錄' />}
           {isAdmin && <TransactionsTab text='全部' />}
         </Tab.List>
-        <Tab.Panels className='mt-24 px-4 pb-20'>
+        <Tab.Panels className='mt-28 px-4 pb-20'>
           {/* User */}
           <Tab.Panel>
             <TransactionList />

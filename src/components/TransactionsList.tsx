@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { Fragment } from 'react'
+import { Fragment, useEffect } from 'react'
 import { TransactionType, CurrencyType } from '@prisma/client'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useInView } from 'react-intersection-observer'
 
 import Spinner from './Spinner'
 import trpc from '@/trpc/client/client'
@@ -17,14 +18,20 @@ export default function TransactionList(props: {
     data: transactionsData,
     hasNextPage,
     isLoading,
-    // fetchNextPage,
-    // isFetchingNextPage,
+    fetchNextPage,
   } = trpc.trade.listTransactions.useInfiniteQuery(
     { role: displayRole },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   )
+  const { ref, inView } = useInView({ rootMargin: '0px 0px 50% 0px' })
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage()
+    }
+  }, [inView])
 
   if (isLoading)
     return (
@@ -43,6 +50,36 @@ export default function TransactionList(props: {
     )
 
   let dateDividerData: string | undefined = undefined
+  let nextPageElement: JSX.Element | null = null
+
+  if (hasNextPage) {
+    if (props.isIndex) {
+      // show redirect button if index
+      nextPageElement = (
+        <div className='col-span-full flex justify-center p-8'>
+          <Link
+            className='rounded-xl bg-stone-800 text-stone-100 hover:bg-amber-900'
+            href={'/transactions'}
+          >
+            <p className='p-4 tracking-widest'>更多交易紀錄</p>
+          </Link>
+        </div>
+      )
+    } else {
+      // show nextpage loading
+      nextPageElement = (
+        <div ref={ref} className='my-8 flex justify-center'>
+          <Spinner className='h-6 w-6' />
+        </div>
+      )
+    }
+  } else {
+    nextPageElement = (
+      <div className='my-8 text-center tracking-widest text-stone-400'>
+        <p>沒有更多交易紀錄</p>
+      </div>
+    )
+  }
 
   return (
     <div className='flex flex-col gap-4'>
@@ -144,16 +181,7 @@ export default function TransactionList(props: {
           </Fragment>
         )
       })}
-      {hasNextPage && props.isIndex && (
-        <div className='col-span-full flex justify-center p-8'>
-          <Link
-            className='rounded-xl bg-stone-800 text-stone-100 hover:bg-amber-900'
-            href={'/transactions'}
-          >
-            <p className='p-4 tracking-widest'>更多交易紀錄</p>
-          </Link>{' '}
-        </div>
-      )}
+      {nextPageElement}
     </div>
   )
 }
