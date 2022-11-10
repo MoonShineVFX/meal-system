@@ -36,7 +36,7 @@ export const TradeRouter = router({
     .input(
       z.object({
         amount: z.number().int().positive(),
-        currency: z.enum([CurrencyType.CREDIT, CurrencyType.POINT]),
+        isUsingPoint: z.boolean(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -44,7 +44,7 @@ export const TradeRouter = router({
       const result = await chargeUserBalance(
         ctx.userLite.id,
         input.amount,
-        input.currency,
+        input.isUsingPoint,
       )
 
       if (result instanceof Error) {

@@ -126,51 +126,88 @@ export async function rechargeUserCredits(
 export async function chargeUserBalance(
   userId: string,
   amount: number,
-  currency: CurrencyType,
+  isUsingPoint: boolean,
 ) {
-  // Check user has enough balance
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  })
-  if (!user) return Error('User not found')
-
-  if (currency === CurrencyType.CREDIT) {
-    if (user.credits < amount) return Error('Insufficient credits')
-  } else if (currency === CurrencyType.POINT) {
-    if (user.points < amount) return Error('Insufficient points')
-  } else {
-    return Error('Invalid currency')
-  }
-
   // Charge user and create charge record
   try {
-    await prisma.$transaction([
-      prisma.user.update({
+    await prisma.$transaction(async (client) => {
+      /* Validate */
+      // Check user has enough balance
+      const user = await client.user.findUnique({
         where: { id: userId },
-        data: {
-          credits: { decrement: currency === CurrencyType.CREDIT ? amount : 0 },
-          points: { decrement: currency === CurrencyType.POINT ? amount : 0 },
-        },
-      }),
-      prisma.user.update({
-        where: { id: settings.SERVER_USER_ID },
-        data: {
-          credits: {
-            increment: currency === CurrencyType.CREDIT ? amount : 0,
+      })
+      if (!user) throw new Error('User not found')
+
+      // Calculate charge amount
+      let pointsChargeAmount = 0
+      let creditsChargeAmount = 0
+
+      if (isUsingPoint) {
+        pointsChargeAmount = Math.min(amount, user.points)
+        creditsChargeAmount = amount - pointsChargeAmount
+      } else {
+        creditsChargeAmount = amount
+      }
+
+      if (creditsChargeAmount > user.credits)
+        throw new Error('Not enough credits')
+
+      /* Operation */
+      // Charge user
+      let operations: Promise<any>[] = []
+      operations.push(
+        client.user.update({
+          where: {
+            id: userId,
           },
-          points: { increment: currency === CurrencyType.POINT ? amount : 0 },
-        },
-      }),
-      prisma.transaction.create({
-        data: {
-          sourceUserId: userId,
-          targetUserId: settings.SERVER_USER_ID,
-          amount: amount,
-          type: TransactionType.PAYMENT,
-          currency: currency,
-        },
-      }),
-    ])
+          data: {
+            credits: { decrement: creditsChargeAmount },
+            points: { decrement: pointsChargeAmount },
+          },
+        }),
+      )
+      // Recharge server
+      operations.push(
+        client.user.update({
+          where: { id: settings.SERVER_USER_ID },
+          data: {
+            credits: {
+              increment: creditsChargeAmount,
+            },
+            points: { increment: pointsChargeAmount },
+          },
+        }),
+      )
+
+      if (creditsChargeAmount > 0) {
+        operations.push(
+          client.transaction.create({
+            data: {
+              sourceUserId: userId,
+              targetUserId: settings.SERVER_USER_ID,
+              amount: creditsChargeAmount,
+              type: TransactionType.PAYMENT,
+              currency: CurrencyType.CREDIT,
+            },
+          }),
+        )
+      }
+      if (pointsChargeAmount > 0) {
+        operations.push(
+          client.transaction.create({
+            data: {
+              sourceUserId: userId,
+              targetUserId: settings.SERVER_USER_ID,
+              amount: pointsChargeAmount,
+              type: TransactionType.PAYMENT,
+              currency: CurrencyType.POINT,
+            },
+          }),
+        )
+      }
+
+      await Promise.all(operations)
+    })
   } catch (error) {
     return error
   }

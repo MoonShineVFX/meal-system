@@ -14,6 +14,21 @@ module.exports = {
       main: 'ui~="main"',
       'not-main': 'ui~="not-main"',
       loading: 'ui~="loading"',
+      'not-loading': 'ui~="not-loading"',
+    },
+    extend: {
+      keyframes: {
+        blink: {
+          '0%': { opacity: 1 },
+          '100%': { opacity: 0 },
+        },
+      },
+      animation: {
+        blink: 'blink 1s cubic-bezier(1, 0, 0, 1) infinite',
+      },
+      screens: {
+        tall: { raw: '(min-height: 580px)' },
+      },
     },
   },
   plugins: [require('@headlessui/tailwindcss')],

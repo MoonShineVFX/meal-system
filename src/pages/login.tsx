@@ -113,6 +113,8 @@ function InputField(props: {
         placeholder={props.placeholder}
         defaultValue={props.defaultValue}
         autoComplete={props.autoComplete}
+        autoCapitalize='none'
+        autoCorrect='off'
         className='rounded-md border-2 bg-stone-100 p-2 text-lg outline-stone-400 focus:outline-amber-500 disabled:opacity-75'
       />
     </div>

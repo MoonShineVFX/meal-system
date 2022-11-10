@@ -82,7 +82,7 @@ export default function TransactionList(props: {
   }
 
   return (
-    <div className='flex flex-col gap-4'>
+    <div className='flex flex-col gap-3'>
       {transactionsData?.pages.map((page, pageIdx) => {
         if (pageIdx !== 0 && props.isIndex) return null
         return (
@@ -160,7 +160,7 @@ export default function TransactionList(props: {
                     {/* Description */}
                     {description}
                     {/* Balance change */}
-                    <div className='flex grow flex-col items-end min-[460px]:flex-row min-[460px]:items-center min-[460px]:gap-3'>
+                    <div className='min-[460px]:flex-row min-[460px]:items-center min-[460px]:gap-3 flex grow flex-col items-end'>
                       <div
                         data-ui={isPositive && 'active'}
                         className={`grow text-right text-2xl font-bold ${balanceState.style}`}

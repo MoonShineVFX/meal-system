@@ -15,7 +15,7 @@ export default function Menu() {
   return (
     <div className='fixed bottom-0 z-40 flex h-16 w-full justify-center'>
       <div className='flex w-full max-w-xl items-center justify-evenly rounded-t-xl bg-stone-100 drop-shadow-2xl'>
-        <MenuButton path='/pay' icon={CalendarDaysIcon} />
+        <MenuButton path='/recharge' icon={CalendarDaysIcon} />
         <MenuButton path='/' icon={HomeIcon} mainIcon={CurrencyDollarIcon} />
         <MenuButton path='/transactions' icon={ListBulletIcon} />
       </div>

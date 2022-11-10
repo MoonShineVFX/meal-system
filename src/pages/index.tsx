@@ -101,7 +101,9 @@ function IndexButton(props: {
       className='flex w-full max-w-[10rem] items-center justify-between rounded-xl bg-stone-800 py-4 px-5 shadow-lg hover:bg-amber-900 active:bg-amber-900'
     >
       <props.icon className='h-8 w-8 text-stone-100' />
-      <div className='tracking-[0.5ch] text-stone-100'>{props.text}</div>
+      <div className='text-lg tracking-[0.5ch] text-stone-100'>
+        {props.text}
+      </div>
     </Link>
   )
 }
