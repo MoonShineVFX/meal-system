@@ -41,7 +41,7 @@ declare global {
   var tokenCache: TokenCache | undefined
 }
 
-export const tokenCache = global.tokenCache || new TokenCache()
+export const tokenCache = global.tokenCache ?? new TokenCache()
 
 if (process.env.NODE_ENV !== 'production') {
   global.tokenCache = tokenCache

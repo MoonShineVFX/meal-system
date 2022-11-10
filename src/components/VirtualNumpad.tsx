@@ -6,13 +6,14 @@ const layout = [
   ['4', '5', '6'],
   ['1', '2', '3'],
   ['clear:清除', '0', 'backspace:←'],
-  ['cancel:取消', 'ok:付款'],
+  ['cancel:取消', 'ok:{accept}'],
 ]
 
 export default function VirtualNumpad(props: {
   onChange: (value: number) => void
   onAccept: () => void
   onCancel: () => void
+  acceptText?: string
   maxValue?: number
 }) {
   const [value, setValue] = useState(0)
@@ -55,7 +56,15 @@ export default function VirtualNumpad(props: {
       {layout.map((row, i) => (
         <div key={`row-${i}`} className='flex justify-between gap-2'>
           {row.map((key) => (
-            <VirtualKey key={key} keyString={key} onClick={handleKeyPressed} />
+            <VirtualKey
+              key={key}
+              keyString={
+                key === 'ok:{accept}'
+                  ? key.replace('{accept}', props.acceptText ?? '付款')
+                  : key
+              }
+              onClick={handleKeyPressed}
+            />
           ))}
         </div>
       ))}
@@ -69,7 +78,7 @@ function VirtualKey(props: {
 }) {
   const [key, label] = props.keyString.split(':')
   const isSpecial = label !== undefined
-  const labelString = label || key
+  const labelString = label ?? key
 
   return (
     <button

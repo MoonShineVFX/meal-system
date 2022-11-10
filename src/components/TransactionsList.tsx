@@ -13,7 +13,7 @@ export default function TransactionList(props: {
   role?: Role
   isIndex?: boolean // if index, show more button and first page only
 }) {
-  const displayRole = props.role || Role.USER
+  const displayRole = props.role ?? Role.USER
   const {
     data: transactionsData,
     hasNextPage,

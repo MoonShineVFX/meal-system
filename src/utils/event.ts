@@ -66,7 +66,7 @@ declare global {
   var eventsCentral: EventsCentral | undefined
 }
 
-export const eventsCentral = global.eventsCentral || new EventsCentral()
+export const eventsCentral = global.eventsCentral ?? new EventsCentral()
 
 if (process.env.NODE_ENV !== 'production') {
   global.eventsCentral = eventsCentral

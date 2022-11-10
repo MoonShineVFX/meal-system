@@ -257,7 +257,7 @@ declare global {
 }
 
 const prisma =
-  global.prisma ||
+  global.prisma ??
   new PrismaClient({
     log:
       process.env.NODE_ENV !== 'production'
