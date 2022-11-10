@@ -5,7 +5,7 @@ import { CurrencyDollarIcon } from '@heroicons/react/24/solid'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { ChevronUpIcon } from '@heroicons/react/24/outline'
 import CountUp from 'react-countup'
-import { Popover } from '@headlessui/react'
+import { Popover, Transition } from '@headlessui/react'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
@@ -35,14 +35,20 @@ export default function PageIndex() {
               {userData?.name}
               <ChevronDownIcon className='w-5 ui-open:rotate-180' />
             </Popover.Button>
-            <Popover.Panel className='absolute right-0 left-0 overflow-hidden rounded-b-md bg-stone-100 pt-2 shadow-lg'>
-              <Link
-                href='/login'
-                className='flex flex-col p-2 text-center hover:bg-stone-200 active:bg-stone-200'
-              >
-                登出
-              </Link>
-            </Popover.Panel>
+            <Transition
+              enter='transition duration-100 ease-out'
+              enterFrom='scale-y-0'
+              enterTo='scale-y-100'
+            >
+              <Popover.Panel className='absolute right-0 left-0 overflow-hidden rounded-b-md bg-stone-100 pt-2 shadow-lg'>
+                <Link
+                  href='/login'
+                  className='flex flex-col p-2 text-center hover:bg-stone-200 active:bg-stone-200'
+                >
+                  登出
+                </Link>
+              </Popover.Panel>
+            </Transition>
           </Popover>
         </div>
         {/* Balance */}
