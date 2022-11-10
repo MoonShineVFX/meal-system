@@ -6,7 +6,7 @@ import {
   chargeUserBalance,
   getTransactions,
 } from '@/utils/database'
-import { CurrencyType, Role } from '@prisma/client'
+import { Role } from '@prisma/client'
 import { settings } from '@/utils/settings'
 
 export const TradeRouter = router({
