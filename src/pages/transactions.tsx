@@ -35,7 +35,7 @@ export default function PageTransactions() {
           {/* Server */}
           {isAdmin && (
             <Tab.Panel>
-              <TransactionList role={Role.SERVER} />
+              <TransactionList role={Role.ADMIN} />
             </Tab.Panel>
           )}
         </Tab.Panels>
