@@ -7,7 +7,7 @@ import {
   getTransactions,
 } from '@/utils/database'
 import { Role } from '@prisma/client'
-import { settings } from '@/utils/settings'
+import { settings, validateRole } from '@/utils/settings'
 
 export const TradeRouter = router({
   recharge: adminProcedure
@@ -64,6 +64,15 @@ export const TradeRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
+      // Validate role
+      if (!validateRole(ctx.userLite.role, input.role)) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'This user are not allowed to access this resource',
+        })
+      }
+
+      // Get transactions
       const transactions = await getTransactions(
         ctx.userLite.id,
         input.cursor,

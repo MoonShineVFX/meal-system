@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { CircleStackIcon } from '@heroicons/react/24/solid'
 import { Transition } from '@headlessui/react'
 import { Role } from '@prisma/client'
+import { useAtom } from 'jotai'
 
+import { addNotificationAtom, NotificationType } from './Notification'
 import trpc from '@/trpc/client/client'
 import SwitchButton from './SwitchButton'
 import Spinner from './Spinner'
@@ -17,6 +19,7 @@ export default function Payment(props: { isOpen: boolean }) {
   const [isUsingPoint, setUsingPoint] = useState(true)
   const chargeMutation = trpc.trade.charge.useMutation()
   const trpcContext = trpc.useContext()
+  const [, addNotification] = useAtom(addNotificationAtom)
 
   useEffect(() => {
     // Set default value
@@ -51,10 +54,20 @@ export default function Payment(props: { isOpen: boolean }) {
         isUsingPoint,
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          addNotification({
+            type: NotificationType.SUCCESS,
+            message: '付款成功',
+          })
           trpcContext.user.info.invalidate(undefined)
           trpcContext.trade.listTransactions.invalidate({ role: Role.USER })
           handleClose()
+        },
+        onError: async () => {
+          addNotification({
+            type: NotificationType.ERROR,
+            message: '付款失敗',
+          })
         },
       },
     )

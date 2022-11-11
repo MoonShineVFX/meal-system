@@ -8,7 +8,6 @@ import CountUp from 'react-countup'
 import { Popover, Transition } from '@headlessui/react'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-import { useAtom } from 'jotai'
 
 import TransactionList from '@/components/TransactionsList'
 import trpc from '@/trpc/client/client'

@@ -69,7 +69,7 @@ function NotificationPod(props: {
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    setIsOpen(true)
+    setTimeout(() => setIsOpen(true), 100)
     setTimeout(
       () => setIsOpen(false),
       settings.NOTIFICATION_DURATION - settings.NOTIFICATION_DELAY,
@@ -82,7 +82,7 @@ function NotificationPod(props: {
 
   return (
     <div
-      className='absolute top-0 flex items-center gap-1 rounded-xl bg-stone-100 py-2 px-3 text-stone-700 shadow-lg transition-all'
+      className='absolute top-0 flex items-center gap-1 rounded-xl border-[1px] border-stone-200 bg-stone-100 py-2 px-3 text-stone-700 shadow-lg transition-all'
       style={{
         transform: `translateY(calc(${targetY}px - 100%${gap}))`,
         transitionDuration: `${settings.NOTIFICATION_DELAY}ms`,

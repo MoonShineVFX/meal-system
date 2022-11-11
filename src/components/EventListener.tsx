@@ -1,11 +1,15 @@
-import trpc from '@/trpc/client/client'
-import { Role } from '@prisma/client'
+import { CurrencyType, Role } from '@prisma/client'
 import { useState } from 'react'
+import { useAtom } from 'jotai'
+
+import { addNotificationAtom, NotificationType } from './Notification'
+import trpc from '@/trpc/client/client'
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
   const [eventDate, setEventDate] = useState(new Date())
   const userInfoQuery = trpc.user.info.useQuery(undefined)
+  const [, addNotification] = useAtom(addNotificationAtom)
 
   const updateTranscations = async (role: Role) => {
     const data = trpcContext.trade.listTransactions.getInfiniteData({ role })
@@ -21,6 +25,18 @@ export default function EventListener() {
         until: data.pages[0].transactions[0].id,
         role,
       })
+
+    if (role === Role.STAFF) {
+      for (const newTranscation of newTransactions.slice().reverse()) {
+        addNotification({
+          type: NotificationType.INFO,
+          message: `${newTranscation.sourceUser.name} 付款 ${
+            newTranscation.amount
+          } ${newTranscation.currency === CurrencyType.POINT ? '點數' : '元'}`,
+        })
+      }
+    }
+
     trpcContext.trade.listTransactions.setInfiniteData(
       (data) => {
         return {
