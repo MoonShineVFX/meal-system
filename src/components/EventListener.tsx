@@ -1,4 +1,4 @@
-import { CurrencyType, Role } from '@prisma/client'
+import { Role } from '@prisma/client'
 import { useState } from 'react'
 import { useAtom } from 'jotai'
 
@@ -28,11 +28,18 @@ export default function EventListener() {
 
     if (role === Role.STAFF) {
       for (const newTranscation of newTransactions.slice().reverse()) {
+        let paymentStrings: string[] = []
+        if (newTranscation.creditsAmount > 0) {
+          paymentStrings.push(`${newTranscation.creditsAmount} 元`)
+        }
+        if (newTranscation.pointsAmount > 0) {
+          paymentStrings.push(`${newTranscation.pointsAmount} 點`)
+        }
         addNotification({
           type: NotificationType.INFO,
-          message: `${newTranscation.sourceUser.name} 付款 ${
-            newTranscation.amount
-          } ${newTranscation.currency === CurrencyType.POINT ? '點數' : '元'}`,
+          message: `${
+            newTranscation.sourceUser.name
+          } 付款 ${paymentStrings.join(' 和 ')}`,
         })
       }
     }

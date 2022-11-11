@@ -21,7 +21,7 @@ export const settings = {
     [TransactionType.RECHARGE]: '儲值',
     [TransactionType.PAYMENT]: '消費',
     [TransactionType.REFUND]: '退款',
-    [TransactionType.RESERVE]: '預訂',
+    [TransactionType.ORDER]: '訂單',
   },
   /* Trade */
   TRANSACTIONS_PER_PAGE: 20,

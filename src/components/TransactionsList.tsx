@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Fragment, useEffect } from 'react'
-import { TransactionType, CurrencyType } from '@prisma/client'
+import { TransactionType } from '@prisma/client'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useInView } from 'react-intersection-observer'
 
@@ -149,7 +149,7 @@ export default function TransactionList(props: {
                   <div className='flex items-center gap-4 rounded-lg px-4 py-2 hover:bg-stone-200'>
                     <div className='h-2 w-2 rounded-full bg-stone-800'></div>
                     {/* Time */}
-                    <div className='flex w-[10ch] flex-col'>
+                    <div className='flex w-[8ch] flex-col'>
                       <div className='text-base '>
                         {transaction.createdAt.toLocaleTimeString('en-US', {
                           hour: '2-digit',
@@ -160,18 +160,44 @@ export default function TransactionList(props: {
                     {/* Description */}
                     {description}
                     {/* Balance change */}
-                    <div className='min-[460px]:flex-row min-[460px]:items-center min-[460px]:gap-3 flex grow flex-col items-end'>
+                    <div className='flex grow flex-col items-end'>
+                      {/* Credits */}
                       <div
-                        data-ui={isPositive && 'active'}
-                        className={`grow text-right text-2xl font-bold ${balanceState.style}`}
+                        data-ui={
+                          transaction.creditsAmount > 0
+                            ? 'active'
+                            : 'not-active'
+                        }
+                        className='flex items-center gap-1 data-not-active:hidden'
                       >
-                        {balanceState.prefix}
-                        {transaction.amount}
+                        <div
+                          data-ui={isPositive && 'active'}
+                          className={`text-2xl font-bold ${balanceState.style}`}
+                        >
+                          {balanceState.prefix}
+                          {transaction.creditsAmount}
+                        </div>
+                        <div className='text-left text-xs text-stone-500'>
+                          元
+                        </div>
                       </div>
-                      <div className='max-w-[7ch] grow text-left text-xs text-stone-500'>
-                        {transaction.currency === CurrencyType.CREDIT
-                          ? '夢想幣'
-                          : '福利點數'}
+                      {/* Points */}
+                      <div
+                        data-ui={
+                          transaction.pointsAmount > 0 ? 'active' : 'not-active'
+                        }
+                        className='flex items-center gap-1 data-not-active:hidden'
+                      >
+                        <div
+                          data-ui={isPositive && 'active'}
+                          className={`text-2xl font-bold ${balanceState.style}`}
+                        >
+                          {balanceState.prefix}
+                          {transaction.pointsAmount}
+                        </div>
+                        <div className='text-left text-xs text-stone-500'>
+                          點
+                        </div>
                       </div>
                     </div>
                   </div>

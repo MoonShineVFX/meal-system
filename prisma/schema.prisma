@@ -9,11 +9,6 @@ datasource db {
   relationMode = "prisma"
 }
 
-enum CurrencyType {
-  POINT
-  CREDIT
-}
-
 enum TransactionType {
   RECHARGE
   PAYMENT
@@ -56,8 +51,8 @@ model Transaction {
   targetUser    User            @relation("target", fields: [targetUserId], references: [id])
   targetUserId  String
   type          TransactionType
-  pointsAmount  Int
-  creditsAmount Int
+  pointsAmount  Int             @default(0)
+  creditsAmount Int             @default(0)
   orders        Order[]
 
   @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])

@@ -1,10 +1,4 @@
-import {
-  PrismaClient,
-  Role,
-  TransactionType,
-  CurrencyType,
-  Prisma,
-} from '@prisma/client'
+import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client'
 import { tokenCache } from './cached'
 import { settings } from './settings'
 import { eventsCentral } from './event'
@@ -103,9 +97,8 @@ export async function rechargeUserCredits(
         data: {
           sourceUserId: sourceUserId,
           targetUserId: targetUserId,
-          amount: amount,
+          creditsAmount: amount,
           type: TransactionType.RECHARGE,
-          currency: CurrencyType.CREDIT,
         },
       }),
     ])
@@ -179,32 +172,17 @@ export async function chargeUserBalance(
         }),
       )
 
-      if (creditsChargeAmount > 0) {
-        operations.push(
-          client.transaction.create({
-            data: {
-              sourceUserId: userId,
-              targetUserId: settings.SERVER_USER_ID,
-              amount: creditsChargeAmount,
-              type: TransactionType.PAYMENT,
-              currency: CurrencyType.CREDIT,
-            },
-          }),
-        )
-      }
-      if (pointsChargeAmount > 0) {
-        operations.push(
-          client.transaction.create({
-            data: {
-              sourceUserId: userId,
-              targetUserId: settings.SERVER_USER_ID,
-              amount: pointsChargeAmount,
-              type: TransactionType.PAYMENT,
-              currency: CurrencyType.POINT,
-            },
-          }),
-        )
-      }
+      operations.push(
+        client.transaction.create({
+          data: {
+            sourceUserId: userId,
+            targetUserId: settings.SERVER_USER_ID,
+            creditsAmount: creditsChargeAmount,
+            pointsAmount: pointsChargeAmount,
+            type: TransactionType.PAYMENT,
+          },
+        }),
+      )
 
       await Promise.all(operations)
     })
@@ -234,7 +212,7 @@ export async function getTransactions(
       OR: [
         {
           sourceUserId: userId,
-          type: { in: [TransactionType.PAYMENT, TransactionType.RESERVE] },
+          type: { in: [TransactionType.PAYMENT, TransactionType.ORDER] },
         },
         {
           targetUserId: userId,
