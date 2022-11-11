@@ -21,11 +21,20 @@ export default function Payment(props: { isOpen: boolean }) {
   useEffect(() => {
     // Set default value
     if (props.isOpen) {
-      setUsingPoint(true)
+      if (!userData?.points) {
+        setUsingPoint(false)
+      }
       setTotalPaymentAmount(0)
       setStep(0)
     }
   }, [props.isOpen])
+
+  // Disable usepoint if user not have any points
+  useEffect(() => {
+    if (!userData?.points) {
+      setUsingPoint(false)
+    }
+  }, [userData?.points])
 
   const handleClose = () => {
     router.push('/')
@@ -108,11 +117,15 @@ export default function Payment(props: { isOpen: boolean }) {
             }}
           >
             <div
-              data-ui={(userData?.points ?? 0) > 0 ? 'active' : 'not-active'}
+              data-ui={userData?.points ? 'active' : 'not-active'}
               className='group/points flex items-center justify-between bg-stone-100 p-4 tall:rounded-t-xl'
             >
-              <p className='flex items-center gap-2 tracking-wider text-stone-600 group-data-not-active/points:opacity-40'>
-                <CircleStackIcon className='h-4 w-4 text-amber-600' />
+              <p
+                data-ui={isUsingPoint ? 'active' : 'not-active'}
+                className='group/usep flex items-center gap-2 tracking-wider text-stone-600 group-data-not-active/points:opacity-40'
+              >
+                <CircleStackIcon className='absolute h-4 w-4 animate-ping text-amber-400 group-data-not-active/points:hidden group-data-not-active/usep:hidden' />
+                <CircleStackIcon className='h-4 w-4 text-amber-500 group-data-not-active/usep:text-stone-400' />
                 使用福利點數折抵
               </p>
               <SwitchButton

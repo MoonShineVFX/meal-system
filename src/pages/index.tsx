@@ -8,6 +8,7 @@ import CountUp from 'react-countup'
 import { Popover, Transition } from '@headlessui/react'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
+import { useAtom } from 'jotai'
 
 import TransactionList from '@/components/TransactionsList'
 import trpc from '@/trpc/client/client'
@@ -62,7 +63,7 @@ export default function PageIndex() {
           {/* Points */}
           <div className='mt-4 flex w-full grow items-center justify-center gap-2'>
             <CircleStackIcon className='h-4 w-4 text-amber-800' />
-            <p className='text-lg font-semibold'>
+            <p className='text-lg font-semibold text-stone-800'>
               <CountUp
                 end={userData?.points ?? 0}
                 duration={0.5}

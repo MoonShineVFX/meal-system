@@ -12,6 +12,8 @@ export const settings = {
   PURGE_AMOUNT: 5000,
   /* Events */
   EVENT_EXPIRE_MINS: 10,
+  NOTIFICATION_DURATION: 3500,
+  NOTIFICATION_DELAY: 500,
   /* Database */
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
