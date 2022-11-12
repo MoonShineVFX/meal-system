@@ -14,12 +14,7 @@ import Spinner from './Spinner'
 export default function Payment(props: { isOpen: boolean }) {
   const router = useRouter()
   const [isUsingPoint, setUsingPoint] = useState(false)
-  const { data: userData } = trpc.user.info.useQuery(undefined, {
-    // Disable usepoint if user not have any points
-    onSuccess: (data) => {
-      if (data.points > 0) setUsingPoint(true)
-    },
-  })
+  const { data: userData } = trpc.user.info.useQuery(undefined)
   const [totalPaymentAmount, setTotalPaymentAmount] = useState(0)
   const [step, setStep] = useState(0)
   const chargeMutation = trpc.trade.charge.useMutation()
@@ -31,6 +26,9 @@ export default function Payment(props: { isOpen: boolean }) {
     if (props.isOpen) {
       setTotalPaymentAmount(0)
       setStep(0)
+      if (userData && userData?.points > 0) {
+        setUsingPoint(true)
+      }
     }
   }, [props.isOpen])
 
