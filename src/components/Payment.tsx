@@ -302,7 +302,7 @@ function PaymentDetail(props: {
       >
         {isNotEnough ? (
           <span className='rounded-md bg-red-600 px-2 py-1 font-normal text-white'>
-            金額不足
+            餘額不足
           </span>
         ) : (
           props.paymentAmount
