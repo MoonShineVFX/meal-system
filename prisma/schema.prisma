@@ -67,27 +67,27 @@ model Setting {
 }
 
 // TWMP
-enum TwmpPayStatus {
+enum TwmpStatus {
   SUCCESS
   FAILED
-  PENDING
+  INITIAL
 }
 
 model Twmp {
-  id            String        @id @default(cuid()) // orderNo
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id            String       @id @default(cuid()) // orderNo
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   transAMT      Int
-  txnID         String?       @unique
+  txnID         String?      @unique
   txnUID        String[]
-  txnDate       DateTime?     @db.Date
-  txnTime       DateTime?     @db.Time
-  payStatus     TwmpPayStatus @default(PENDING)
-  paymentTool   String
-  transaction   Transaction?  @relation(fields: [transactionId], references: [id])
-  transactionId Int?          @unique
-  user          User?         @relation(fields: [userId], references: [id])
-  userId        String?
+  txnDate       DateTime?    @db.Date
+  txnTime       DateTime?    @db.Time
+  status        TwmpStatus   @default(INITIAL)
+  paymentTool   String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  transactionId Int?         @unique
+  user          User         @relation(fields: [userId], references: [id])
+  userId        String
 }
 
 // Meal

@@ -3,7 +3,7 @@ import { User, TransactionType, Role } from '@prisma/client'
 /* Settings */
 export const settings = {
   /* Auth */
-  AUTH_API_URL: process.env.AUTH_API_URL,
+  AUTH_API_URL: process.env.AUTH_API_URL!,
   COOKIE_TOKEN_NAME: 'meal_token',
   COOKIE_EVENT_DATE_NAME: 'event_date',
   COOKIE_EXPIRE_DAYS: 14,
@@ -25,6 +25,13 @@ export const settings = {
   },
   /* Trade */
   TRANSACTIONS_PER_PAGE: 20,
+  /* TWMP */
+  TWMP_API_URL: process.env.TWMP_API_URL!,
+  TWMP_ACQ_BANK: process.env.TWMP_ACQ_BANK!,
+  TWMP_MERCHANT_ID: process.env.TWMP_MERCHANT_ID!,
+  TWMP_TERMINAL_ID: process.env.TWMP_TERMINAL_ID!,
+  TWMP_3DES_IV: process.env.TWMP_3DES_IV!,
+  TWMP_3DES_KEY: process.env.TWMP_3DES_KEY!,
 }
 
 /* Types */

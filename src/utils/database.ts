@@ -266,6 +266,17 @@ export async function getTransactions(
   return transactions
 }
 
+export async function initialTwmpPayment(amount: number, userId: string) {
+  const twmp = await prisma.twmp.create({
+    data: {
+      transAMT: amount,
+      userId: userId,
+    },
+  })
+
+  return twmp
+}
+
 /* Global */
 declare global {
   var prisma: PrismaClient | undefined
