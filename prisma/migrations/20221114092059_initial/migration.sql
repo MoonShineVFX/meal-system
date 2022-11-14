@@ -1,11 +1,11 @@
 -- CreateEnum
-CREATE TYPE "CurrencyType" AS ENUM ('POINT', 'CREDIT');
-
--- CreateEnum
 CREATE TYPE "TransactionType" AS ENUM ('RECHARGE', 'PAYMENT', 'ORDER', 'REFUND');
 
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('SERVER', 'ADMIN', 'STAFF', 'USER');
+
+-- CreateEnum
+CREATE TYPE "TwmpPayStatus" AS ENUM ('SUCCESS', 'FAILED', 'PENDING');
 
 -- CreateTable
 CREATE TABLE "AuthToken" (
@@ -35,8 +35,8 @@ CREATE TABLE "Transaction" (
     "sourceUserId" TEXT NOT NULL,
     "targetUserId" TEXT NOT NULL,
     "type" "TransactionType" NOT NULL,
-    "pointsAmount" INTEGER NOT NULL,
-    "creditsAmount" INTEGER NOT NULL,
+    "pointsAmount" INTEGER NOT NULL DEFAULT 0,
+    "creditsAmount" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
 );
@@ -48,6 +48,23 @@ CREATE TABLE "Setting" (
     "rechargeValue" INTEGER NOT NULL DEFAULT 500,
 
     CONSTRAINT "Setting_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Twmp" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "transAMT" INTEGER NOT NULL,
+    "txnID" TEXT,
+    "txnUID" TEXT[],
+    "txnDate" DATE,
+    "txnTime" TIME,
+    "payStatus" "TwmpPayStatus" NOT NULL DEFAULT 'PENDING',
+    "paymentTool" TEXT NOT NULL,
+    "transactionId" INTEGER,
+
+    CONSTRAINT "Twmp_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -108,6 +125,12 @@ CREATE TABLE "DayMenu" (
 
 -- CreateIndex
 CREATE INDEX "Transaction_sourceUserId_targetUserId_type_createdAt_idx" ON "Transaction"("sourceUserId", "targetUserId", "type", "createdAt" DESC);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Twmp_txnID_key" ON "Twmp"("txnID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Twmp_transactionId_key" ON "Twmp"("transactionId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Meal_menuId_key" ON "Meal"("menuId");

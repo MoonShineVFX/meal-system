@@ -54,6 +54,7 @@ model Transaction {
   pointsAmount  Int             @default(0)
   creditsAmount Int             @default(0)
   orders        Order[]
+  twmp          Twmp?
 
   @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
 }
@@ -62,6 +63,28 @@ model Setting {
   id               Int      @id @default(autoincrement())
   lastRechargeDate DateTime @default(now())
   rechargeValue    Int      @default(500)
+}
+
+// TWMP
+enum TwmpPayStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
+model Twmp {
+  id            String        @id @default(cuid()) // orderNo
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  transAMT      Int
+  txnID         String?       @unique
+  txnUID        String[]
+  txnDate       DateTime?     @db.Date
+  txnTime       DateTime?     @db.Time
+  payStatus     TwmpPayStatus @default(PENDING)
+  paymentTool   String
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id])
+  transactionId Int?          @unique
 }
 
 // Meal
