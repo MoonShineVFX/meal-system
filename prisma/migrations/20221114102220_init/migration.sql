@@ -63,6 +63,7 @@ CREATE TABLE "Twmp" (
     "payStatus" "TwmpPayStatus" NOT NULL DEFAULT 'PENDING',
     "paymentTool" TEXT NOT NULL,
     "transactionId" INTEGER,
+    "userId" TEXT,
 
     CONSTRAINT "Twmp_pkey" PRIMARY KEY ("id")
 );
