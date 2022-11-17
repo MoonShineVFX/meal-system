@@ -1,5 +1,4 @@
 import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client'
-import { tokenCache } from './cached'
 import { settings } from './settings'
 import { eventsCentral } from './event'
 
@@ -38,9 +37,7 @@ export async function createAuthToken(userId: string) {
     },
   })
 
-  const { authTokens: userAuthTokens, ...user } = authToken.user
-
-  await tokenCache.add(authToken.id, user)
+  const { authTokens: userAuthTokens } = authToken.user
 
   // Limit tokens per user
   if (userAuthTokens.length > settings.TOKEN_COUNT_PER_USER) {
@@ -58,18 +55,12 @@ export async function createAuthToken(userId: string) {
 }
 
 export async function validateAuthToken(token: string) {
-  // Find cached tokens first
-  if (await tokenCache.has(token)) return await tokenCache.getUser(token)
-
   // If not found, find in db
   const authToken = await prisma.authToken.findUnique({
     where: { id: token },
     include: { user: { select: { id: true, name: true, role: true } } },
   })
   if (!authToken) return null
-
-  // Cache token and purge old tokens
-  await tokenCache.add(authToken.id, authToken.user)
 
   return authToken.user
 }
