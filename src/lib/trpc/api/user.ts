@@ -4,7 +4,6 @@ import { z } from 'zod'
 
 import { createAuthToken, ensureUser, getUserInfo } from '@/lib/server/database'
 import { settings, generateCookie } from '@/lib/common'
-import secrets from '@/lib/server/secrets'
 
 import { userProcedure, publicProcedure, router } from '../trpc'
 
@@ -55,7 +54,7 @@ export const UserRouter = router({
         user = await ensureUser(input.username, input.username)
       } else {
         // Validate from LDAP
-        const adTokenResponse = await fetch(`${secrets.AUTH_API_URL}/login`, {
+        const adTokenResponse = await fetch(`${settings.AUTH_API_URL}/login`, {
           method: 'POST',
           headers: {
             Authorization: `Basic ${Buffer.from(
@@ -72,9 +71,12 @@ export const UserRouter = router({
         }
 
         const adToken = await adTokenResponse.text()
-        const userAdDataResponse = await fetch(`${secrets.AUTH_API_URL}/user`, {
-          headers: { Authorization: `auth_token ${adToken}` },
-        })
+        const userAdDataResponse = await fetch(
+          `${settings.AUTH_API_URL}/user`,
+          {
+            headers: { Authorization: `auth_token ${adToken}` },
+          },
+        )
 
         if (!userAdDataResponse.ok) {
           throw new TRPCError({

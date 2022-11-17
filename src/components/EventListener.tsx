@@ -1,15 +1,32 @@
 import { Role } from '@prisma/client'
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useAtom } from 'jotai'
 
 import { addNotificationAtom, NotificationType } from './Notification'
 import trpc from '@/lib/client/trpc'
+import pusherClient from '@/lib/client/pusher'
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
-  const [eventDate, setEventDate] = useState(new Date())
-  const userInfoQuery = trpc.user.info.useQuery(undefined)
   const [, addNotification] = useAtom(addNotificationAtom)
+
+  useEffect(() => {
+    const channel = pusherClient.subscribe('test-channel')
+    channel.bind('transaction-event', (data: any) => {
+      console.warn('Data coming!!')
+      console.warn(data)
+      // revalidate userinfo
+      trpcContext.user.info.invalidate()
+      // update transcations
+      for (const role of Object.keys(Role)) {
+        updateTranscations(role as Role)
+      }
+    })
+    return () => {
+      channel.unbind_all()
+      channel.unsubscribe()
+    }
+  })
 
   const updateTranscations = async (role: Role) => {
     const data = trpcContext.trade.listTransactions.getInfiniteData({ role })
@@ -60,28 +77,5 @@ export default function EventListener() {
       { role },
     )
   }
-
-  // Polling for new events
-  trpc.events.useQuery(
-    { eventDate: eventDate },
-    {
-      enabled: userInfoQuery.isSuccess,
-      refetchInterval: 1000,
-      onSuccess: async (data) => {
-        if (data.length === 0) return
-
-        /* Handle events */
-        // revalidate userinfo
-        trpcContext.user.info.invalidate()
-        // update transcations
-        for (const role of Object.keys(Role)) {
-          updateTranscations(role as Role)
-        }
-
-        // set event date to latest
-        setEventDate(data[data.length - 1].date)
-      },
-    },
-  )
   return null
 }

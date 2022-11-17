@@ -1,7 +1,7 @@
 import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client'
 
 import { settings } from '@/lib/common'
-import { eventsCentral } from './event'
+import pusherServer from './pusher'
 
 /* Functions */
 export async function ensureUser(userId: string, name: string) {
@@ -98,11 +98,8 @@ export async function rechargeUserCredits(
     return error
   }
 
-  // Create recharge record
-  eventsCentral.add({
-    sourceUserId: sourceUserId,
-    targetUserId: targetUserId,
-    type: TransactionType.RECHARGE,
+  pusherServer.trigger('test-channel', 'transaction-event', {
+    message: `Recharge ${amount} credits to ${targetUserId}`,
   })
 
   return true
@@ -182,11 +179,8 @@ export async function chargeUserBalance(
     return error
   }
 
-  // Add event
-  eventsCentral.add({
-    sourceUserId: userId,
-    targetUserId: settings.SERVER_USER_ID,
-    type: TransactionType.PAYMENT,
+  pusherServer.trigger('test-channel', 'transaction-event', {
+    message: `Charge ${amount} credits from ${userId}`,
   })
 
   return true
