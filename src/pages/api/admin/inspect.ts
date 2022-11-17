@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { tokenCache } from '@/utils/cached'
-import superjson from 'superjson'
-import { settings } from '@/utils/settings'
-import { validateAuthToken } from '@/utils/database'
-import { validateRole } from '@/utils/settings'
 import { Role } from '@prisma/client'
-import { eventsCentral } from '@/utils/event'
+import superjson from 'superjson'
+
+import { tokenCache } from '@/lib/server/cached'
+import { validateAuthToken } from '@/lib/server/database'
+import { validateRole, settings } from '@/lib/common'
+import { eventsCentral } from '@/lib/server/event'
 
 export default async function handler(
   req: NextApiRequest,

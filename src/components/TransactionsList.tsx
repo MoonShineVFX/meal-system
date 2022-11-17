@@ -5,8 +5,8 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useInView } from 'react-intersection-observer'
 
 import Spinner from './Spinner'
-import trpc from '@/trpc/client/client'
-import { settings } from '@/utils/settings'
+import trpc from '@/lib/client/trpc'
+import { settings } from '@/lib/common'
 import { Role } from '@prisma/client'
 
 export default function TransactionList(props: {

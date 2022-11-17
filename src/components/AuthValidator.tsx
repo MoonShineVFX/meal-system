@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import Spinner from '@/components/Spinner'
-import trpc from '@/trpc/client/client'
+import trpc from '@/lib/client/trpc'
 
 export default function AuthListener() {
   const userInfoQuery = trpc.user.info.useQuery(undefined)

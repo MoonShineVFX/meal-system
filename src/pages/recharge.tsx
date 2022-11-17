@@ -1,5 +1,6 @@
-import trpc from '@/trpc/client/client'
 import { FormEvent } from 'react'
+
+import trpc from '@/lib/client/trpc'
 
 interface RechargeFormElements extends HTMLFormControlsCollection {
   targetUserId: HTMLSelectElement

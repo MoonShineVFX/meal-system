@@ -1,5 +1,6 @@
-import trpc from '@/trpc/client/client'
 import type { AppType } from 'next/app'
+
+import trpc from '@/lib/client/trpc'
 import EventListener from '@/components/EventListener'
 import AuthListener from '@/components/AuthValidator'
 import Notification from '@/components/Notification'

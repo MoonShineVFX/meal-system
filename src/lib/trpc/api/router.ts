@@ -1,8 +1,10 @@
-import { router, userProcedure } from '../server'
+import { z } from 'zod'
+
+import { eventsCentral } from '@/lib/server/event'
+
+import { router, userProcedure } from '../trpc'
 import { UserRouter } from './user'
 import { TradeRouter } from './trade'
-import { eventsCentral } from '@/utils/event'
-import { z } from 'zod'
 
 export const appRouter = router({
   user: UserRouter,

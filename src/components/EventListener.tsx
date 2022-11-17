@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useAtom } from 'jotai'
 
 import { addNotificationAtom, NotificationType } from './Notification'
-import trpc from '@/trpc/client/client'
+import trpc from '@/lib/client/trpc'
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()

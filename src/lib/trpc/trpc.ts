@@ -1,10 +1,10 @@
-import { validateAuthToken } from '@/utils/database'
 import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
 import { Role } from '@prisma/client'
-import { settings, UserLite } from '@/utils/settings'
 import superjson from 'superjson'
-import { validateRole } from '@/utils/settings'
+
+import { validateAuthToken } from '@/lib/server/database'
+import { settings, UserLite, validateRole } from '@/lib/common'
 
 /* Context */
 export async function createContext({

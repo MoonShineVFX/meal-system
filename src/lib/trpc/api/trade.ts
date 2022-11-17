@@ -1,13 +1,15 @@
-import { adminProcedure, userProcedure, router } from '../server'
+import { Role } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+
 import {
   rechargeUserCredits,
   chargeUserBalance,
   getTransactions,
-} from '@/utils/database'
-import { Role } from '@prisma/client'
-import { settings, validateRole } from '@/utils/settings'
+} from '@/lib/server/database'
+import { settings, validateRole } from '@/lib/common'
+
+import { adminProcedure, userProcedure, router } from '../trpc'
 
 export const TradeRouter = router({
   recharge: adminProcedure

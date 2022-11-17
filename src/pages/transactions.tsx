@@ -2,8 +2,8 @@ import TransactionList from '@/components/TransactionsList'
 import { Tab } from '@headlessui/react'
 import { Role } from '@prisma/client'
 
-import { validateRole } from '@/utils/settings'
-import trpc from '@/trpc/client/client'
+import { validateRole } from '@/lib/common'
+import trpc from '@/lib/client/trpc'
 
 export default function PageTransactions() {
   const { data: userData } = trpc.user.info.useQuery(undefined)

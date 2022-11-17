@@ -1,9 +1,10 @@
-import trpc from '@/trpc/client/client'
 import { useRouter } from 'next/router'
 import { FormEvent, useEffect } from 'react'
-import { generateCookie } from '@/utils/settings'
-import Spinner from '@/components/Spinner'
 import { useAtom } from 'jotai'
+
+import trpc from '@/lib/client/trpc'
+import { generateCookie } from '@/lib/common'
+import Spinner from '@/components/Spinner'
 import {
   addNotificationAtom,
   NotificationType,

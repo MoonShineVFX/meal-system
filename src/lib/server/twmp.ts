@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js'
 
-import { settings } from './settings'
+import secrets from './secrets'
 
 type CreateTwmpPaymentResponse<T> = T extends true
   ? { callbackUrl: string; txnID: string }
@@ -14,9 +14,9 @@ export async function createTwmpPayment<T extends boolean>(
   isMobile: T,
 ) {
   const requestBody: { [key: string]: string } = {
-    acqBank: settings.TWMP_ACQ_BANK,
-    merchantId: settings.TWMP_MERCHANT_ID,
-    terminalId: settings.TWMP_TERMINAL_ID,
+    acqBank: secrets.TWMP_ACQ_BANK,
+    merchantId: secrets.TWMP_MERCHANT_ID,
+    terminalId: secrets.TWMP_TERMINAL_ID,
     orderNo: orderNo,
     transAMT: amount.toString(),
     currency: '901',
@@ -50,7 +50,7 @@ export async function createTwmpPayment<T extends boolean>(
   }
 
   const response = await fetch(
-    `${settings.TWMP_API_URL}/WebQR/api/MerchantNotifyTwmpTrans`,
+    `${secrets.TWMP_API_URL}/WebQR/api/MerchantNotifyTwmpTrans`,
     {
       method: 'POST',
       headers: {
@@ -106,9 +106,9 @@ function encodeVerifyCode(inputs: string[]) {
   const inputsHash = CryptoJS.SHA256(inputs.join(''))
   return CryptoJS.TripleDES.encrypt(
     inputsHash,
-    CryptoJS.enc.Hex.parse(settings.TWMP_3DES_KEY),
+    CryptoJS.enc.Hex.parse(secrets.TWMP_3DES_KEY),
     {
-      iv: CryptoJS.enc.Hex.parse(settings.TWMP_3DES_IV),
+      iv: CryptoJS.enc.Hex.parse(secrets.TWMP_3DES_IV),
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.NoPadding,
     },

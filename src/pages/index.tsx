@@ -10,7 +10,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
 import TransactionList from '@/components/TransactionsList'
-import trpc from '@/trpc/client/client'
+import trpc from '@/lib/client/trpc'
 import Payment from '@/components/Payment'
 
 export default function PageIndex() {

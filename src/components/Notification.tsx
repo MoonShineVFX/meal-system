@@ -4,7 +4,7 @@ import { CheckCircleIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { XCircleIcon } from '@heroicons/react/24/outline'
 
-import { settings } from '@/utils/settings'
+import { settings } from '@/lib/common'
 
 /* Type */
 export enum NotificationType {

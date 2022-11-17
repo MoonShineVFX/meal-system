@@ -7,7 +7,7 @@ import { Role } from '@prisma/client'
 import { useAtom } from 'jotai'
 
 import { addNotificationAtom, NotificationType } from './Notification'
-import trpc from '@/trpc/client/client'
+import trpc from '@/lib/client/trpc'
 import SwitchButton from './SwitchButton'
 import Spinner from './Spinner'
 

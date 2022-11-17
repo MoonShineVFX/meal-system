@@ -1,5 +1,6 @@
 import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client'
-import { settings } from './settings'
+
+import { settings } from '@/lib/common'
 import { eventsCentral } from './event'
 
 /* Functions */
@@ -278,7 +279,7 @@ const prisma =
   new PrismaClient({
     log:
       process.env.NODE_ENV !== 'production'
-        ? ['query', 'error', 'warn']
+        ? ['error', 'warn'] // ['query'] if wanted
         : ['error'],
   })
 

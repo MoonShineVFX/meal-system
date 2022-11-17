@@ -1,5 +1,6 @@
 import { TransactionType, Role } from '@prisma/client'
-import { settings, validateRole } from './settings'
+
+import { settings, validateRole } from '@/lib/common'
 
 type Event = {
   date: Date

@@ -1,9 +1,12 @@
 import { User } from '@prisma/client'
-import { userProcedure, publicProcedure, router } from '../server'
-import { createAuthToken, ensureUser, getUserInfo } from '@/utils/database'
-import { settings, generateCookie } from '@/utils/settings'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+
+import { createAuthToken, ensureUser, getUserInfo } from '@/lib/server/database'
+import { settings, generateCookie } from '@/lib/common'
+import secrets from '@/lib/server/secrets'
+
+import { userProcedure, publicProcedure, router } from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -52,7 +55,7 @@ export const UserRouter = router({
         user = await ensureUser(input.username, input.username)
       } else {
         // Validate from LDAP
-        const adTokenResponse = await fetch(`${settings.AUTH_API_URL}/login`, {
+        const adTokenResponse = await fetch(`${secrets.AUTH_API_URL}/login`, {
           method: 'POST',
           headers: {
             Authorization: `Basic ${Buffer.from(
@@ -69,12 +72,9 @@ export const UserRouter = router({
         }
 
         const adToken = await adTokenResponse.text()
-        const userAdDataResponse = await fetch(
-          `${settings.AUTH_API_URL}/user`,
-          {
-            headers: { Authorization: `auth_token ${adToken}` },
-          },
-        )
+        const userAdDataResponse = await fetch(`${secrets.AUTH_API_URL}/user`, {
+          headers: { Authorization: `auth_token ${adToken}` },
+        })
 
         if (!userAdDataResponse.ok) {
           throw new TRPCError({

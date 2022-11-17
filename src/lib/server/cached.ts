@@ -1,4 +1,4 @@
-import { settings, UserLite } from './settings'
+import { settings, UserLite } from '@/lib/common'
 
 /* Define */
 class TokenCache {
