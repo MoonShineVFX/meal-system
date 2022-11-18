@@ -26,8 +26,9 @@ const pusherServer =
     appId: settings.PUSHER_APP_ID,
     key: settings.PUSHER_KEY,
     secret: settings.PUSHER_SECRET,
-    cluster: settings.PUSHER_CLUSTER,
-    useTLS: process.env.NODE_ENV === 'production',
+    host: settings.PUSHER_HOST,
+    useTLS: true,
+    port: '443',
   })
 
 if (process.env.NODE_ENV !== 'production') {

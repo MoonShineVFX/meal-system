@@ -36,7 +36,7 @@ export const settings = {
   PUSHER_APP_ID: process.env.PUSHER_APP_ID!,
   PUSHER_KEY: process.env.NEXT_PUBLIC_PUSHER_KEY!,
   PUSHER_SECRET: process.env.PUSHER_SECRET!,
-  PUSHER_CLUSTER: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+  PUSHER_HOST: process.env.NEXT_PUBLIC_PUSHER_HOST!,
 }
 
 /* Types */

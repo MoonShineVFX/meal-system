@@ -27,7 +27,10 @@ declare global {
 const pusherClient =
   global.pusherClient ??
   new Pusher(settings.PUSHER_KEY, {
-    cluster: settings.PUSHER_CLUSTER,
+    wsHost: settings.PUSHER_HOST,
+    forceTLS: true,
+    disableStats: true,
+    enabledTransports: ['ws', 'wss'],
   })
 
 if (process.env.NODE_ENV !== 'production') {

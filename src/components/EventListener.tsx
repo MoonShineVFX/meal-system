@@ -24,7 +24,8 @@ export default function EventListener() {
     })
     return () => {
       channel.unbind_all()
-      channel.unsubscribe()
+      // TODO: how to unsubscribe from React strict?
+      // channel.unsubscribe()
     }
   })
 
