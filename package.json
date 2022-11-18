@@ -28,6 +28,7 @@
     "@types/pusher-js": "^5.1.0",
     "@types/react": "18.0.24",
     "@types/react-countup": "^4.3.1",
+    "@types/crypto-js": "^4.1.1",
     "autoprefixer": "^10.4.13",
     "crypto-js": "^4.1.1",
     "jotai": "^1.9.2",
@@ -49,7 +50,6 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
-    "@types/crypto-js": "^4.1.1",
     "prettier": "^2.7.1",
     "prettier-plugin-tailwindcss": "^0.1.13",
     "ts-node": "^10.9.1"
