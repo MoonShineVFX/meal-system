@@ -1,82 +1,42 @@
 import { Role } from '@prisma/client'
-import { useEffect } from 'react'
 import { useAtom } from 'jotai'
+import { useEffect, useRef } from 'react'
+import Pusher from 'pusher-js'
 
 import { addNotificationAtom, NotificationType } from './Notification'
 import trpc from '@/lib/client/trpc'
-import pusherClient from '@/lib/client/pusher'
+import { settings, Event } from '@/lib/common'
+
+Pusher.logToConsole = process.env.NODE_ENV !== 'production'
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
   const [, addNotification] = useAtom(addNotificationAtom)
+  const pusher = useRef<Pusher | null>(null)
+  const userInfoQuery = trpc.user.info.useQuery(undefined)
 
   useEffect(() => {
-    const channel = pusherClient.subscribe('test-channel')
-    channel.bind('transaction-event', (data: any) => {
-      console.warn('Data coming!!')
-      console.warn(data)
-      // revalidate userinfo
-      trpcContext.user.info.invalidate()
-      // update transcations
-      for (const role of Object.keys(Role)) {
-        updateTranscations(role as Role)
-      }
-    })
-    return () => {
-      channel.unbind_all()
-      // TODO: how to unsubscribe from React strict?
-      // channel.unsubscribe()
-    }
-  })
-
-  const updateTranscations = async (role: Role) => {
-    const data = trpcContext.trade.listTransactions.getInfiniteData({ role })
-    if (
-      !data ||
-      data.pages.length === 0 ||
-      data.pages[0].transactions.length === 0
-    )
-      return
-
-    const { transactions: newTransactions } =
-      await trpcContext.trade.listTransactions.fetch({
-        until: data.pages[0].transactions[0].id,
-        role,
+    if (userInfoQuery.data && !pusher.current) {
+      // Create pusher
+      pusher.current = new Pusher(settings.PUSHER_KEY, {
+        wsHost: settings.PUSHER_HOST,
+        forceTLS: true,
+        enabledTransports: ['ws', 'wss'],
+        userAuthentication: {
+          endpoint: '/api/pusher/user-auth',
+          transport: 'ajax',
+        },
       })
-
-    if (role === Role.STAFF) {
-      for (const newTranscation of newTransactions.slice().reverse()) {
-        let paymentStrings: string[] = []
-        if (newTranscation.creditsAmount > 0) {
-          paymentStrings.push(`${newTranscation.creditsAmount} 元`)
-        }
-        if (newTranscation.pointsAmount > 0) {
-          paymentStrings.push(`${newTranscation.pointsAmount} 點`)
-        }
-        addNotification({
-          type: NotificationType.INFO,
-          message: `${
-            newTranscation.sourceUser.name
-          } 付款 ${paymentStrings.join(' 和 ')}`,
-        })
-      }
+      // Subscribe to pusher channel
+      pusher.current.user.bind(Event.USER_TRANSACTION, (data: any) => {
+        // revalidate userinfo
+        trpcContext.user.info.invalidate()
+        // update transcations
+        trpcContext.trade.listTransactions.invalidate({ role: Role.USER })
+      })
+      pusher.current.signin()
     }
+  }, [userInfoQuery.data])
 
-    trpcContext.trade.listTransactions.setInfiniteData(
-      (data) => {
-        return {
-          pages: data!.pages.map((page, i) => {
-            if (i !== 0) return page
-            return {
-              transactions: [...newTransactions, ...page.transactions],
-              nextCursor: page.nextCursor,
-            }
-          }),
-          pageParams: data!.pageParams,
-        }
-      },
-      { role },
-    )
-  }
   return null
 }

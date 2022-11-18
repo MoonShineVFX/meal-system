@@ -42,6 +42,12 @@ export const settings = {
 /* Types */
 export type UserLite = Pick<User, 'id' | 'name' | 'role'>
 
+export const Event = {
+  USER_TRANSACTION: 'user_transaction',
+  STAFF_TRANSACTION: 'staff_transaction',
+  ADMIN_TRANSACTION: 'admin_transaction',
+}
+
 /* Functions */
 export function generateCookie(token: string | undefined) {
   const expireTime = token ? settings.COOKIE_EXPIRE_DAYS * 24 * 60 * 60 : 0

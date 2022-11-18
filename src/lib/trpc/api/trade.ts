@@ -61,7 +61,6 @@ export const TradeRouter = router({
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
-        until: z.number().int().positive().optional(),
         role: z.enum([Role.USER, Role.STAFF, Role.ADMIN, Role.SERVER]),
       }),
     )
@@ -78,14 +77,10 @@ export const TradeRouter = router({
       const transactions = await getTransactions(
         ctx.userLite.id,
         input.cursor,
-        input.until,
         input.role,
       )
       let nextCursor: number | undefined = undefined
-      if (
-        !input.until &&
-        transactions.length > settings.TRANSACTIONS_PER_PAGE
-      ) {
+      if (transactions.length > settings.TRANSACTIONS_PER_PAGE) {
         nextCursor = transactions.pop()!.id
       }
       return {

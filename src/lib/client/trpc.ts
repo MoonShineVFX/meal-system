@@ -1,4 +1,4 @@
-import { httpBatchLink } from '@trpc/client'
+import { httpBatchLink, loggerLink } from '@trpc/client'
 import { createTRPCNext } from '@trpc/next'
 import superjson from 'superjson'
 
@@ -13,6 +13,12 @@ const trpc = createTRPCNext<AppRouter>({
   config({ ctx }) {
     return {
       links: [
+        loggerLink({
+          enabled: (opts) =>
+            (process.env.NODE_ENV !== 'production' &&
+              typeof window !== 'undefined') ||
+            (opts.direction === 'down' && opts.result instanceof Error),
+        }),
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
         }),
@@ -23,6 +29,7 @@ const trpc = createTRPCNext<AppRouter>({
           queries: {
             retry: false,
             refetchOnMount: false,
+            refetchOnWindowFocus: false,
           },
           mutations: {
             retry: false,

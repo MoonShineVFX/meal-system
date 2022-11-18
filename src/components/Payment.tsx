@@ -1,9 +1,8 @@
 import { useRouter } from 'next/router'
 import VirtualNumpad from './VirtualNumpad'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { CircleStackIcon } from '@heroicons/react/24/solid'
 import { Transition } from '@headlessui/react'
-import { Role } from '@prisma/client'
 import { useAtom } from 'jotai'
 
 import { addNotificationAtom, NotificationType } from './Notification'
@@ -18,8 +17,21 @@ export default function Payment(props: { isOpen: boolean }) {
   const [totalPaymentAmount, setTotalPaymentAmount] = useState(0)
   const [step, setStep] = useState(0)
   const chargeMutation = trpc.trade.charge.useMutation()
-  const trpcContext = trpc.useContext()
   const [, addNotification] = useAtom(addNotificationAtom)
+
+  const pointsPaymentAmount = useMemo(
+    () =>
+      isUsingPoint ? Math.min(totalPaymentAmount, userData?.points ?? 0) : 0,
+    [isUsingPoint, totalPaymentAmount, userData?.points],
+  )
+  const creditsPaymentAmount = useMemo(
+    () => totalPaymentAmount - pointsPaymentAmount,
+    [totalPaymentAmount, pointsPaymentAmount],
+  )
+  const isNotEnough = useMemo(
+    () => creditsPaymentAmount > (userData?.credits ?? 0),
+    [creditsPaymentAmount, userData?.credits],
+  )
 
   useEffect(() => {
     // Set default value
@@ -52,8 +64,6 @@ export default function Payment(props: { isOpen: boolean }) {
             type: NotificationType.SUCCESS,
             message: '付款成功',
           })
-          trpcContext.user.info.invalidate(undefined)
-          trpcContext.trade.listTransactions.invalidate({ role: Role.USER })
           handleClose()
         },
         onError: async () => {
@@ -65,12 +75,6 @@ export default function Payment(props: { isOpen: boolean }) {
       },
     )
   }
-
-  const pointsPaymentAmount = isUsingPoint
-    ? Math.min(totalPaymentAmount, userData?.points ?? 0)
-    : 0
-  const creditsPaymentAmount = totalPaymentAmount - pointsPaymentAmount
-  const isNotEnough = creditsPaymentAmount > (userData?.credits ?? 0)
 
   return (
     <>
@@ -238,16 +242,16 @@ function PaymentPanel(props: {
       {/* Payment detail */}
       <div className='flex flex-col gap-2'>
         <PaymentDetail
-          active={props.isUsingPoint}
-          paymentAmount={props.pointsPaymentAmount}
-          label='福利點數'
-          currentAmount={props.pointsCurrentAmount}
-        />
-        <PaymentDetail
           active={true}
           paymentAmount={props.creditsPaymentAmount}
           label='夢想幣'
           currentAmount={props.creditsCurrentAmount}
+        />
+        <PaymentDetail
+          active={props.isUsingPoint}
+          paymentAmount={props.pointsPaymentAmount}
+          label='福利點數'
+          currentAmount={props.pointsCurrentAmount}
         />
       </div>
       {/* Confirm Buttons */}

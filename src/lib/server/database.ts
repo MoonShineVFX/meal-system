@@ -1,6 +1,6 @@
 import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client'
 
-import { settings } from '@/lib/common'
+import { settings, Event } from '@/lib/common'
 import pusherServer from './pusher'
 
 /* Functions */
@@ -98,7 +98,7 @@ export async function rechargeUserCredits(
     return error
   }
 
-  pusherServer.trigger('test-channel', 'transaction-event', {
+  pusherServer.sendToUser(targetUserId, Event.USER_TRANSACTION, {
     message: `Recharge ${amount} credits to ${targetUserId}`,
   })
 
@@ -112,7 +112,7 @@ export async function chargeUserBalance(
 ) {
   // Charge user and create charge record
   try {
-    await prisma.$transaction(async (client) => {
+    const currentTransaction = await prisma.$transaction(async (client) => {
       /* Validate */
       // Check user has enough balance
       const user = await client.user.findUnique({
@@ -161,27 +161,29 @@ export async function chargeUserBalance(
         }),
       )
 
-      operations.push(
-        client.transaction.create({
-          data: {
-            sourceUserId: userId,
-            targetUserId: settings.SERVER_USER_ID,
-            creditsAmount: creditsChargeAmount,
-            pointsAmount: pointsChargeAmount,
-            type: TransactionType.PAYMENT,
-          },
-        }),
-      )
-
       await Promise.all(operations)
+      const transaction = await client.transaction.create({
+        data: {
+          sourceUserId: userId,
+          targetUserId: settings.SERVER_USER_ID,
+          creditsAmount: creditsChargeAmount,
+          pointsAmount: pointsChargeAmount,
+          type: TransactionType.PAYMENT,
+        },
+      })
+      return transaction
+    })
+
+    pusherServer.sendToUser(userId, Event.USER_TRANSACTION, {
+      message: `Charge ${amount} credits from ${userId}`,
+      extraData: {
+        isUsingPoint: isUsingPoint,
+        transaction: currentTransaction,
+      },
     })
   } catch (error) {
     return error
   }
-
-  pusherServer.trigger('test-channel', 'transaction-event', {
-    message: `Charge ${amount} credits from ${userId}`,
-  })
 
   return true
 }
@@ -189,7 +191,6 @@ export async function chargeUserBalance(
 export async function getTransactions(
   userId: string | undefined,
   cursor: number | undefined,
-  until: number | undefined,
   role: Role,
 ) {
   let whereQuery: Prisma.TransactionWhereInput
@@ -224,12 +225,7 @@ export async function getTransactions(
 
   const transactions = await prisma.transaction.findMany({
     where: {
-      AND: [
-        whereQuery,
-        {
-          id: until ? { gt: until } : undefined,
-        },
-      ],
+      AND: [whereQuery],
     },
     orderBy: {
       id: 'desc',
