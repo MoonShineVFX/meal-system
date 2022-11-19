@@ -1,42 +1,97 @@
 import { Role } from '@prisma/client'
 import { useAtom } from 'jotai'
-import { useEffect, useRef } from 'react'
-import Pusher from 'pusher-js'
 
 import { addNotificationAtom, NotificationType } from './Notification'
+import { addTransactionListAtom } from './TransactionsList'
 import trpc from '@/lib/client/trpc'
-import { settings, Event } from '@/lib/common'
+import { validateRole, TransactionWithName } from '@/lib/common'
 
-Pusher.logToConsole = process.env.NODE_ENV !== 'production'
+function makePaymentString(transaction: TransactionWithName) {
+  let paymentStrings: string[] = []
+  if (transaction.creditsAmount > 0) {
+    paymentStrings.push(`${transaction.creditsAmount} 元`)
+  }
+  if (transaction.pointsAmount > 0) {
+    paymentStrings.push(`${transaction.pointsAmount} 點`)
+  }
+
+  return `付款 ${paymentStrings.join(' 和 ')}`
+}
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
-  const [, addNotification] = useAtom(addNotificationAtom)
-  const pusher = useRef<Pusher | null>(null)
   const userInfoQuery = trpc.user.info.useQuery(undefined)
+  const [, addNotification] = useAtom(addNotificationAtom)
+  const [, addTransactionList] = useAtom(addTransactionListAtom)
 
-  useEffect(() => {
-    if (userInfoQuery.data && !pusher.current) {
-      // Create pusher
-      pusher.current = new Pusher(settings.PUSHER_KEY, {
-        wsHost: settings.PUSHER_HOST,
-        forceTLS: true,
-        enabledTransports: ['ws', 'wss'],
-        userAuthentication: {
-          endpoint: '/api/pusher/user-auth',
-          transport: 'ajax',
-        },
-      })
-      // Subscribe to pusher channel
-      pusher.current.user.bind(Event.USER_TRANSACTION, (data: any) => {
-        // revalidate userinfo
+  /* User Transactions */
+  trpc.trade.onTransactionAdd.useSubscription(
+    { role: Role.USER },
+    {
+      onData: async (transaction) => {
         trpcContext.user.info.invalidate()
-        // update transcations
-        trpcContext.trade.listTransactions.invalidate({ role: Role.USER })
-      })
-      pusher.current.signin()
-    }
-  }, [userInfoQuery.data])
+        addNotification({
+          type: NotificationType.SUCCESS,
+          message: `成功${makePaymentString(transaction)}`,
+        })
+        addTransactionList({ role: Role.USER, transactions: [transaction] })
+      },
+      onError: async (err) => {
+        addNotification({
+          type: NotificationType.ERROR,
+          message: err.message,
+        })
+      },
+    },
+  )
+
+  /* Staff Transactions */
+  if (validateRole(userInfoQuery.data!.role, Role.STAFF)) {
+    trpc.trade.onTransactionAdd.useSubscription(
+      { role: Role.STAFF },
+      {
+        onData: async (transaction) => {
+          addTransactionList({
+            role: Role.STAFF,
+            transactions: [transaction],
+          })
+          addNotification({
+            type: NotificationType.SUCCESS,
+            message: `${transaction.sourceUser.name} ${makePaymentString(
+              transaction,
+            )}`,
+          })
+        },
+        onError: async (err) => {
+          addNotification({
+            type: NotificationType.ERROR,
+            message: err.message,
+          })
+        },
+      },
+    )
+  }
+
+  /* Admin Transactions */
+  if (validateRole(userInfoQuery.data!.role, Role.ADMIN)) {
+    trpc.trade.onTransactionAdd.useSubscription(
+      { role: Role.ADMIN },
+      {
+        onData: async (transaction) => {
+          addTransactionList({
+            role: Role.ADMIN,
+            transactions: [transaction],
+          })
+        },
+        onError: async (err) => {
+          addNotification({
+            type: NotificationType.ERROR,
+            message: err.message,
+          })
+        },
+      },
+    )
+  }
 
   return null
 }

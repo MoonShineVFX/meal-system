@@ -1,11 +1,9 @@
-import { User, TransactionType, Role } from '@prisma/client'
+import { User, TransactionType, Role, Transaction } from '@prisma/client'
 
 /* Settings */
 export const settings = {
   /* Auth */
-  AUTH_API_URL: process.env.AUTH_API_URL!,
   COOKIE_TOKEN_NAME: 'meal_token',
-  COOKIE_EVENT_DATE_NAME: 'event_date',
   COOKIE_EXPIRE_DAYS: 14,
   /* Cached */
   CACHED_MAX_LENGTH: 10000,
@@ -32,26 +30,26 @@ export const settings = {
   TWMP_TERMINAL_ID: process.env.TWMP_TERMINAL_ID!,
   TWMP_3DES_IV: process.env.TWMP_3DES_IV!,
   TWMP_3DES_KEY: process.env.TWMP_3DES_KEY!,
-  /* Pusher */
-  PUSHER_APP_ID: process.env.PUSHER_APP_ID!,
-  PUSHER_KEY: process.env.NEXT_PUBLIC_PUSHER_KEY!,
-  PUSHER_SECRET: process.env.PUSHER_SECRET!,
-  PUSHER_HOST: process.env.NEXT_PUBLIC_PUSHER_HOST!,
+  /* URL */
+  AUTH_API_URL: process.env.AUTH_API_URL!,
+  WEBSOCKET_URL: process.env.NEXT_PUBLIC_WEBSOCKET_URL!,
 }
 
 /* Types */
 export type UserLite = Pick<User, 'id' | 'name' | 'role'>
-
-export const Event = {
-  USER_TRANSACTION: 'user_transaction',
-  STAFF_TRANSACTION: 'staff_transaction',
-  ADMIN_TRANSACTION: 'admin_transaction',
+export type TransactionWithName = Transaction & {
+  sourceUser: {
+    name: string
+  }
+  targetUser: {
+    name: string
+  }
 }
 
 /* Functions */
 export function generateCookie(token: string | undefined) {
   const expireTime = token ? settings.COOKIE_EXPIRE_DAYS * 24 * 60 * 60 : 0
-  return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict; HttpOnlyl`
+  return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict`
 }
 
 export function validateRole(sourceRole: Role, targetRole: Role) {

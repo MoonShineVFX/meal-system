@@ -1,4 +1,3 @@
-import { useRouter } from 'next/router'
 import { FormEvent, useEffect } from 'react'
 import { useAtom } from 'jotai'
 
@@ -22,7 +21,6 @@ interface LoginFormElement extends HTMLFormElement {
 export default function PageLogin() {
   const loginMutation = trpc.user.login.useMutation()
   const trpcContext = trpc.useContext()
-  const router = useRouter()
   const [, addNotification] = useAtom(addNotificationAtom)
 
   useEffect(() => {
@@ -45,8 +43,8 @@ export default function PageLogin() {
             type: NotificationType.SUCCESS,
             message: '登入成功',
           })
-          await trpcContext.user.info.invalidate()
-          router.push('/')
+          // await trpcContext.user.info.invalidate()
+          // router.push('/')
         },
         onError: (error) => {
           addNotification({

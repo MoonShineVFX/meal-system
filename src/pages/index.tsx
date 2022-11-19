@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 import TransactionList from '@/components/TransactionsList'
 import trpc from '@/lib/client/trpc'
 import Payment from '@/components/Payment'
+import { generateCookie } from '@/lib/common'
 
 export default function PageIndex() {
   const { data: userData } = trpc.user.info.useQuery(undefined)
@@ -21,6 +22,12 @@ export default function PageIndex() {
   useEffect(() => {
     setIsOpenPayment(router.query.pay === '')
   }, [router.query.pay])
+
+  const handleLogout = () => {
+    const cookie = generateCookie(undefined)
+    document.cookie = cookie
+    window.location.href = '/login'
+  }
 
   return (
     <div className=''>
@@ -41,12 +48,12 @@ export default function PageIndex() {
               enterTo='scale-y-100'
             >
               <Popover.Panel className='absolute right-0 left-0 overflow-hidden rounded-b-md bg-stone-100 pt-2 shadow-lg'>
-                <Link
-                  href='/login'
-                  className='flex flex-col p-2 text-center hover:bg-stone-200 active:bg-stone-200'
+                <button
+                  onClick={handleLogout}
+                  className='flex w-full flex-col items-center p-2 text-center hover:bg-stone-200 active:bg-stone-200'
                 >
                   登出
-                </Link>
+                </button>
               </Popover.Panel>
             </Transition>
           </Popover>

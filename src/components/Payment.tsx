@@ -60,10 +60,6 @@ export default function Payment(props: { isOpen: boolean }) {
       },
       {
         onSuccess: async () => {
-          addNotification({
-            type: NotificationType.SUCCESS,
-            message: '付款成功',
-          })
           handleClose()
         },
         onError: async () => {
@@ -211,6 +207,22 @@ function PaymentPanel(props: {
   onCancel?: () => void
   onAccept?: () => void
 }) {
+  useEffect(() => {
+    if (!props.isConfirm) return
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    switch (event.key) {
+      case 'Enter':
+        props.onAccept?.()
+        break
+    }
+  }
+
   return (
     <div
       className='group/panel mx-auto flex w-full max-w-xs grow translate-y-0 translate-x-0 flex-col justify-between rounded-xl bg-stone-100 p-4 tall:grow-0 tall:p-6'
@@ -259,14 +271,14 @@ function PaymentPanel(props: {
         <button
           onClick={props.onCancel}
           disabled={props.isLoading}
-          className='grow basis-0 rounded-xl bg-stone-200 py-3 indent-[0.1em] text-xl tracking-widest text-stone-500 disabled:cursor-not-allowed disabled:opacity-40 data-active:hover:bg-stone-300 data-active:active:bg-stone-300'
+          className='grow basis-0 rounded-xl bg-stone-200 py-3 indent-[0.1em] text-xl tracking-widest text-stone-500 hover:bg-stone-300 active:bg-stone-300 disabled:cursor-not-allowed disabled:opacity-40'
         >
           返回
         </button>
         <button
-          onClick={props.onAccept}
           disabled={props.isLoading}
-          className='ml-4 grow basis-0 rounded-xl bg-stone-800 py-3 indent-[0.1em] text-xl tracking-widest text-stone-100 disabled:cursor-not-allowed disabled:opacity-75 data-active:hover:bg-amber-900 data-active:active:bg-amber-900'
+          onClick={props.onAccept}
+          className='ml-4 grow basis-0 rounded-xl bg-stone-800 py-3 indent-[0.1em] text-xl tracking-widest text-stone-100 hover:bg-amber-900 active:bg-amber-900 disabled:cursor-not-allowed disabled:opacity-75'
         >
           {props.isLoading ? (
             <div className='flex items-center justify-center'>

@@ -22,7 +22,7 @@ export default function VirtualNumpad(props: {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [props.disabledAccept])
 
   /* Callback */
   const clearValue = () => {
@@ -47,7 +47,7 @@ export default function VirtualNumpad(props: {
         removeValue()
         break
       case 'Enter':
-        props.onAccept()
+        if (!props.disabledAccept) props.onAccept()
         break
       case 'Escape':
         props.onCancel()

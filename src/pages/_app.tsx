@@ -9,6 +9,8 @@ import RouterProgress from '@/components/RouteProgress'
 import '@/styles/globals.css'
 
 const PageApp: AppType = ({ Component, pageProps }) => {
+  const userInfoQuery = trpc.user.info.useQuery(undefined)
+
   return (
     <>
       {/* Main */}
@@ -17,8 +19,9 @@ const PageApp: AppType = ({ Component, pageProps }) => {
       </div>
       {/* Menu */}
       <Menu />
+      {/* Overlay */}
       <RouterProgress />
-      <EventListener />
+      {userInfoQuery.data && <EventListener />}
       <AuthListener />
       <Notification />
     </>

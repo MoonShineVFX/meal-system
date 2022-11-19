@@ -1,16 +1,74 @@
-import { httpBatchLink, loggerLink } from '@trpc/client'
+import {
+  loggerLink,
+  createWSClient,
+  wsLink,
+  TRPCLink,
+  httpBatchLink,
+} from '@trpc/client'
 import { createTRPCNext } from '@trpc/next'
 import superjson from 'superjson'
+import { observable } from '@trpc/server/observable'
 
+import { generateCookie, settings } from '@/lib/common'
 import type { AppRouter } from '@/lib/trpc'
 
-function getBaseUrl() {
-  if (typeof window !== 'undefined') return ''
-  return `http://localhost:${process.env.PORT ?? 3000}`
+function getTerminalLink() {
+  const httpURL =
+    process.env.NODE_ENV === 'production'
+      ? ''
+      : `http://localhost:${process.env.PORT ?? 3000}`
+  if (typeof window === 'undefined') {
+    return httpBatchLink({
+      url: `${httpURL}/api/trpc`,
+    })
+  }
+
+  const client = createWSClient({
+    url:
+      process.env.NODE_ENV === 'production'
+        ? `${window.location.protocol === 'http:' ? 'ws' : 'wss'}://${
+            window.location.host
+          }`
+        : settings.WEBSOCKET_URL,
+  })
+
+  return wsLink<AppRouter>({
+    client,
+  })
+}
+
+const authLink: TRPCLink<AppRouter> = () => {
+  return ({ next, op }) => {
+    return observable((observer) => {
+      const unsubscribe = next(op).subscribe({
+        next(value) {
+          if (
+            op.type === 'mutation' &&
+            op.path === 'user.login' &&
+            value.result.type === 'data'
+          ) {
+            const cookie = generateCookie(
+              (value.result.data as { token: string }).token,
+            )
+            document.cookie = cookie
+            window.location.href = '/'
+          }
+          observer.next(value)
+        },
+        error(err) {
+          observer.error(err)
+        },
+        complete() {
+          observer.complete()
+        },
+      })
+      return unsubscribe
+    })
+  }
 }
 
 const trpc = createTRPCNext<AppRouter>({
-  config({ ctx }) {
+  config() {
     return {
       links: [
         loggerLink({
@@ -19,9 +77,8 @@ const trpc = createTRPCNext<AppRouter>({
               typeof window !== 'undefined') ||
             (opts.direction === 'down' && opts.result instanceof Error),
         }),
-        httpBatchLink({
-          url: `${getBaseUrl()}/api/trpc`,
-        }),
+        authLink,
+        getTerminalLink(),
       ],
       transformer: superjson,
       queryClientConfig: {

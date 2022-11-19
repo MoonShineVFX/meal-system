@@ -1,7 +1,6 @@
 import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client'
 
-import { settings, Event } from '@/lib/common'
-import pusherServer from './pusher'
+import { settings } from '@/lib/common'
 
 /* Functions */
 export async function ensureUser(userId: string, name: string) {
@@ -56,7 +55,8 @@ export async function createAuthToken(userId: string) {
 }
 
 export async function validateAuthToken(token: string) {
-  // If not found, find in db
+  console.log('[NOTIFY] validateAuthToken', token)
+
   const authToken = await prisma.authToken.findUnique({
     where: { id: token },
     include: { user: { select: { id: true, name: true, role: true } } },
@@ -97,10 +97,6 @@ export async function rechargeUserCredits(
   } catch (error) {
     return error
   }
-
-  pusherServer.sendToUser(targetUserId, Event.USER_TRANSACTION, {
-    message: `Recharge ${amount} credits to ${targetUserId}`,
-  })
 
   return true
 }
@@ -170,22 +166,28 @@ export async function chargeUserBalance(
           pointsAmount: pointsChargeAmount,
           type: TransactionType.PAYMENT,
         },
+        include: {
+          sourceUser: {
+            select: {
+              name: true,
+            },
+          },
+          targetUser: {
+            select: {
+              name: true,
+            },
+          },
+        },
       })
       return transaction
     })
 
-    pusherServer.sendToUser(userId, Event.USER_TRANSACTION, {
-      message: `Charge ${amount} credits from ${userId}`,
-      extraData: {
-        isUsingPoint: isUsingPoint,
-        transaction: currentTransaction,
-      },
-    })
+    return currentTransaction
   } catch (error) {
-    return error
+    if (error instanceof Error) return error
   }
 
-  return true
+  return Error('Unknown error')
 }
 
 export async function getTransactions(

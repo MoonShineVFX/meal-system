@@ -28,12 +28,6 @@ export const UserRouter = router({
       })
     }
 
-    // Extend cookie duration
-    ctx.res.setHeader(
-      'Set-Cookie',
-      generateCookie(ctx.req.cookies[settings.COOKIE_TOKEN_NAME]!),
-    )
-
     return user
   }),
   login: publicProcedure
@@ -92,8 +86,12 @@ export const UserRouter = router({
       }
 
       const token = await createAuthToken(user.id)
-      ctx.res.setHeader('Set-Cookie', generateCookie(token))
 
-      return
+      // Set cookie if http request
+      if (ctx.res) {
+        ctx.res.setHeader('Set-Cookie', generateCookie(token))
+      }
+
+      return { token }
     }),
 })
