@@ -32,7 +32,7 @@ export default function AuthListener() {
       <div className='fixed inset-0 z-50 grid place-items-center bg-amber-400'>
         <div className='flex items-center gap-2 text-lg tracking-widest'>
           <Spinner className='h-5 w-5' />
-          會員驗證中
+          身分驗證中
         </div>
       </div>
     )
