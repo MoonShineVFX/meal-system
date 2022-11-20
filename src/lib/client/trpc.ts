@@ -19,14 +19,14 @@ function getTerminalLink() {
       : `http://localhost:${process.env.PORT ?? 3000}`
   if (typeof window === 'undefined') {
     return httpBatchLink({
-      url: `${httpURL}/api/trpc`,
+      url: `${httpURL}/api/trpc`, // Dummy URL
     })
   }
 
   const client = createWSClient({
-    url: `ws://${
+    url: `${window.location.protocol === 'http:' ? 'ws' : 'wss'}://${
       process.env.NODE_ENV === 'production'
-        ? ''
+        ? window.location.host
         : `${window.location.hostname}:${settings.WEBSOCKET_PORT}`
     }`,
 

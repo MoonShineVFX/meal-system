@@ -37,9 +37,6 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v3
-        env:
-          NEXT_PUBLIC_PUSHER_KEY: ${{ secrets.PUSHER_KEY }}
-          NEXT_PUBLIC_PUSHER_CLUSTER: ${{ secrets.PUSHER_CLUSTER }}
         with:
           context: .
           push: true
