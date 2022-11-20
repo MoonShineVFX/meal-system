@@ -24,12 +24,23 @@ function getTerminalLink() {
   }
 
   const client = createWSClient({
-    url:
+    url: `${window.location.protocol === 'http:' ? 'ws' : 'wss'}://${
       process.env.NODE_ENV === 'production'
-        ? `${window.location.protocol === 'http:' ? 'ws' : 'wss'}://${
-            window.location.host
-          }`
-        : settings.WEBSOCKET_URL,
+        ? ''
+        : `${window.location.hostname}:${settings.WEBSOCKET_PORT}`
+    }`,
+
+    onClose: () => {
+      console.error(
+        'Websocket closed, reload page to resubscribe to events due to bug in trpc',
+      )
+      if (
+        typeof window !== 'undefined' &&
+        process.env.NODE_ENV === 'production'
+      ) {
+        window.location.reload()
+      }
+    },
   })
 
   return wsLink<AppRouter>({

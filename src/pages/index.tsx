@@ -8,14 +8,15 @@ import CountUp from 'react-countup'
 import { Popover, Transition } from '@headlessui/react'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
+import { useAtomValue } from 'jotai'
 
 import TransactionList from '@/components/TransactionsList'
-import trpc from '@/lib/client/trpc'
 import Payment from '@/components/Payment'
 import { generateCookie } from '@/lib/common'
+import { userAtom } from '@/components/AuthValidator'
 
 export default function PageIndex() {
-  const { data: userData } = trpc.user.info.useQuery(undefined)
+  const user = useAtomValue(userAtom)
   const router = useRouter()
   const [isOpenPayment, setIsOpenPayment] = useState(false)
 
@@ -39,7 +40,7 @@ export default function PageIndex() {
         <div className='flex justify-end'>
           <Popover className='relative'>
             <Popover.Button className='flex select-none items-center rounded-md p-1 tracking-widest text-stone-800 hover:bg-stone-800/10 focus:outline-none active:bg-stone-800/10 ui-open:rounded-b-none ui-open:bg-stone-100 ui-open:text-stone-400'>
-              {userData?.name}
+              {user?.name}
               <ChevronDownIcon className='w-5 ui-open:rotate-180' />
             </Popover.Button>
             <Transition
@@ -62,7 +63,7 @@ export default function PageIndex() {
         <div className='mx-auto'>
           {/* Credits */}
           <BalanceIndicator
-            balance={userData?.credits ?? 0}
+            balance={user?.credits ?? 0}
             currencyText='夢想幣'
             currencyIcon={'$'}
           />
@@ -71,7 +72,7 @@ export default function PageIndex() {
             <CircleStackIcon className='h-4 w-4 text-amber-800' />
             <p className='text-lg font-semibold text-stone-800'>
               <CountUp
-                end={userData?.points ?? 0}
+                end={user?.points ?? 0}
                 duration={0.5}
                 preserveValue={true}
               />

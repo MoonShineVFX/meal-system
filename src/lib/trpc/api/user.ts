@@ -1,9 +1,11 @@
 import { User } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+import { observable } from '@trpc/server/observable'
 
 import { createAuthToken, ensureUser, getUserInfo } from '@/lib/server/database'
 import { settings, generateCookie } from '@/lib/common'
+import { Event, eventEmitter } from '@/lib/server/event'
 
 import { userProcedure, publicProcedure, router } from '../trpc'
 
@@ -29,6 +31,19 @@ export const UserRouter = router({
     }
 
     return user
+  }),
+  onUpdate: userProcedure.subscription(({ ctx }) => {
+    return observable<User>((observer) => {
+      const listener = (user: User) => {
+        observer.next(user)
+      }
+
+      const eventName = Event.USER_UPDATE(ctx.userLite.id)
+      eventEmitter.on(eventName, listener)
+      return () => {
+        eventEmitter.off(eventName, listener)
+      }
+    })
   }),
   login: publicProcedure
     .input(

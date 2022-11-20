@@ -1,5 +1,5 @@
 import { FormEvent, useEffect } from 'react'
-import { useAtom } from 'jotai'
+import { useSetAtom } from 'jotai'
 
 import trpc from '@/lib/client/trpc'
 import { generateCookie } from '@/lib/common'
@@ -21,7 +21,7 @@ interface LoginFormElement extends HTMLFormElement {
 export default function PageLogin() {
   const loginMutation = trpc.user.login.useMutation()
   const trpcContext = trpc.useContext()
-  const [, addNotification] = useAtom(addNotificationAtom)
+  const addNotification = useSetAtom(addNotificationAtom)
 
   useEffect(() => {
     // Logout the user when enter the page

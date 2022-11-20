@@ -55,8 +55,6 @@ export async function createAuthToken(userId: string) {
 }
 
 export async function validateAuthToken(token: string) {
-  console.log('[NOTIFY] validateAuthToken', token)
-
   const authToken = await prisma.authToken.findUnique({
     where: { id: token },
     include: { user: { select: { id: true, name: true, role: true } } },
@@ -80,7 +78,7 @@ export async function rechargeUserCredits(
 ) {
   // Recharge target user and create recharge record
   try {
-    await prisma.$transaction([
+    const [user, transaction] = await prisma.$transaction([
       prisma.user.update({
         where: { id: targetUserId },
         data: { credits: { increment: amount } },
@@ -92,13 +90,20 @@ export async function rechargeUserCredits(
           creditsAmount: amount,
           type: TransactionType.RECHARGE,
         },
+        include: {
+          sourceUser: { select: { name: true } },
+          targetUser: { select: { name: true } },
+        },
       }),
     ])
+    return {
+      user,
+      transaction,
+    }
   } catch (error) {
-    return error
+    if (error instanceof Error) return error
+    return new Error('Unknown error')
   }
-
-  return true
 }
 
 export async function chargeUserBalance(
@@ -108,7 +113,7 @@ export async function chargeUserBalance(
 ) {
   // Charge user and create charge record
   try {
-    const currentTransaction = await prisma.$transaction(async (client) => {
+    const [user, transaction] = await prisma.$transaction(async (client) => {
       /* Validate */
       // Check user has enough balance
       const user = await client.user.findUnique({
@@ -132,32 +137,27 @@ export async function chargeUserBalance(
 
       /* Operation */
       // Charge user
-      let operations: Promise<any>[] = []
-      operations.push(
-        client.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            credits: { decrement: creditsChargeAmount },
-            points: { decrement: pointsChargeAmount },
-          },
-        }),
-      )
-      // Recharge server
-      operations.push(
-        client.user.update({
-          where: { id: settings.SERVER_USER_ID },
-          data: {
-            credits: {
-              increment: creditsChargeAmount,
-            },
-            points: { increment: pointsChargeAmount },
-          },
-        }),
-      )
+      const updatedUser = await client.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          credits: { decrement: creditsChargeAmount },
+          points: { decrement: pointsChargeAmount },
+        },
+      })
 
-      await Promise.all(operations)
+      // Recharge server
+      await client.user.update({
+        where: { id: settings.SERVER_USER_ID },
+        data: {
+          credits: {
+            increment: creditsChargeAmount,
+          },
+          points: { increment: pointsChargeAmount },
+        },
+      })
+
       const transaction = await client.transaction.create({
         data: {
           sourceUserId: userId,
@@ -179,15 +179,17 @@ export async function chargeUserBalance(
           },
         },
       })
-      return transaction
+      return [updatedUser, transaction]
     })
 
-    return currentTransaction
+    return {
+      user,
+      transaction,
+    }
   } catch (error) {
     if (error instanceof Error) return error
+    return Error('Unknown error')
   }
-
-  return Error('Unknown error')
 }
 
 export async function getTransactions(
@@ -222,32 +224,36 @@ export async function getTransactions(
       },
     }
   } else {
-    throw Error('Invalid role')
+    return Error('Invalid role')
   }
-
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      AND: [whereQuery],
-    },
-    orderBy: {
-      id: 'desc',
-    },
-    include: {
-      sourceUser: {
-        select: {
-          name: true,
+  try {
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        AND: [whereQuery],
+      },
+      orderBy: {
+        id: 'desc',
+      },
+      include: {
+        sourceUser: {
+          select: {
+            name: true,
+          },
+        },
+        targetUser: {
+          select: {
+            name: true,
+          },
         },
       },
-      targetUser: {
-        select: {
-          name: true,
-        },
-      },
-    },
-    take: settings.TRANSACTIONS_PER_PAGE + 1,
-    cursor: cursor ? { id: cursor } : undefined,
-  })
-  return transactions
+      take: settings.TRANSACTIONS_PER_PAGE + 1,
+      cursor: cursor ? { id: cursor } : undefined,
+    })
+    return transactions
+  } catch (error) {
+    if (error instanceof Error) return error
+    return Error('Unknown error')
+  }
 }
 
 export async function initialTwmpPayment(amount: number, userId: string) {

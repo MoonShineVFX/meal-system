@@ -1,12 +1,14 @@
 import { Role } from '@prisma/client'
-import { useAtom } from 'jotai'
+import { useSetAtom, useAtom } from 'jotai'
 
 import { addNotificationAtom, NotificationType } from './Notification'
 import { addTransactionListAtom } from './TransactionsList'
 import trpc from '@/lib/client/trpc'
-import { validateRole, TransactionWithName } from '@/lib/common'
+import { validateRole, TransactionWithName, settings } from '@/lib/common'
+import { userAtom } from './AuthValidator'
 
 function makePaymentString(transaction: TransactionWithName) {
+  const actionString = settings.TRANSACTION_NAME[transaction.type]
   let paymentStrings: string[] = []
   if (transaction.creditsAmount > 0) {
     paymentStrings.push(`${transaction.creditsAmount} 元`)
@@ -15,14 +17,29 @@ function makePaymentString(transaction: TransactionWithName) {
     paymentStrings.push(`${transaction.pointsAmount} 點`)
   }
 
-  return `付款 ${paymentStrings.join(' 和 ')}`
+  return `${actionString} ${paymentStrings.join(' 和 ')}`
 }
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
-  const userInfoQuery = trpc.user.info.useQuery(undefined)
-  const [, addNotification] = useAtom(addNotificationAtom)
-  const [, addTransactionList] = useAtom(addTransactionListAtom)
+  const [user, setUser] = useAtom(userAtom)
+  const addNotification = useSetAtom(addNotificationAtom)
+  const addTransactionList = useSetAtom(addTransactionListAtom)
+
+  const handleError = async (error: Omit<Error, 'name'>) => {
+    addNotification({
+      type: NotificationType.ERROR,
+      message: error.message,
+    })
+  }
+
+  /* User Info */
+  trpc.user.onUpdate.useSubscription(undefined, {
+    onData(user) {
+      setUser(user)
+    },
+    onError: handleError,
+  })
 
   /* User Transactions */
   trpc.trade.onTransactionAdd.useSubscription(
@@ -36,17 +53,12 @@ export default function EventListener() {
         })
         addTransactionList({ role: Role.USER, transactions: [transaction] })
       },
-      onError: async (err) => {
-        addNotification({
-          type: NotificationType.ERROR,
-          message: err.message,
-        })
-      },
+      onError: handleError,
     },
   )
 
   /* Staff Transactions */
-  if (validateRole(userInfoQuery.data!.role, Role.STAFF)) {
+  if (validateRole(user!.role, Role.STAFF)) {
     trpc.trade.onTransactionAdd.useSubscription(
       { role: Role.STAFF },
       {
@@ -62,18 +74,13 @@ export default function EventListener() {
             )}`,
           })
         },
-        onError: async (err) => {
-          addNotification({
-            type: NotificationType.ERROR,
-            message: err.message,
-          })
-        },
+        onError: handleError,
       },
     )
   }
 
   /* Admin Transactions */
-  if (validateRole(userInfoQuery.data!.role, Role.ADMIN)) {
+  if (validateRole(user!.role, Role.ADMIN)) {
     trpc.trade.onTransactionAdd.useSubscription(
       { role: Role.ADMIN },
       {
@@ -83,12 +90,7 @@ export default function EventListener() {
             transactions: [transaction],
           })
         },
-        onError: async (err) => {
-          addNotification({
-            type: NotificationType.ERROR,
-            message: err.message,
-          })
-        },
+        onError: handleError,
       },
     )
   }

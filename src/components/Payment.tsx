@@ -3,34 +3,34 @@ import VirtualNumpad from './VirtualNumpad'
 import { useEffect, useState, useMemo } from 'react'
 import { CircleStackIcon } from '@heroicons/react/24/solid'
 import { Transition } from '@headlessui/react'
-import { useAtom } from 'jotai'
+import { useSetAtom, useAtomValue } from 'jotai'
 
 import { addNotificationAtom, NotificationType } from './Notification'
 import trpc from '@/lib/client/trpc'
 import SwitchButton from './SwitchButton'
 import Spinner from './Spinner'
+import { userAtom } from './AuthValidator'
 
 export default function Payment(props: { isOpen: boolean }) {
   const router = useRouter()
   const [isUsingPoint, setUsingPoint] = useState(false)
-  const { data: userData } = trpc.user.info.useQuery(undefined)
+  const user = useAtomValue(userAtom)
   const [totalPaymentAmount, setTotalPaymentAmount] = useState(0)
   const [step, setStep] = useState(0)
   const chargeMutation = trpc.trade.charge.useMutation()
-  const [, addNotification] = useAtom(addNotificationAtom)
+  const addNotification = useSetAtom(addNotificationAtom)
 
   const pointsPaymentAmount = useMemo(
-    () =>
-      isUsingPoint ? Math.min(totalPaymentAmount, userData?.points ?? 0) : 0,
-    [isUsingPoint, totalPaymentAmount, userData?.points],
+    () => (isUsingPoint ? Math.min(totalPaymentAmount, user?.points ?? 0) : 0),
+    [isUsingPoint, totalPaymentAmount, user?.points],
   )
   const creditsPaymentAmount = useMemo(
     () => totalPaymentAmount - pointsPaymentAmount,
     [totalPaymentAmount, pointsPaymentAmount],
   )
   const isNotEnough = useMemo(
-    () => creditsPaymentAmount > (userData?.credits ?? 0),
-    [creditsPaymentAmount, userData?.credits],
+    () => creditsPaymentAmount > (user?.credits ?? 0),
+    [creditsPaymentAmount, user?.credits],
   )
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function Payment(props: { isOpen: boolean }) {
     if (props.isOpen) {
       setTotalPaymentAmount(0)
       setStep(0)
-      if (userData && userData?.points > 0) {
+      if (user && user?.points > 0) {
         setUsingPoint(true)
       }
     }
@@ -104,8 +104,8 @@ export default function Payment(props: { isOpen: boolean }) {
               isUsingPoint={isUsingPoint}
               pointsPaymentAmount={pointsPaymentAmount}
               creditsPaymentAmount={creditsPaymentAmount}
-              pointsCurrentAmount={userData?.points ?? 0}
-              creditsCurrentAmount={userData?.credits ?? 0}
+              pointsCurrentAmount={user?.points ?? 0}
+              creditsCurrentAmount={user?.credits ?? 0}
             />
           </Transition.Child>
           {/* Keyboard */}
@@ -123,7 +123,7 @@ export default function Payment(props: { isOpen: boolean }) {
             }}
           >
             <div
-              data-ui={userData?.points ? 'active' : 'not-active'}
+              data-ui={user?.points ? 'active' : 'not-active'}
               className='group/points flex items-center justify-between bg-stone-100 p-4 tall:rounded-t-xl'
             >
               <p
@@ -181,8 +181,8 @@ export default function Payment(props: { isOpen: boolean }) {
             isUsingPoint={isUsingPoint}
             pointsPaymentAmount={pointsPaymentAmount}
             creditsPaymentAmount={creditsPaymentAmount}
-            pointsCurrentAmount={userData?.points ?? 0}
-            creditsCurrentAmount={userData?.credits ?? 0}
+            pointsCurrentAmount={user?.points ?? 0}
+            creditsCurrentAmount={user?.credits ?? 0}
             isConfirm={true}
             onAccept={handleCharge}
             onCancel={handleBackFromStep2}

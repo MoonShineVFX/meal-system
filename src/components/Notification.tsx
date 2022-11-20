@@ -1,4 +1,4 @@
-import { atom, useAtom } from 'jotai'
+import { atom, useAtomValue } from 'jotai'
 import { useEffect, useState } from 'react'
 import { CheckCircleIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
@@ -46,7 +46,7 @@ export const addNotificationAtom = atom(
 
 /* Component */
 export default function Notification() {
-  const [notifications] = useAtom(notificationAtom)
+  const notifications = useAtomValue(notificationAtom)
 
   return (
     <div className='pointer-events-none fixed inset-0 flex justify-center'>

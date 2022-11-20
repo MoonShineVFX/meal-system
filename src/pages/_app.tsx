@@ -1,15 +1,16 @@
 import type { AppType } from 'next/app'
+import { useAtomValue } from 'jotai'
 
 import trpc from '@/lib/client/trpc'
 import EventListener from '@/components/EventListener'
-import AuthListener from '@/components/AuthValidator'
+import AuthValidator, { userAtom } from '@/components/AuthValidator'
 import Notification from '@/components/Notification'
 import Menu from '@/components/Menu'
 import RouterProgress from '@/components/RouteProgress'
 import '@/styles/globals.css'
 
 const PageApp: AppType = ({ Component, pageProps }) => {
-  const userInfoQuery = trpc.user.info.useQuery(undefined)
+  const user = useAtomValue(userAtom)
 
   return (
     <>
@@ -21,8 +22,8 @@ const PageApp: AppType = ({ Component, pageProps }) => {
       <Menu />
       {/* Overlay */}
       <RouterProgress />
-      {userInfoQuery.data && <EventListener />}
-      <AuthListener />
+      {user && <EventListener />}
+      <AuthValidator />
       <Notification />
     </>
   )

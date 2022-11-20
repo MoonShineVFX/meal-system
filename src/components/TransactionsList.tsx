@@ -3,12 +3,12 @@ import { Fragment, useEffect, useMemo } from 'react'
 import { TransactionType } from '@prisma/client'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useInView } from 'react-intersection-observer'
-import { atom, useAtom } from 'jotai'
+import { atom, useAtomValue, useSetAtom } from 'jotai'
+import { Role } from '@prisma/client'
 
 import Spinner from './Spinner'
 import trpc from '@/lib/client/trpc'
 import { settings, TransactionWithName } from '@/lib/common'
-import { Role } from '@prisma/client'
 
 /* State */
 const transactionListAtom = {
@@ -64,8 +64,8 @@ export default function TransactionList(props: {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   )
-  const [transactions] = useAtom(transactionListAtom[displayRole])
-  const [, addTransactionList] = useAtom(addTransactionListAtom)
+  const transactions = useAtomValue(transactionListAtom[displayRole])
+  const addTransactionList = useSetAtom(addTransactionListAtom)
 
   const { ref, inView } = useInView({ rootMargin: '0px 0px 50% 0px' })
   const nextPageElement = useMemo<JSX.Element | null>(() => {

@@ -35,6 +35,15 @@ export const TradeRouter = router({
           message: result.message,
         })
       }
+
+      const { user, transaction } = result
+
+      eventEmitter.emit(Event.USER_UPDATE(user.id), user)
+      eventEmitter.emit(
+        Event.TRANSACTION_ADD_USER(ctx.userLite.id),
+        transaction,
+      )
+      eventEmitter.emit(Event.TRANSACTION_ADD_ADMIN, transaction)
     }),
   charge: userProcedure
     .input(
@@ -58,10 +67,15 @@ export const TradeRouter = router({
         })
       }
 
-      const userEventName = Event.TRANSACTION_ADD_USER(ctx.userLite.id)
-      eventEmitter.emit(userEventName, result)
-      eventEmitter.emit(Event.TRANSACTION_ADD_STAFF, result)
-      eventEmitter.emit(Event.TRANSACTION_ADD_ADMIN, result)
+      const { user, transaction } = result
+
+      eventEmitter.emit(Event.USER_UPDATE(user.id), user)
+      eventEmitter.emit(
+        Event.TRANSACTION_ADD_USER(ctx.userLite.id),
+        transaction,
+      )
+      eventEmitter.emit(Event.TRANSACTION_ADD_STAFF, transaction)
+      eventEmitter.emit(Event.TRANSACTION_ADD_ADMIN, transaction)
     }),
   // Get transaction records, use until arg to update new records
   listTransactions: userProcedure
@@ -86,6 +100,13 @@ export const TradeRouter = router({
         input.cursor,
         input.role,
       )
+      if (transactions instanceof Error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: transactions.message,
+        })
+      }
+
       let nextCursor: number | undefined = undefined
       if (transactions.length > settings.TRANSACTIONS_PER_PAGE) {
         nextCursor = transactions.pop()!.id
@@ -110,8 +131,8 @@ export const TradeRouter = router({
         })
       }
 
-      return observable<TransactionWithName>((emit) => {
-        const onAdd = (data: TransactionWithName) => emit.next(data)
+      return observable<TransactionWithName>((observer) => {
+        const listener = (data: TransactionWithName) => observer.next(data)
         let eventName: string
 
         if (input.role === Role.USER) {
@@ -122,14 +143,14 @@ export const TradeRouter = router({
           eventName = Event.TRANSACTION_ADD_ADMIN
         } else {
           throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
+            code: 'FORBIDDEN',
             message: 'Invalid role',
           })
         }
 
-        eventEmitter.on(eventName, onAdd)
+        eventEmitter.on(eventName, listener)
         return () => {
-          eventEmitter.off(eventName, onAdd)
+          eventEmitter.off(eventName, listener)
         }
       })
     }),

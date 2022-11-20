@@ -19,7 +19,7 @@ export const settings = {
     [TransactionType.RECHARGE]: '儲值',
     [TransactionType.PAYMENT]: '消費',
     [TransactionType.REFUND]: '退款',
-    [TransactionType.ORDER]: '訂單',
+    [TransactionType.ORDER]: '預訂',
   },
   /* Trade */
   TRANSACTIONS_PER_PAGE: 20,
@@ -32,11 +32,13 @@ export const settings = {
   TWMP_3DES_KEY: process.env.TWMP_3DES_KEY!,
   /* URL */
   AUTH_API_URL: process.env.AUTH_API_URL!,
-  WEBSOCKET_URL: process.env.NEXT_PUBLIC_WEBSOCKET_URL!,
+  WEBSOCKET_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_PORT ?? '3001',
+  HTTP_PORT: process.env.PORT ?? '3000',
 }
 
 /* Types */
 export type UserLite = Pick<User, 'id' | 'name' | 'role'>
+
 export type TransactionWithName = Transaction & {
   sourceUser: {
     name: string

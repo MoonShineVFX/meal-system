@@ -1,17 +1,18 @@
 import TransactionList from '@/components/TransactionsList'
 import { Tab } from '@headlessui/react'
 import { Role } from '@prisma/client'
+import { useAtomValue } from 'jotai'
 
 import { validateRole } from '@/lib/common'
-import trpc from '@/lib/client/trpc'
+import { userAtom } from '@/components/AuthValidator'
 
 export default function PageTransactions() {
-  const { data: userData } = trpc.user.info.useQuery(undefined)
+  const user = useAtomValue(userAtom)
 
-  if (!userData) return null
+  if (!user) return null
 
-  const isStaff = validateRole(userData!.role, Role.STAFF)
-  const isAdmin = validateRole(userData!.role, Role.ADMIN)
+  const isStaff = validateRole(user.role, Role.STAFF)
+  const isAdmin = validateRole(user.role, Role.ADMIN)
 
   return (
     <div className=''>
