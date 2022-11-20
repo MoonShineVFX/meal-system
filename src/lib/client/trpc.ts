@@ -24,7 +24,7 @@ function getTerminalLink() {
   }
 
   const client = createWSClient({
-    url: `${window.location.protocol === 'http:' ? 'ws' : 'wss'}://${
+    url: `ws://${
       process.env.NODE_ENV === 'production'
         ? ''
         : `${window.location.hostname}:${settings.WEBSOCKET_PORT}`
