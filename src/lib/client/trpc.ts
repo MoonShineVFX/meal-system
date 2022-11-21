@@ -30,9 +30,9 @@ function getWSClient() {
       }`,
       onOpen: () => {
         onSocketOpenCallbacks.forEach((cb) => cb())
-      },
-      onClose: () => {
-        onSocketCloseCallbacks.forEach((cb) => cb())
+        wsClient.getConnection().addEventListener('close', () => {
+          onSocketCloseCallbacks.forEach((cb) => cb())
+        })
       },
       retryDelayMs: () => 1000,
     })

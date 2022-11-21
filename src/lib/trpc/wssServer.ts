@@ -14,11 +14,9 @@ const wss = new ws.Server({ port: parseInt(settings.WEBSOCKET_PORT, 10) })
 const handler = applyWSSHandler({ wss, router: appRouter, createContext })
 
 wss.on('connection', (ws, req) => {
-  console.log(`++ Conection (${wss.clients.size})`)
+  console.log(`Conection added (${wss.clients.size})`)
   ws.once('close', () => {
-    console.log(`-- Conection (${wss.clients.size})`)
-    // console.log(req.headers)
-    // TODO: remove token in cachedtoken
+    console.log(`Conection removed (${wss.clients.size})`)
   })
 })
 
