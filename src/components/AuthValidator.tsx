@@ -19,7 +19,7 @@ export default function AuthListener() {
         router.push('/')
       }
     },
-    onError(err) {
+    onError() {
       setUser(null)
       if (router.pathname !== '/login') {
         router.push('/login')

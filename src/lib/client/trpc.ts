@@ -12,6 +12,37 @@ import { observable } from '@trpc/server/observable'
 import { generateCookie, settings } from '@/lib/common'
 import type { AppRouter } from '@/lib/trpc'
 
+export const onSocketOpenCallbacks: (() => void)[] = []
+export const onSocketCloseCallbacks: (() => void)[] = []
+
+/* WebSocket Client */
+declare global {
+  var wsClient: ReturnType<typeof createWSClient> | undefined
+}
+function getWSClient() {
+  const wsClient =
+    global.wsClient ??
+    createWSClient({
+      url: `${window.location.protocol === 'http:' ? 'ws' : 'wss'}://${
+        process.env.NODE_ENV === 'production'
+          ? window.location.host
+          : `${window.location.hostname}:${settings.WEBSOCKET_PORT}`
+      }`,
+      onOpen: () => {
+        onSocketOpenCallbacks.forEach((cb) => cb())
+      },
+      onClose: () => {
+        onSocketCloseCallbacks.forEach((cb) => cb())
+      },
+      retryDelayMs: () => 1000,
+    })
+  if (process.env.NODE_ENV !== 'production') {
+    global.wsClient = wsClient
+  }
+  return wsClient
+}
+
+/* Links */
 function getTerminalLink() {
   const httpURL =
     process.env.NODE_ENV === 'production'
@@ -23,25 +54,7 @@ function getTerminalLink() {
     })
   }
 
-  const client = createWSClient({
-    url: `${window.location.protocol === 'http:' ? 'ws' : 'wss'}://${
-      process.env.NODE_ENV === 'production'
-        ? window.location.host
-        : `${window.location.hostname}:${settings.WEBSOCKET_PORT}`
-    }`,
-
-    onClose: () => {
-      console.error(
-        'Websocket closed, reload page to resubscribe to events due to bug in trpc',
-      )
-      if (
-        typeof window !== 'undefined' &&
-        process.env.NODE_ENV === 'production'
-      ) {
-        window.location.reload()
-      }
-    },
-  })
+  const client = getWSClient()
 
   return wsLink<AppRouter>({
     client,
@@ -78,6 +91,7 @@ const authLink: TRPCLink<AppRouter> = () => {
   }
 }
 
+/* TRPC */
 const trpc = createTRPCNext<AppRouter>({
   config() {
     return {

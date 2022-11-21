@@ -16,7 +16,7 @@ export enum NotificationType {
 export type NotificationMessage = {
   type: NotificationType
   message: string
-  time: number
+  id: number
 }
 
 const iconMap = {
@@ -27,17 +27,18 @@ const iconMap = {
 
 /* State */
 const notificationAtom = atom<NotificationMessage[]>([])
+let notificationIdCounter = 0
 export const addNotificationAtom = atom(
   null,
-  async (get, set, message: Omit<NotificationMessage, 'time'>) => {
-    const now = new Date().getTime()
-    const newNotificationMessage = { ...message, time: now }
+  async (get, set, message: Omit<NotificationMessage, 'id'>) => {
+    const id = notificationIdCounter++
+    const newNotificationMessage = { ...message, id: id }
     set(notificationAtom, [newNotificationMessage, ...get(notificationAtom)])
     setTimeout(
       () =>
         set(
           notificationAtom,
-          get(notificationAtom).filter((message) => message.time !== now),
+          get(notificationAtom).filter((message) => message.id !== id),
         ),
       settings.NOTIFICATION_DURATION,
     )
@@ -52,7 +53,7 @@ export default function Notification() {
     <div className='pointer-events-none fixed inset-0 flex justify-center'>
       {notifications.map((notification, i) => (
         <NotificationPod
-          key={notification.time}
+          key={notification.id}
           notification={notification}
           index={i}
         />
