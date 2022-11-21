@@ -1,5 +1,5 @@
 import { twMerge } from 'tailwind-merge'
-import { useEffect, Dispatch, SetStateAction } from 'react'
+import React, { useEffect } from 'react'
 
 const layout = [
   ['7', '8', '9'],
@@ -9,14 +9,16 @@ const layout = [
   ['cancel:取消', 'ok:{accept}'],
 ]
 
-export default function VirtualNumpad(props: {
-  setValue: Dispatch<SetStateAction<number>>
-  onAccept: () => void
-  onCancel: () => void
+type VirtualNumpadProps = {
+  onAction?: (func: ((value: number) => number) | number) => void
+  onAccept?: () => void
+  onCancel?: () => void
   acceptText?: string
   maxValue?: number
   disabledAccept?: boolean
-}) {
+}
+
+function VirtualNumpad(props: VirtualNumpadProps) {
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
     return () => {
@@ -26,15 +28,15 @@ export default function VirtualNumpad(props: {
 
   /* Callback */
   const clearValue = () => {
-    props.setValue(0)
+    props.onAction?.(0)
   }
 
   const removeValue = () => {
-    props.setValue((value) => Math.floor(value / 10))
+    props.onAction?.((value) => Math.floor(value / 10))
   }
 
   const addValue = (addString: string) => {
-    props.setValue((value) =>
+    props.onAction?.((value) =>
       Math.min(value * 10 + parseInt(addString), props.maxValue || Infinity),
     )
   }
@@ -47,10 +49,10 @@ export default function VirtualNumpad(props: {
         removeValue()
         break
       case 'Enter':
-        if (!props.disabledAccept) props.onAccept()
+        if (!props.disabledAccept) props.onAccept?.()
         break
       case 'Escape':
-        props.onCancel()
+        props.onCancel?.()
         break
       case ' ':
         clearValue()
@@ -74,10 +76,10 @@ export default function VirtualNumpad(props: {
           removeValue()
           break
         case 'cancel':
-          props.onCancel()
+          props.onCancel?.()
           break
         case 'ok':
-          props.onAccept()
+          props.onAccept?.()
           break
         default:
           break
@@ -146,3 +148,5 @@ function VirtualKey(props: {
     </button>
   )
 }
+
+export default React.memo(VirtualNumpad)

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import VirtualNumpad from './VirtualNumpad'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { CircleStackIcon } from '@heroicons/react/24/solid'
 import { Transition } from '@headlessui/react'
 import { useSetAtom, useAtomValue } from 'jotai'
@@ -19,6 +19,20 @@ export default function Payment(props: { isOpen: boolean }) {
   const [step, setStep] = useState(0)
   const chargeMutation = trpc.trade.charge.useMutation()
   const addNotification = useSetAtom(addNotificationAtom)
+
+  const onNumpadAction = useCallback(
+    (func: ((value: number) => number) | number) => {
+      if (typeof func === 'number') {
+        setTotalPaymentAmount(func)
+      } else {
+        setTotalPaymentAmount((value) => func(value))
+      }
+    },
+    [],
+  )
+  const onNumpadAccept = useCallback(() => {
+    setStep(1)
+  }, [])
 
   const pointsPaymentAmount = useMemo(
     () => (isUsingPoint ? Math.min(totalPaymentAmount, user?.points ?? 0) : 0),
@@ -44,15 +58,15 @@ export default function Payment(props: { isOpen: boolean }) {
     }
   }, [props.isOpen])
 
-  const handleClose = () => {
+  const closePayment = useCallback(() => {
     router.push('/')
-  }
+  }, [])
 
-  const handleBackFromStep2 = () => {
+  const backFromStep2 = useCallback(() => {
     if (!chargeMutation.isLoading) setStep(0)
-  }
+  }, [])
 
-  const handleCharge = async () => {
+  const makePayment = useCallback(async () => {
     chargeMutation.mutate(
       {
         amount: totalPaymentAmount,
@@ -60,7 +74,7 @@ export default function Payment(props: { isOpen: boolean }) {
       },
       {
         onSuccess: async () => {
-          handleClose()
+          closePayment()
         },
         onError: async () => {
           addNotification({
@@ -70,7 +84,7 @@ export default function Payment(props: { isOpen: boolean }) {
         },
       },
     )
-  }
+  }, [totalPaymentAmount, isUsingPoint])
 
   return (
     <>
@@ -83,7 +97,7 @@ export default function Payment(props: { isOpen: boolean }) {
         leave='transition-opacity duration-150'
         leaveFrom='opacity-100'
         leaveTo='opacity-0'
-        onClick={handleClose}
+        onClick={closePayment}
         className='fixed inset-0 z-50 select-none bg-stone-800/50 backdrop-blur-[2px]'
       >
         <div className='mx-auto flex h-full w-full max-w-lg flex-col'>
@@ -141,9 +155,9 @@ export default function Payment(props: { isOpen: boolean }) {
               />
             </div>
             <VirtualNumpad
-              setValue={setTotalPaymentAmount}
-              onAccept={() => setStep(1)}
-              onCancel={handleClose}
+              onAction={onNumpadAction}
+              onAccept={onNumpadAccept}
+              onCancel={closePayment}
               maxValue={9999}
               disabledAccept={isNotEnough || totalPaymentAmount === 0}
             />
@@ -161,7 +175,7 @@ export default function Payment(props: { isOpen: boolean }) {
         leaveTo='opacity-0'
         className='fixed inset-0 z-50 flex select-none flex-col justify-center bg-stone-800/50 backdrop-blur-[2px]'
         onClick={(event: any) => {
-          handleBackFromStep2()
+          backFromStep2()
           event.preventDefault()
           event.stopPropagation()
         }}
@@ -184,8 +198,8 @@ export default function Payment(props: { isOpen: boolean }) {
             pointsCurrentAmount={user?.points ?? 0}
             creditsCurrentAmount={user?.credits ?? 0}
             isConfirm={true}
-            onAccept={handleCharge}
-            onCancel={handleBackFromStep2}
+            onAccept={makePayment}
+            onCancel={backFromStep2}
             isLoading={chargeMutation.isLoading}
           />
         </Transition.Child>
