@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import VirtualNumpad from './VirtualNumpad'
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { CircleStackIcon } from '@heroicons/react/24/solid'
 import { Transition } from '@headlessui/react'
 import { useSetAtom, useAtomValue } from 'jotai'
@@ -34,18 +34,11 @@ export default function Payment(props: { isOpen: boolean }) {
     setStep(1)
   }, [])
 
-  const pointsPaymentAmount = useMemo(
-    () => (isUsingPoint ? Math.min(totalPaymentAmount, user?.points ?? 0) : 0),
-    [isUsingPoint, totalPaymentAmount, user?.points],
-  )
-  const creditsPaymentAmount = useMemo(
-    () => totalPaymentAmount - pointsPaymentAmount,
-    [totalPaymentAmount, pointsPaymentAmount],
-  )
-  const isNotEnough = useMemo(
-    () => creditsPaymentAmount > (user?.credits ?? 0),
-    [creditsPaymentAmount, user?.credits],
-  )
+  const pointsPaymentAmount = isUsingPoint
+    ? Math.min(totalPaymentAmount, user?.points ?? 0)
+    : 0
+  const creditsPaymentAmount = totalPaymentAmount - pointsPaymentAmount
+  const isNotEnough = creditsPaymentAmount > (user?.credits ?? 0)
 
   useEffect(() => {
     // Set default value
@@ -66,7 +59,7 @@ export default function Payment(props: { isOpen: boolean }) {
     if (!chargeMutation.isLoading) setStep(0)
   }, [])
 
-  const makePayment = useCallback(async () => {
+  const makePayment = async () => {
     chargeMutation.mutate(
       {
         amount: totalPaymentAmount,
@@ -84,7 +77,7 @@ export default function Payment(props: { isOpen: boolean }) {
         },
       },
     )
-  }, [totalPaymentAmount, isUsingPoint])
+  }
 
   return (
     <>

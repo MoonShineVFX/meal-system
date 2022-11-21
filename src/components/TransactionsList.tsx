@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Fragment, useEffect, useMemo } from 'react'
+import React, { Fragment, useEffect, useMemo } from 'react'
 import { TransactionType } from '@prisma/client'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useInView } from 'react-intersection-observer'
@@ -48,10 +48,11 @@ export const addTransactionListAtom = atom(
 )
 
 /* Component */
-export default function TransactionList(props: {
+function TransactionList(props: {
   role?: Exclude<Role, 'SERVER'>
   isIndex?: boolean // if index, show more button and first page only
 }) {
+  const isIndex = props.isIndex ?? false
   const displayRole = props.role ?? Role.USER
   const {
     data: transactionsData,
@@ -70,7 +71,7 @@ export default function TransactionList(props: {
   const { ref, inView } = useInView({ rootMargin: '0px 0px 50% 0px' })
   const nextPageElement = useMemo<JSX.Element | null>(() => {
     if (hasNextPage) {
-      if (props.isIndex) {
+      if (isIndex) {
         // show redirect button if index
         return (
           <div className='col-span-full flex justify-center p-8'>
@@ -97,11 +98,11 @@ export default function TransactionList(props: {
         </div>
       )
     }
-  }, [props.isIndex, hasNextPage])
+  }, [isIndex, hasNextPage])
   const transactionsElements = useMemo<JSX.Element[]>(() => {
     let dateDividerData: string | undefined = undefined
     return transactions
-      ?.slice(0, props.isIndex ? settings.TRANSACTIONS_PER_PAGE : undefined)
+      ?.slice(0, isIndex ? settings.TRANSACTIONS_PER_PAGE : undefined)
       .map((transaction) => {
         // Check if date divider is needed
         let dateDivider: JSX.Element | null = null
@@ -252,3 +253,5 @@ export default function TransactionList(props: {
     </div>
   )
 }
+
+export default React.memo(TransactionList)

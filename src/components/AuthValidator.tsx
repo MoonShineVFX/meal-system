@@ -9,7 +9,7 @@ import trpc from '@/lib/client/trpc'
 export const userAtom = atom<User | null>(null)
 
 /* Component */
-export default function AuthListener() {
+export default function AuthValidator() {
   const router = useRouter()
   const setUser = useSetAtom(userAtom)
   const userInfoQuery = trpc.user.info.useQuery(undefined, {
