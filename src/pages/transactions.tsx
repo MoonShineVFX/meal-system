@@ -1,7 +1,6 @@
 import TransactionList from '@/components/TransactionsList'
 import { Tab } from '@headlessui/react'
 import { Role } from '@prisma/client'
-import { Transition } from '@headlessui/react'
 
 import { validateRole } from '@/lib/common'
 import { useStore } from '@/lib/client/store'
@@ -24,20 +23,20 @@ export default function PageTransactions() {
         </Tab.List>
         <Tab.Panels className='pt-[5rem] pb-16'>
           {/* User */}
-          <TransactionsPanel>
+          <Tab.Panel>
             <TransactionList />
-          </TransactionsPanel>
+          </Tab.Panel>
           {/* Staff */}
           {isStaff && (
-            <TransactionsPanel>
+            <Tab.Panel>
               <TransactionList role={Role.STAFF} />
-            </TransactionsPanel>
+            </Tab.Panel>
           )}
           {/* Server */}
           {isAdmin && (
-            <TransactionsPanel>
+            <Tab.Panel>
               <TransactionList role={Role.ADMIN} />
-            </TransactionsPanel>
+            </Tab.Panel>
           )}
         </Tab.Panels>
       </Tab.Group>
@@ -52,24 +51,5 @@ function TransactionsTab(props: { text: string }) {
         {props.text}
       </div>
     </Tab>
-  )
-}
-
-function TransactionsPanel(props: { children: React.ReactNode }) {
-  return (
-    <Tab.Panel>
-      <Transition
-        appear={true}
-        show={true}
-        enter='transition-all duration-200'
-        enterFrom='opacity-0'
-        enterTo='opacity-100'
-        leave='transition-opacity duration-200'
-        leaveFrom='opacity-100'
-        leaveTo='opacity-0'
-      >
-        {props.children}
-      </Transition>
-    </Tab.Panel>
   )
 }

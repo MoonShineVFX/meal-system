@@ -22,7 +22,7 @@ export default function Notification() {
   const notifications = useStore((state) => state.notifications)
 
   return (
-    <div className='pointer-events-none fixed inset-0 flex justify-center'>
+    <div className='pointer-events-none fixed inset-0 z-40 flex justify-center'>
       {notifications.map((notification, i) => (
         <NotificationPod
           key={notification.id}

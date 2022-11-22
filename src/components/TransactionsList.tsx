@@ -4,6 +4,7 @@ import { TransactionType } from '@prisma/client'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { Role } from '@prisma/client'
 import { GroupedVirtuoso } from 'react-virtuoso'
+import { Transition } from '@headlessui/react'
 
 import Spinner from './Spinner'
 import trpc from '@/lib/client/trpc'
@@ -216,7 +217,20 @@ function TransactionList(props: {
         </div>
       )}
       components={{
-        Footer: () => <div className='pb-8'>{nextPageElement}</div>,
+        Footer: () => (
+          <Transition
+            appear={true}
+            show={true}
+            enter='transition-all duration-200'
+            enterFrom='opacity-0'
+            enterTo='opacity-100'
+            leave='transition-opacity duration-200'
+            leaveFrom='opacity-100'
+            leaveTo='opacity-0'
+          >
+            <div className='pb-8'>{nextPageElement}</div>
+          </Transition>
+        ),
       }}
     />
   )
