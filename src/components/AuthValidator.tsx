@@ -1,17 +1,13 @@
 import { useRouter } from 'next/router'
-import { atom, useSetAtom } from 'jotai'
-import { User } from '@prisma/client'
 
 import Spinner from '@/components/Spinner'
 import trpc from '@/lib/client/trpc'
-
-/* State */
-export const userAtom = atom<User | null>(null)
+import { useStore } from '@/lib/client/store'
 
 /* Component */
 export default function AuthValidator() {
   const router = useRouter()
-  const setUser = useSetAtom(userAtom)
+  const setUser = useStore((state) => state.setUser)
   const userInfoQuery = trpc.user.info.useQuery(undefined, {
     onSuccess(data) {
       setUser(data)

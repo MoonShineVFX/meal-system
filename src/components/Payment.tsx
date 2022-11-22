@@ -3,22 +3,20 @@ import VirtualNumpad from './VirtualNumpad'
 import { useEffect, useState, useCallback } from 'react'
 import { CircleStackIcon } from '@heroicons/react/24/solid'
 import { Transition } from '@headlessui/react'
-import { useSetAtom, useAtomValue } from 'jotai'
 
-import { addNotificationAtom, NotificationType } from './Notification'
+import { useStore, NotificationType } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
 import SwitchButton from './SwitchButton'
 import Spinner from './Spinner'
-import { userAtom } from './AuthValidator'
 
 export default function Payment(props: { isOpen: boolean }) {
   const router = useRouter()
   const [isUsingPoint, setUsingPoint] = useState(false)
-  const user = useAtomValue(userAtom)
+  const user = useStore((state) => state.user)
   const [totalPaymentAmount, setTotalPaymentAmount] = useState(0)
   const [step, setStep] = useState(0)
   const chargeMutation = trpc.trade.charge.useMutation()
-  const addNotification = useSetAtom(addNotificationAtom)
+  const addNotification = useStore((state) => state.addNotification)
 
   const onNumpadAction = useCallback(
     (func: ((value: number) => number) | number) => {

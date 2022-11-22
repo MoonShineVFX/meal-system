@@ -1,15 +1,12 @@
 import { Role } from '@prisma/client'
-import { useSetAtom, useAtom } from 'jotai'
+import { useState, useEffect } from 'react'
 
-import { addNotificationAtom, NotificationType } from './Notification'
-import { addTransactionListAtom } from './TransactionsList'
+import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
   onSocketOpenCallbacks,
   onSocketCloseCallbacks,
 } from '@/lib/client/trpc'
 import { validateRole, TransactionWithName, settings } from '@/lib/common'
-import { userAtom } from './AuthValidator'
-import { useState, useEffect } from 'react'
 
 function makePaymentString(transaction: TransactionWithName) {
   const actionString = settings.TRANSACTION_NAME[transaction.type]
@@ -28,9 +25,10 @@ export default function EventListener() {
   const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(true)
   const [isSocketBeenClosed, setIsSocketBeenClosed] = useState(false)
   const trpcContext = trpc.useContext()
-  const [user, setUser] = useAtom(userAtom)
-  const addNotification = useSetAtom(addNotificationAtom)
-  const addTransactionList = useSetAtom(addTransactionListAtom)
+  const user = useStore((state) => state.user)
+  const setUser = useStore((state) => state.setUser)
+  const addNotification = useStore((state) => state.addNotification)
+  const addTransactions = useStore((state) => state.addTransactions)
 
   const handleError = async (error: Omit<Error, 'name'>) => {
     // Catch socket closed error
@@ -106,7 +104,7 @@ export default function EventListener() {
           type: NotificationType.SUCCESS,
           message: `成功${makePaymentString(transaction)}`,
         })
-        addTransactionList({ role: Role.USER, transactions: [transaction] })
+        addTransactions(Role.USER, [transaction])
       },
       onError: handleError,
     },
@@ -124,10 +122,7 @@ export default function EventListener() {
           }
         },
         onData: async (transaction) => {
-          addTransactionList({
-            role: Role.STAFF,
-            transactions: [transaction],
-          })
+          addTransactions(Role.STAFF, [transaction])
           addNotification({
             type: NotificationType.SUCCESS,
             message: `${transaction.sourceUser.name} ${makePaymentString(
@@ -152,10 +147,7 @@ export default function EventListener() {
           }
         },
         onData: async (transaction) => {
-          addTransactionList({
-            role: Role.ADMIN,
-            transactions: [transaction],
-          })
+          addTransactions(Role.ADMIN, [transaction])
         },
         onError: handleError,
       },

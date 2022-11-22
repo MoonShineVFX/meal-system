@@ -1,13 +1,9 @@
 import { FormEvent, useEffect } from 'react'
-import { useSetAtom } from 'jotai'
 
 import trpc from '@/lib/client/trpc'
 import { generateCookie } from '@/lib/common'
 import Spinner from '@/components/Spinner'
-import {
-  addNotificationAtom,
-  NotificationType,
-} from '@/components/Notification'
+import { useStore, NotificationType } from '@/lib/client/store'
 
 interface LoginFormElements extends HTMLFormControlsCollection {
   username: HTMLInputElement
@@ -21,7 +17,7 @@ interface LoginFormElement extends HTMLFormElement {
 export default function PageLogin() {
   const loginMutation = trpc.user.login.useMutation()
   const trpcContext = trpc.useContext()
-  const addNotification = useSetAtom(addNotificationAtom)
+  const addNotification = useStore((state) => state.addNotification)
 
   useEffect(() => {
     // Logout the user when enter the page
@@ -37,14 +33,12 @@ export default function PageLogin() {
         password: event.currentTarget.elements.password.value,
       },
       {
-        // If the login is successful, redirect to the home page
+        // If the login is successful, reload to the home page
         onSuccess: async () => {
           addNotification({
             type: NotificationType.SUCCESS,
             message: '登入成功',
           })
-          // await trpcContext.user.info.invalidate()
-          // router.push('/')
         },
         onError: (error) => {
           addNotification({

@@ -8,15 +8,14 @@ import CountUp from 'react-countup'
 import { Popover, Transition } from '@headlessui/react'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-import { useAtomValue } from 'jotai'
 
 import TransactionList from '@/components/TransactionsList'
 import Payment from '@/components/Payment'
 import { generateCookie } from '@/lib/common'
-import { userAtom } from '@/components/AuthValidator'
+import { useStore } from '@/lib/client/store'
 
 export default function PageIndex() {
-  const user = useAtomValue(userAtom)
+  const user = useStore((state) => state.user)
   const router = useRouter()
   const [isOpenPayment, setIsOpenPayment] = useState(false)
 

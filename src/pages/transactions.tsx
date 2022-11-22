@@ -1,13 +1,12 @@
 import TransactionList from '@/components/TransactionsList'
 import { Tab } from '@headlessui/react'
 import { Role } from '@prisma/client'
-import { useAtomValue } from 'jotai'
 
 import { validateRole } from '@/lib/common'
-import { userAtom } from '@/components/AuthValidator'
+import { useStore } from '@/lib/client/store'
 
 export default function PageTransactions() {
-  const user = useAtomValue(userAtom)
+  const user = useStore((state) => state.user)
 
   if (!user) return null
 

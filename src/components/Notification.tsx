@@ -1,4 +1,8 @@
-import { atom, useAtomValue } from 'jotai'
+import {
+  useStore,
+  NotificationType,
+  NotificationPayload,
+} from '@/lib/client/store'
 import { useEffect, useState } from 'react'
 import { CheckCircleIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
@@ -7,47 +11,15 @@ import { XCircleIcon } from '@heroicons/react/24/outline'
 import { settings } from '@/lib/common'
 
 /* Type */
-export enum NotificationType {
-  SUCCESS = 'SUCCESS',
-  ERROR = 'ERROR',
-  INFO = 'INFO',
-}
-
-export type NotificationMessage = {
-  type: NotificationType
-  message: string
-  id: number
-}
-
 const iconMap = {
   [NotificationType.SUCCESS]: [CheckCircleIcon, 'text-green-500'],
   [NotificationType.ERROR]: [XCircleIcon, 'text-red-500'],
   [NotificationType.INFO]: [ExclamationCircleIcon, 'text-yellow-500'],
 }
 
-/* State */
-const notificationAtom = atom<NotificationMessage[]>([])
-let notificationIdCounter = 0
-export const addNotificationAtom = atom(
-  null,
-  async (get, set, message: Omit<NotificationMessage, 'id'>) => {
-    const id = notificationIdCounter++
-    const newNotificationMessage = { ...message, id: id }
-    set(notificationAtom, [newNotificationMessage, ...get(notificationAtom)])
-    setTimeout(
-      () =>
-        set(
-          notificationAtom,
-          get(notificationAtom).filter((message) => message.id !== id),
-        ),
-      settings.NOTIFICATION_DURATION,
-    )
-  },
-)
-
 /* Component */
 export default function Notification() {
-  const notifications = useAtomValue(notificationAtom)
+  const notifications = useStore((state) => state.notifications)
 
   return (
     <div className='pointer-events-none fixed inset-0 flex justify-center'>
@@ -63,7 +35,7 @@ export default function Notification() {
 }
 
 function NotificationPod(props: {
-  notification: NotificationMessage
+  notification: NotificationPayload
   index: number
 }) {
   const { notification } = props

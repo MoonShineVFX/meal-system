@@ -1,8 +1,7 @@
 import { FormEvent } from 'react'
-import { useAtomValue } from 'jotai'
 
 import trpc from '@/lib/client/trpc'
-import { userAtom } from '@/components/AuthValidator'
+import { useStore } from '@/lib/client/store'
 
 interface RechargeFormElements extends HTMLFormControlsCollection {
   targetUserId: HTMLSelectElement
@@ -14,7 +13,7 @@ interface RechargeFormElement extends HTMLFormElement {
 }
 
 export default function PageRecharge() {
-  const user = useAtomValue(userAtom)
+  const user = useStore((state) => state.user)
   const rechargeMutation = trpc.trade.recharge.useMutation()
 
   const handleRecharge = async (event: FormEvent<RechargeFormElement>) => {

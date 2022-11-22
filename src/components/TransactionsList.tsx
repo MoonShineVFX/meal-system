@@ -3,49 +3,12 @@ import React, { Fragment, useEffect, useMemo } from 'react'
 import { TransactionType } from '@prisma/client'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useInView } from 'react-intersection-observer'
-import { atom, useAtomValue, useSetAtom } from 'jotai'
 import { Role } from '@prisma/client'
 
 import Spinner from './Spinner'
 import trpc from '@/lib/client/trpc'
-import { settings, TransactionWithName } from '@/lib/common'
-
-/* State */
-const transactionListAtom = {
-  [Role.USER]: atom<TransactionWithName[]>([]),
-  [Role.STAFF]: atom<TransactionWithName[]>([]),
-  [Role.ADMIN]: atom<TransactionWithName[]>([]),
-}
-
-type addTransactionListAtomProps = {
-  role: Exclude<Role, 'SERVER'>
-  transactions: TransactionWithName[]
-}
-export const addTransactionListAtom = atom(
-  null,
-  async (get, set, props: addTransactionListAtomProps) => {
-    const prevTransactions = get(transactionListAtom[props.role])
-    const transactionsMap: Record<
-      TransactionWithName['id'],
-      TransactionWithName
-    > = {}
-
-    for (const transaction of prevTransactions) {
-      transactionsMap[transaction.id] = transaction
-    }
-
-    for (const transaction of props.transactions) {
-      transactionsMap[transaction.id] = transaction
-    }
-
-    set(
-      transactionListAtom[props.role],
-      Object.values(transactionsMap).sort(
-        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-      ),
-    )
-  },
-)
+import { settings } from '@/lib/common'
+import { useStore } from '@/lib/client/store'
 
 /* Component */
 function TransactionList(props: {
@@ -65,8 +28,8 @@ function TransactionList(props: {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   )
-  const transactions = useAtomValue(transactionListAtom[displayRole])
-  const addTransactionList = useSetAtom(addTransactionListAtom)
+  const transactions = useStore((state) => state[displayRole])
+  const addTransactions = useStore((state) => state.addTransactions)
 
   const { ref, inView } = useInView({ rootMargin: '0px 0px 50% 0px' })
   const nextPageElement = useMemo<JSX.Element | null>(() => {
@@ -215,11 +178,10 @@ function TransactionList(props: {
   }, [transactions])
 
   useEffect(() => {
-    addTransactionList({
-      role: displayRole,
-      transactions:
-        transactionsData?.pages.map((page) => page.transactions).flat() ?? [],
-    })
+    addTransactions(
+      displayRole,
+      transactionsData?.pages.map((page) => page.transactions).flat() ?? [],
+    )
   }, [transactionsData?.pages])
 
   // Auto fetch next page when in view
