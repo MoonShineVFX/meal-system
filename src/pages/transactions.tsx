@@ -1,6 +1,7 @@
 import TransactionList from '@/components/TransactionsList'
 import { Tab } from '@headlessui/react'
 import { Role } from '@prisma/client'
+import { Transition } from '@headlessui/react'
 
 import { validateRole } from '@/lib/common'
 import { useStore } from '@/lib/client/store'
@@ -14,29 +15,29 @@ export default function PageTransactions() {
   const isAdmin = validateRole(user.role, Role.ADMIN)
 
   return (
-    <div className=''>
+    <div>
       <Tab.Group>
-        <Tab.List className='fixed top-0 w-full max-w-lg border-b-2 bg-amber-400 px-4 pt-4 xs:rounded-b-xl'>
+        <Tab.List className='fixed top-0 z-10 w-full max-w-lg border-b-2 bg-amber-400 px-4 pt-4 xs:rounded-b-xl'>
           <TransactionsTab text='交易紀錄' />
           {isStaff && <TransactionsTab text='收款紀錄' />}
           {isAdmin && <TransactionsTab text='全部' />}
         </Tab.List>
-        <Tab.Panels className='mt-28 px-4 pb-20'>
+        <Tab.Panels className='pt-[5rem] pb-16'>
           {/* User */}
-          <Tab.Panel>
+          <TransactionsPanel>
             <TransactionList />
-          </Tab.Panel>
+          </TransactionsPanel>
           {/* Staff */}
           {isStaff && (
-            <Tab.Panel>
+            <TransactionsPanel>
               <TransactionList role={Role.STAFF} />
-            </Tab.Panel>
+            </TransactionsPanel>
           )}
           {/* Server */}
           {isAdmin && (
-            <Tab.Panel>
+            <TransactionsPanel>
               <TransactionList role={Role.ADMIN} />
-            </Tab.Panel>
+            </TransactionsPanel>
           )}
         </Tab.Panels>
       </Tab.Group>
@@ -51,5 +52,24 @@ function TransactionsTab(props: { text: string }) {
         {props.text}
       </div>
     </Tab>
+  )
+}
+
+function TransactionsPanel(props: { children: React.ReactNode }) {
+  return (
+    <Tab.Panel>
+      <Transition
+        appear={true}
+        show={true}
+        enter='transition-all duration-200'
+        enterFrom='opacity-0'
+        enterTo='opacity-100'
+        leave='transition-opacity duration-200'
+        leaveFrom='opacity-100'
+        leaveTo='opacity-0'
+      >
+        {props.children}
+      </Transition>
+    </Tab.Panel>
   )
 }

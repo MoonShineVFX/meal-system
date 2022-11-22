@@ -6,6 +6,10 @@ body {
   @apply bg-stone-100 lg:overflow-y-scroll;
 }
 
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 #nprogress .bar {
   @apply h-[3px] bg-stone-800;
   box-shadow: 0 0 8px theme('colors.stone.800/50'),
@@ -13,8 +17,4 @@ body {
 }
 #nprogress .peg {
   display: none;
-}
-
-html {
-  -webkit-tap-highlight-color: transparent;
 }

@@ -15,7 +15,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
       {/* Main */}
-      <div className='mx-auto max-w-lg'>
+      <div className='mx-auto min-h-full max-w-lg'>
         <Component {...pageProps} />
       </div>
       {/* Menu */}
