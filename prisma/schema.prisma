@@ -42,6 +42,7 @@ model User {
   authTokens        AuthToken[]
   orders            Order[]
   twmps             Twmp[]
+  blockchain        Blockchain?
 }
 
 model Transaction {
@@ -147,4 +148,11 @@ model DayMenu {
   dinnerId    Int?     @unique
   tea         Menu?    @relation("tea", fields: [teaId], references: [id])
   teaId       Int?     @unique
+}
+
+// Blockchain
+model Blockchain {
+  address String @id
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String @unique
 }
