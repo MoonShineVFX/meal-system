@@ -56,7 +56,7 @@ async function createBlockchainAccountWithMint(
 
 async function main() {
   for (const mock of mockData) {
-    console.log('>> Creating user:', mock.name)
+    console.log('>> Seed user:', mock.name)
 
     console.log('Create prisma data')
     const updateData = {
@@ -78,7 +78,7 @@ async function main() {
     })
 
     if (!user.blockchain) {
-      console.log('Create bloackchain accounts')
+      console.log('Create blockchain accounts')
       const newBlockchainAccount = await createBlockchainAccountWithMint(
         mock.points,
         mock.credits,
@@ -95,7 +95,7 @@ async function main() {
         },
       })
     } else {
-      console.log('Mint bloackchain accounts')
+      console.log('Mint blockchain accounts')
       const pointBalance = await getUserBalance(
         CurrencyType.POINT,
         user.blockchain.address,
