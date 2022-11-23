@@ -46,17 +46,18 @@ model User {
 }
 
 model Transaction {
-  id            Int             @id @default(autoincrement())
-  createdAt     DateTime        @default(now())
-  sourceUser    User            @relation("source", fields: [sourceUserId], references: [id])
-  sourceUserId  String
-  targetUser    User            @relation("target", fields: [targetUserId], references: [id])
-  targetUserId  String
-  type          TransactionType
-  pointsAmount  Int             @default(0)
-  creditsAmount Int             @default(0)
-  orders        Order[]
-  twmp          Twmp?
+  id               Int             @id @default(autoincrement())
+  createdAt        DateTime        @default(now())
+  sourceUser       User            @relation("source", fields: [sourceUserId], references: [id])
+  sourceUserId     String
+  targetUser       User            @relation("target", fields: [targetUserId], references: [id])
+  targetUserId     String
+  type             TransactionType
+  pointsAmount     Int             @default(0)
+  creditsAmount    Int             @default(0)
+  orders           Order[]
+  twmp             Twmp?
+  blockchainHashes String[]
 
   @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
 }
@@ -152,7 +153,8 @@ model DayMenu {
 
 // Blockchain
 model Blockchain {
-  address String @id
-  user    User   @relation(fields: [userId], references: [id])
-  userId  String @unique
+  address    String @id
+  user       User   @relation(fields: [userId], references: [id])
+  userId     String @unique
+  privateKey String @unique
 }
