@@ -3,6 +3,7 @@ import { User, TransactionType, Role, Transaction } from '@prisma/client'
 /* Settings */
 export const settings = {
   /* Auth */
+  AUTH_API_URL: process.env.AUTH_API_URL!,
   COOKIE_TOKEN_NAME: 'meal_token',
   COOKIE_EXPIRE_DAYS: 14,
   /* Cached */
@@ -30,10 +31,18 @@ export const settings = {
   TWMP_TERMINAL_ID: process.env.TWMP_TERMINAL_ID!,
   TWMP_3DES_IV: process.env.TWMP_3DES_IV!,
   TWMP_3DES_KEY: process.env.TWMP_3DES_KEY!,
-  /* URL */
-  AUTH_API_URL: process.env.AUTH_API_URL!,
+  /* Server */
   WEBSOCKET_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_PORT ?? '3001',
   HTTP_PORT: process.env.PORT ?? '3000',
+  /* Blockchain */
+  BLOCKCHAIN_URL: process.env.BLOCKCHAIN_URL!,
+  BLOCKCHAIN_CREDIT_ADDRESS: process.env.BLOCKCHAIN_CREDIT_ADDRESS!,
+  BLOCKCHAIN_POINT_ADDRESS: process.env.BLOCKCHAIN_POINT_ADDRESS!,
+  BLOCKCHAIN_PRIVATE_KEY: process.env.BLOCKCHAIN_PRIVATE_KEY!,
+  BLOCKCHAIN_GAS_PRICE: 5,
+  BLOCKCHAIN_GAS: 200000,
+  BLOCKCHAIN_NONCE_REFRESH_TIME: 1000 * 60,
+  BLOCKCHAIN_LOG: process.env.BLOCKCHAIN_LOG === 'true',
 }
 
 /* Types */

@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev-next": "next dev",
-    "dev-wss": "tsx watch src/lib/trpc/wssServer.ts --tsconfig tsconfig.server.json",
+    "dev-wss": "tsx watch src/lib/server/host/dev.ts --tsconfig tsconfig.server.json",
     "build-next": "cross-env NODE_ENV=production next build",
     "build-server": "tsc --project tsconfig.server.json",
-    "start": "cross-env NODE_ENV=production TS_NODE_BASEURL=./dist node -r tsconfig-paths/register dist/lib/trpc/prodServer.js",
+    "start": "cross-env NODE_ENV=production TS_NODE_BASEURL=./dist node -r tsconfig-paths/register dist/lib/server/host/prod.js",
     "db-studio": "prisma studio",
     "db-seed": "ts-node prisma/scripts/seed.ts",
     "db-generate": "prisma generate"
@@ -50,6 +50,7 @@
     "tailwindcss": "^3.2.1",
     "tsconfig-paths": "^4.1.0",
     "typescript": "^4.8.4",
+    "web3": "^1.8.1",
     "ws": "^8.11.0",
     "zod": "^3.19.1",
     "zustand": "^4.1.4"

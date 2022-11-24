@@ -1,23 +1,58 @@
 import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client'
 
 import { settings } from '@/lib/common'
+import { blockchainManager, CurrencyType } from './blockchain'
 
-/* Functions */
-export async function ensureUser(userId: string, name: string) {
-  const user = await prisma.user.findUnique({
+/* User */
+export async function ensureUser(
+  userId: string,
+  name: string,
+  role?: Role,
+  points?: number,
+  credits?: number,
+) {
+  const updateData = {
+    name: name,
+    role: role,
+    points: points,
+    credits: credits,
+  }
+
+  const user = await prisma.user.upsert({
     where: {
       id: userId,
     },
-  })
-  if (user) return user
-
-  const newUser = await prisma.user.create({
-    data: {
+    update: updateData,
+    create: {
       id: userId,
-      name: name,
+      ...updateData,
+    },
+    include: {
+      blockchain: true,
     },
   })
-  return newUser
+
+  // If user does not have a blockchain, create one
+  if (!user.blockchain) {
+    console.log(`Creating blockchain account for user ${user.name} (${userId})`)
+    const newBlockchainAccount = await blockchainManager.createAccount()
+    await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        blockchain: {
+          create: {
+            address: newBlockchainAccount.address,
+            privateKey: newBlockchainAccount.privateKey,
+          },
+        },
+      },
+    })
+  }
+  blockchainUpdateForUser(user.id)
+
+  return user
 }
 
 export async function createAuthToken(userId: string) {
@@ -71,6 +106,7 @@ export async function getUserInfo(userId: string) {
   return user
 }
 
+/* Transaction */
 export async function rechargeUserCredits(
   sourceUserId: string,
   targetUserId: string,
@@ -96,6 +132,10 @@ export async function rechargeUserCredits(
         },
       }),
     ])
+
+    // Update blockchain
+    blockchainUpdateFromRecharge(transaction.id)
+
     return {
       user,
       transaction,
@@ -179,8 +219,12 @@ export async function chargeUserBalance(
           },
         },
       })
+
       return [updatedUser, transaction]
     })
+
+    // Update blockchain
+    blockchainUpdateFromTransfer(transaction.id)
 
     return {
       user,
@@ -256,6 +300,7 @@ export async function getTransactions(
   }
 }
 
+/* TWMP */
 export async function initialTwmpPayment(amount: number, userId: string) {
   const twmp = await prisma.twmp.create({
     data: {
@@ -265,6 +310,154 @@ export async function initialTwmpPayment(amount: number, userId: string) {
   })
 
   return twmp
+}
+
+/* Blockchain */
+async function blockchainUpdateFromTransfer(transactionId: number) {
+  const transaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: {
+      sourceUser: { include: { blockchain: true } },
+      targetUser: { include: { blockchain: true } },
+    },
+  })
+
+  // Catch error
+  if (!transaction) throw Error('Transaction not found')
+  if (transaction.blockchainHashes.length > 0) throw Error('Already updated')
+  if (!transaction.sourceUser.blockchain || !transaction.targetUser.blockchain)
+    throw Error('User blockchain data not found')
+
+  // Update
+  let blockchainHashes = []
+  if (transaction.pointsAmount > 0) {
+    blockchainHashes.push(
+      await blockchainManager.transfer(
+        CurrencyType.POINT,
+        transaction.sourceUser.blockchain.address,
+        transaction.targetUser.blockchain.address,
+        transaction.pointsAmount,
+      ),
+    )
+  }
+  if (transaction.creditsAmount > 0) {
+    blockchainHashes.push(
+      await blockchainManager.transfer(
+        CurrencyType.CREDIT,
+        transaction.sourceUser.blockchain.address,
+        transaction.targetUser.blockchain.address,
+        transaction.creditsAmount,
+      ),
+    )
+  }
+
+  await prisma.transaction.update({
+    where: { id: transactionId },
+    data: {
+      blockchainHashes: blockchainHashes,
+    },
+  })
+}
+
+async function blockchainUpdateFromRecharge(transactionId: number) {
+  const transaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: {
+      targetUser: { include: { blockchain: true } },
+    },
+  })
+
+  // Catch error
+  if (!transaction) throw Error('Transaction not found')
+  if (transaction.blockchainHashes.length > 0) throw Error('Already updated')
+  if (!transaction.targetUser.blockchain)
+    throw Error('User blockchain data not found')
+
+  // Update
+  let blockchainHashes = []
+  if (transaction.pointsAmount > 0) {
+    blockchainHashes.push(
+      await blockchainManager.mint(
+        CurrencyType.POINT,
+        transaction.targetUser.blockchain.address,
+        transaction.pointsAmount,
+      ),
+    )
+  }
+  if (transaction.creditsAmount > 0) {
+    blockchainHashes.push(
+      await blockchainManager.mint(
+        CurrencyType.CREDIT,
+        transaction.targetUser.blockchain.address,
+        transaction.creditsAmount,
+      ),
+    )
+  }
+
+  await prisma.transaction.update({
+    where: { id: transactionId },
+    data: {
+      blockchainHashes: blockchainHashes,
+    },
+  })
+}
+
+async function blockchainUpdateForUser(userId: string) {
+  console.log('>> Updating blockchain for user', userId)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { blockchain: true },
+  })
+
+  // Catch error
+  if (!user) throw Error('User not found')
+  if (!user.blockchain) throw Error('User blockchain data not found')
+
+  // Update
+  const pointBalance = await blockchainManager.getUserBalance(
+    CurrencyType.POINT,
+    user.blockchain.address,
+  )
+  const creditBalance = await blockchainManager.getUserBalance(
+    CurrencyType.CREDIT,
+    user.blockchain.address,
+  )
+  console.log('Blockchain balance', pointBalance, creditBalance)
+  console.log('Database balance', user.points, user.credits)
+  if (pointBalance < user.points) {
+    console.log('Minting points for user', user.name)
+    const hash = await blockchainManager.mint(
+      CurrencyType.POINT,
+      user.blockchain.address,
+      user.points - pointBalance,
+    )
+    console.log(hash)
+  } else if (pointBalance > user.points) {
+    console.log('Burning points for user', user.name)
+    const hash = await blockchainManager.burn(
+      CurrencyType.POINT,
+      user.blockchain.address,
+      pointBalance - user.points,
+    )
+    console.log(hash)
+  }
+  if (creditBalance < user.credits) {
+    console.log('Minting credits for user', user.name)
+    const hash = await blockchainManager.mint(
+      CurrencyType.CREDIT,
+      user.blockchain.address,
+      user.credits - creditBalance,
+    )
+    console.log(hash)
+  } else if (creditBalance > user.credits) {
+    console.log('Burning credits for user', user.name)
+    const hash = await blockchainManager.burn(
+      CurrencyType.CREDIT,
+      user.blockchain.address,
+      creditBalance - user.credits,
+    )
+    console.log(hash)
+  }
 }
 
 /* Global */
