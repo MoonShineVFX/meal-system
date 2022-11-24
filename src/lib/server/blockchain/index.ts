@@ -1,8 +1,1 @@
-export {
-  transfer,
-  mint,
-  burn,
-  createAccount,
-  CurrencyType,
-  getUserBalance,
-} from './blockchain'
+export { blockchainManager, CurrencyType } from './blockchain'

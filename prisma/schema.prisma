@@ -153,8 +153,8 @@ model DayMenu {
 
 // Blockchain
 model Blockchain {
-  address    String @id
-  user       User   @relation(fields: [userId], references: [id])
-  userId     String @unique
-  privateKey String @unique
+  address    String  @id
+  user       User    @relation(fields: [userId], references: [id])
+  userId     String  @unique
+  privateKey String? @unique
 }
