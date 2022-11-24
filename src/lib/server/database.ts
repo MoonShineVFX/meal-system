@@ -220,11 +220,11 @@ export async function chargeUserBalance(
         },
       })
 
-      // Update blockchain
-      blockchainUpdateFromTransfer(transaction.id)
-
       return [updatedUser, transaction]
     })
+
+    // Update blockchain
+    blockchainUpdateFromTransfer(transaction.id)
 
     return {
       user,

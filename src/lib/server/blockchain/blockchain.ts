@@ -12,6 +12,8 @@ export enum CurrencyType {
   POINT = 'point',
 }
 
+type NonceMetadata = { nonce: number; time: number }
+
 /* Defines */
 class BlockchainManager {
   private client: Web3
@@ -20,9 +22,9 @@ class BlockchainManager {
     [CurrencyType.CREDIT]: Contract
     [CurrencyType.POINT]: Contract
   }
-  private noncePromise: Promise<void>
 
-  private currentNonce = -1
+  private nonceQueue: Promise<NonceMetadata>[] = []
+
   private gasPrice = Web3.utils.toWei(
     settings.BLOCKCHAIN_GAS_PRICE.toString(),
     'gwei',
@@ -43,20 +45,67 @@ class BlockchainManager {
     this.adminAccount = this.client.eth.accounts.privateKeyToAccount(
       settings.BLOCKCHAIN_PRIVATE_KEY,
     )
-    this.noncePromise = this.getNonce()
+    this.getNonce()
+  }
+
+  log(...args: Parameters<typeof console.log>) {
+    if (settings.BLOCKCHAIN_LOG) {
+      console.log('[Blockchain Manager]', ...args)
+    }
   }
 
   async getNonce() {
-    this.currentNonce = await this.client.eth.getTransactionCount(
-      this.adminAccount.address,
-    )
-    console.log('BlockchainManager initialized')
+    this.log('>> Get Nonce')
+
+    const previousPromise =
+      this.nonceQueue.length > 0
+        ? this.nonceQueue[this.nonceQueue.length - 1]
+        : null
+    let currentPromise: Promise<NonceMetadata>
+
+    if (!previousPromise) {
+      this.log('No previous promise, create mock one')
+      currentPromise = new Promise<NonceMetadata>(async (resolve) => {
+        resolve({ nonce: -1, time: 0 })
+      })
+    } else {
+      this.log('Previous promise exists')
+      currentPromise = new Promise<NonceMetadata>(async (resolve) => {
+        const previousNonceMetadata = await previousPromise
+        const now = Date.now()
+        if (
+          now - previousNonceMetadata.time >
+          settings.BLOCKCHAIN_NONCE_REFRESH_TIME
+        ) {
+          this.log('Previous nonce is too old, refresh new one')
+          const newNonce = await this.client.eth.getTransactionCount(
+            this.adminAccount.address,
+          )
+          resolve({ nonce: newNonce, time: now })
+        } else {
+          this.log(
+            'Previous nonce is still valid, increase it',
+            previousNonceMetadata.nonce + 1,
+          )
+          resolve({
+            nonce: previousNonceMetadata.nonce + 1,
+            time: previousNonceMetadata.time,
+          })
+        }
+      })
+    }
+
+    this.nonceQueue.push(currentPromise)
+    if (this.nonceQueue.length > 3) this.nonceQueue.shift()
+
+    const thisNonce = await currentPromise
+    this.log('<< Nonce', thisNonce.nonce)
+
+    return thisNonce.nonce
   }
 
   /* Functions */
   waitForTxHash(singedTx: SignedTransaction): Promise<string> {
-    if (this.currentNonce === -1)
-      throw new Error('BlockchainManager not initialized')
     return new Promise((resolve, reject) => {
       this.client.eth
         .sendSignedTransaction(singedTx.rawTransaction!)
@@ -75,9 +124,7 @@ class BlockchainManager {
     toAddress: string,
     amount: number,
   ) {
-    await this.noncePromise
-    const thisNonce = this.currentNonce
-    this.currentNonce += 1
+    const thisNonce = await this.getNonce()
     const signedTx = await this.client.eth.accounts.signTransaction(
       {
         from: this.adminAccount.address,
@@ -108,9 +155,7 @@ class BlockchainManager {
   }
 
   async mint(currencyType: CurrencyType, toAddress: string, amount: number) {
-    await this.noncePromise
-    const thisNonce = this.currentNonce
-    this.currentNonce += 1
+    const thisNonce = await this.getNonce()
     const signedTx = await this.client.eth.accounts.signTransaction(
       {
         from: this.adminAccount.address,
@@ -140,9 +185,7 @@ class BlockchainManager {
   }
 
   async burn(currencyType: CurrencyType, fromAddress: string, amount: number) {
-    await this.noncePromise
-    const thisNonce = this.currentNonce
-    this.currentNonce += 1
+    const thisNonce = await this.getNonce()
     const signedTx = await this.client.eth.accounts.signTransaction(
       {
         from: this.adminAccount.address,
