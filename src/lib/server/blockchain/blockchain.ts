@@ -44,7 +44,7 @@ class BlockchainManager {
   }
 
   log(...args: Parameters<typeof console.log>) {
-    if (settings.BLOCKCHAIN_LOG) {
+    if (settings.LOG_BLOCKCHAIN) {
       console.log('[Blockchain Manager]', ...args)
     }
   }
