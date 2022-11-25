@@ -34,13 +34,6 @@ export const TradeRouter = router({
         CurrencyType.CREDIT,
       )
 
-      if (result instanceof Error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.message,
-        })
-      }
-
       const { user, transaction } = result
 
       eventEmitter.emit(Event.USER_UPDATE(user.id), user)
@@ -64,13 +57,6 @@ export const TradeRouter = router({
         input.amount,
         input.isUsingPoint,
       )
-
-      if (result instanceof Error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.message,
-        })
-      }
 
       const { user, transaction } = result
 
@@ -105,12 +91,6 @@ export const TradeRouter = router({
         input.cursor,
         input.role,
       )
-      if (transactions instanceof Error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: transactions.message,
-        })
-      }
 
       let nextCursor: number | undefined = undefined
       if (transactions.length > settings.TRANSACTIONS_PER_PAGE) {

@@ -1,11 +1,11 @@
 -- CreateEnum
-CREATE TYPE "TransactionType" AS ENUM ('RECHARGE', 'PAYMENT', 'ORDER', 'REFUND');
+CREATE TYPE "TransactionType" AS ENUM ('RECHARGE', 'PAYMENT', 'REFUND');
 
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('SERVER', 'ADMIN', 'STAFF', 'USER');
 
 -- CreateEnum
-CREATE TYPE "TwmpPayStatus" AS ENUM ('SUCCESS', 'FAILED', 'PENDING');
+CREATE TYPE "TwmpStatus" AS ENUM ('SUCCESS', 'FAILED', 'CANCEL');
 
 -- CreateTable
 CREATE TABLE "AuthToken" (
@@ -22,8 +22,8 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "points" INTEGER NOT NULL DEFAULT 500,
-    "credits" INTEGER NOT NULL DEFAULT 0,
+    "pointBalance" INTEGER NOT NULL DEFAULT 500,
+    "creditBalance" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -35,8 +35,9 @@ CREATE TABLE "Transaction" (
     "sourceUserId" TEXT NOT NULL,
     "targetUserId" TEXT NOT NULL,
     "type" "TransactionType" NOT NULL,
-    "pointsAmount" INTEGER NOT NULL DEFAULT 0,
-    "creditsAmount" INTEGER NOT NULL DEFAULT 0,
+    "pointAmount" INTEGER NOT NULL DEFAULT 0,
+    "creditAmount" INTEGER NOT NULL DEFAULT 0,
+    "blockchainHashes" TEXT[],
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
 );
@@ -51,21 +52,35 @@ CREATE TABLE "Setting" (
 );
 
 -- CreateTable
+CREATE TABLE "TwmpDetail" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "status" "TwmpStatus" NOT NULL,
+    "transactionId" INTEGER,
+    "twmpId" TEXT NOT NULL,
+
+    CONSTRAINT "TwmpDetail_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Twmp" (
     "id" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "transAMT" INTEGER NOT NULL,
     "txnID" TEXT,
-    "txnUID" TEXT[],
-    "txnDate" DATE,
-    "txnTime" TIME,
-    "payStatus" "TwmpPayStatus" NOT NULL DEFAULT 'PENDING',
-    "paymentTool" TEXT NOT NULL,
-    "transactionId" INTEGER,
-    "userId" TEXT,
+    "userId" TEXT NOT NULL,
 
     CONSTRAINT "Twmp_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Blockchain" (
+    "address" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "privateKey" TEXT,
+
+    CONSTRAINT "Blockchain_pkey" PRIMARY KEY ("address")
 );
 
 -- CreateTable
@@ -128,10 +143,16 @@ CREATE TABLE "DayMenu" (
 CREATE INDEX "Transaction_sourceUserId_targetUserId_type_createdAt_idx" ON "Transaction"("sourceUserId", "targetUserId", "type", "createdAt" DESC);
 
 -- CreateIndex
+CREATE UNIQUE INDEX "TwmpDetail_transactionId_key" ON "TwmpDetail"("transactionId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Twmp_txnID_key" ON "Twmp"("txnID");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Twmp_transactionId_key" ON "Twmp"("transactionId");
+CREATE UNIQUE INDEX "Blockchain_userId_key" ON "Blockchain"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Blockchain_privateKey_key" ON "Blockchain"("privateKey");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Meal_menuId_key" ON "Meal"("menuId");

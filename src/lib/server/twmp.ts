@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js'
+import { TwmpStatus } from '@prisma/client'
 
 import { settings } from '@/lib/common'
 
@@ -117,6 +118,28 @@ type CancelTwmpPaymentResponse = {
 }
 
 /* Functions */
+function parseTxnTime(txnDate: string, txnTime: string) {
+  const date =
+    txnDate.slice(0, 4) + '-' + txnDate.slice(4, 6) + '-' + txnDate.slice(6, 8)
+  const time =
+    txnTime.slice(0, 2) + ':' + txnTime.slice(2, 4) + ':' + txnTime.slice(4, 6)
+  return new Date(`${date}T${time}.000+08:00`)
+}
+
+function parsePayStatus(payStatus: PayStatus) {
+  switch (payStatus) {
+    case PayStatus.SUCCESS:
+      return TwmpStatus.SUCCESS
+    case PayStatus.REFUNDED:
+      return TwmpStatus.CANCELED
+    case PayStatus.FAILED:
+    case PayStatus.REFUND_FAILED:
+      return TwmpStatus.FAILED
+    default:
+      throw new Error('Unknown payStatus', payStatus)
+  }
+}
+
 function encodeVerifyCode(...inputs: string[]) {
   const inputsHash = CryptoJS.SHA256(inputs.join(''))
   return CryptoJS.TripleDES.encrypt(
@@ -188,13 +211,11 @@ export async function createTwmpPayment<T extends TwmpPaymentType>(
     },
   )
 
-  if (!response.ok) {
-    return Error(`${response.statusText}`)
-  }
+  if (!response.ok) throw Error(`${response.statusText}`)
 
   let responseBody: CreateTwmpPaymentResponse<T> = await response.json()
   if (requestBody.code !== '0000') {
-    return Error(`[${responseBody.code}] ${responseBody.msg}`)
+    throw Error(`[${responseBody.code}] ${responseBody.msg}`)
   }
 
   let responseVerifyCode: string
@@ -213,11 +234,11 @@ export async function createTwmpPayment<T extends TwmpPaymentType>(
         .qrcode,
     )
   } else {
-    return Error('Unknown payment type')
+    throw Error('Unknown payment type')
   }
 
   if (responseVerifyCode !== responseBody.verifyCode) {
-    return Error('invalid verify code from response')
+    throw Error('invalid verify code from response')
   }
 
   if (type === TwmpPaymentType.MOBILE) {
@@ -234,6 +255,8 @@ export async function createTwmpPayment<T extends TwmpPaymentType>(
       ).qrcode,
       txnID: responseBody.txnID,
     } as CreateTwmpPaymentResult<TwmpPaymentType.DESKTOP>
+  } else {
+    throw Error('Unknown payment type')
   }
 }
 
@@ -244,10 +267,17 @@ export async function handleTwmpPaymentNotify(
   const requestVerifyCode = encodeVerifyCode(requestBody.txn_content)
 
   if (requestVerifyCode !== requestBody.verifyCode) {
-    return Error('invalid verify code from request')
+    throw Error('invalid verify code from request')
   }
 
-  return JSON.parse(requestBody.txn_content) as TwmpPaymentNotifyTxnContent
+  const content = JSON.parse(
+    requestBody.txn_content,
+  ) as TwmpPaymentNotifyTxnContent
+  return {
+    ...content,
+    time: parseTxnTime(content.txnDate, content.txnTime),
+    status: parsePayStatus(content.payStatus),
+  }
 }
 
 /* 5.2 特店 Server 呼叫 twMP 線上購物 Server 進行交易查詢 */
@@ -270,12 +300,12 @@ export async function findTwmpPayment(txnID: string) {
   )
 
   if (!response.ok) {
-    return Error(`${response.statusText}`)
+    throw Error(`${response.statusText}`)
   }
 
   const responseBody: FindTwmpPaymentResponse = await response.json()
   if (requestBody.code !== '0000') {
-    return Error(`[${responseBody.code}] ${responseBody.msg}`)
+    throw Error(`[${responseBody.code}] ${responseBody.msg}`)
   }
 
   const responseVerifyCode = encodeVerifyCode(
@@ -284,7 +314,7 @@ export async function findTwmpPayment(txnID: string) {
   )
 
   if (responseVerifyCode !== responseBody.verifyCode) {
-    return Error('invalid verify code from response')
+    throw Error('invalid verify code from response')
   }
 
   return JSON.parse(responseBody.txn_content) as FindTwmpPaymentTxnContent
@@ -323,12 +353,12 @@ export async function CancelTwmpPayment(
   )
 
   if (!response.ok) {
-    return Error(`${response.statusText}`)
+    throw Error(`${response.statusText}`)
   }
 
   const responseBody: CancelTwmpPaymentResponse = await response.json()
   if (requestBody.code !== '0000') {
-    return Error(`[${responseBody.code}] ${responseBody.msg}`)
+    throw Error(`[${responseBody.code}] ${responseBody.msg}`)
   }
 
   const responseVerifyCode = encodeVerifyCode(
@@ -337,7 +367,7 @@ export async function CancelTwmpPayment(
   )
 
   if (responseVerifyCode !== responseBody.verifyCode) {
-    return Error('invalid verify code from response')
+    throw Error('invalid verify code from response')
   }
 
   return JSON.parse(

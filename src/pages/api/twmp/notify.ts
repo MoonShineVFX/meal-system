@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { handleTwmpPaymentNotify } from '@/lib/server/twmp'
 import z from 'zod'
+
+import { handleTwmpPaymentNotify } from '@/lib/server/twmp'
+import { updateTwmpPayment } from '@/lib/server/database'
 
 const schema = z.object({
   txn_content: z.string().min(1),
@@ -10,11 +12,17 @@ const schema = z.object({
 export default async function api(req: NextApiRequest, res: NextApiResponse) {
   try {
     const requestBody = schema.parse(req.body)
-    const response = await handleTwmpPaymentNotify(requestBody)
+    const result = await handleTwmpPaymentNotify(requestBody)
 
-    if (response instanceof Error) throw response
+    if (result instanceof Error) throw result
 
-    // TODO: Update twmp database from response
+    await updateTwmpPayment(
+      result.orderNo,
+      result.txnUID,
+      result.status,
+      result.time,
+    )
+    res.status(200).send('OK')
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({
