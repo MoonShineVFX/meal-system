@@ -111,7 +111,7 @@ function TransactionList(props: {
     hasNextPage,
     isLoading,
     fetchNextPage,
-  } = trpc.trade.listTransactions.useInfiniteQuery(
+  } = trpc.transaction.list.useInfiniteQuery(
     { role: displayRole },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,

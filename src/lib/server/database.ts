@@ -3,7 +3,7 @@ import {
   Role,
   TransactionType,
   Prisma,
-  TwmpStatus,
+  TwmpResultStatus,
 } from '@prisma/client'
 
 import { settings, CurrencyType } from '@/lib/common'
@@ -117,6 +117,7 @@ export async function rechargeUserBalance(
   targetUserId: string,
   amount: number,
   type: CurrencyType,
+  twmpResultId?: string, // If excute from twmp update
 ) {
   // Add target user balance and create recharge record
   const [user, transaction] = await prisma.$transaction([
@@ -137,6 +138,7 @@ export async function rechargeUserBalance(
         targetUserId: targetUserId,
         creditAmount: amount,
         type: TransactionType.RECHARGE,
+        twmpResultId: twmpResultId,
       },
       include: {
         sourceUser: { select: { name: true } },
@@ -154,7 +156,11 @@ export async function rechargeUserBalance(
   }
 }
 
-export async function refundUserBalance(targetUserId: string, amount: number) {
+export async function refundUserBalance(
+  targetUserId: string,
+  amount: number,
+  twmpResultId?: string, // If excute from twmp update
+) {
   // Burn target user balance and create refund record
   const [user, transaction] = await prisma.$transaction([
     prisma.user.update({
@@ -171,6 +177,7 @@ export async function refundUserBalance(targetUserId: string, amount: number) {
         targetUserId: targetUserId,
         creditAmount: -amount,
         type: TransactionType.REFUND,
+        twmpResultId: twmpResultId,
       },
       include: {
         sourceUser: { select: { name: true } },
@@ -309,7 +316,7 @@ export async function getTransactions(
       },
     }
   } else {
-    throw Error('Invalid role')
+    throw new Error('Invalid role')
   }
 
   const transactions = await prisma.transaction.findMany({
@@ -338,86 +345,87 @@ export async function getTransactions(
 }
 
 /* TWMP */
-export async function initialTwmpPayment(amount: number, userId: string) {
-  const twmp = await prisma.twmp.create({
+export async function initialTwmpDeposit(amount: number, userId: string) {
+  const twmpDeposit = await prisma.twmpDeposit.create({
     data: {
       userId: userId,
       transAMT: amount,
     },
   })
 
-  return twmp
+  return twmpDeposit
 }
 
-export async function updateTwmpPayment(
+export async function updateTwmpDeposit(
   orderNo: string,
   txnUID: string,
-  status: TwmpStatus,
+  status: TwmpResultStatus,
   time: Date,
 ) {
-  const twmp = await prisma.twmp.findUniqueOrThrow({
+  const existTwmpResult = await prisma.twmpResult.findUnique({
     where: {
-      orderNo: orderNo,
+      txnUID: txnUID,
+    },
+  })
+
+  if (
+    existTwmpResult &&
+    existTwmpResult.status === status &&
+    existTwmpResult.updatedAt === time
+  ) {
+    console.warn(`TWMP result already updated: ${txnUID}`)
+    return existTwmpResult
+  }
+
+  const twmpResult = await prisma.twmpResult.upsert({
+    where: {
+      txnUID: txnUID,
+    },
+    update: {
+      status: status,
+      updatedAt: time,
+    },
+    create: {
+      twmpDepositId: orderNo,
+      txnUID: txnUID,
+      status: status,
+      createdAt: time,
+      updatedAt: time,
     },
     include: {
-      details: {
-        orderBy: {
-          createdAt: 'asc',
+      twmpDeposit: {
+        select: {
+          transAMT: true,
+          userId: true,
         },
       },
     },
   })
 
-  const existDetails = twmp.details.filter((detail) => detail.txnUID === txnUID)
-  if (existDetails.length > 0) {
-    console.warn(`TWMP txnUID already exists: ${txnUID}`)
-    return existDetails[0]
-  }
-
-  const prevousStatus = twmp.details.map((detail) => detail.status)
-
-  let transactionId: number | undefined
-  if (
-    !prevousStatus.includes(TwmpStatus.SUCCESS) &&
-    status === TwmpStatus.SUCCESS
-  ) {
+  if (status === TwmpResultStatus.SUCCESS) {
     // Recharge user
-    const result = await rechargeUserBalance(
-      twmp.userId,
-      twmp.transAMT,
+    await rechargeUserBalance(
+      twmpResult.twmpDeposit.userId,
+      twmpResult.twmpDeposit.transAMT,
       CurrencyType.CREDIT,
+      txnUID,
     )
-    transactionId = result.transaction.id
-  } else if (
-    prevousStatus.includes(TwmpStatus.SUCCESS) &&
-    !prevousStatus.includes(TwmpStatus.CANCELED) &&
-    status === TwmpStatus.CANCELED
-  ) {
+  } else if (status === TwmpResultStatus.CANCELED) {
     // Refund user
-    const result = await refundUserBalance(twmp.userId, twmp.transAMT)
-    transactionId = result.transaction.id
-  } else {
-    // Do nothing
-    console.log(
-      `TWMP [${orderNo}] status changed from ${
-        prevousStatus[prevousStatus.length - 1]
-      } to ${status}`,
+    await refundUserBalance(
+      twmpResult.twmpDeposit.userId,
+      twmpResult.twmpDeposit.transAMT,
+      txnUID,
     )
   }
 
-  await prisma.twmpDetail.create({
-    data: {
-      txnUID: txnUID,
-      createdAt: time,
-      status: status,
-      twmpId: orderNo,
-      transactionId: transactionId,
-    },
-  })
+  console.log(
+    `TWMP Deposit [${orderNo}] Result [${txnUID}] status changed to ${status}`,
+  )
 }
 
 /* Blockchain */
-/** Sync transaction payment by blockchain transfer */
+// Sync transaction payment by blockchain transfer
 async function updateBlockchainByTransfer(transactionId: number) {
   const transaction = await prisma.transaction.findUnique({
     where: { id: transactionId },
@@ -428,10 +436,11 @@ async function updateBlockchainByTransfer(transactionId: number) {
   })
 
   // Catch error
-  if (!transaction) throw Error('Transaction not found')
-  if (transaction.blockchainHashes.length > 0) throw Error('Already updated')
+  if (!transaction) throw new Error('Transaction not found')
+  if (transaction.blockchainHashes.length > 0)
+    throw new Error('Already updated')
   if (!transaction.sourceUser.blockchain || !transaction.targetUser.blockchain)
-    throw Error('User blockchain data not found')
+    throw new Error('User blockchain data not found')
 
   // Update
   let blockchainHashes = []
@@ -463,7 +472,7 @@ async function updateBlockchainByTransfer(transactionId: number) {
     },
   })
 }
-/** Sync transaction recharge/refund by blockchain mint/burn */
+// Sync transaction recharge/refund by blockchain mint/burn
 async function updateBlockchainByMintBurn(transactionId: number) {
   const transaction = await prisma.transaction.findUnique({
     where: { id: transactionId },
@@ -473,10 +482,11 @@ async function updateBlockchainByMintBurn(transactionId: number) {
   })
 
   // Catch error
-  if (!transaction) throw Error('Transaction not found')
-  if (transaction.blockchainHashes.length > 0) throw Error('Already updated')
+  if (!transaction) throw new Error('Transaction not found')
+  if (transaction.blockchainHashes.length > 0)
+    throw new Error('Already updated')
   if (!transaction.targetUser.blockchain)
-    throw Error('User blockchain data not found')
+    throw new Error('User blockchain data not found')
 
   // Update
   let blockchainHashes = []
@@ -522,7 +532,7 @@ async function updateBlockchainByMintBurn(transactionId: number) {
     },
   })
 }
-/** Sync user balance by blockchain mint/burn */
+// Sync user balance by blockchain mint/burn
 async function forceSyncBlockchainWallet(userId: string) {
   console.log('>> Updating blockchain for user', userId)
   const user = await prisma.user.findUnique({
@@ -531,8 +541,8 @@ async function forceSyncBlockchainWallet(userId: string) {
   })
 
   // Catch error
-  if (!user) throw Error('User not found')
-  if (!user.blockchain) throw Error('User blockchain data not found')
+  if (!user) throw new Error('User not found')
+  if (!user.blockchain) throw new Error('User blockchain data not found')
 
   // Update
   const pointBalance = await blockchainManager.getUserBalance(

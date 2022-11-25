@@ -18,7 +18,7 @@ import { eventEmitter, Event } from '@/lib/server/event'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
 
-export const TradeRouter = router({
+export const TransactionRouter = router({
   recharge: adminProcedure
     .input(
       z.object({
@@ -69,7 +69,7 @@ export const TradeRouter = router({
       eventEmitter.emit(Event.TRANSACTION_ADD_ADMIN, transaction)
     }),
   // Get transaction records, use until arg to update new records
-  listTransactions: userProcedure
+  list: userProcedure
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
@@ -101,7 +101,7 @@ export const TradeRouter = router({
         nextCursor,
       }
     }),
-  onTransactionAdd: userProcedure
+  onAdd: userProcedure
     .input(
       z.object({
         role: z.enum([Role.USER, Role.STAFF, Role.ADMIN]),

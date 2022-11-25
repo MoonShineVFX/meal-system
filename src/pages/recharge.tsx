@@ -14,7 +14,7 @@ interface RechargeFormElement extends HTMLFormElement {
 
 export default function PageRecharge() {
   const user = useStore((state) => state.user)
-  const rechargeMutation = trpc.trade.recharge.useMutation()
+  const rechargeMutation = trpc.transaction.recharge.useMutation()
 
   const handleRecharge = async (event: FormEvent<RechargeFormElement>) => {
     event.preventDefault()

@@ -89,13 +89,15 @@ export default function EventListener() {
   })
 
   /* User Transactions */
-  trpc.trade.onTransactionAdd.useSubscription(
+  trpc.transaction.onAdd.useSubscription(
     { role: Role.USER },
     {
       enabled: subscriptionsEnabled,
       onStarted: async () => {
         if (isSocketBeenClosed) {
-          trpcContext.trade.listTransactions.invalidate({ role: Role.USER })
+          trpcContext.transaction.list.invalidate({
+            role: Role.USER,
+          })
         }
       },
       onData: async (transaction) => {
@@ -112,13 +114,15 @@ export default function EventListener() {
 
   /* Staff Transactions */
   if (validateRole(user!.role, Role.STAFF)) {
-    trpc.trade.onTransactionAdd.useSubscription(
+    trpc.transaction.onAdd.useSubscription(
       { role: Role.STAFF },
       {
         enabled: subscriptionsEnabled,
         onStarted: async () => {
           if (isSocketBeenClosed) {
-            trpcContext.trade.listTransactions.invalidate({ role: Role.STAFF })
+            trpcContext.transaction.list.invalidate({
+              role: Role.STAFF,
+            })
           }
         },
         onData: async (transaction) => {
@@ -137,13 +141,15 @@ export default function EventListener() {
 
   /* Admin Transactions */
   if (validateRole(user!.role, Role.ADMIN)) {
-    trpc.trade.onTransactionAdd.useSubscription(
+    trpc.transaction.onAdd.useSubscription(
       { role: Role.ADMIN },
       {
         enabled: subscriptionsEnabled,
         onStarted: async () => {
           if (isSocketBeenClosed) {
-            trpcContext.trade.listTransactions.invalidate({ role: Role.ADMIN })
+            trpcContext.transaction.list.invalidate({
+              role: Role.ADMIN,
+            })
           }
         },
         onData: async (transaction) => {

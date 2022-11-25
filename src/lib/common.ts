@@ -30,6 +30,7 @@ export const settings = {
   TWMP_TERMINAL_ID: process.env.TWMP_TERMINAL_ID!,
   TWMP_3DES_IV: process.env.TWMP_3DES_IV!,
   TWMP_3DES_KEY: process.env.TWMP_3DES_KEY!,
+  TWMP_FISC_KEY: process.env.TWMP_FISC_KEY!,
   /* Server */
   WEBSOCKET_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_PORT ?? '3001',
   HTTP_PORT: process.env.PORT ?? '3000',

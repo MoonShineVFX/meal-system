@@ -1,10 +1,10 @@
 import { router } from '../trpc'
 import { UserRouter } from './user'
-import { TradeRouter } from './trade'
+import { TransactionRouter } from './transaction'
 
 export const appRouter = router({
   user: UserRouter,
-  trade: TradeRouter,
+  transaction: TransactionRouter,
 })
 
 export type AppRouter = typeof appRouter

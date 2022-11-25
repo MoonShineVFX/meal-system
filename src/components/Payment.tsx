@@ -15,7 +15,7 @@ export default function Payment(props: { isOpen: boolean }) {
   const user = useStore((state) => state.user)
   const [totalAmountToPay, setTotalAmountToPay] = useState(0)
   const [step, setStep] = useState(0)
-  const chargeMutation = trpc.trade.charge.useMutation()
+  const chargeMutation = trpc.transaction.charge.useMutation()
   const addNotification = useStore((state) => state.addNotification)
 
   const onNumpadAction = useCallback(
