@@ -4,14 +4,9 @@ import { SignedTransaction, Account } from 'web3-core'
 import { Contract } from 'web3-eth-contract'
 
 import abi from './abi.json'
-import { settings } from '@/lib/common'
+import { settings, CurrencyType } from '@/lib/common'
 
 /* Type */
-export enum CurrencyType {
-  CREDIT = 'credit',
-  POINT = 'point',
-}
-
 type NonceMetadata = { nonce: number; time: number }
 
 /* Defines */

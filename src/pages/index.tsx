@@ -60,18 +60,18 @@ export default function PageIndex() {
         </div>
         {/* Balance */}
         <div className='mx-auto'>
-          {/* Credits */}
+          {/* Credit */}
           <BalanceIndicator
-            balance={user?.credits ?? 0}
+            balance={user?.creditBalance ?? 0}
             currencyText='夢想幣'
             currencyIcon={'$'}
           />
-          {/* Points */}
+          {/* Point */}
           <div className='mt-4 flex w-full grow items-center justify-center gap-2'>
             <CircleStackIcon className='h-4 w-4 text-amber-800' />
             <p className='text-lg font-semibold text-stone-800'>
               <CountUp
-                end={user?.points ?? 0}
+                end={user?.pointBalance ?? 0}
                 duration={0.5}
                 preserveValue={true}
               />

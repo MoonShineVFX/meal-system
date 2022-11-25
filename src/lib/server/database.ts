@@ -1,21 +1,21 @@
 import { PrismaClient, Role, TransactionType, Prisma } from '@prisma/client'
 
-import { settings } from '@/lib/common'
-import { blockchainManager, CurrencyType } from './blockchain'
+import { settings, CurrencyType } from '@/lib/common'
+import { blockchainManager } from './blockchain'
 
 /* User */
 export async function ensureUser(
   userId: string,
   name: string,
   role?: Role,
-  points?: number,
-  credits?: number,
+  pointBalance?: number,
+  creditBalance?: number,
 ) {
   const updateData = {
     name: name,
     role: role,
-    points: points,
-    credits: credits,
+    pointBalance: pointBalance,
+    creditBalance: creditBalance,
   }
 
   const user = await prisma.user.upsert({
@@ -107,23 +107,30 @@ export async function getUserInfo(userId: string) {
 }
 
 /* Transaction */
-export async function rechargeUserCredits(
-  sourceUserId: string,
+export async function rechargeUserBalance(
   targetUserId: string,
   amount: number,
+  type: CurrencyType,
 ) {
   // Recharge target user and create recharge record
   try {
     const [user, transaction] = await prisma.$transaction([
       prisma.user.update({
         where: { id: targetUserId },
-        data: { credits: { increment: amount } },
+        data: {
+          creditBalance: {
+            increment: type === CurrencyType.CREDIT ? amount : 0,
+          },
+          pointBalance: {
+            increment: type === CurrencyType.POINT ? amount : 0,
+          },
+        },
       }),
       prisma.transaction.create({
         data: {
-          sourceUserId: sourceUserId,
+          sourceUserId: settings.SERVER_USER_ID,
           targetUserId: targetUserId,
-          creditsAmount: amount,
+          creditAmount: amount,
           type: TransactionType.RECHARGE,
         },
         include: {
@@ -162,17 +169,17 @@ export async function chargeUserBalance(
       if (!user) throw new Error('User not found')
 
       // Calculate charge amount
-      let pointsChargeAmount = 0
-      let creditsChargeAmount = 0
+      let pointAmountToPay = 0
+      let creditAmountToPay = 0
 
       if (isUsingPoint) {
-        pointsChargeAmount = Math.min(amount, user.points)
-        creditsChargeAmount = amount - pointsChargeAmount
+        pointAmountToPay = Math.min(amount, user.pointBalance)
+        creditAmountToPay = amount - pointAmountToPay
       } else {
-        creditsChargeAmount = amount
+        creditAmountToPay = amount
       }
 
-      if (creditsChargeAmount > user.credits)
+      if (creditAmountToPay > user.creditBalance)
         throw new Error('Not enough credits')
 
       /* Operation */
@@ -182,8 +189,8 @@ export async function chargeUserBalance(
           id: userId,
         },
         data: {
-          credits: { decrement: creditsChargeAmount },
-          points: { decrement: pointsChargeAmount },
+          creditBalance: { decrement: creditAmountToPay },
+          pointBalance: { decrement: pointAmountToPay },
         },
       })
 
@@ -191,10 +198,10 @@ export async function chargeUserBalance(
       await client.user.update({
         where: { id: settings.SERVER_USER_ID },
         data: {
-          credits: {
-            increment: creditsChargeAmount,
+          creditBalance: {
+            increment: creditAmountToPay,
           },
-          points: { increment: pointsChargeAmount },
+          pointBalance: { increment: pointAmountToPay },
         },
       })
 
@@ -202,8 +209,8 @@ export async function chargeUserBalance(
         data: {
           sourceUserId: userId,
           targetUserId: settings.SERVER_USER_ID,
-          creditsAmount: creditsChargeAmount,
-          pointsAmount: pointsChargeAmount,
+          creditAmount: creditAmountToPay,
+          pointAmount: pointAmountToPay,
           type: TransactionType.PAYMENT,
         },
         include: {
@@ -304,7 +311,6 @@ export async function getTransactions(
 export async function initialTwmpPayment(amount: number, userId: string) {
   const twmp = await prisma.twmp.create({
     data: {
-      transAMT: amount,
       userId: userId,
     },
   })
@@ -330,23 +336,23 @@ async function blockchainUpdateFromTransfer(transactionId: number) {
 
   // Update
   let blockchainHashes = []
-  if (transaction.pointsAmount > 0) {
+  if (transaction.pointAmount > 0) {
     blockchainHashes.push(
       await blockchainManager.transfer(
         CurrencyType.POINT,
         transaction.sourceUser.blockchain.address,
         transaction.targetUser.blockchain.address,
-        transaction.pointsAmount,
+        transaction.pointAmount,
       ),
     )
   }
-  if (transaction.creditsAmount > 0) {
+  if (transaction.creditAmount > 0) {
     blockchainHashes.push(
       await blockchainManager.transfer(
         CurrencyType.CREDIT,
         transaction.sourceUser.blockchain.address,
         transaction.targetUser.blockchain.address,
-        transaction.creditsAmount,
+        transaction.creditAmount,
       ),
     )
   }
@@ -375,21 +381,21 @@ async function blockchainUpdateFromRecharge(transactionId: number) {
 
   // Update
   let blockchainHashes = []
-  if (transaction.pointsAmount > 0) {
+  if (transaction.pointAmount > 0) {
     blockchainHashes.push(
       await blockchainManager.mint(
         CurrencyType.POINT,
         transaction.targetUser.blockchain.address,
-        transaction.pointsAmount,
+        transaction.pointAmount,
       ),
     )
   }
-  if (transaction.creditsAmount > 0) {
+  if (transaction.creditAmount > 0) {
     blockchainHashes.push(
       await blockchainManager.mint(
         CurrencyType.CREDIT,
         transaction.targetUser.blockchain.address,
-        transaction.creditsAmount,
+        transaction.creditAmount,
       ),
     )
   }
@@ -423,38 +429,38 @@ async function blockchainUpdateForUser(userId: string) {
     user.blockchain.address,
   )
   console.log('Blockchain balance', pointBalance, creditBalance)
-  console.log('Database balance', user.points, user.credits)
-  if (pointBalance < user.points) {
-    console.log('Minting points for user', user.name)
+  console.log('Database balance', user.pointBalance, user.creditBalance)
+  if (pointBalance < user.pointBalance) {
+    console.log('Minting point for user', user.name)
     const hash = await blockchainManager.mint(
       CurrencyType.POINT,
       user.blockchain.address,
-      user.points - pointBalance,
+      user.pointBalance - pointBalance,
     )
     console.log(hash)
-  } else if (pointBalance > user.points) {
-    console.log('Burning points for user', user.name)
+  } else if (pointBalance > user.pointBalance) {
+    console.log('Burning point for user', user.name)
     const hash = await blockchainManager.burn(
       CurrencyType.POINT,
       user.blockchain.address,
-      pointBalance - user.points,
+      pointBalance - user.pointBalance,
     )
     console.log(hash)
   }
-  if (creditBalance < user.credits) {
-    console.log('Minting credits for user', user.name)
+  if (creditBalance < user.creditBalance) {
+    console.log('Minting credit for user', user.name)
     const hash = await blockchainManager.mint(
       CurrencyType.CREDIT,
       user.blockchain.address,
-      user.credits - creditBalance,
+      user.creditBalance - creditBalance,
     )
     console.log(hash)
-  } else if (creditBalance > user.credits) {
-    console.log('Burning credits for user', user.name)
+  } else if (creditBalance > user.creditBalance) {
+    console.log('Burning credit for user', user.name)
     const hash = await blockchainManager.burn(
       CurrencyType.CREDIT,
       user.blockchain.address,
-      creditBalance - user.credits,
+      creditBalance - user.creditBalance,
     )
     console.log(hash)
   }

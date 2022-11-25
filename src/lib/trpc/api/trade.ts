@@ -4,11 +4,16 @@ import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
 
 import {
-  rechargeUserCredits,
+  rechargeUserBalance,
   chargeUserBalance,
   getTransactions,
 } from '@/lib/server/database'
-import { settings, validateRole, TransactionWithName } from '@/lib/common'
+import {
+  settings,
+  validateRole,
+  TransactionWithName,
+  CurrencyType,
+} from '@/lib/common'
 import { eventEmitter, Event } from '@/lib/server/event'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
@@ -23,10 +28,10 @@ export const TradeRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       // Recharge target user
-      const result = await rechargeUserCredits(
-        ctx.userLite.id,
+      const result = await rechargeUserBalance(
         input.targetUserId,
         input.amount,
+        CurrencyType.CREDIT,
       )
 
       if (result instanceof Error) {

@@ -20,13 +20,55 @@ enum PaymentTool {
   UNION = 'C',
 }
 
-type CreateTwmpPaymentResponse<T> = T extends true
-  ? { callbackUrl: string; txnID: string }
-  : T extends false
-  ? { qrcode: string; txnID: string }
-  : never
+enum RefundType {
+  CANCEL = 'CANCEL',
+  REFUND = 'REFUND',
+}
 
-type FindTwmpPaymentResponseDetail = {
+enum TwmpPaymentType {
+  DESKTOP,
+  MOBILE,
+}
+type CreateTwmpPaymentResult<T> = T extends TwmpPaymentType.MOBILE
+  ? { TwmpURL: string; txnID: string }
+  : { qrcode: string; txnID: string }
+
+type CreateTwmpPaymentResponse<T> = T extends TwmpPaymentType.MOBILE
+  ? {
+      code: string
+      msg: string
+      txnID: string
+      TwmpURL: string
+      verifyCode: string
+    }
+  : {
+      code: string
+      msg: string
+      txnID: string
+      qrcode: string
+      verifyCode: string
+    }
+
+type TwmpPaymentNotifyTxnContent = {
+  acqBank: string // '001'
+  merchandId: string // '109100001004156'
+  terminalId: string // '10900002'
+  orderNo: string // '0000123456789098'
+  txnID: string // '494194165261930496'
+  txnUID: string // 'da5d521f9fdd4dc0866e26f0d84f6ba4'
+  transAMT: string // '3000'
+  txnTime: string // '101010'
+  payStatus: PayStatus // 'S'
+  txnDate: string // '20200828'
+  paymentTool: PaymentTool // 'F'
+}
+
+export type TwmpPaymentNotifyRequest = {
+  txn_content: string
+  verifyCode: string
+}
+
+type FindTwmpPaymentTxnContentDetail = {
   txnUID: string // 'de05133edeb94bfabfe5757be27354a0'
   transAMT: string // '1800'
   txnTime: string // '135916'
@@ -36,13 +78,42 @@ type FindTwmpPaymentResponseDetail = {
   paymentTool: PaymentTool // 'F'
 }
 
-type FindTwmpPaymentResponse = {
+type FindTwmpPaymentTxnContent = {
   acqBank: string // '006'
   merchantId: string // '006263015610919'
   terminalId: string // '90010001'
   orderNo: string // '000012345678941100'
   txnID: string // '706232917298655232'
-  detail: FindTwmpPaymentResponseDetail[]
+  detail: FindTwmpPaymentTxnContentDetail[]
+}
+
+type FindTwmpPaymentResponse = {
+  code: string
+  msg: string
+  txn_content: string
+  verifyCode: string
+}
+
+type CancelTwmpPaymentRefundContent = {
+  acqBank: string
+  merchantId: string
+  terminalId: string
+  orderNo: string
+  txnID: string
+  txnUID: string
+  txnType: RefundType
+  transAMT: string
+  refundAMT: string
+  txnDate: string
+  txnTime: string
+  payStatus: PayStatus
+}
+
+type CancelTwmpPaymentResponse = {
+  code: string
+  msg: string
+  refund_content: string
+  verifyCode: string
 }
 
 /* Functions */
@@ -62,10 +133,10 @@ function encodeVerifyCode(...inputs: string[]) {
 }
 
 /* 4.1 特店 Server 呼叫 twMP 線上購物 Server 進行交易  */
-export async function createTwmpPayment<T extends boolean>(
+export async function createTwmpPayment<T extends TwmpPaymentType>(
   orderNo: string,
   amount: number,
-  isMobile: T,
+  type: T,
 ) {
   const requestBody: RequestBody = {
     acqBank: settings.TWMP_ACQ_BANK,
@@ -76,7 +147,7 @@ export async function createTwmpPayment<T extends boolean>(
     currency: '901',
   }
 
-  if (isMobile) {
+  if (type === TwmpPaymentType.MOBILE) {
     requestBody['txnType'] = 'A'
     requestBody['callbackURL'] = '_TODO_CALLBACKURL'
     requestBody['verifyCode'] = encodeVerifyCode(
@@ -89,7 +160,7 @@ export async function createTwmpPayment<T extends boolean>(
       requestBody.txnType,
       requestBody.callbackURL,
     )
-  } else {
+  } else if (type === TwmpPaymentType.DESKTOP) {
     requestBody['txnType'] = 'P'
     requestBody['qrcodeType'] = '1'
     requestBody['verifyCode'] = encodeVerifyCode(
@@ -101,6 +172,8 @@ export async function createTwmpPayment<T extends boolean>(
       requestBody.currency,
       requestBody.txnType,
     )
+  } else {
+    throw Error('Unknown payment type')
   }
 
   const response = await fetch(
@@ -119,41 +192,62 @@ export async function createTwmpPayment<T extends boolean>(
     return Error(`${response.statusText}`)
   }
 
-  const responseBody = await response.json()
-  if (requestBody['code'] !== '0000') {
-    return Error(`[${responseBody['code']}] ${responseBody['msg']}`)
+  let responseBody: CreateTwmpPaymentResponse<T> = await response.json()
+  if (requestBody.code !== '0000') {
+    return Error(`[${responseBody.code}] ${responseBody.msg}`)
   }
 
   let responseVerifyCode: string
-  if (isMobile) {
+  if (type === TwmpPaymentType.MOBILE) {
     responseVerifyCode = encodeVerifyCode(
-      responseBody['code'],
-      responseBody['txnID'],
-      responseBody['TwmpURL'],
+      responseBody.code,
+      responseBody.txnID,
+      (responseBody as CreateTwmpPaymentResponse<TwmpPaymentType.MOBILE>)
+        .TwmpURL,
+    )
+  } else if (type === TwmpPaymentType.DESKTOP) {
+    responseVerifyCode = encodeVerifyCode(
+      responseBody.code,
+      responseBody.txnID,
+      (responseBody as CreateTwmpPaymentResponse<TwmpPaymentType.DESKTOP>)
+        .qrcode,
     )
   } else {
-    responseVerifyCode = encodeVerifyCode(
-      responseBody['code'],
-      responseBody['txnID'],
-      responseBody['qrcode'],
-    )
+    return Error('Unknown payment type')
   }
 
-  if (responseVerifyCode !== responseBody['verifyCode']) {
+  if (responseVerifyCode !== responseBody.verifyCode) {
     return Error('invalid verify code from response')
   }
 
-  if (isMobile) {
+  if (type === TwmpPaymentType.MOBILE) {
     return {
-      callbackUrl: responseBody['TwmpURL'],
-      txnID: responseBody['txnID'],
-    } as CreateTwmpPaymentResponse<T>
-  } else {
+      TwmpURL: (
+        responseBody as CreateTwmpPaymentResponse<TwmpPaymentType.MOBILE>
+      ).TwmpURL,
+      txnID: responseBody.txnID,
+    } as CreateTwmpPaymentResult<TwmpPaymentType.MOBILE>
+  } else if (type === TwmpPaymentType.DESKTOP) {
     return {
-      qrcode: responseBody['qrcode'],
-      txnID: responseBody['txnID'],
-    } as CreateTwmpPaymentResponse<T>
+      qrcode: (
+        responseBody as CreateTwmpPaymentResponse<TwmpPaymentType.DESKTOP>
+      ).qrcode,
+      txnID: responseBody.txnID,
+    } as CreateTwmpPaymentResult<TwmpPaymentType.DESKTOP>
   }
+}
+
+/* 5.1 twMP 線上購物 Server 將交易結果通知特店 Server */
+export async function handleTwmpPaymentNotify(
+  requestBody: TwmpPaymentNotifyRequest,
+) {
+  const requestVerifyCode = encodeVerifyCode(requestBody.txn_content)
+
+  if (requestVerifyCode !== requestBody.verifyCode) {
+    return Error('invalid verify code from request')
+  }
+
+  return JSON.parse(requestBody.txn_content) as TwmpPaymentNotifyTxnContent
 }
 
 /* 5.2 特店 Server 呼叫 twMP 線上購物 Server 進行交易查詢 */
@@ -179,35 +273,74 @@ export async function findTwmpPayment(txnID: string) {
     return Error(`${response.statusText}`)
   }
 
-  const responseBody = await response.json()
-  if (requestBody['code'] !== '0000') {
-    return Error(`[${responseBody['code']}] ${responseBody['msg']}`)
+  const responseBody: FindTwmpPaymentResponse = await response.json()
+  if (requestBody.code !== '0000') {
+    return Error(`[${responseBody.code}] ${responseBody.msg}`)
   }
 
   const responseVerifyCode = encodeVerifyCode(
-    responseBody['code'],
-    responseBody['txn_content'],
+    responseBody.code,
+    responseBody.txn_content,
   )
 
-  if (responseVerifyCode !== responseBody['verifyCode']) {
+  if (responseVerifyCode !== responseBody.verifyCode) {
     return Error('invalid verify code from response')
   }
 
-  return JSON.parse(responseBody['txn_content']) as FindTwmpPaymentResponse
+  return JSON.parse(responseBody.txn_content) as FindTwmpPaymentTxnContent
 }
 
-// 5.1
-// const textContent_5_1 = {
-//   acqBank: '001',
-//   merchandId: '109100001004156',
-//   terminalId: '10900002',
-//   orderNo: '0000123456789098',
-//   txnID: '494194165261930496',
-//   txnUID: 'da5d521f9fdd4dc0866e26f0d84f6ba4',
-//   transAMT: '3000',
-//   txnTime: '101010',
-//   payStatus: 'S',
-//   txnDate: '20200828',
-//   paymentTool: 'F',
-// }
-// 5.2
+/* 5.3 特店 Server 呼叫 twMP 線上購物 Server 進行取消交易 */
+export async function CancelTwmpPayment(
+  txnID: string,
+  txnUID: string,
+  amount: number,
+) {
+  const requestBody: RequestBody = {
+    txnID: txnID,
+    txnUID: txnUID,
+    txnType: 'CANCEL', // 'REFUND' for partial refund
+    refundAMT: amount.toString(),
+  }
+
+  requestBody['verifyCode'] = encodeVerifyCode(
+    requestBody.txnID,
+    requestBody.txnUID,
+    requestBody.txnType,
+    requestBody.refundAMT,
+  )
+
+  const response = await fetch(
+    `${settings.TWMP_API_URL}/WebQR/api/TwmpTransRefun`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        charset: 'UTF-8',
+      },
+      body: JSON.stringify(requestBody),
+    },
+  )
+
+  if (!response.ok) {
+    return Error(`${response.statusText}`)
+  }
+
+  const responseBody: CancelTwmpPaymentResponse = await response.json()
+  if (requestBody.code !== '0000') {
+    return Error(`[${responseBody.code}] ${responseBody.msg}`)
+  }
+
+  const responseVerifyCode = encodeVerifyCode(
+    responseBody.code,
+    responseBody.refund_content,
+  )
+
+  if (responseVerifyCode !== responseBody.verifyCode) {
+    return Error('invalid verify code from response')
+  }
+
+  return JSON.parse(
+    responseBody.refund_content,
+  ) as CancelTwmpPaymentRefundContent
+}

@@ -11,11 +11,11 @@ import { validateRole, TransactionWithName, settings } from '@/lib/common'
 function makePaymentString(transaction: TransactionWithName) {
   const actionString = settings.TRANSACTION_NAME[transaction.type]
   let paymentStrings: string[] = []
-  if (transaction.creditsAmount > 0) {
-    paymentStrings.push(`${transaction.creditsAmount} 元`)
+  if (transaction.creditAmount > 0) {
+    paymentStrings.push(`${transaction.creditAmount} 元`)
   }
-  if (transaction.pointsAmount > 0) {
-    paymentStrings.push(`${transaction.pointsAmount} 點`)
+  if (transaction.pointAmount > 0) {
+    paymentStrings.push(`${transaction.pointAmount} 點`)
   }
 
   return `${actionString} ${paymentStrings.join(' 和 ')}`
