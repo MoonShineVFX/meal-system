@@ -368,8 +368,11 @@ export async function updateTwmpPayment(
     },
   })
 
-  if (twmp.details.filter((detail) => detail.txnUID === txnUID).length > 0)
-    throw Error(`TWMP txnUID already exists: ${txnUID}`)
+  const existDetails = twmp.details.filter((detail) => detail.txnUID === txnUID)
+  if (existDetails.length > 0) {
+    console.warn(`TWMP txnUID already exists: ${txnUID}`)
+    return existDetails[0]
+  }
 
   const prevousStatus = twmp.details.map((detail) => detail.status)
 

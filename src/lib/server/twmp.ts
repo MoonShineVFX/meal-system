@@ -159,6 +159,7 @@ function encodeVerifyCode(...inputs: string[]) {
 export async function createTwmpPayment<T extends TwmpPaymentType>(
   orderNo: string,
   amount: number,
+  callbackHost: string,
   type: T,
 ) {
   const requestBody: RequestBody = {
@@ -172,7 +173,7 @@ export async function createTwmpPayment<T extends TwmpPaymentType>(
 
   if (type === TwmpPaymentType.MOBILE) {
     requestBody['txnType'] = 'A'
-    requestBody['callbackURL'] = '_TODO_CALLBACKURL'
+    requestBody['callbackURL'] = `${callbackHost}/twmp/result`
     requestBody['verifyCode'] = encodeVerifyCode(
       requestBody.acqBank,
       requestBody.merchantId,

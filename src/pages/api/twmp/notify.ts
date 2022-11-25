@@ -10,6 +10,11 @@ const schema = z.object({
 })
 
 export default async function api(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    res.status(405).end()
+    return
+  }
+
   try {
     const requestBody = schema.parse(req.body)
     const result = await handleTwmpPaymentNotify(requestBody)
