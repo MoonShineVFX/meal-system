@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import z from 'zod'
 
-import { findTwmpDeposit, encodeCallbackCode } from '@/lib/server/twmp'
+import { encodeCallbackCode } from '@/lib/server/twmp'
 
 const querySchema = z.object({
   acqBank: z.string().min(1),
@@ -43,4 +43,10 @@ export default function PageTwmpResult(props: { twmpDepositId: string }) {
   useEffect(() => {
     router.replace(router.pathname, undefined, { shallow: true })
   }, [])
+
+  return (
+    <div>
+      <h1>{props.twmpDepositId}</h1>
+    </div>
+  )
 }

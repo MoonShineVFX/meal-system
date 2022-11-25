@@ -9,6 +9,12 @@ import {
 import { settings, CurrencyType } from '@/lib/common'
 import { blockchainManager } from './blockchain'
 
+function log(...args: Parameters<typeof console.log>) {
+  if (settings.LOG_DATABASE) {
+    log('[Database]', ...args)
+  }
+}
+
 /* User */
 export async function ensureUser(
   userId: string,
@@ -40,7 +46,7 @@ export async function ensureUser(
 
   // If user does not have a blockchain, create one
   if (!user.blockchain) {
-    console.log(`Creating blockchain account for user ${user.name} (${userId})`)
+    log(`Creating blockchain account for user ${user.name} (${userId})`)
     const newBlockchainAccount = await blockchainManager.createAccount()
     await prisma.user.update({
       where: {
@@ -419,7 +425,7 @@ export async function updateTwmpDeposit(
     )
   }
 
-  console.log(
+  log(
     `TWMP Deposit [${orderNo}] Result [${txnUID}] status changed to ${status}`,
   )
 }
@@ -534,7 +540,7 @@ async function updateBlockchainByMintBurn(transactionId: number) {
 }
 // Sync user balance by blockchain mint/burn
 async function forceSyncBlockchainWallet(userId: string) {
-  console.log('>> Updating blockchain for user', userId)
+  log('>> Updating blockchain for user', userId)
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { blockchain: true },
@@ -553,41 +559,41 @@ async function forceSyncBlockchainWallet(userId: string) {
     CurrencyType.CREDIT,
     user.blockchain.address,
   )
-  console.log('Blockchain balance', pointBalance, creditBalance)
-  console.log('Database balance', user.pointBalance, user.creditBalance)
+  log('Blockchain balance', pointBalance, creditBalance)
+  log('Database balance', user.pointBalance, user.creditBalance)
   if (pointBalance < user.pointBalance) {
-    console.log('Minting point for user', user.name)
+    log('Minting point for user', user.name)
     const hash = await blockchainManager.mint(
       CurrencyType.POINT,
       user.blockchain.address,
       user.pointBalance - pointBalance,
     )
-    console.log(hash)
+    log(hash)
   } else if (pointBalance > user.pointBalance) {
-    console.log('Burning point for user', user.name)
+    log('Burning point for user', user.name)
     const hash = await blockchainManager.burn(
       CurrencyType.POINT,
       user.blockchain.address,
       pointBalance - user.pointBalance,
     )
-    console.log(hash)
+    log(hash)
   }
   if (creditBalance < user.creditBalance) {
-    console.log('Minting credit for user', user.name)
+    log('Minting credit for user', user.name)
     const hash = await blockchainManager.mint(
       CurrencyType.CREDIT,
       user.blockchain.address,
       user.creditBalance - creditBalance,
     )
-    console.log(hash)
+    log(hash)
   } else if (creditBalance > user.creditBalance) {
-    console.log('Burning credit for user', user.name)
+    log('Burning credit for user', user.name)
     const hash = await blockchainManager.burn(
       CurrencyType.CREDIT,
       user.blockchain.address,
       creditBalance - user.creditBalance,
     )
-    console.log(hash)
+    log(hash)
   }
 }
 

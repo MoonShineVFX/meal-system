@@ -42,7 +42,9 @@ export const settings = {
   BLOCKCHAIN_GAS_PRICE: 5,
   BLOCKCHAIN_GAS: 200000,
   BLOCKCHAIN_NONCE_REFRESH_TIME: 1000 * 60,
-  BLOCKCHAIN_LOG: process.env.BLOCKCHAIN_LOG === 'true',
+  /* Log */
+  LOG_BLOCKCHAIN: process.env.LOG_BLOCKCHAIN === 'true',
+  LOG_DATABASE: process.env.LOG_DATABASE === 'true',
 }
 
 /* Types */

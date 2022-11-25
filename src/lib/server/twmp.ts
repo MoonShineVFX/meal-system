@@ -137,7 +137,7 @@ function parsePayStatus(payStatus: PayStatus) {
     case PayStatus.REFUND_FAILED:
       return TwmpResultStatus.FAILED
     default:
-      throw new Error('Unknown payStatus', payStatus)
+      throw new Error(`Unknown payStatus: ${payStatus}`)
   }
 }
 
