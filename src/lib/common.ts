@@ -20,7 +20,6 @@ export const settings = {
     [TransactionType.RECHARGE]: '儲值',
     [TransactionType.PAYMENT]: '消費',
     [TransactionType.REFUND]: '退款',
-    [TransactionType.ORDER]: '預訂',
   },
   /* Trade */
   TRANSACTIONS_PER_PAGE: 20,
@@ -31,6 +30,7 @@ export const settings = {
   TWMP_TERMINAL_ID: process.env.TWMP_TERMINAL_ID!,
   TWMP_3DES_IV: process.env.TWMP_3DES_IV!,
   TWMP_3DES_KEY: process.env.TWMP_3DES_KEY!,
+  TWMP_FISC_KEY: process.env.TWMP_FISC_KEY!,
   /* Server */
   WEBSOCKET_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_PORT ?? '3001',
   HTTP_PORT: process.env.PORT ?? '3000',
@@ -42,7 +42,9 @@ export const settings = {
   BLOCKCHAIN_GAS_PRICE: 5,
   BLOCKCHAIN_GAS: 200000,
   BLOCKCHAIN_NONCE_REFRESH_TIME: 1000 * 60,
-  BLOCKCHAIN_LOG: process.env.BLOCKCHAIN_LOG === 'true',
+  /* Log */
+  LOG_BLOCKCHAIN: process.env.LOG_BLOCKCHAIN === 'true',
+  LOG_DATABASE: process.env.LOG_DATABASE === 'true',
 }
 
 /* Types */
@@ -55,6 +57,11 @@ export type TransactionWithName = Transaction & {
   targetUser: {
     name: string
   }
+}
+
+export enum CurrencyType {
+  CREDIT = 'credit',
+  POINT = 'point',
 }
 
 /* Functions */

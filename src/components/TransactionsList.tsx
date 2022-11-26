@@ -65,9 +65,9 @@ function TransactionItem(props: {
       {description}
       {/* Balance change */}
       <div className='flex grow flex-col items-end'>
-        {/* Credits */}
+        {/* Credit */}
         <div
-          data-ui={transaction.creditsAmount > 0 ? 'active' : 'not-active'}
+          data-ui={transaction.creditAmount > 0 ? 'active' : 'not-active'}
           className='flex items-center gap-1 data-not-active:hidden'
         >
           <div
@@ -75,13 +75,13 @@ function TransactionItem(props: {
             className={`text-2xl font-bold ${balanceState.style}`}
           >
             {balanceState.prefix}
-            {transaction.creditsAmount}
+            {transaction.creditAmount}
           </div>
           <div className='text-left text-xs text-stone-500'>元</div>
         </div>
-        {/* Points */}
+        {/* Point */}
         <div
-          data-ui={transaction.pointsAmount > 0 ? 'active' : 'not-active'}
+          data-ui={transaction.pointAmount > 0 ? 'active' : 'not-active'}
           className='flex items-center gap-1 data-not-active:hidden'
         >
           <div
@@ -89,7 +89,7 @@ function TransactionItem(props: {
             className={`text-2xl font-bold ${balanceState.style}`}
           >
             {balanceState.prefix}
-            {transaction.pointsAmount}
+            {transaction.pointAmount}
           </div>
           <div className='text-left text-xs text-stone-500'>點</div>
         </div>
@@ -111,7 +111,7 @@ function TransactionList(props: {
     hasNextPage,
     isLoading,
     fetchNextPage,
-  } = trpc.trade.listTransactions.useInfiniteQuery(
+  } = trpc.transaction.list.useInfiniteQuery(
     { role: displayRole },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,

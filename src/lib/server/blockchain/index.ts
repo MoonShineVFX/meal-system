@@ -1,1 +1,1 @@
-export { blockchainManager, CurrencyType } from './blockchain'
+export { blockchainManager } from './blockchain'

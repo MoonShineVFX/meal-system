@@ -4,16 +4,21 @@ import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
 
 import {
-  rechargeUserCredits,
+  rechargeUserBalance,
   chargeUserBalance,
   getTransactions,
 } from '@/lib/server/database'
-import { settings, validateRole, TransactionWithName } from '@/lib/common'
+import {
+  settings,
+  validateRole,
+  TransactionWithName,
+  CurrencyType,
+} from '@/lib/common'
 import { eventEmitter, Event } from '@/lib/server/event'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
 
-export const TradeRouter = router({
+export const TransactionRouter = router({
   recharge: adminProcedure
     .input(
       z.object({
@@ -23,18 +28,11 @@ export const TradeRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       // Recharge target user
-      const result = await rechargeUserCredits(
-        ctx.userLite.id,
+      const result = await rechargeUserBalance(
         input.targetUserId,
         input.amount,
+        CurrencyType.CREDIT,
       )
-
-      if (result instanceof Error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.message,
-        })
-      }
 
       const { user, transaction } = result
 
@@ -60,13 +58,6 @@ export const TradeRouter = router({
         input.isUsingPoint,
       )
 
-      if (result instanceof Error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.message,
-        })
-      }
-
       const { user, transaction } = result
 
       eventEmitter.emit(Event.USER_UPDATE(user.id), user)
@@ -78,7 +69,7 @@ export const TradeRouter = router({
       eventEmitter.emit(Event.TRANSACTION_ADD_ADMIN, transaction)
     }),
   // Get transaction records, use until arg to update new records
-  listTransactions: userProcedure
+  list: userProcedure
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
@@ -100,12 +91,6 @@ export const TradeRouter = router({
         input.cursor,
         input.role,
       )
-      if (transactions instanceof Error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: transactions.message,
-        })
-      }
 
       let nextCursor: number | undefined = undefined
       if (transactions.length > settings.TRANSACTIONS_PER_PAGE) {
@@ -116,7 +101,7 @@ export const TradeRouter = router({
         nextCursor,
       }
     }),
-  onTransactionAdd: userProcedure
+  onAdd: userProcedure
     .input(
       z.object({
         role: z.enum([Role.USER, Role.STAFF, Role.ADMIN]),

@@ -10,10 +10,9 @@ datasource db {
 }
 
 enum TransactionType {
-  RECHARGE
-  PAYMENT
-  ORDER
-  REFUND
+  RECHARGE // Server add balance to user
+  PAYMENT // User pay/order for something
+  REFUND // Server remove balance from user
 }
 
 enum Role {
@@ -31,18 +30,18 @@ model AuthToken {
 }
 
 model User {
-  id                String        @id
-  name              String
-  role              Role          @default(USER)
-  createdAt         DateTime      @default(now())
-  points            Int           @default(500)
-  credits           Int           @default(0)
-  sourceTransaction Transaction[] @relation("source")
-  targetTransaction Transaction[] @relation("target")
-  authTokens        AuthToken[]
-  orders            Order[]
-  twmps             Twmp[]
-  blockchain        Blockchain?
+  id                 String        @id
+  name               String
+  role               Role          @default(USER)
+  createdAt          DateTime      @default(now())
+  pointBalance       Int           @default(500)
+  creditBalance      Int           @default(0)
+  sourceTransactions Transaction[] @relation("source")
+  targetTransactions Transaction[] @relation("target")
+  authTokens         AuthToken[]
+  orders             Order[]
+  twmpDeposits       TwmpDeposit[]
+  blockchain         Blockchain?
 }
 
 model Transaction {
@@ -53,11 +52,12 @@ model Transaction {
   targetUser       User            @relation("target", fields: [targetUserId], references: [id])
   targetUserId     String
   type             TransactionType
-  pointsAmount     Int             @default(0)
-  creditsAmount    Int             @default(0)
-  orders           Order[]
-  twmp             Twmp?
+  pointAmount      Int             @default(0)
+  creditAmount     Int             @default(0)
+  twmpResult       TwmpResult?     @relation(fields: [twmpResultId], references: [txnUID])
+  twmpResultId     String?
   blockchainHashes String[]
+  orders           Order[]
 
   @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
 }
@@ -69,27 +69,40 @@ model Setting {
 }
 
 // TWMP
-enum TwmpStatus {
+enum TwmpResultStatus {
   SUCCESS
   FAILED
-  INITIAL
+  CANCELED
 }
 
-model Twmp {
-  id            String       @id @default(cuid()) // orderNo
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  transAMT      Int
-  txnID         String?      @unique
-  txnUID        String[]
-  txnDate       DateTime?    @db.Date
-  txnTime       DateTime?    @db.Time
-  status        TwmpStatus   @default(INITIAL)
-  paymentTool   String?
-  transaction   Transaction? @relation(fields: [transactionId], references: [id])
-  transactionId Int?         @unique
-  user          User         @relation(fields: [userId], references: [id])
-  userId        String
+model TwmpResult {
+  txnUID        String           @id
+  createdAt     DateTime
+  updatedAt     DateTime         @updatedAt
+  status        TwmpResultStatus
+  transactions  Transaction[]
+  twmpDeposit   TwmpDeposit      @relation(fields: [twmpDepositId], references: [orderNo])
+  twmpDepositId String
+}
+
+model TwmpDeposit {
+  orderNo     String       @id @default(cuid())
+  createdAt   DateTime     @default(now())
+  transAMT    Int
+  txnID       String?      @unique
+  results     TwmpResult[]
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String
+  callbackUrl String?
+  qrcode      String?
+}
+
+// Blockchain
+model Blockchain {
+  address    String  @id
+  user       User    @relation(fields: [userId], references: [id])
+  userId     String  @unique
+  privateKey String? @unique
 }
 
 // Meal
@@ -149,12 +162,4 @@ model DayMenu {
   dinnerId    Int?     @unique
   tea         Menu?    @relation("tea", fields: [teaId], references: [id])
   teaId       Int?     @unique
-}
-
-// Blockchain
-model Blockchain {
-  address    String  @id
-  user       User    @relation(fields: [userId], references: [id])
-  userId     String  @unique
-  privateKey String? @unique
 }

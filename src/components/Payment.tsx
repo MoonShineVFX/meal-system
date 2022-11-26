@@ -13,17 +13,17 @@ export default function Payment(props: { isOpen: boolean }) {
   const router = useRouter()
   const [isUsingPoint, setUsingPoint] = useState(false)
   const user = useStore((state) => state.user)
-  const [totalPaymentAmount, setTotalPaymentAmount] = useState(0)
+  const [totalAmountToPay, setTotalAmountToPay] = useState(0)
   const [step, setStep] = useState(0)
-  const chargeMutation = trpc.trade.charge.useMutation()
+  const chargeMutation = trpc.transaction.charge.useMutation()
   const addNotification = useStore((state) => state.addNotification)
 
   const onNumpadAction = useCallback(
     (func: ((value: number) => number) | number) => {
       if (typeof func === 'number') {
-        setTotalPaymentAmount(func)
+        setTotalAmountToPay(func)
       } else {
-        setTotalPaymentAmount((value) => func(value))
+        setTotalAmountToPay((value) => func(value))
       }
     },
     [],
@@ -32,18 +32,18 @@ export default function Payment(props: { isOpen: boolean }) {
     setStep(1)
   }, [])
 
-  const pointsPaymentAmount = isUsingPoint
-    ? Math.min(totalPaymentAmount, user?.points ?? 0)
+  const pointAmountToPay = isUsingPoint
+    ? Math.min(totalAmountToPay, user?.pointBalance ?? 0)
     : 0
-  const creditsPaymentAmount = totalPaymentAmount - pointsPaymentAmount
-  const isNotEnough = creditsPaymentAmount > (user?.credits ?? 0)
+  const creditAmountToPay = totalAmountToPay - pointAmountToPay
+  const isNotEnough = creditAmountToPay > (user?.creditBalance ?? 0)
 
   useEffect(() => {
     // Set default value
     if (props.isOpen) {
-      setTotalPaymentAmount(0)
+      setTotalAmountToPay(0)
       setStep(0)
-      if (user && user?.points > 0) {
+      if (user && user?.pointBalance > 0) {
         setUsingPoint(true)
       }
     }
@@ -60,7 +60,7 @@ export default function Payment(props: { isOpen: boolean }) {
   const makePayment = async () => {
     chargeMutation.mutate(
       {
-        amount: totalPaymentAmount,
+        amount: totalAmountToPay,
         isUsingPoint,
       },
       {
@@ -104,13 +104,13 @@ export default function Payment(props: { isOpen: boolean }) {
           >
             {/* Panel */}
             <PaymentPanel
-              totalPaymentAmount={totalPaymentAmount}
+              totalAmountToPay={totalAmountToPay}
               isNotEnough={isNotEnough}
               isUsingPoint={isUsingPoint}
-              pointsPaymentAmount={pointsPaymentAmount}
-              creditsPaymentAmount={creditsPaymentAmount}
-              pointsCurrentAmount={user?.points ?? 0}
-              creditsCurrentAmount={user?.credits ?? 0}
+              pointAmountToPay={pointAmountToPay}
+              creditAmountToPay={creditAmountToPay}
+              pointBalance={user?.pointBalance ?? 0}
+              creditBalance={user?.creditBalance ?? 0}
             />
           </Transition.Child>
           {/* Keyboard */}
@@ -128,19 +128,19 @@ export default function Payment(props: { isOpen: boolean }) {
             }}
           >
             <div
-              data-ui={user?.points ? 'active' : 'not-active'}
-              className='group/points flex items-center justify-between bg-stone-100 p-4 tall:rounded-t-xl'
+              data-ui={user?.pointBalance ? 'active' : 'not-active'}
+              className='group/point flex items-center justify-between bg-stone-100 p-4 tall:rounded-t-xl'
             >
               <p
                 data-ui={isUsingPoint ? 'active' : 'not-active'}
-                className='group/usep flex items-center gap-2 tracking-wider text-stone-600 group-data-not-active/points:opacity-40'
+                className='group/usep flex items-center gap-2 tracking-wider text-stone-600 group-data-not-active/point:opacity-40'
               >
-                <CircleStackIcon className='absolute h-4 w-4 animate-ping text-amber-400 group-data-not-active/points:hidden group-data-not-active/usep:hidden' />
+                <CircleStackIcon className='absolute h-4 w-4 animate-ping text-amber-400 group-data-not-active/point:hidden group-data-not-active/usep:hidden' />
                 <CircleStackIcon className='h-4 w-4 text-amber-500 group-data-not-active/usep:text-stone-400' />
                 使用福利點數折抵
               </p>
               <SwitchButton
-                className='group-data-not-active/points:pointer-events-none group-data-not-active/points:opacity-40'
+                className='group-data-not-active/point:pointer-events-none group-data-not-active/point:opacity-40'
                 checked={isUsingPoint}
                 onChange={setUsingPoint}
               />
@@ -150,7 +150,7 @@ export default function Payment(props: { isOpen: boolean }) {
               onAccept={onNumpadAccept}
               onCancel={closePayment}
               maxValue={9999}
-              disabledAccept={isNotEnough || totalPaymentAmount === 0}
+              disabledAccept={isNotEnough || totalAmountToPay === 0}
             />
           </Transition.Child>
         </div>
@@ -181,13 +181,13 @@ export default function Payment(props: { isOpen: boolean }) {
           leaveTo='scale-75 -translate-y-[25vh]'
         >
           <PaymentPanel
-            totalPaymentAmount={totalPaymentAmount}
+            totalAmountToPay={totalAmountToPay}
             isNotEnough={isNotEnough}
             isUsingPoint={isUsingPoint}
-            pointsPaymentAmount={pointsPaymentAmount}
-            creditsPaymentAmount={creditsPaymentAmount}
-            pointsCurrentAmount={user?.points ?? 0}
-            creditsCurrentAmount={user?.credits ?? 0}
+            pointAmountToPay={pointAmountToPay}
+            creditAmountToPay={creditAmountToPay}
+            pointBalance={user?.pointBalance ?? 0}
+            creditBalance={user?.creditBalance ?? 0}
             isConfirm={true}
             onAccept={makePayment}
             onCancel={backFromStep2}
@@ -200,13 +200,13 @@ export default function Payment(props: { isOpen: boolean }) {
 }
 
 function PaymentPanel(props: {
-  totalPaymentAmount: number
+  totalAmountToPay: number
   isNotEnough: boolean
   isUsingPoint: boolean
-  pointsPaymentAmount: number
-  creditsPaymentAmount: number
-  pointsCurrentAmount: number
-  creditsCurrentAmount: number
+  pointAmountToPay: number
+  creditAmountToPay: number
+  pointBalance: number
+  creditBalance: number
   isConfirm?: boolean
   isLoading?: boolean
   onCancel?: () => void
@@ -247,7 +247,7 @@ function PaymentPanel(props: {
             data-ui={props.isNotEnough ? 'not-active' : 'active'}
             className={'relative data-not-active:text-red-600'}
           >
-            {props.totalPaymentAmount}
+            {props.totalAmountToPay}
             <div className='absolute right-0 top-0 h-full w-1 translate-x-full group-data-not-active/panel:hidden'>
               <div className='ml-[1px] h-full w-[3px] animate-blink bg-stone-800'></div>
             </div>
@@ -260,15 +260,15 @@ function PaymentPanel(props: {
       <div className='flex flex-col gap-2'>
         <PaymentDetail
           active={true}
-          paymentAmount={props.creditsPaymentAmount}
+          amountToPay={props.creditAmountToPay}
           label='夢想幣'
-          currentAmount={props.creditsCurrentAmount}
+          balance={props.creditBalance}
         />
         <PaymentDetail
           active={props.isUsingPoint}
-          paymentAmount={props.pointsPaymentAmount}
+          amountToPay={props.pointAmountToPay}
           label='福利點數'
-          currentAmount={props.pointsCurrentAmount}
+          balance={props.pointBalance}
         />
       </div>
       {/* Confirm Buttons */}
@@ -300,11 +300,11 @@ function PaymentPanel(props: {
 
 function PaymentDetail(props: {
   active: boolean
-  paymentAmount: number
+  amountToPay: number
   label: string
-  currentAmount: number
+  balance: number
 }) {
-  const isNotEnough = props.paymentAmount > props.currentAmount
+  const isNotEnough = props.amountToPay > props.balance
 
   return (
     <div
@@ -313,11 +313,11 @@ function PaymentDetail(props: {
     >
       <div className='flex items-center gap-1'>
         {props.label}
-        <div className='text-sm text-stone-400'>{`(${props.currentAmount})`}</div>
+        <div className='text-sm text-stone-400'>{`(${props.balance})`}</div>
       </div>
       <div
         data-ui={
-          props.paymentAmount > 0 && !isNotEnough ? 'active' : 'not-active'
+          props.amountToPay > 0 && !isNotEnough ? 'active' : 'not-active'
         }
         className='grow text-right font-bold data-active:text-amber-600 data-active:before:content-["-"] group-data-not-active:hidden'
       >
@@ -326,7 +326,7 @@ function PaymentDetail(props: {
             餘額不足
           </span>
         ) : (
-          props.paymentAmount
+          props.amountToPay
         )}
       </div>
     </div>
