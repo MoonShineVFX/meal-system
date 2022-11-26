@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import z from 'zod'
 
-import { handleTwmpDepositNotify } from '@/lib/server/twmp'
+import { handleTwmpNotify } from '@/lib/server/twmp'
 import { updateTwmpDeposit } from '@/lib/server/database'
 
 const requestBodySchema = z.object({
@@ -17,7 +17,7 @@ export default async function api(req: NextApiRequest, res: NextApiResponse) {
 
   try {
     const requestBody = requestBodySchema.parse(req.body)
-    const result = await handleTwmpDepositNotify(requestBody)
+    const result = await handleTwmpNotify(requestBody)
 
     await updateTwmpDeposit(
       result.orderNo,

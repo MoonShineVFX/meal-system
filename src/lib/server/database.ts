@@ -8,6 +8,7 @@ import {
 
 import { settings, CurrencyType } from '@/lib/common'
 import { blockchainManager } from './blockchain'
+import { createTwmp, getTwmp } from './twmp'
 
 function log(...args: Parameters<typeof console.log>) {
   if (settings.LOG_DATABASE) {
@@ -351,15 +352,32 @@ export async function getTransactions(
 }
 
 /* TWMP */
-export async function initialTwmpDeposit(amount: number, userId: string) {
-  const twmpDeposit = await prisma.twmpDeposit.create({
+export async function createTwmpDeposit(
+  userId: string,
+  amount: number,
+  callbackHost?: string,
+) {
+  let twmpDeposit = await prisma.twmpDeposit.create({
     data: {
       userId: userId,
       transAMT: amount,
     },
   })
 
-  return twmpDeposit
+  const response = await createTwmp(twmpDeposit.orderNo, amount, callbackHost)
+
+  twmpDeposit = await prisma.twmpDeposit.update({
+    where: { orderNo: twmpDeposit.orderNo },
+    data: {
+      txnID: response.txnID,
+    },
+  })
+
+  return {
+    twmpDeposit,
+    qrcode: 'qrcode' in response ? response.qrcode : undefined,
+    twmpUrl: 'twmpUrl' in response ? response.twmpUrl : undefined,
+  }
 }
 
 export async function updateTwmpDeposit(
@@ -428,6 +446,34 @@ export async function updateTwmpDeposit(
   log(
     `TWMP Deposit [${orderNo}] Result [${txnUID}] status changed to ${status}`,
   )
+}
+
+export async function getTwmpDeposit(twmpDepositId: string) {
+  const twmpDeposit = await prisma.twmpDeposit.findUnique({
+    where: {
+      orderNo: twmpDepositId,
+    },
+    include: {
+      results: true,
+    },
+  })
+
+  if (!twmpDeposit) return null
+  if (!twmpDeposit.txnID) throw new Error('TWMP txnID not found')
+
+  if (twmpDeposit.results.length === 0) {
+    const response = await getTwmp(twmpDeposit.txnID)
+    for (const detail of response.detail) {
+      await updateTwmpDeposit(
+        twmpDeposit.orderNo,
+        detail.txnUID,
+        detail.status,
+        detail.time,
+      )
+    }
+  }
+
+  return twmpDeposit
 }
 
 /* Blockchain */

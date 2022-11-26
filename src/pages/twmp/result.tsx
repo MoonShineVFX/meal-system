@@ -9,40 +9,67 @@ const querySchema = z.object({
   acqBank: z.string().min(1),
   terminalID: z.string().min(1),
   merchantId: z.string().min(1),
-  orderNumber: z.string().min(1),
+  orderNumber: z.string().cuid(),
   cardPlan: z.string().min(1),
   responseCode: z.string().min(1),
   verifyCode: z.string().min(1),
 })
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const query = querySchema.parse(context.query)
-  const verifyCode = encodeCallbackCode(
-    query.acqBank,
-    query.cardPlan,
-    query.merchantId,
-    query.orderNumber,
-    query.responseCode,
-    query.terminalID,
-  )
+  let errorMessage = undefined
 
-  if (verifyCode !== query.verifyCode) {
-    throw new Error('VerifyCode mismatch')
+  try {
+    const query = querySchema.parse(context.query)
+    const verifyCode = encodeCallbackCode(
+      query.acqBank,
+      query.cardPlan,
+      query.merchantId,
+      query.orderNumber,
+      query.responseCode,
+      query.terminalID,
+    )
+
+    if (verifyCode !== query.verifyCode) {
+      errorMessage = '驗證碼錯誤'
+    } else if (query.responseCode !== '0000') {
+      errorMessage = `交易錯誤: 代碼 [${query.responseCode}]`
+    }
+
+    return {
+      props: {
+        twmpDepositId: query.orderNumber,
+      },
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      errorMessage = '網址參數錯誤'
+    } else if (error instanceof Error) {
+      errorMessage = error.message
+    } else {
+      errorMessage = '未知錯誤'
+    }
   }
 
   return {
     props: {
-      twmpDepositId: query.orderNumber,
+      errorMessage: errorMessage,
     },
   }
 }
 
-export default function PageTwmpResult(props: { twmpDepositId: string }) {
+export default function PageTwmpResult(props: {
+  twmpDepositId?: string
+  errorMessage?: string
+}) {
   const router = useRouter()
 
   useEffect(() => {
     router.replace(router.pathname, undefined, { shallow: true })
   }, [])
+
+  if (props.errorMessage || !props.twmpDepositId) {
+    return <div>{props.errorMessage}</div>
+  }
 
   return (
     <div>

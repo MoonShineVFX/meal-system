@@ -51,6 +51,7 @@ export async function createContext(
     res: isSocket ? undefined : (opts.res as NextApiResponse),
     ws: isSocket ? (opts.res as ws) : undefined,
     userLite: userLite,
+    host: opts.req.headers.origin!,
   }
 }
 
