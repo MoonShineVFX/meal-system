@@ -30,7 +30,6 @@ export const TwmpRouter = router({
       if (twmpDeposit && twmpDeposit.userId !== ctx.userLite.id) {
         throw new Error('Unauthorized')
       }
-
       return twmpDeposit
     }),
 })

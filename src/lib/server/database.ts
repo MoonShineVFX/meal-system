@@ -12,7 +12,7 @@ import { createTwmp, getTwmp } from './twmp'
 
 function log(...args: Parameters<typeof console.log>) {
   if (settings.LOG_DATABASE) {
-    log('[Database]', ...args)
+    console.log('[Database]', ...args)
   }
 }
 
@@ -370,14 +370,12 @@ export async function createTwmpDeposit(
     where: { orderNo: twmpDeposit.orderNo },
     data: {
       txnID: response.txnID,
+      callbackUrl: 'twmpUrl' in response ? response.twmpUrl : undefined,
+      qrcode: 'qrcode' in response ? response.qrcode : undefined,
     },
   })
 
-  return {
-    twmpDeposit,
-    qrcode: 'qrcode' in response ? response.qrcode : undefined,
-    twmpUrl: 'twmpUrl' in response ? response.twmpUrl : undefined,
-  }
+  return twmpDeposit
 }
 
 export async function updateTwmpDeposit(
@@ -449,7 +447,8 @@ export async function updateTwmpDeposit(
 }
 
 export async function getTwmpDeposit(twmpDepositId: string) {
-  const twmpDeposit = await prisma.twmpDeposit.findUnique({
+  log(`Get TWMP Deposit [${twmpDepositId}]`)
+  let twmpDeposit = await prisma.twmpDeposit.findUnique({
     where: {
       orderNo: twmpDepositId,
     },
@@ -462,14 +461,28 @@ export async function getTwmpDeposit(twmpDepositId: string) {
   if (!twmpDeposit.txnID) throw new Error('TWMP txnID not found')
 
   if (twmpDeposit.results.length === 0) {
-    const response = await getTwmp(twmpDeposit.txnID)
-    for (const detail of response.detail) {
-      await updateTwmpDeposit(
-        twmpDeposit.orderNo,
-        detail.txnUID,
-        detail.status,
-        detail.time,
-      )
+    log(`TWMP Deposit [${twmpDepositId}] Result not found, fetching...`)
+    try {
+      const response = await getTwmp(twmpDeposit.txnID)
+      for (const detail of response.detail) {
+        await updateTwmpDeposit(
+          twmpDeposit.orderNo,
+          detail.txnUID,
+          detail.status,
+          detail.time,
+        )
+      }
+
+      twmpDeposit = await prisma.twmpDeposit.findUnique({
+        where: {
+          orderNo: twmpDepositId,
+        },
+        include: {
+          results: true,
+        },
+      })
+    } catch (error) {
+      log(`TWMP Deposit [${twmpDepositId}] update failed: ${error}`)
     }
   }
 

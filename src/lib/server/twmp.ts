@@ -180,7 +180,7 @@ export async function createTwmp(
 
   if (isMobile) {
     requestBody['txnType'] = 'A'
-    requestBody['callbackURL'] = `${callbackHost}/twmp/result`
+    requestBody['callbackURL'] = `${callbackHost}/twmp/callback`
     requestBody['verifyCode'] = encodeVerifyCode(
       requestBody.acqBank,
       requestBody.merchantId,
@@ -249,8 +249,11 @@ export async function createTwmp(
       txnID: responseBody.txnID,
     } as CreateTwmpResult<PaymentType.MOBILE>
   } else {
+    const originalQrcode = (
+      responseBody as CreateTwmpResponse<PaymentType.DESKTOP>
+    ).qrcode
     return {
-      qrcode: (responseBody as CreateTwmpResponse<PaymentType.DESKTOP>).qrcode,
+      qrcode: encodeURI(originalQrcode),
       txnID: responseBody.txnID,
     } as CreateTwmpResult<PaymentType.DESKTOP>
   }

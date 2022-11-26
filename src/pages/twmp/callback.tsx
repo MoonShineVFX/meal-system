@@ -33,12 +33,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       errorMessage = '驗證碼錯誤'
     } else if (query.responseCode !== '0000') {
       errorMessage = `交易錯誤: 代碼 [${query.responseCode}]`
-    }
-
-    return {
-      props: {
-        twmpDepositId: query.orderNumber,
-      },
+    } else {
+      return {
+        props: {
+          twmpDepositId: query.orderNumber,
+        },
+      }
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -64,16 +64,20 @@ export default function PageTwmpResult(props: {
   const router = useRouter()
 
   useEffect(() => {
-    router.replace(router.pathname, undefined, { shallow: true })
+    if (!props.errorMessage && props.twmpDepositId) {
+      router.push(`/twmp/${props.twmpDepositId}?callback=true`)
+    } else {
+      router.replace(router.pathname, undefined, { shallow: true })
+    }
   }, [])
 
   if (props.errorMessage || !props.twmpDepositId) {
-    return <div>{props.errorMessage}</div>
+    return <div>errmsg: {props.errorMessage}</div>
   }
 
   return (
     <div>
-      <h1>{props.twmpDepositId}</h1>
+      <h1>{props.twmpDepositId} 轉址中</h1>
     </div>
   )
 }

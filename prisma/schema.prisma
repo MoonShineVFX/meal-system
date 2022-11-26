@@ -86,14 +86,15 @@ model TwmpResult {
 }
 
 model TwmpDeposit {
-  orderNo   String       @id @default(cuid())
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  transAMT  Int
-  txnID     String?      @unique
-  results   TwmpResult[]
-  user      User         @relation(fields: [userId], references: [id])
-  userId    String
+  orderNo     String       @id @default(cuid())
+  createdAt   DateTime     @default(now())
+  transAMT    Int
+  txnID       String?      @unique
+  results     TwmpResult[]
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String
+  callbackUrl String?
+  qrcode      String?
 }
 
 // Blockchain
