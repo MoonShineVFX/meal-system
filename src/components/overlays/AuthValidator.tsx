@@ -25,7 +25,7 @@ export default function AuthValidator() {
 
   if (userInfoQuery.status !== 'success' && router.pathname !== '/login')
     return (
-      <div className='fixed inset-0 z-50 grid place-items-center bg-teal-700'>
+      <div className='fixed inset-0 z-50 grid place-items-center bg-violet-700'>
         <div className='flex items-center gap-2 text-gray-900'>
           <Spinner className='h-5 w-5' />
           <p className='text-lg font-bold tracking-widest'>身分驗證中</p>

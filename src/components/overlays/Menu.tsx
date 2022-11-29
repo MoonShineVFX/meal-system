@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { Popover, Transition } from '@headlessui/react'
 
 import { HomeIcon as HomeIconSolid } from '@heroicons/react/24/solid'
 import { CalendarDaysIcon as CalendarDaysIconSolid } from '@heroicons/react/24/solid'
@@ -14,6 +15,8 @@ import { UserIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import { useStore } from '@/lib/client/store'
+import { generateCookie } from '@/lib/common'
+import { settings } from '@/lib/common'
 
 export default function Menu() {
   const router = useRouter()
@@ -41,7 +44,7 @@ export default function Menu() {
         />
         <MenuButton
           label='錢包'
-          path='/wallet'
+          path='/transaction'
           icons={[WalletIcon, WalletIconSolid]}
         />
         <ProfileButton className='sm:hidden' />
@@ -55,20 +58,54 @@ export default function Menu() {
 function ProfileButton(props: { className?: string }) {
   const user = useStore((state) => state.user)
 
+  const handleLogout = () => {
+    const cookie = generateCookie(undefined)
+    document.cookie = cookie
+    window.location.href = '/login'
+  }
+
   return (
-    <button className={`${props.className}`} title='logout'>
-      <MenuIcon
-        className='sm:hidden'
-        isSelected={true}
-        icons={[UserIcon, UserIconSolid]}
-      />
-      <div className='hidden items-center gap-1 rounded-md p-2 text-gray-500 hover:bg-gray-200 active:bg-gray-200 sm:flex'>
-        <span className='hidden pl-1 text-sm tracking-widest sm:block'>
-          {user?.name}
-        </span>
-        <ChevronDownIcon className='h-5 w-5 stroke-[1px]' />
-      </div>
-    </button>
+    <Popover className={`${props.className} relative`}>
+      {({ open }) => (
+        <>
+          <Popover.Button className='focus:outline-none'>
+            <MenuIcon
+              className='sm:hidden'
+              isSelected={open}
+              icons={[UserIcon, UserIconSolid]}
+            />
+            <div className='hidden items-center gap-1 rounded-md p-2 text-gray-500 hover:bg-gray-200 active:bg-gray-200 ui-open:bg-gray-200 sm:flex'>
+              <span className='hidden pl-1 text-sm tracking-widest sm:block'>
+                {user?.name}
+              </span>
+              <ChevronDownIcon className='h-5 w-5 stroke-[1px] ui-open:rotate-180' />
+            </div>
+          </Popover.Button>
+          <Transition
+            enter='transition duration-100 ease-out'
+            enterFrom='transform scale-y-50 opacity-0'
+            enterTo='transform scale-y-100 opacity-100'
+            leave='transition duration-75 ease-out'
+            leaveFrom='transform scale-y-100 opacity-100'
+            leaveTo='transform scale-y-50 opacity-0'
+          >
+            <Popover.Panel className='absolute bottom-12 right-0 z-10 min-w-[7em] overflow-hidden rounded-md border-[1px] border-gray-200 bg-gray-100 py-2 text-gray-500 shadow-md sm:bottom-auto sm:text-sm'>
+              <div className='w-full cursor-pointer py-2 px-4 hover:bg-gray-200 active:bg-gray-200'>
+                <a href={settings.REPORT_URL} target='_blank'>
+                  回報問題
+                </a>
+              </div>
+              <div
+                className='w-full cursor-pointer py-2 px-4 text-red-400 hover:bg-gray-200 active:bg-gray-200'
+                onClick={handleLogout}
+              >
+                登出
+              </div>
+            </Popover.Panel>
+          </Transition>
+        </>
+      )}
+    </Popover>
   )
 }
 
@@ -85,7 +122,7 @@ function MenuButton(props: {
   const isShallow = props.path.includes('?')
   const isSelected = isShallow
     ? router.query.logout === ''
-    : router.pathname === props.path
+    : router.pathname.split('/')[1] === props.path.replace('/', '')
 
   const NormalIcon = props.icons[0]
 
@@ -109,11 +146,11 @@ function MenuButton(props: {
       />
       {/* Desktop label */}
       <div className='hidden h-full sm:inline-flex sm:flex-col'>
-        <div className='flex h-full min-w-[5em] items-center justify-center rounded-md text-center tracking-widest text-gray-500 group-data-selected:text-teal-500 group-data-not-selected:hover:bg-gray-200 group-data-not-selected:hover:text-gray-600 group-data-not-selected:active:bg-gray-200'>
+        <div className='flex h-full min-w-[5em] items-center justify-center rounded-md text-center tracking-widest text-gray-500 group-data-selected:text-violet-500 group-data-not-selected:hover:bg-gray-200 group-data-not-selected:hover:text-gray-600 group-data-not-selected:active:bg-gray-200'>
           <NormalIcon className='h-5 w-5 stroke-[1px]' />
           <span className='ml-2'>{props.label}</span>
         </div>
-        <div className='-mb-[3px] h-[3px] w-full bg-teal-500 group-data-not-selected:hidden'></div>
+        <div className='-mb-[3px] h-[3px] w-full bg-violet-500 group-data-not-selected:hidden'></div>
       </div>
     </Link>
   )
@@ -133,7 +170,7 @@ function MenuIcon(props: {
       data-ui={props.isSelected ? 'selected' : 'not-selected'}
       className={`group flex items-center rounded-full p-3 hover:bg-gray-200 active:bg-gray-200 ${props.className}`}
     >
-      <Icon className='h-6 w-6 stroke-1 text-gray-600 group-data-selected:text-teal-500' />
+      <Icon className='h-6 w-6 stroke-1 text-gray-600 group-data-selected:text-violet-500' />
     </div>
   )
 }

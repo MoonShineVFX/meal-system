@@ -45,6 +45,8 @@ export const settings = {
   /* Log */
   LOG_BLOCKCHAIN: process.env.LOG_BLOCKCHAIN === 'true',
   LOG_DATABASE: process.env.LOG_DATABASE === 'true',
+  /* Misc */
+  REPORT_URL: process.env.NEXT_PUBLIC_REPORT_URL ?? '',
 }
 
 /* Types */
