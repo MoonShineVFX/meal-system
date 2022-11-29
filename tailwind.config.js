@@ -5,14 +5,12 @@ module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     screens: {
-      xs: '512px',
+      xs: '576px',
       ...defaultTheme.screens,
     },
     data: {
-      active: 'ui~="active"',
-      'not-active': 'ui~="not-active"',
-      main: 'ui~="main"',
-      'not-main': 'ui~="not-main"',
+      selected: 'ui~="selected"',
+      'not-selected': 'ui~="not-selected"',
       loading: 'ui~="loading"',
       'not-loading': 'ui~="not-loading"',
     },
