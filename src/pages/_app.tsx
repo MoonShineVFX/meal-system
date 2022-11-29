@@ -17,12 +17,12 @@ const PageApp: AppType = ({ Component, pageProps }) => {
       {/* Menu */}
       {user && <Menu />}
       {/* Main */}
-      <div className='mx-auto min-h-full max-w-lg'>
+      <div>
         <Component {...pageProps} />
       </div>
       {/* Overlay */}
-      <RouterProgress />
       {user && <EventListener />}
+      <RouterProgress />
       <AuthValidator />
       <Notification />
     </>

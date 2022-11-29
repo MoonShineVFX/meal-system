@@ -17,6 +17,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useStore } from '@/lib/client/store'
 import { generateCookie } from '@/lib/common'
 import { settings } from '@/lib/common'
+import Logo from '@/components/Logo'
 
 export default function Menu() {
   const router = useRouter()
@@ -27,7 +28,7 @@ export default function Menu() {
     <nav className='fixed bottom-0 z-40 flex h-16 w-full justify-center bg-gray-100 drop-shadow-2xl sm:static sm:items-center sm:justify-between sm:px-8 sm:drop-shadow-none'>
       {/* Logo */}
       <h1 className='hidden flex-shrink-0 text-xl font-bold sm:block'>
-        夢想支付
+        <Logo className='h-8 w-auto text-violet-500' />
       </h1>
       {/* Main links */}
       <div className='flex h-full w-full items-center justify-evenly py-1 md:justify-center md:gap-8'>
@@ -89,7 +90,7 @@ function ProfileButton(props: { className?: string }) {
             leaveFrom='transform scale-y-100 opacity-100'
             leaveTo='transform scale-y-50 opacity-0'
           >
-            <Popover.Panel className='absolute bottom-12 right-0 z-10 min-w-[7em] overflow-hidden rounded-md border-[1px] border-gray-200 bg-gray-100 py-2 text-gray-500 shadow-md sm:bottom-auto sm:text-sm'>
+            <Popover.Panel className='absolute bottom-12 right-0 z-10 min-w-[7em] overflow-hidden rounded-md border-[1px] border-gray-200 bg-gray-100 py-2 tracking-wider text-gray-500 shadow-md sm:bottom-auto sm:text-sm'>
               <div className='w-full cursor-pointer py-2 px-4 hover:bg-gray-200 active:bg-gray-200'>
                 <a href={settings.REPORT_URL} target='_blank'>
                   回報問題
