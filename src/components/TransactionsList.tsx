@@ -2,7 +2,7 @@ import Link from 'next/link'
 import React, { useEffect, useMemo } from 'react'
 import { TransactionType } from '@prisma/client'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 import { GroupedVirtuoso } from 'react-virtuoso'
 import { Transition } from '@headlessui/react'
 
@@ -15,7 +15,7 @@ import { useCallback } from 'react'
 /* Component */
 function TransactionItem(props: {
   transaction: TransactionWithName
-  displayRole: Role
+  displayRole: UserRole
 }) {
   const { transaction, displayRole } = props
 
@@ -25,7 +25,7 @@ function TransactionItem(props: {
     TransactionType.REFUND as string,
   ].includes(transaction.type as string)
   const balanceState =
-    displayRole === Role.STAFF
+    displayRole === UserRole.STAFF
       ? { prefix: '', style: 'text-amber-600' }
       : isPositive
       ? { prefix: '+', style: 'text-green-500' }
@@ -33,9 +33,9 @@ function TransactionItem(props: {
 
   // Make description by displayRole
   let description: JSX.Element | null = null
-  if (displayRole === Role.USER) {
+  if (displayRole === UserRole.USER) {
     description = <div>{settings.TRANSACTION_NAME[transaction.type]}</div>
-  } else if (displayRole === Role.STAFF) {
+  } else if (displayRole === UserRole.STAFF) {
     description = <div>{transaction.sourceUser.name}</div>
   } else {
     description = (
@@ -68,7 +68,7 @@ function TransactionItem(props: {
         {/* Credit */}
         <div
           data-ui={transaction.creditAmount > 0 ? 'active' : 'not-active'}
-          className='flex items-center gap-1 data-not-active:hidden'
+          className='data-not-active:hidden flex items-center gap-1'
         >
           <div
             data-ui={isPositive && 'active'}
@@ -82,7 +82,7 @@ function TransactionItem(props: {
         {/* Point */}
         <div
           data-ui={transaction.pointAmount > 0 ? 'active' : 'not-active'}
-          className='flex items-center gap-1 data-not-active:hidden'
+          className='data-not-active:hidden flex items-center gap-1'
         >
           <div
             data-ui={isPositive && 'active'}
@@ -101,11 +101,11 @@ function TransactionItem(props: {
 const TransactionItemMemo = React.memo(TransactionItem)
 
 function TransactionList(props: {
-  role?: Exclude<Role, 'SERVER'>
+  role?: Exclude<UserRole, 'SERVER'>
   isIndex?: boolean // if index, show more button and first page only
 }) {
   const isIndex = props.isIndex ?? false
-  const displayRole = props.role ?? Role.USER
+  const displayRole = props.role ?? UserRole.USER
   const {
     data: transactionsData,
     hasNextPage,

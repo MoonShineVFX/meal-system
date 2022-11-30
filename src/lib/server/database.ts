@@ -1,6 +1,6 @@
 import {
   PrismaClient,
-  Role,
+  UserRole,
   TransactionType,
   Prisma,
   TwmpResultStatus,
@@ -20,7 +20,7 @@ function log(...args: Parameters<typeof console.log>) {
 export async function ensureUser(
   userId: string,
   name: string,
-  role?: Role,
+  role?: UserRole,
   pointBalance?: number,
   creditBalance?: number,
 ) {
@@ -41,12 +41,12 @@ export async function ensureUser(
       ...updateData,
     },
     include: {
-      blockchain: true,
+      ethWallet: true,
     },
   })
 
   // If user does not have a blockchain, create one
-  if (!user.blockchain) {
+  if (!user.ethWallet) {
     log(`Creating blockchain account for user ${user.name} (${userId})`)
     const newBlockchainAccount = await blockchainManager.createAccount()
     await prisma.user.update({
@@ -54,7 +54,7 @@ export async function ensureUser(
         id: userId,
       },
       data: {
-        blockchain: {
+        ethWallet: {
           create: {
             address: newBlockchainAccount.address,
             privateKey: newBlockchainAccount.privateKey,
@@ -69,7 +69,7 @@ export async function ensureUser(
 }
 
 export async function createAuthToken(userId: string) {
-  const authToken = await prisma.authToken.create({
+  const authToken = await prisma.userToken.create({
     data: {
       userId: userId,
     },
@@ -79,20 +79,20 @@ export async function createAuthToken(userId: string) {
           id: true,
           name: true,
           role: true,
-          authTokens: true,
+          tokens: true,
         },
       },
     },
   })
 
-  const { authTokens: userAuthTokens } = authToken.user
+  const { tokens: userAuthTokens } = authToken.user
 
   // Limit tokens per user
   if (userAuthTokens.length > settings.TOKEN_COUNT_PER_USER) {
     const toDeleteTokenIds = userAuthTokens
       .slice(0, userAuthTokens.length - settings.TOKEN_COUNT_PER_USER)
       .map((t) => t.id)
-    await prisma.authToken.deleteMany({
+    await prisma.userToken.deleteMany({
       where: {
         id: { in: toDeleteTokenIds },
       },
@@ -103,7 +103,7 @@ export async function createAuthToken(userId: string) {
 }
 
 export async function validateAuthToken(token: string) {
-  const authToken = await prisma.authToken.findUnique({
+  const authToken = await prisma.userToken.findUnique({
     where: { id: token },
     include: { user: { select: { id: true, name: true, role: true } } },
   })
@@ -121,7 +121,7 @@ export async function getUserInfo(userId: string) {
 
 /* Transaction */
 export async function rechargeUserBalance(
-  targetUserId: string,
+  userId: string,
   amount: number,
   type: CurrencyType,
   twmpResultId?: string, // If excute from twmp update
@@ -129,7 +129,7 @@ export async function rechargeUserBalance(
   // Add target user balance and create recharge record
   const [user, transaction] = await prisma.$transaction([
     prisma.user.update({
-      where: { id: targetUserId },
+      where: { id: userId },
       data: {
         creditBalance: {
           increment: type === CurrencyType.CREDIT ? amount : 0,
@@ -142,7 +142,7 @@ export async function rechargeUserBalance(
     prisma.transaction.create({
       data: {
         sourceUserId: settings.SERVER_USER_ID,
-        targetUserId: targetUserId,
+        targetUserId: userId,
         creditAmount: amount,
         type: TransactionType.RECHARGE,
         twmpResultId: twmpResultId,
@@ -164,14 +164,14 @@ export async function rechargeUserBalance(
 }
 
 export async function refundUserBalance(
-  targetUserId: string,
+  userId: string,
   amount: number,
   twmpResultId?: string, // If excute from twmp update
 ) {
-  // Burn target user balance and create refund record
+  // Burn target user balance even negative and create refund record
   const [user, transaction] = await prisma.$transaction([
     prisma.user.update({
-      where: { id: targetUserId },
+      where: { id: userId },
       data: {
         creditBalance: {
           decrement: amount,
@@ -181,7 +181,7 @@ export async function refundUserBalance(
     prisma.transaction.create({
       data: {
         sourceUserId: settings.SERVER_USER_ID,
-        targetUserId: targetUserId,
+        targetUserId: userId,
         creditAmount: -amount,
         type: TransactionType.REFUND,
         twmpResultId: twmpResultId,
@@ -242,22 +242,10 @@ export async function chargeUserBalance(
       },
     })
 
-    // Recharge server
-    await client.user.update({
-      where: { id: settings.SERVER_USER_ID },
-      data: {
-        creditBalance: {
-          increment: creditAmountToPay,
-        },
-        pointBalance: { increment: pointAmountToPay },
-      },
-    })
-
     const transaction = await client.transaction.create({
       data: {
         sourceUserId: userId,
         targetUserId: settings.SERVER_USER_ID,
-        creditAmount: creditAmountToPay,
         pointAmount: pointAmountToPay,
         type: TransactionType.PAYMENT,
       },
@@ -290,10 +278,10 @@ export async function chargeUserBalance(
 export async function getTransactions(
   userId: string | undefined,
   cursor: number | undefined,
-  role: Role,
+  role: UserRole,
 ) {
   let whereQuery: Prisma.TransactionWhereInput
-  if (role === Role.USER) {
+  if (role === UserRole.USER) {
     whereQuery = {
       OR: [
         {
@@ -307,12 +295,13 @@ export async function getTransactions(
         },
       ],
     }
-  } else if (role === Role.STAFF) {
+  } else if (role === UserRole.STAFF) {
     whereQuery = {
       targetUserId: settings.SERVER_USER_ID,
       type: TransactionType.PAYMENT,
     }
-  } else if (role === Role.ADMIN || role === Role.SERVER) {
+  } else if (role === UserRole.ADMIN) {
+    // Filter auto recharge
     whereQuery = {
       NOT: {
         sourceUserId: settings.SERVER_USER_ID,
@@ -408,14 +397,14 @@ export async function updateTwmpDeposit(
       updatedAt: time,
     },
     create: {
-      twmpDepositId: orderNo,
+      depositId: orderNo,
       txnUID: txnUID,
       status: status,
       createdAt: time,
       updatedAt: time,
     },
     include: {
-      twmpDeposit: {
+      deposit: {
         select: {
           transAMT: true,
           userId: true,
@@ -427,16 +416,16 @@ export async function updateTwmpDeposit(
   if (status === TwmpResultStatus.SUCCESS) {
     // Recharge user
     await rechargeUserBalance(
-      twmpResult.twmpDeposit.userId,
-      twmpResult.twmpDeposit.transAMT,
+      twmpResult.deposit.userId,
+      twmpResult.deposit.transAMT,
       CurrencyType.CREDIT,
       txnUID,
     )
   } else if (status === TwmpResultStatus.CANCELED) {
     // Refund user
     await refundUserBalance(
-      twmpResult.twmpDeposit.userId,
-      twmpResult.twmpDeposit.transAMT,
+      twmpResult.deposit.userId,
+      twmpResult.deposit.transAMT,
       txnUID,
     )
   }
@@ -495,36 +484,35 @@ async function updateBlockchainByTransfer(transactionId: number) {
   const transaction = await prisma.transaction.findUnique({
     where: { id: transactionId },
     include: {
-      sourceUser: { include: { blockchain: true } },
-      targetUser: { include: { blockchain: true } },
+      sourceUser: { include: { ethWallet: true } },
+      targetUser: { include: { ethWallet: true } },
     },
   })
 
   // Catch error
   if (!transaction) throw new Error('Transaction not found')
-  if (transaction.blockchainHashes.length > 0)
-    throw new Error('Already updated')
-  if (!transaction.sourceUser.blockchain || !transaction.targetUser.blockchain)
-    throw new Error('User blockchain data not found')
+  if (transaction.ethHashes.length > 0) throw new Error('Already updated')
+  if (!transaction.sourceUser.ethWallet || !transaction.targetUser.ethWallet)
+    throw new Error('User eth wallet not found')
 
   // Update
-  let blockchainHashes = []
+  let ethHashes = []
   if (transaction.pointAmount > 0) {
-    blockchainHashes.push(
+    ethHashes.push(
       await blockchainManager.transfer(
         CurrencyType.POINT,
-        transaction.sourceUser.blockchain.address,
-        transaction.targetUser.blockchain.address,
+        transaction.sourceUser.ethWallet.address,
+        transaction.targetUser.ethWallet.address,
         transaction.pointAmount,
       ),
     )
   }
   if (transaction.creditAmount > 0) {
-    blockchainHashes.push(
+    ethHashes.push(
       await blockchainManager.transfer(
         CurrencyType.CREDIT,
-        transaction.sourceUser.blockchain.address,
-        transaction.targetUser.blockchain.address,
+        transaction.sourceUser.ethWallet.address,
+        transaction.targetUser.ethWallet.address,
         transaction.creditAmount,
       ),
     )
@@ -533,7 +521,7 @@ async function updateBlockchainByTransfer(transactionId: number) {
   return await prisma.transaction.update({
     where: { id: transactionId },
     data: {
-      blockchainHashes: blockchainHashes,
+      ethHashes: ethHashes,
     },
   })
 }
@@ -542,49 +530,48 @@ async function updateBlockchainByMintBurn(transactionId: number) {
   const transaction = await prisma.transaction.findUnique({
     where: { id: transactionId },
     include: {
-      targetUser: { include: { blockchain: true } },
+      targetUser: { include: { ethWallet: true } },
     },
   })
 
   // Catch error
   if (!transaction) throw new Error('Transaction not found')
-  if (transaction.blockchainHashes.length > 0)
-    throw new Error('Already updated')
-  if (!transaction.targetUser.blockchain)
+  if (transaction.ethHashes.length > 0) throw new Error('Already updated')
+  if (!transaction.targetUser.ethWallet)
     throw new Error('User blockchain data not found')
 
   // Update
-  let blockchainHashes = []
+  let ethHashes = []
   if (transaction.pointAmount > 0) {
-    blockchainHashes.push(
+    ethHashes.push(
       await blockchainManager.mint(
         CurrencyType.POINT,
-        transaction.targetUser.blockchain.address,
+        transaction.targetUser.ethWallet.address,
         transaction.pointAmount,
       ),
     )
   } else if (transaction.pointAmount < 0) {
-    blockchainHashes.push(
+    ethHashes.push(
       await blockchainManager.burn(
         CurrencyType.POINT,
-        transaction.targetUser.blockchain.address,
+        transaction.targetUser.ethWallet.address,
         -transaction.pointAmount,
       ),
     )
   }
   if (transaction.creditAmount > 0) {
-    blockchainHashes.push(
+    ethHashes.push(
       await blockchainManager.mint(
         CurrencyType.CREDIT,
-        transaction.targetUser.blockchain.address,
+        transaction.targetUser.ethWallet.address,
         transaction.creditAmount,
       ),
     )
   } else if (transaction.creditAmount < 0) {
-    blockchainHashes.push(
+    ethHashes.push(
       await blockchainManager.burn(
         CurrencyType.CREDIT,
-        transaction.targetUser.blockchain.address,
+        transaction.targetUser.ethWallet.address,
         -transaction.creditAmount,
       ),
     )
@@ -593,7 +580,7 @@ async function updateBlockchainByMintBurn(transactionId: number) {
   return await prisma.transaction.update({
     where: { id: transactionId },
     data: {
-      blockchainHashes: blockchainHashes,
+      ethHashes: ethHashes,
     },
   })
 }
@@ -602,21 +589,21 @@ async function forceSyncBlockchainWallet(userId: string) {
   log('>> Updating blockchain for user', userId)
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { blockchain: true },
+    include: { ethWallet: true },
   })
 
   // Catch error
   if (!user) throw new Error('User not found')
-  if (!user.blockchain) throw new Error('User blockchain data not found')
+  if (!user.ethWallet) throw new Error('User blockchain data not found')
 
   // Update
   const pointBalance = await blockchainManager.getUserBalance(
     CurrencyType.POINT,
-    user.blockchain.address,
+    user.ethWallet.address,
   )
   const creditBalance = await blockchainManager.getUserBalance(
     CurrencyType.CREDIT,
-    user.blockchain.address,
+    user.ethWallet.address,
   )
   log('Blockchain balance', pointBalance, creditBalance)
   log('Database balance', user.pointBalance, user.creditBalance)
@@ -624,7 +611,7 @@ async function forceSyncBlockchainWallet(userId: string) {
     log('Minting point for user', user.name)
     const hash = await blockchainManager.mint(
       CurrencyType.POINT,
-      user.blockchain.address,
+      user.ethWallet.address,
       user.pointBalance - pointBalance,
     )
     log(hash)
@@ -632,7 +619,7 @@ async function forceSyncBlockchainWallet(userId: string) {
     log('Burning point for user', user.name)
     const hash = await blockchainManager.burn(
       CurrencyType.POINT,
-      user.blockchain.address,
+      user.ethWallet.address,
       pointBalance - user.pointBalance,
     )
     log(hash)
@@ -641,7 +628,7 @@ async function forceSyncBlockchainWallet(userId: string) {
     log('Minting credit for user', user.name)
     const hash = await blockchainManager.mint(
       CurrencyType.CREDIT,
-      user.blockchain.address,
+      user.ethWallet.address,
       user.creditBalance - creditBalance,
     )
     log(hash)
@@ -649,7 +636,7 @@ async function forceSyncBlockchainWallet(userId: string) {
     log('Burning credit for user', user.name)
     const hash = await blockchainManager.burn(
       CurrencyType.CREDIT,
-      user.blockchain.address,
+      user.ethWallet.address,
       creditBalance - user.creditBalance,
     )
     log(hash)

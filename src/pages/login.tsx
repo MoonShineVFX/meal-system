@@ -1,13 +1,13 @@
 import { FormEvent, useEffect } from 'react'
 import Image from 'next/image'
 
-import CoverImage from '/public/resource/cover1.jpg'
+import CoverImage from '/public/resource/login-bg.jpg'
 
 import trpc from '@/lib/client/trpc'
 import { generateCookie } from '@/lib/common'
-import Spinner from '@/components/Spinner'
 import { useStore, NotificationType } from '@/lib/client/store'
 import Logo from '@/components/Logo'
+import Button from '@/components/Button'
 
 interface LoginFormElements extends HTMLFormControlsCollection {
   username: HTMLInputElement
@@ -58,7 +58,7 @@ export default function PageLogin() {
 
   return (
     <div className='absolute inset-0 flex'>
-      <div className='flex w-full shrink-0 flex-col justify-center bg-stone-100 lg:max-w-md'>
+      <div className='flex w-full shrink-0 flex-col justify-center bg-gray-100 lg:max-w-md'>
         <form
           className='group mx-auto flex w-full max-w-sm flex-col gap-8 py-8 px-10'
           onSubmit={handleLogin}
@@ -89,20 +89,16 @@ export default function PageLogin() {
             placeholder=''
             autoComplete='password'
           />
-          <button
-            disabled={isBusy}
-            className='flex h-12 items-center justify-center rounded-md bg-violet-500 text-lg font-bold tracking-widest text-gray-100 hover:bg-violet-600 active:bg-amber-900 disabled:opacity-75 disabled:hover:bg-gray-800'
+          <Button
+            className='h-12'
+            textClassName='text-lg font-bold'
+            isDisabled={isBusy}
+            isLoading={loginMutation.isLoading}
+            isSuccess={loginMutation.isSuccess}
             type='submit'
-          >
-            {loginMutation.isSuccess ? (
-              '登入成功'
-            ) : (
-              <>
-                <Spinner className='hidden h-6 w-6 group-data-loading:block' />
-                <p className='group-data-loading:hidden'>登入</p>
-              </>
-            )}
-          </button>
+            text='登入'
+            textOnSuccess='登入成功'
+          />
         </form>
       </div>
       <div className='relative hidden grow lg:block'>
@@ -111,6 +107,7 @@ export default function PageLogin() {
           fill
           src={CoverImage}
           alt='Cover Image'
+          priority
         />
       </div>
     </div>

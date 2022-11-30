@@ -1,6 +1,6 @@
 import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 import superjson from 'superjson'
 import { IncomingMessage } from 'http'
 import { NodeHTTPCreateContextFnOptions } from '@trpc/server/adapters/node-http'
@@ -63,7 +63,7 @@ export const router = t.router
 
 async function validateUserLite(
   userLite: UserLite | null,
-  targetRole: Role,
+  targetRole: UserRole,
   path?: string | string[],
 ) {
   if (!userLite || !validateRole(userLite.role, targetRole)) {
@@ -76,21 +76,21 @@ async function validateUserLite(
 
 export const adminProcedure = t.procedure.use(
   t.middleware(async ({ next, ctx, path }) => {
-    await validateUserLite(ctx.userLite, Role.ADMIN, path)
+    await validateUserLite(ctx.userLite, UserRole.ADMIN, path)
     return next({ ctx: { userLite: ctx.userLite! } })
   }),
 )
 
 export const staffProcedure = t.procedure.use(
   t.middleware(async ({ next, ctx, path }) => {
-    await validateUserLite(ctx.userLite, Role.STAFF, path)
+    await validateUserLite(ctx.userLite, UserRole.STAFF, path)
     return next({ ctx: { userLite: ctx.userLite! } })
   }),
 )
 
 export const userProcedure = t.procedure.use(
   t.middleware(async ({ next, ctx, path }) => {
-    await validateUserLite(ctx.userLite, Role.USER, path)
+    await validateUserLite(ctx.userLite, UserRole.USER, path)
     return next({ ctx: { userLite: ctx.userLite! } })
   }),
 )

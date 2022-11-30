@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 import { useState, useEffect } from 'react'
 
 import { useStore, NotificationType } from '@/lib/client/store'
@@ -90,13 +90,13 @@ export default function EventListener() {
 
   /* User Transactions */
   trpc.transaction.onAdd.useSubscription(
-    { role: Role.USER },
+    { role: UserRole.USER },
     {
       enabled: subscriptionsEnabled,
       onStarted: async () => {
         if (isSocketBeenClosed) {
           trpcContext.transaction.list.invalidate({
-            role: Role.USER,
+            role: UserRole.USER,
           })
         }
       },
@@ -106,27 +106,27 @@ export default function EventListener() {
           type: NotificationType.SUCCESS,
           message: `成功${makePaymentString(transaction)}`,
         })
-        addTransactions(Role.USER, [transaction])
+        addTransactions(UserRole.USER, [transaction])
       },
       onError: handleError,
     },
   )
 
   /* Staff Transactions */
-  if (validateRole(user!.role, Role.STAFF)) {
+  if (validateRole(user!.role, UserRole.STAFF)) {
     trpc.transaction.onAdd.useSubscription(
-      { role: Role.STAFF },
+      { role: UserRole.STAFF },
       {
         enabled: subscriptionsEnabled,
         onStarted: async () => {
           if (isSocketBeenClosed) {
             trpcContext.transaction.list.invalidate({
-              role: Role.STAFF,
+              role: UserRole.STAFF,
             })
           }
         },
         onData: async (transaction) => {
-          addTransactions(Role.STAFF, [transaction])
+          addTransactions(UserRole.STAFF, [transaction])
           addNotification({
             type: NotificationType.SUCCESS,
             message: `${transaction.sourceUser.name} ${makePaymentString(
@@ -140,20 +140,20 @@ export default function EventListener() {
   }
 
   /* Admin Transactions */
-  if (validateRole(user!.role, Role.ADMIN)) {
+  if (validateRole(user!.role, UserRole.ADMIN)) {
     trpc.transaction.onAdd.useSubscription(
-      { role: Role.ADMIN },
+      { role: UserRole.ADMIN },
       {
         enabled: subscriptionsEnabled,
         onStarted: async () => {
           if (isSocketBeenClosed) {
             trpcContext.transaction.list.invalidate({
-              role: Role.ADMIN,
+              role: UserRole.ADMIN,
             })
           }
         },
         onData: async (transaction) => {
-          addTransactions(Role.ADMIN, [transaction])
+          addTransactions(UserRole.ADMIN, [transaction])
         },
         onError: handleError,
       },

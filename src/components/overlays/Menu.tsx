@@ -79,7 +79,7 @@ function ProfileButton(props: { className?: string }) {
               <span className='hidden pl-1 text-sm tracking-widest sm:block'>
                 {user?.name}
               </span>
-              <ChevronDownIcon className='h-5 w-5 stroke-[1px] ui-open:rotate-180' />
+              <ChevronDownIcon className='h-5 w-5 stroke-[1px] transition-transform ui-open:rotate-180' />
             </div>
           </Popover.Button>
           <Transition

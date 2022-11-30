@@ -1,4 +1,4 @@
-import { User, TransactionType, Role, Transaction } from '@prisma/client'
+import { User, TransactionType, UserRole, Transaction } from '@prisma/client'
 
 /* Settings */
 export const settings = {
@@ -20,6 +20,7 @@ export const settings = {
     [TransactionType.RECHARGE]: '儲值',
     [TransactionType.PAYMENT]: '消費',
     [TransactionType.REFUND]: '退款',
+    [TransactionType.TRANSFER]: '轉帳',
   },
   /* Trade */
   TRANSACTIONS_PER_PAGE: 20,
@@ -72,12 +73,11 @@ export function generateCookie(token: string | undefined) {
   return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict`
 }
 
-export function validateRole(sourceRole: Role, targetRole: Role) {
+export function validateRole(sourceRole: UserRole, targetRole: UserRole) {
   const roleWeight = {
-    [Role.SERVER]: 1000,
-    [Role.ADMIN]: 100,
-    [Role.STAFF]: 50,
-    [Role.USER]: 10,
+    [UserRole.ADMIN]: 100,
+    [UserRole.STAFF]: 50,
+    [UserRole.USER]: 10,
   }
 
   return roleWeight[sourceRole] >= roleWeight[targetRole]

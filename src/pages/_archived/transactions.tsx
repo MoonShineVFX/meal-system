@@ -1,6 +1,6 @@
 import TransactionList from '@/components/TransactionsList'
 import { Tab } from '@headlessui/react'
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 
 import { validateRole } from '@/lib/common'
 import { useStore } from '@/lib/client/store'
@@ -10,8 +10,8 @@ export default function PageTransactions() {
 
   if (!user) return null
 
-  const isStaff = validateRole(user.role, Role.STAFF)
-  const isAdmin = validateRole(user.role, Role.ADMIN)
+  const isStaff = validateRole(user.role, UserRole.STAFF)
+  const isAdmin = validateRole(user.role, UserRole.ADMIN)
 
   return (
     <div>
@@ -29,13 +29,13 @@ export default function PageTransactions() {
           {/* Staff */}
           {isStaff && (
             <Tab.Panel>
-              <TransactionList role={Role.STAFF} />
+              <TransactionList role={UserRole.STAFF} />
             </Tab.Panel>
           )}
           {/* Server */}
           {isAdmin && (
             <Tab.Panel>
-              <TransactionList role={Role.ADMIN} />
+              <TransactionList role={UserRole.ADMIN} />
             </Tab.Panel>
           )}
         </Tab.Panels>

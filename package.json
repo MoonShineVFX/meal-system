@@ -61,6 +61,7 @@
   "devDependencies": {
     "prettier": "^2.7.1",
     "prettier-plugin-tailwindcss": "^0.1.13",
+    "prisma-dbml-generator": "^0.10.0",
     "ts-node": "^10.9.1",
     "tsx": "^3.12.1"
   }

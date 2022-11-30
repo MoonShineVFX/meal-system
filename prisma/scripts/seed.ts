@@ -1,32 +1,33 @@
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 import { ensureUser } from '@/lib/server/database'
+import { settings } from '@/lib/common'
 
 const mockData = [
   {
-    id: '_server',
+    id: settings.SERVER_USER_ID,
     name: '伺服器',
-    role: Role.SERVER,
+    role: UserRole.ADMIN,
     pointBalance: 2000,
     creditBalance: 2000,
   },
   {
     id: '_admin',
     name: '管理員',
-    role: Role.ADMIN,
+    role: UserRole.ADMIN,
     pointBalance: 500,
     creditBalance: 1000,
   },
   {
     id: '_staff',
     name: '員工',
-    role: Role.STAFF,
+    role: UserRole.STAFF,
     pointBalance: 500,
     creditBalance: 1000,
   },
   {
     id: '_user',
     name: '使用者',
-    role: Role.USER,
+    role: UserRole.USER,
     pointBalance: 500,
     creditBalance: 1000,
   },
