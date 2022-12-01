@@ -75,7 +75,7 @@ export const UserRouter = router({
         if (!adTokenResponse.ok) {
           throw new TRPCError({
             code: 'UNAUTHORIZED',
-            message: '錯誤的帳號或密碼',
+            message: '帳號或密碼錯誤',
           })
         }
 

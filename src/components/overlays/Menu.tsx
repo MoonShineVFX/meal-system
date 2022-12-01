@@ -16,7 +16,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import { useStore } from '@/lib/client/store'
 import { generateCookie } from '@/lib/common'
-import { settings } from '@/lib/common'
+import { settings, twData } from '@/lib/common'
 import Logo from '@/components/Logo'
 
 export default function Menu() {
@@ -129,7 +129,7 @@ function MenuButton(props: {
 
   return (
     <Link
-      data-ui={isSelected ? 'selected' : 'not-selected'}
+      data-ui={twData({ selected: isSelected })}
       className='group inline-flex h-full items-center justify-center data-selected:cursor-default'
       href={{
         pathname: isShallow ? router.pathname : props.path,
@@ -168,7 +168,7 @@ function MenuIcon(props: {
   const Icon = props.isSelected ? props.icons[1] : props.icons[0]
   return (
     <div
-      data-ui={props.isSelected ? 'selected' : 'not-selected'}
+      data-ui={twData({ selected: props.isSelected })}
       className={`group flex items-center rounded-full p-3 hover:bg-gray-200 active:bg-gray-200 ${props.className}`}
     >
       <Icon className='h-6 w-6 stroke-1 text-gray-600 group-data-selected:text-violet-500' />

@@ -82,3 +82,9 @@ export function validateRole(sourceRole: UserRole, targetRole: UserRole) {
 
   return roleWeight[sourceRole] >= roleWeight[targetRole]
 }
+
+export function twData(parms: Record<string, boolean | undefined>) {
+  return Object.entries(parms)
+    .map(([key, value]) => (value ? key : `not-${key}`))
+    .join(' ')
+}

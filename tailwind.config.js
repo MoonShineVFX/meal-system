@@ -1,6 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 const defaultTheme = require('tailwindcss/defaultTheme')
 
+let dataPrefixes = {}
+;['selected', 'loading', 'busy'].forEach((prefix) => {
+  ;(dataPrefixes[prefix] = `ui~="${prefix}"`),
+    (dataPrefixes[`not-${prefix}`] = `ui~="not-${prefix}"`)
+})
+
 module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
@@ -8,12 +14,7 @@ module.exports = {
       xs: '576px',
       ...defaultTheme.screens,
     },
-    data: {
-      selected: 'ui~="selected"',
-      'not-selected': 'ui~="not-selected"',
-      loading: 'ui~="loading"',
-      'not-loading': 'ui~="not-loading"',
-    },
+    data: dataPrefixes,
     extend: {
       keyframes: {
         blink: {

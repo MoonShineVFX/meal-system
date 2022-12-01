@@ -15,7 +15,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
       {/* Menu */}
-      {user && <Menu />}
+      <Menu />
       {/* Main */}
       <div>
         <Component {...pageProps} />
