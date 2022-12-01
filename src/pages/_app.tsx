@@ -19,9 +19,9 @@ const PageApp: AppType = ({ Component, pageProps }) => {
       {/* Menu */}
       <Navigation />
       {/* Main */}
-      <div className='sm:pl-64'>
+      <main className='h-full sm:pl-64'>
         <Component {...pageProps} />
-      </div>
+      </main>
       {/* Overlay */}
       {user && <EventListener />}
       <RouterProgress />

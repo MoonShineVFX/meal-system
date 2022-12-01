@@ -28,7 +28,6 @@ export default function Button(props: {
     <p className={props.textClassName}>{props.text}</p>
   )
   const themeColor = themes[props.theme ?? 'main']
-  console.log('render button')
 
   return (
     <button

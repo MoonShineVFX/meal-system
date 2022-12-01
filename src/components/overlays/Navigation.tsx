@@ -23,7 +23,7 @@ export default function Menu() {
   if (router.pathname === '/login') return null
 
   return (
-    <nav className='fixed bottom-0 z-40 flex h-16 w-full justify-center bg-gray-100 sm:inset-y-0 sm:bottom-auto sm:h-full sm:w-64 sm:flex-col sm:justify-start sm:gap-8 sm:border-r sm:border-gray-300 sm:bg-gray-200 sm:px-8 sm:py-8'>
+    <nav className='fixed bottom-0 z-40 flex h-16 w-full justify-center bg-gray-100 shadow sm:inset-y-0 sm:bottom-auto sm:h-full sm:w-64 sm:flex-col sm:justify-start sm:gap-8 sm:border-gray-300 sm:bg-gray-200 sm:px-8 sm:py-8 sm:shadow-none'>
       {/* Logo */}
       <div className='hidden pl-2 sm:block'>
         <Logo className='h-8 w-auto text-violet-400' />
@@ -66,7 +66,7 @@ function ProfileButton(props: { className?: string }) {
       {({ open }) => (
         <>
           <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-md sm:p-2 sm:hover:bg-gray-300 sm:active:bg-gray-300 sm:ui-open:bg-gray-300'>
-            <div className='h-8 w-8 overflow-hidden rounded-full border border-gray-300 outline outline-0 outline-violet-500 hover:outline-2 active:outline-2 ui-open:outline-2 sm:h-12 sm:w-12 sm:outline-none'>
+            <div className='h-8 w-8 overflow-hidden rounded-full border border-gray-300 ring-0 ring-violet-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0'>
               <img src='/resource/profile-dummy.png' />
             </div>
             <div className='hidden grow items-center gap-1 rounded-md pl-2 text-gray-500 sm:flex'>
@@ -85,7 +85,7 @@ function ProfileButton(props: { className?: string }) {
             leaveFrom='transform scale-y-100 opacity-100'
             leaveTo='transform scale-y-50 opacity-0'
           >
-            <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[7em] rounded-md border-[1px] border-gray-300 bg-gray-100 py-2 tracking-wider text-gray-500 shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0 sm:text-sm'>
+            <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[7em] rounded-md border-[1px] border-gray-300 bg-gray-100 py-2 tracking-wider text-gray-500 drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0 sm:text-sm'>
               <div className='w-full cursor-pointer py-2 px-4 hover:bg-gray-200 active:bg-gray-200'>
                 <a href={settings.REPORT_URL} target='_blank'>
                   回報問題
@@ -128,7 +128,7 @@ function MenuButton(props: {
   return (
     <Link
       data-ui={twData({ selected: isSelected })}
-      className='group inline-flex items-center justify-center data-selected:cursor-default sm:w-full sm:justify-start'
+      className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
       href={{
         pathname: isShallow ? router.pathname : props.path,
         query: isShallow
