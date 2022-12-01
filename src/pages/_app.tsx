@@ -19,7 +19,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
       {/* Menu */}
       <Menu />
       {/* Main */}
-      <div>
+      <div className='sm:pl-64'>
         <Component {...pageProps} />
       </div>
       {/* Overlay */}

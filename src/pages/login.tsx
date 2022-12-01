@@ -3,6 +3,7 @@ import Image from 'next/image'
 
 import CoverImage from '/public/resource/login-bg.jpg'
 
+import Title from '@/components/Title'
 import trpc from '@/lib/client/trpc'
 import { generateCookie, twData } from '@/lib/common'
 import { useStore, NotificationType } from '@/lib/client/store'
@@ -57,60 +58,63 @@ export default function PageLogin() {
   const isBusy = loginMutation.isLoading || loginMutation.isSuccess
 
   return (
-    <div className='absolute inset-0 flex'>
-      <div className='flex w-full shrink-0 flex-col justify-center bg-gray-100 lg:max-w-md'>
-        <form
-          className='group relative mx-auto flex w-full max-w-sm flex-col gap-8 py-8 px-10'
-          onSubmit={handleLogin}
-          data-ui={twData({ loading: isBusy })}
-        >
-          <Logo className='w-40 text-violet-500' />
-          <h1 className='text-xl font-bold tracking-wider text-gray-500'>
-            請登入夢想 AD 帳號
-          </h1>
-          <InputField
-            disabled={isBusy}
-            label='帳號'
-            type='text'
-            name='username'
-            placeholder=''
-            autoComplete='username'
+    <>
+      <Title prefix='登入' />
+      <div className='absolute inset-0 flex'>
+        <div className='flex w-full shrink-0 flex-col justify-center bg-gray-100 lg:max-w-md'>
+          <form
+            className='group relative mx-auto flex w-full max-w-sm flex-col gap-8 py-8 px-10'
+            onSubmit={handleLogin}
+            data-ui={twData({ loading: isBusy })}
+          >
+            <Logo className='w-40 text-violet-500' />
+            <h1 className='text-xl font-bold tracking-wider text-gray-500'>
+              請登入夢想 AD 帳號
+            </h1>
+            <InputField
+              disabled={isBusy}
+              label='帳號'
+              type='text'
+              name='username'
+              placeholder=''
+              autoComplete='username'
+            />
+            <InputField
+              disabled={isBusy}
+              label='密碼'
+              type='password'
+              name='password'
+              placeholder=''
+              autoComplete='password'
+            />
+            <Button
+              className='h-12'
+              textClassName='text-lg font-bold'
+              isBusy={isBusy}
+              isLoading={loginMutation.isLoading}
+              isSuccess={loginMutation.isSuccess}
+              type='submit'
+              text='登入'
+              textOnSuccess='登入成功'
+            />
+            {loginMutation.isError && (
+              <div className='absolute bottom-0 text-sm font-normal text-red-400'>
+                ⚠️{loginMutation.error.message}
+              </div>
+            )}
+          </form>
+        </div>
+        <div className='relative hidden grow lg:block'>
+          <Image
+            className='object-cover'
+            fill
+            src={CoverImage}
+            alt='Cover Image'
+            priority
           />
-          <InputField
-            disabled={isBusy}
-            label='密碼'
-            type='password'
-            name='password'
-            placeholder=''
-            autoComplete='password'
-          />
-          <Button
-            className='h-12'
-            textClassName='text-lg font-bold'
-            isBusy={isBusy}
-            isLoading={loginMutation.isLoading}
-            isSuccess={loginMutation.isSuccess}
-            type='submit'
-            text='登入'
-            textOnSuccess='登入成功'
-          />
-          {loginMutation.isError && (
-            <div className='absolute bottom-0 text-sm font-normal text-red-400'>
-              ⚠️{loginMutation.error.message}
-            </div>
-          )}
-        </form>
+        </div>
       </div>
-      <div className='relative hidden grow lg:block'>
-        <Image
-          className='object-cover'
-          fill
-          src={CoverImage}
-          alt='Cover Image'
-          priority
-        />
-      </div>
-    </div>
+    </>
   )
 }
 
