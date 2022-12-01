@@ -3,7 +3,11 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
 
-import { createAuthToken, ensureUser, getUserInfo } from '@/lib/server/database'
+import {
+  createAuthToken,
+  ensureUser,
+  getUserInfo,
+} from '@/lib/server/database'
 import { settings, generateCookie } from '@/lib/common'
 import { Event, eventEmitter } from '@/lib/server/event'
 
