@@ -8,12 +8,14 @@ import Notification from '@/components/overlays/Notification'
 import Menu from '@/components/overlays/Menu'
 import RouterProgress from '@/components/overlays/RouteProgress'
 import '@/styles/globals.css'
+import Title from '@/components/Title'
 
 const PageApp: AppType = ({ Component, pageProps }) => {
   const user = useStore((state) => state.user)
 
   return (
     <>
+      <Title />
       {/* Menu */}
       <Menu />
       {/* Main */}

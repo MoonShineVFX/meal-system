@@ -48,6 +48,7 @@ export const settings = {
   LOG_DATABASE: process.env.LOG_DATABASE === 'true',
   /* Misc */
   REPORT_URL: process.env.NEXT_PUBLIC_REPORT_URL ?? '',
+  TITLE: process.env.NEXT_PUBLIC_TITLE ?? '夢想餐飲',
 }
 
 /* Types */
