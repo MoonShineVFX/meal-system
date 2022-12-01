@@ -5,7 +5,7 @@ import { useStore } from '@/lib/client/store'
 import EventListener from '@/components/overlays/EventListener'
 import AuthValidator from '@/components/overlays/AuthValidator'
 import Notification from '@/components/overlays/Notification'
-import Menu from '@/components/overlays/Menu'
+import Navigation from '@/components/overlays/Navigation'
 import RouterProgress from '@/components/overlays/RouteProgress'
 import '@/styles/globals.css'
 import Title from '@/components/Title'
@@ -17,7 +17,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
     <>
       <Title />
       {/* Menu */}
-      <Menu />
+      <Navigation />
       {/* Main */}
       <div className='sm:pl-64'>
         <Component {...pageProps} />
