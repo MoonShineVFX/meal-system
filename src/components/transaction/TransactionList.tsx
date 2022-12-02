@@ -12,7 +12,7 @@ export default function TransactionList(props: {
     setScrollParent(
       window.innerWidth < 375 ? props.externalScrollElement : undefined,
     )
-  }, [])
+  }, [props.externalScrollElement])
 
   return (
     <div className='flex grow flex-col bg-gray-100'>

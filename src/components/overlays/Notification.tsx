@@ -50,15 +50,14 @@ function NotificationPod(props: {
   }, [])
 
   const [Icon, iconStyle] = iconMap[notification.type]
-  const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 0
-  const isDesktop = windowWidth > 1024
-  const targetLength = isOpen ? (isDesktop ? 90 : 72) : 0 // top padding
+  const isDesktop = window.innerWidth > 1024
+  const targetLength = isOpen ? (isDesktop ? 90 : 72) : 0 // border padding
   const gap =
     props.index !== 0
       ? ` ${isDesktop ? '-' : '+'} (100% + ${isDesktop ? 24 : 16}px) * ${
           props.index
         }`
-      : '' // gap
+      : ''
 
   return (
     <div
