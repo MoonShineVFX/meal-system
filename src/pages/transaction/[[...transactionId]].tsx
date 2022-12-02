@@ -28,7 +28,7 @@ export default function PageTransaction(props: { transactionId?: string }) {
       data-ui={twData({ selected: isDetailOpened })}
     >
       {/* Transaction List */}
-      <section className='flex flex-col group-data-selected:hidden lg:group-data-selected:flex xl:grid xl:grid-cols-[minmax(0,256px)_minmax(0,1fr)] xl:grid-rows-none xl:group-data-selected:grid'>
+      <section className='flex flex-col group-data-selected:hidden lg:group-data-selected:flex xl:grid xl:grid-cols-[minmax(0,256px)_minmax(0,1fr)] xl:group-data-selected:grid'>
         <Wallet />
         <TransactionList />
       </section>
