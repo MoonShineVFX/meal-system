@@ -8,9 +8,9 @@ export default function Wallet() {
   const user = useStore((state) => state.user)
 
   return (
-    <div className='grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] grid-rows-none gap-4 bg-gray-100 p-4 xl:place-content-start'>
+    <div className='grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] grid-rows-none place-content-start gap-4 bg-gray-100 p-4'>
       {/* Balance */}
-      <div className='grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-[1px] bg-gray-300'>
+      <div className='grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-[1px] bg-gray-300'>
         <div className='flex items-center gap-4 bg-gray-100 p-4'>
           <CircleStackIcon className='h-8 w-8 shrink-0 text-violet-500' />
           <div className='flex flex-col whitespace-nowrap'>
@@ -31,10 +31,10 @@ export default function Wallet() {
         </div>
       </div>
       {/* Action */}
-      <div className='grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] place-content-center justify-center gap-4'>
-        <Button className='h-10' textClassName='font-bold' text='儲值' />
+      <div className='grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] place-content-evenly justify-center gap-4'>
+        <Button className='h-12' textClassName='font-bold' text='儲值' />
         <Button
-          className='h-10'
+          className='h-12'
           textClassName='font-bold'
           text='區塊鏈紀錄'
           theme='secondary'
