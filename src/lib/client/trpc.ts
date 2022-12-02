@@ -65,6 +65,7 @@ const authLink: TRPCLink<AppRouter> = () => {
   return ({ next, op }) => {
     return observable((observer) => {
       const unsubscribe = next(op).subscribe({
+        // Detect login mutation, redirect to index if success
         next(value) {
           if (
             op.type === 'mutation' &&
@@ -75,7 +76,7 @@ const authLink: TRPCLink<AppRouter> = () => {
               (value.result.data as { token: string }).token,
             )
             document.cookie = cookie
-            window.location.href = '/'
+            window.location.href = '/?login'
           }
           observer.next(value)
         },

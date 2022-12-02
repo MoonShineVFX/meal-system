@@ -17,11 +17,7 @@ import { generateCookie } from '@/lib/common'
 import { settings, twData } from '@/lib/common'
 import Logo from '@/components/core/Logo'
 
-export default function Menu() {
-  const router = useRouter()
-
-  if (router.pathname === '/login') return null
-
+export default function Navigation() {
   return (
     <div className='flex h-full items-center justify-evenly bg-gray-100 shadow sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-gray-200 sm:px-8 sm:py-8 sm:shadow-none'>
       {/* LOGO */}
@@ -68,12 +64,12 @@ function ProfileButton(props: { className?: string }) {
             <img src='/resource/profile-dummy.png' />
           </div>
         </div>
-        <div className='hidden grow items-center gap-1 rounded-md pl-2 text-gray-500 sm:flex'>
+        <div className='hidden grow items-center pl-2 sm:flex'>
           <div className='flex grow flex-col text-left'>
             <span className='tracking-widest'>{user?.name}</span>
             <span className='text-sm text-gray-400'>@{user?.id}</span>
           </div>
-          <ChevronDownIcon className='h-6 w-6 text-gray-400 transition-transform ui-open:rotate-180 ui-open:text-gray-500' />
+          <ChevronDownIcon className='h-6 w-6 text-gray-400 transition-transform ui-open:rotate-180' />
         </div>
       </Popover.Button>
       <Transition
@@ -84,7 +80,7 @@ function ProfileButton(props: { className?: string }) {
         leaveFrom='transform scale-100 opacity-100'
         leaveTo='transform scale-50 opacity-0'
       >
-        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[7em] rounded-md border-[1px] border-gray-300 bg-gray-100 py-2 tracking-wider text-gray-500 drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0 sm:text-sm'>
+        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[7em] rounded-md border-[1px] border-gray-300 bg-gray-100 py-2 tracking-wider text-gray-500 drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
           <div className='w-full cursor-pointer py-2 px-4 hover:bg-gray-200 active:bg-gray-200'>
             <a href={settings.REPORT_URL} target='_blank'>
               回報問題

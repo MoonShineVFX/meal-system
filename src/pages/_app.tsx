@@ -1,4 +1,6 @@
 import type { AppType } from 'next/app'
+import { useRouter } from 'next/router'
+import { twMerge } from 'tailwind-merge'
 
 import trpc from '@/lib/client/trpc'
 import { useStore } from '@/lib/client/store'
@@ -10,17 +12,32 @@ import RouterProgress from '@/components/overlays/RouteProgress'
 import '@/styles/globals.css'
 import Title from '@/components/core/Title'
 
+const fullScreenPaths = ['/login']
+
 const PageApp: AppType = ({ Component, pageProps }) => {
   const user = useStore((state) => state.user)
+  const router = useRouter()
+  const isFullScreen = fullScreenPaths.includes(router.pathname)
 
   return (
     <>
       <Title />
+      {/* Content */}
       <div className='grid h-full grid-rows-[auto_64px] sm:grid-cols-[256px_auto] sm:grid-rows-none'>
-        <nav className='order-last sm:order-none'>
+        <nav
+          className={twMerge(
+            'order-last sm:order-none',
+            isFullScreen && 'hidden',
+          )}
+        >
           <Navigation />
         </nav>
-        <main>
+        <main
+          className={twMerge(
+            '@container/main',
+            isFullScreen && 'col-span-full row-span-full',
+          )}
+        >
           <Component {...pageProps} />
         </main>
       </div>

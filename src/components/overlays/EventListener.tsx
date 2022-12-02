@@ -1,5 +1,5 @@
 import { UserRole } from '@prisma/client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
@@ -30,7 +30,7 @@ export default function EventListener() {
   const addNotification = useStore((state) => state.addNotification)
   const addTransactions = useStore((state) => state.addTransactions)
 
-  const handleError = async (error: Omit<Error, 'name'>) => {
+  const handleError = useCallback(async (error: Omit<Error, 'name'>) => {
     // Catch socket closed error
     if (error.message === 'WebSocket closed prematurely') {
       return
@@ -39,7 +39,7 @@ export default function EventListener() {
       type: NotificationType.ERROR,
       message: error.message,
     })
-  }
+  }, [])
 
   /* Socket management */
   useEffect(() => {
@@ -62,6 +62,7 @@ export default function EventListener() {
     }
     onSocketCloseCallbacks.push(handleSocketClose)
     onSocketOpenCallbacks.push(handleSocketOpen)
+
     return () => {
       onSocketCloseCallbacks.splice(
         onSocketCloseCallbacks.indexOf(handleSocketClose),

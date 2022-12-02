@@ -1,12 +1,14 @@
 import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 
 import Spinner from '@/components/core/Spinner'
 import trpc from '@/lib/client/trpc'
-import { useStore } from '@/lib/client/store'
+import { useStore, NotificationType } from '@/lib/client/store'
 
 /* Component */
 export default function AuthValidator() {
   const router = useRouter()
+  const addNotification = useStore((state) => state.addNotification)
   const setUser = useStore((state) => state.setUser)
   const userInfoQuery = trpc.user.info.useQuery(undefined, {
     onSuccess(data) {
@@ -22,6 +24,17 @@ export default function AuthValidator() {
       }
     },
   })
+
+  /* Login success notice */
+  useEffect(() => {
+    if (router.query.login === '') {
+      addNotification({
+        type: NotificationType.SUCCESS,
+        message: '登入成功',
+      })
+      router.replace(router.pathname, undefined, { shallow: true })
+    }
+  }, [router.query])
 
   if (userInfoQuery.status !== 'success' && router.pathname !== '/login')
     return (

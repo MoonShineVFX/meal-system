@@ -22,7 +22,7 @@ export default function Notification() {
   const notifications = useStore((state) => state.notifications)
 
   return (
-    <div className='pointer-events-none fixed inset-0 z-40 flex justify-center'>
+    <div className='pointer-events-none fixed inset-0 z-40 flex justify-center lg:justify-end lg:pr-8'>
       {notifications.map((notification, i) => (
         <NotificationPod
           key={notification.id}
@@ -50,20 +50,29 @@ function NotificationPod(props: {
   }, [])
 
   const [Icon, iconStyle] = iconMap[notification.type]
-  const targetY = isOpen ? 60 : 0 // top padding
-  const gap = props.index !== 0 ? ` + (100% + 12px) * ${props.index}` : '' // gap
+  const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 0
+  const isDesktop = windowWidth > 1024
+  const targetLength = isOpen ? (isDesktop ? 90 : 72) : 0 // top padding
+  const gap =
+    props.index !== 0
+      ? ` ${isDesktop ? '-' : '+'} (100% + ${isDesktop ? 24 : 16}px) * ${
+          props.index
+        }`
+      : '' // gap
 
   return (
     <div
-      className='absolute top-0 flex items-center gap-1 rounded-xl border-[1px] border-stone-200 bg-stone-100 py-2 px-3 text-stone-700 shadow-lg transition-all'
+      className='absolute top-0 flex items-center gap-1 rounded-md border border-gray-200 bg-gray-100 py-3 px-4 text-gray-500 shadow-lg transition-all lg:bottom-0 lg:top-auto lg:p-4'
       style={{
-        transform: `translateY(calc(${targetY}px - 100%${gap}))`,
+        transform: isDesktop
+          ? `translateY(calc(100% - ${targetLength}px${gap}))`
+          : `translateY(calc(${targetLength}px - 100%${gap}))`,
         transitionDuration: `${settings.NOTIFICATION_DELAY}ms`,
         opacity: isOpen ? 1 : 0,
       }}
     >
       <Icon className={`h-5 w-5 ${iconStyle}`} />
-      <p className='text-stone-700'>{notification.message}</p>
+      <p className='text-gray-600'>{notification.message}</p>
     </div>
   )
 }
