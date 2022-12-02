@@ -8,7 +8,7 @@ import Notification from '@/components/overlays/Notification'
 import Navigation from '@/components/overlays/Navigation'
 import RouterProgress from '@/components/overlays/RouteProgress'
 import '@/styles/globals.css'
-import Title from '@/components/Title'
+import Title from '@/components/core/Title'
 
 const PageApp: AppType = ({ Component, pageProps }) => {
   const user = useStore((state) => state.user)

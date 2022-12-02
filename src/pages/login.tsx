@@ -3,12 +3,12 @@ import Image from 'next/image'
 
 import CoverImage from '/public/resource/login-bg.jpg'
 
-import Title from '@/components/Title'
+import Title from '@/components/core/Title'
 import trpc from '@/lib/client/trpc'
 import { generateCookie, twData } from '@/lib/common'
 import { useStore, NotificationType } from '@/lib/client/store'
-import Logo from '@/components/Logo'
-import Button from '@/components/Button'
+import Logo from '@/components/core/Logo'
+import Button from '@/components/core/Button'
 
 interface LoginFormElements extends HTMLFormControlsCollection {
   username: HTMLInputElement

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 
-import Spinner from '@/components/Spinner'
+import Spinner from '@/components/core/Spinner'
 import trpc from '@/lib/client/trpc'
 import { useStore } from '@/lib/client/store'
 

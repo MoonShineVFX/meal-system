@@ -15,7 +15,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useStore } from '@/lib/client/store'
 import { generateCookie } from '@/lib/common'
 import { settings, twData } from '@/lib/common'
-import Logo from '@/components/Logo'
+import Logo from '@/components/core/Logo'
 
 export default function Menu() {
   const router = useRouter()

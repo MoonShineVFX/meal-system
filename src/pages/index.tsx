@@ -1,4 +1,4 @@
-import Title from '@/components/Title'
+import Title from '@/components/core/Title'
 
 export default function PageIndex() {
   return (
