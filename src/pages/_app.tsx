@@ -16,12 +16,14 @@ const PageApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
       <Title />
-      {/* Menu */}
-      <Navigation />
-      {/* Main */}
-      <main className='h-full sm:pl-64'>
-        <Component {...pageProps} />
-      </main>
+      <div className='grid h-full grid-rows-[auto_64px] sm:grid-cols-[256px_auto] sm:grid-rows-none'>
+        <nav className='order-last sm:order-none'>
+          <Navigation />
+        </nav>
+        <main>
+          <Component {...pageProps} />
+        </main>
+      </div>
       {/* Overlay */}
       {user && <EventListener />}
       <RouterProgress />

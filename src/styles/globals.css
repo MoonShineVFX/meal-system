@@ -5,10 +5,7 @@
 html,
 body,
 #__next {
-  @apply h-full bg-gray-200 text-gray-500;
-}
-
-html {
+  @apply h-full w-full bg-gray-200 text-gray-500;
   -webkit-tap-highlight-color: transparent;
 }
 
