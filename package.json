@@ -12,7 +12,8 @@
     "db-studio": "prisma studio",
     "db-seed": "ts-node prisma/scripts/seed/seed.ts",
     "db-migrate": "prisma migrate dev",
-    "db-generate": "prisma generate"
+    "db-generate": "prisma generate",
+    "db-reset": "prisma db push --force-reset"
   },
   "keywords": [],
   "author": "",

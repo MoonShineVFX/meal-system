@@ -3,8 +3,6 @@ import { faker } from '@faker-js/faker/locale/zh_TW'
 
 import {
   createMenu,
-  readMenu,
-  deleteMenu,
   createCommodity,
   createSubCategory,
   addCommodityToMenu,
@@ -13,12 +11,8 @@ import { menuMockData } from './mock'
 
 export default async function seedMenu() {
   // Create main menu
-  let menu = await readMenu(MenuType.MAIN)
-  if (menu) {
-    await deleteMenu(menu.id)
-  }
   console.log('>> Seed menu')
-  menu = await createMenu(MenuType.MAIN)
+  const menu = await createMenu(MenuType.MAIN)
 
   for (const [mainCategoryName, mainCategoryData] of Object.entries(
     menuMockData,
