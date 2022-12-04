@@ -68,6 +68,12 @@ export enum CurrencyType {
   POINT = 'point',
 }
 
+export type OptionSet = {
+  name: string
+  multiSelect: boolean
+  options: string[]
+}
+
 /* Functions */
 export function generateCookie(token: string | undefined) {
   const expireTime = token ? settings.COOKIE_EXPIRE_DAYS * 24 * 60 * 60 : 0

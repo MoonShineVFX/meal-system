@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity", "interactiveTransactions"]
+  provider = "prisma-client-js"
 }
 
 // generator dbml {
@@ -8,9 +7,8 @@ generator client {
 // }
 
 datasource db {
-  provider     = "postgresql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // User
@@ -140,14 +138,17 @@ model OrderItem {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  price    Int
   quantity Int
+  name     String
+  imageUrl String?
+  price    Int
+  options  String[]
 
-  order       Order             @relation(fields: [orderId], references: [id])
-  orderId     Int
-  commodity   CommodityOnMenu   @relation(fields: [commodityId], references: [id])
-  commodityId Int
-  options     CommodityOption[]
+  order           Order           @relation(fields: [orderId], references: [id])
+  orderId         Int
+  commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId])
+  menuId          Int
+  commodityId     Int
 }
 
 model CartItem {
@@ -156,24 +157,36 @@ model CartItem {
   updatedAt DateTime @updatedAt
 
   quantity Int
+  options  String[]
 
-  user        User              @relation(fields: [userId], references: [id])
-  userId      String
-  commodity   CommodityOnMenu   @relation(fields: [commodityId], references: [id])
-  commodityId Int
-  options     CommodityOption[]
+  user            User            @relation(fields: [userId], references: [id])
+  userId          String
+  commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId], onDelete: Cascade)
+  menuId          Int
+  commodityId     Int
 }
 
 // Commodity
-model CommodityCategory {
+model CommodityMainCategory {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name       String
-  isArchived Boolean @default(false)
+  name String @unique
 
-  commodities Commodity[]
+  subCategories CommoditySubCategory[]
+}
+
+model CommoditySubCategory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String @unique
+
+  mainCategory   CommodityMainCategory @relation(fields: [mainCategoryId], references: [id])
+  mainCategoryId Int
+  commodities    Commodity[]
 }
 
 model CommodityOptionSetTemplate {
@@ -181,41 +194,9 @@ model CommodityOptionSetTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  data Json @db.Json // { "name": string, "description": string, "type": string, "options": string[] }
-
-  isArchived Boolean @default(false)
-}
-
-enum CommodityOptionSetType {
-  SINGLE
-  MULTI
-}
-
-model CommodityOption {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-
-  name       String
-  isArchived Boolean @default(false)
-
-  set        CommodityOptionSet @relation(fields: [setId], references: [id])
-  setId      Int
-  cartItems  CartItem[]
-  orderItems OrderItem[]
-}
-
-model CommodityOptionSet {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
   name        String
-  description String                 @default("")
-  type        CommodityOptionSetType
-
-  options     CommodityOption[]
-  commodity   Commodity         @relation(fields: [commodityId], references: [id])
-  commodityId Int
+  multiSelect Boolean
+  options     String[]
 }
 
 model Commodity {
@@ -226,31 +207,33 @@ model Commodity {
   name        String
   description String  @default("")
   price       Int
-  image       String?
+  imageUrl    String?
+  optionSets  Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[] }[]
+  isDeleted   Boolean @default(false)
 
-  optionSets CommodityOptionSet[]
-  category   CommodityCategory?   @relation(fields: [categoryId], references: [id])
-  categoryId Int?
-  toMenu     CommodityOnMenu[]
+  subCateogry   CommoditySubCategory? @relation(fields: [subCategoryId], references: [id])
+  subCategoryId Int?
+  onMenus       CommodityOnMenu[]
 }
 
 // Menu
 model CommodityOnMenu {
-  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   overridePrice Int?
   limitPerUser  Int     @default(0)
   SKU           Int     @default(0)
-  isArchived    Boolean @default(false)
+  isDeleted     Boolean @default(false)
 
   commodity   Commodity   @relation(fields: [commodityId], references: [id])
   commodityId Int
-  menu        Menu?       @relation(fields: [menuId], references: [id])
-  menuId      Int?        @unique
+  menu        Menu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId      Int
   cartItems   CartItem[]
   orderItems  OrderItem[]
+
+  @@id([menuId, commodityId])
 }
 
 enum MenuType {
@@ -266,14 +249,14 @@ model Menu {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  date          DateTime @db.Date
+  date          DateTime? @db.Date // Main type: '2000-01-01'
   type          MenuType
-  name          String
-  description   String   @default("")
-  publishedDate DateTime
-  closedDate    DateTime
-  limitPerUser  Int      @default(0)
-  isArchived    Boolean  @default(false)
+  name          String    @default("")
+  description   String    @default("")
+  publishedDate DateTime?
+  closedDate    DateTime?
+  limitPerUser  Int       @default(0)
+  isDeleted     Boolean   @default(false)
 
   commodities CommodityOnMenu[]
 }

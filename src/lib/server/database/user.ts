@@ -7,7 +7,7 @@ import { forceSyncBlockchainWallet } from './blockchain'
 
 export async function ensureUser(
   userId: string,
-  name: string,
+  name?: string,
   role?: UserRole,
   pointBalance?: number,
   creditBalance?: number,
@@ -25,8 +25,9 @@ export async function ensureUser(
     },
     update: updateData,
     create: {
-      id: userId,
       ...updateData,
+      id: userId,
+      name: name ?? userId,
     },
     include: {
       ethWallet: true,

@@ -3,11 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
 
-import {
-  createAuthToken,
-  ensureUser,
-  getUserInfo,
-} from '@/lib/server/database'
+import { createAuthToken, ensureUser, getUserInfo } from '@/lib/server/database'
 import { settings, generateCookie } from '@/lib/common'
 import { Event, eventEmitter } from '@/lib/server/event'
 
@@ -62,9 +58,9 @@ export const UserRouter = router({
       // Use mock user if dev mode
       if (
         process.env.NODE_ENV !== 'production' &&
-        ['_user', '_staff', '_admin'].includes(input.username)
+        input.username.startsWith('_')
       ) {
-        user = await ensureUser(input.username, input.username)
+        user = await ensureUser(input.username)
       } else {
         // Validate from LDAP
         const adTokenResponse = await fetch(`${settings.AUTH_API_URL}/login`, {
