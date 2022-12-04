@@ -179,3 +179,5 @@ dist
 # Cloud SQL certification
 *.pem
 *.p12
+
+prisma/dbml/

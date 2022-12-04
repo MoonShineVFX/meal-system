@@ -1,21 +1,21 @@
 /** @type {import('tailwindcss').Config} */
 const defaultTheme = require('tailwindcss/defaultTheme')
 
+let dataPrefixes = {}
+;['selected', 'loading', 'busy'].forEach((prefix) => {
+  ;(dataPrefixes[prefix] = `ui~="${prefix}"`),
+    (dataPrefixes[`not-${prefix}`] = `ui~="not-${prefix}"`)
+})
+
 module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     screens: {
-      xs: '512px',
+      se: '375px',
+      xs: '576px',
       ...defaultTheme.screens,
     },
-    data: {
-      active: 'ui~="active"',
-      'not-active': 'ui~="not-active"',
-      main: 'ui~="main"',
-      'not-main': 'ui~="not-main"',
-      loading: 'ui~="loading"',
-      'not-loading': 'ui~="not-loading"',
-    },
+    data: dataPrefixes,
     extend: {
       keyframes: {
         blink: {
@@ -31,7 +31,10 @@ module.exports = {
       },
     },
   },
-  plugins: [require('@headlessui/tailwindcss')],
+  plugins: [
+    require('@headlessui/tailwindcss'),
+    require('@tailwindcss/container-queries'),
+  ],
   future: {
     hoverOnlyWhenSupported: true,
   },

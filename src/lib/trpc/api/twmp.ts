@@ -1,7 +1,10 @@
 import { z } from 'zod'
 
 import { userProcedure, router } from '../trpc'
-import { createTwmpDeposit, getTwmpDeposit } from '@/lib/server/database'
+import {
+  createTwmpDeposit,
+  getTwmpDeposit,
+} from '@/lib/server/database'
 
 export const TwmpRouter = router({
   createDeposit: userProcedure

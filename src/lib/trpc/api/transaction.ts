@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
@@ -73,7 +73,7 @@ export const TransactionRouter = router({
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
-        role: z.enum([Role.USER, Role.STAFF, Role.ADMIN]),
+        role: z.enum([UserRole.USER, UserRole.STAFF, UserRole.ADMIN]),
       }),
     )
     .query(async ({ input, ctx }) => {
@@ -104,7 +104,7 @@ export const TransactionRouter = router({
   onAdd: userProcedure
     .input(
       z.object({
-        role: z.enum([Role.USER, Role.STAFF, Role.ADMIN]),
+        role: z.enum([UserRole.USER, UserRole.STAFF, UserRole.ADMIN]),
       }),
     )
     .subscription(({ ctx, input }) => {
@@ -120,11 +120,11 @@ export const TransactionRouter = router({
         const listener = (data: TransactionWithName) => observer.next(data)
         let eventName: string
 
-        if (input.role === Role.USER) {
+        if (input.role === UserRole.USER) {
           eventName = Event.TRANSACTION_ADD_USER(ctx.userLite.id)
-        } else if (input.role === Role.STAFF) {
+        } else if (input.role === UserRole.STAFF) {
           eventName = Event.TRANSACTION_ADD_STAFF
-        } else if (input.role === Role.ADMIN) {
+        } else if (input.role === UserRole.ADMIN) {
           eventName = Event.TRANSACTION_ADD_ADMIN
         } else {
           throw new TRPCError({

@@ -1,4 +1,4 @@
-import { User, TransactionType, Role, Transaction } from '@prisma/client'
+import { User, TransactionType, UserRole, Transaction } from '@prisma/client'
 
 /* Settings */
 export const settings = {
@@ -20,6 +20,7 @@ export const settings = {
     [TransactionType.RECHARGE]: '儲值',
     [TransactionType.PAYMENT]: '消費',
     [TransactionType.REFUND]: '退款',
+    [TransactionType.TRANSFER]: '轉帳',
   },
   /* Trade */
   TRANSACTIONS_PER_PAGE: 20,
@@ -45,6 +46,9 @@ export const settings = {
   /* Log */
   LOG_BLOCKCHAIN: process.env.LOG_BLOCKCHAIN === 'true',
   LOG_DATABASE: process.env.LOG_DATABASE === 'true',
+  /* Misc */
+  REPORT_URL: process.env.NEXT_PUBLIC_REPORT_URL ?? '',
+  TITLE: process.env.NEXT_PUBLIC_TITLE ?? '夢想餐飲',
 }
 
 /* Types */
@@ -64,19 +68,30 @@ export enum CurrencyType {
   POINT = 'point',
 }
 
+export type OptionSet = {
+  name: string
+  multiSelect: boolean
+  options: string[]
+}
+
 /* Functions */
 export function generateCookie(token: string | undefined) {
   const expireTime = token ? settings.COOKIE_EXPIRE_DAYS * 24 * 60 * 60 : 0
   return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict`
 }
 
-export function validateRole(sourceRole: Role, targetRole: Role) {
+export function validateRole(sourceRole: UserRole, targetRole: UserRole) {
   const roleWeight = {
-    [Role.SERVER]: 1000,
-    [Role.ADMIN]: 100,
-    [Role.STAFF]: 50,
-    [Role.USER]: 10,
+    [UserRole.ADMIN]: 100,
+    [UserRole.STAFF]: 50,
+    [UserRole.USER]: 10,
   }
 
   return roleWeight[sourceRole] >= roleWeight[targetRole]
+}
+
+export function twData(parms: Record<string, boolean | undefined>) {
+  return Object.entries(parms)
+    .map(([key, value]) => (value ? key : `not-${key}`))
+    .join(' ')
 }

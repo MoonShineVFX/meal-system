@@ -1,28 +1,49 @@
 import type { AppType } from 'next/app'
+import { useRouter } from 'next/router'
+import { twMerge } from 'tailwind-merge'
 
 import trpc from '@/lib/client/trpc'
 import { useStore } from '@/lib/client/store'
-import EventListener from '@/components/EventListener'
-import AuthValidator from '@/components/AuthValidator'
-import Notification from '@/components/Notification'
-import Menu from '@/components/Menu'
-import RouterProgress from '@/components/RouteProgress'
+import EventListener from '@/components/overlays/EventListener'
+import AuthValidator from '@/components/overlays/AuthValidator'
+import Notification from '@/components/overlays/Notification'
+import Navigation from '@/components/overlays/Navigation'
+import RouterProgress from '@/components/overlays/RouteProgress'
 import '@/styles/globals.css'
+import Title from '@/components/core/Title'
+
+const fullScreenPaths = ['/login']
 
 const PageApp: AppType = ({ Component, pageProps }) => {
   const user = useStore((state) => state.user)
+  const router = useRouter()
+  const isFullScreen = fullScreenPaths.includes(router.pathname)
 
   return (
     <>
-      {/* Main */}
-      <div className='mx-auto min-h-full max-w-lg'>
-        <Component {...pageProps} />
+      <Title />
+      {/* Content */}
+      <div className='grid h-full grid-rows-[auto_64px] sm:grid-cols-[256px_auto] sm:grid-rows-none'>
+        <nav
+          className={twMerge(
+            'order-last sm:order-none',
+            isFullScreen && 'hidden',
+          )}
+        >
+          <Navigation />
+        </nav>
+        <main
+          className={twMerge(
+            '@container/main',
+            isFullScreen && 'col-span-full row-span-full',
+          )}
+        >
+          <Component {...pageProps} />
+        </main>
       </div>
-      {/* Menu */}
-      <Menu />
       {/* Overlay */}
-      <RouterProgress />
       {user && <EventListener />}
+      <RouterProgress />
       <AuthValidator />
       <Notification />
     </>

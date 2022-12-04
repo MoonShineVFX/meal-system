@@ -58,9 +58,9 @@ export const UserRouter = router({
       // Use mock user if dev mode
       if (
         process.env.NODE_ENV !== 'production' &&
-        ['_user', '_staff', '_admin'].includes(input.username)
+        input.username.startsWith('_')
       ) {
-        user = await ensureUser(input.username, input.username)
+        user = await ensureUser(input.username)
       } else {
         // Validate from LDAP
         const adTokenResponse = await fetch(`${settings.AUTH_API_URL}/login`, {
@@ -75,7 +75,7 @@ export const UserRouter = router({
         if (!adTokenResponse.ok) {
           throw new TRPCError({
             code: 'UNAUTHORIZED',
-            message: '錯誤的帳號或密碼',
+            message: '帳號或密碼錯誤',
           })
         }
 

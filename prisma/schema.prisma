@@ -1,71 +1,75 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity", "interactiveTransactions"]
+  provider = "prisma-client-js"
 }
+
+// generator dbml {
+//   provider = "prisma-dbml-generator"
+// }
 
 datasource db {
-  provider     = "postgresql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-enum TransactionType {
-  RECHARGE // Server add balance to user
-  PAYMENT // User pay/order for something
-  REFUND // Server remove balance from user
-}
-
-enum Role {
-  SERVER
+// User
+enum UserRole {
   ADMIN
   STAFF
   USER
 }
 
-model AuthToken {
+model UserToken {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
   createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 }
 
 model User {
-  id                 String        @id
-  name               String
-  role               Role          @default(USER)
-  createdAt          DateTime      @default(now())
-  pointBalance       Int           @default(500)
-  creditBalance      Int           @default(0)
-  sourceTransactions Transaction[] @relation("source")
-  targetTransactions Transaction[] @relation("target")
-  authTokens         AuthToken[]
+  id        String   @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name          String
+  role          UserRole @default(USER)
+  pointBalance  Int      @default(500)
+  creditBalance Int      @default(0)
+
+  cartItems          CartItem[]
+  tokens             UserToken[]
   orders             Order[]
   twmpDeposits       TwmpDeposit[]
-  blockchain         Blockchain?
+  ethWallet          EthWallet?
+  sourceTransactions Transaction[] @relation("source")
+  targetTransactions Transaction[] @relation("target")
+}
+
+// Transaction
+enum TransactionType {
+  RECHARGE // Server modify balance
+  REFUND
+  PAYMENT // User pay/order for something
+  TRANSFER // User transfer balance to another user
 }
 
 model Transaction {
-  id               Int             @id @default(autoincrement())
-  createdAt        DateTime        @default(now())
-  sourceUser       User            @relation("source", fields: [sourceUserId], references: [id])
-  sourceUserId     String
-  targetUser       User            @relation("target", fields: [targetUserId], references: [id])
-  targetUserId     String
-  type             TransactionType
-  pointAmount      Int             @default(0)
-  creditAmount     Int             @default(0)
-  twmpResult       TwmpResult?     @relation(fields: [twmpResultId], references: [txnUID])
-  twmpResultId     String?
-  blockchainHashes String[]
-  orders           Order[]
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
 
-  @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
-}
+  type         TransactionType
+  pointAmount  Int             @default(0)
+  creditAmount Int             @default(0)
 
-model Setting {
-  id               Int      @id @default(autoincrement())
-  lastRechargeDate DateTime @default(now())
-  rechargeValue    Int      @default(500)
+  sourceUser   User        @relation("source", fields: [sourceUserId], references: [id])
+  sourceUserId String
+  targetUser   User        @relation("target", fields: [targetUserId], references: [id])
+  targetUserId String
+  order        Order?      @relation(fields: [orderId], references: [id])
+  orderId      Int?
+  twmpResult   TwmpResult? @relation(fields: [twmpResultId], references: [txnUID])
+  twmpResultId String?
+  ethHashes    String[]
 }
 
 // TWMP
@@ -76,90 +80,183 @@ enum TwmpResultStatus {
 }
 
 model TwmpResult {
-  txnUID        String           @id
-  createdAt     DateTime
-  updatedAt     DateTime         @updatedAt
-  status        TwmpResultStatus
-  transactions  Transaction[]
-  twmpDeposit   TwmpDeposit      @relation(fields: [twmpDepositId], references: [orderNo])
-  twmpDepositId String
+  txnUID    String   @id
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+
+  status TwmpResultStatus
+
+  transactions Transaction[]
+  deposit      TwmpDeposit   @relation(fields: [depositId], references: [orderNo])
+  depositId    String
 }
 
 model TwmpDeposit {
-  orderNo     String       @id @default(cuid())
-  createdAt   DateTime     @default(now())
+  orderNo   String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
   transAMT    Int
-  txnID       String?      @unique
-  results     TwmpResult[]
-  user        User         @relation(fields: [userId], references: [id])
-  userId      String
+  txnID       String? @unique
   callbackUrl String?
   qrcode      String?
+
+  results TwmpResult[]
+  user    User         @relation(fields: [userId], references: [id])
+  userId  String
 }
 
 // Blockchain
-model Blockchain {
-  address    String  @id
-  user       User    @relation(fields: [userId], references: [id])
-  userId     String  @unique
+model EthWallet {
+  address String @id
+
   privateKey String? @unique
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
 }
 
-// Meal
+// Order
+enum OrderStatus {
+  SUCCESS
+  CANCELED
+}
+
 model Order {
-  id            Int         @id @default(autoincrement())
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  isCancelled   Boolean     @default(false)
-  user          User        @relation(fields: [userId], references: [id])
-  userId        String
-  meal          Meal        @relation(fields: [mealId], references: [id])
-  mealId        Int
-  transaction   Transaction @relation(fields: [transactionId], references: [id])
-  transactionId Int
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status OrderStatus @default(SUCCESS)
+
+  user         User          @relation(fields: [userId], references: [id])
+  userId       String
+  items        OrderItem[]
+  transactions Transaction[]
 }
 
-model Meal {
-  id                 Int      @id @default(autoincrement())
-  name               String
-  description        String   @default("")
-  price              Int
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  menu               Menu?    @relation(fields: [menuId], references: [id])
-  menuId             Int?     @unique
-  orders             Order[]
-  ordersLimitPerUser Int      @default(0)
-  ordersLimitTotal   Int      @default(0)
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  quantity Int
+  name     String
+  imageUrl String?
+  price    Int
+  options  String[]
+
+  order           Order           @relation(fields: [orderId], references: [id])
+  orderId         Int
+  commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId])
+  menuId          Int
+  commodityId     Int
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quantity Int
+  options  String[]
+
+  user            User            @relation(fields: [userId], references: [id])
+  userId          String
+  commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId], onDelete: Cascade)
+  menuId          Int
+  commodityId     Int
+}
+
+// Commodity
+model CommodityMainCategory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String @unique
+
+  subCategories CommoditySubCategory[]
+}
+
+model CommoditySubCategory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String @unique
+
+  mainCategory   CommodityMainCategory @relation(fields: [mainCategoryId], references: [id])
+  mainCategoryId Int
+  commodities    Commodity[]
+}
+
+model CommodityOptionSetTemplate {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  multiSelect Boolean
+  options     String[]
+}
+
+model Commodity {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String  @default("")
+  price       Int
+  imageUrl    String?
+  optionSets  Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[] }[]
+  isDeleted   Boolean @default(false)
+
+  subCateogry   CommoditySubCategory? @relation(fields: [subCategoryId], references: [id])
+  subCategoryId Int?
+  onMenus       CommodityOnMenu[]
+}
+
+// Menu
+model CommodityOnMenu {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  overridePrice Int?
+  limitPerUser  Int     @default(0)
+  SKU           Int     @default(0)
+  isDeleted     Boolean @default(false)
+
+  commodity   Commodity   @relation(fields: [commodityId], references: [id])
+  commodityId Int
+  menu        Menu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId      Int
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@id([menuId, commodityId])
+}
+
+enum MenuType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  TEA
+  MAIN
 }
 
 model Menu {
-  id                 Int      @id @default(autoincrement())
-  name               String
-  description        String   @default("")
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  publishedDate      DateTime
-  closedDate         DateTime
-  ordersLimitPerUser Int      @default(1)
-  ordersLimitTotal   Int      @default(0)
-  breakfastMenu      DayMenu? @relation("breakfast")
-  lunchMenu          DayMenu? @relation("lunch")
-  dinnerMenu         DayMenu? @relation("dinner")
-  teaMenu            DayMenu? @relation("tea")
-  meals              Meal[]
-}
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-model DayMenu {
-  id          DateTime @id @db.Date
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  breakfast   Menu?    @relation("breakfast", fields: [breakfastId], references: [id])
-  breakfastId Int?     @unique
-  lunch       Menu?    @relation("lunch", fields: [lunchId], references: [id])
-  lunchId     Int?     @unique
-  dinner      Menu?    @relation("dinner", fields: [dinnerId], references: [id])
-  dinnerId    Int?     @unique
-  tea         Menu?    @relation("tea", fields: [teaId], references: [id])
-  teaId       Int?     @unique
+  date          DateTime? @db.Date // Main type: '2000-01-01'
+  type          MenuType
+  name          String    @default("")
+  description   String    @default("")
+  publishedDate DateTime?
+  closedDate    DateTime?
+  limitPerUser  Int       @default(0)
+  isDeleted     Boolean   @default(false)
+
+  commodities CommodityOnMenu[]
 }

@@ -1,15 +1,15 @@
 import { StateCreator } from 'zustand'
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 
 import { TransactionWithName } from '@/lib/common'
 import type { StoreState } from './define'
 
 export interface TransactionSlice {
-  [Role.USER]: TransactionWithName[]
-  [Role.STAFF]: TransactionWithName[]
-  [Role.ADMIN]: TransactionWithName[]
+  [UserRole.USER]: TransactionWithName[]
+  [UserRole.STAFF]: TransactionWithName[]
+  [UserRole.ADMIN]: TransactionWithName[]
   addTransactions: (
-    role: Exclude<Role, 'SERVER'>,
+    role: Exclude<UserRole, 'SERVER'>,
     transactions: TransactionWithName[],
   ) => void
 }
@@ -20,9 +20,9 @@ export const createTransactionSlice: StateCreator<
   [],
   TransactionSlice
 > = (set) => ({
-  [Role.USER]: [],
-  [Role.STAFF]: [],
-  [Role.ADMIN]: [],
+  [UserRole.USER]: [],
+  [UserRole.STAFF]: [],
+  [UserRole.ADMIN]: [],
   addTransactions: async (role, transactions) => {
     set((state) => {
       const prevTransactions = state[role]
