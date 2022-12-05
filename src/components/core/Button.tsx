@@ -5,7 +5,7 @@ import { twData } from '@/lib/common'
 const themes: Record<string, string> = {
   main: 'bg-violet-500 hover:bg-violet-600 active:bg-violet-600 data-busy:bg-violet-400 data-busy:hover:bg-violet-400 text-gray-100',
   secondary:
-    'bg-gray-100 border border-violet-300 hover:bg-violet-200 active:bg-violet-200 data-busy:bg-violet-300 data-busy:hover:bg-violet-300 text-violet-500',
+    'bg-gray-100 border border-gray-400 hover:bg-violet-100 active:bg-violet-100 data-busy:bg-violet-100 data-busy:hover:bg-violet-100 text-violet-500',
   support:
     'bg-gray-100 hover:bg-gray-200 active:bg-gray-200 data-busy:bg-gray-100 data-busy:hover:bg-gray-100 text-gray-500',
 }
