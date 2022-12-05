@@ -20,7 +20,7 @@ type UserAdData = {
 }
 
 export const UserRouter = router({
-  info: userProcedure.query(async ({ ctx }) => {
+  getInfo: userProcedure.query(async ({ ctx }) => {
     const user = await getUserInfo(ctx.userLite.id)
 
     if (!user) {

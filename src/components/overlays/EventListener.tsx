@@ -84,7 +84,7 @@ export default function EventListener() {
     { role: UserRole.USER },
     {
       onData: async (transaction) => {
-        trpcContext.user.info.invalidate()
+        trpcContext.user.getInfo.invalidate()
         addNotification({
           type: NotificationType.SUCCESS,
           message: `成功${makePaymentString(transaction)}`,

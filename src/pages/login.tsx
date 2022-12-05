@@ -27,7 +27,7 @@ export default function PageLogin() {
   useEffect(() => {
     // Logout the user when enter the page
     document.cookie = generateCookie(undefined) // Remove the cookie
-    trpcContext.user.info.invalidate()
+    trpcContext.user.getInfo.invalidate()
   }, [])
 
   const handleLogin = async (event: FormEvent<LoginFormElement>) => {

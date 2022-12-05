@@ -18,7 +18,7 @@ export async function createMenu(
   }
 
   // Check menu existence
-  if (await readMenu(type, date)) {
+  if (await getMenu(type, date)) {
     throw new Error('menu already exists')
   }
 
@@ -35,7 +35,7 @@ export async function createMenu(
   })
 }
 
-export async function readMenu(type: MenuType, date?: Date) {
+export async function getMenu(type: MenuType, date?: Date) {
   // Validate date and type
   if (!date && type !== MenuType.MAIN) {
     throw new Error('date is required for non-main menu')
@@ -176,7 +176,7 @@ export async function createSubCategory(
   return subCategory
 }
 
-export async function readCommoditiesOnMenu(menuId: number, userId: string) {
+export async function getCommoditiesOnMenu(menuId: number, userId: string) {
   const menuCommodities = await prisma.commodityOnMenu.findMany({
     where: {
       menuId,

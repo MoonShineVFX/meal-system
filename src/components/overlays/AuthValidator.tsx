@@ -10,7 +10,7 @@ export default function AuthValidator() {
   const router = useRouter()
   const addNotification = useStore((state) => state.addNotification)
   const setUser = useStore((state) => state.setUser)
-  const userInfoQuery = trpc.user.info.useQuery(undefined, {
+  const userInfoQuery = trpc.user.getInfo.useQuery(undefined, {
     onSuccess(data) {
       setUser(data)
       if (router.pathname === '/login') {

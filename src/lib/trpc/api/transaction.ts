@@ -6,7 +6,7 @@ import { observable } from '@trpc/server/observable'
 import {
   rechargeUserBalance,
   chargeUserBalance,
-  readTransactions,
+  getTransactions,
 } from '@/lib/server/database'
 import {
   settings,
@@ -69,7 +69,7 @@ export const TransactionRouter = router({
       eventEmitter.emit(Event.TRANSACTION_ADD_ADMIN, transaction)
     }),
   // Get transaction records, use until arg to update new records
-  list: userProcedure
+  getList: userProcedure
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
@@ -86,7 +86,7 @@ export const TransactionRouter = router({
       }
 
       // Get transactions
-      const transactions = await readTransactions(
+      const transactions = await getTransactions(
         ctx.userLite.id,
         input.cursor,
         input.role,

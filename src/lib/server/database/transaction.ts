@@ -162,7 +162,7 @@ export async function chargeUserBalance(
   }
 }
 
-export async function readTransactions(
+export async function getTransactions(
   userId: string | undefined,
   cursor: number | undefined,
   role: UserRole,
