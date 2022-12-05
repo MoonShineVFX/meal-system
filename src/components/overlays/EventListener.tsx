@@ -1,5 +1,5 @@
 import { UserRole } from '@prisma/client'
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
@@ -22,8 +22,6 @@ function makePaymentString(transaction: TransactionWithName) {
 }
 
 export default function EventListener() {
-  const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(true)
-  const [isSocketBeenClosed, setIsSocketBeenClosed] = useState(false)
   const trpcContext = trpc.useContext()
   const user = useStore((state) => state.user)
   const setUser = useStore((state) => state.setUser)
@@ -44,17 +42,15 @@ export default function EventListener() {
   /* Socket management */
   useEffect(() => {
     const handleSocketOpen = async () => {
-      console.warn('Socket reopened, restore subscriptions')
-      setSubscriptionsEnabled(true)
+      console.warn('Socket reopened')
+      trpcContext.invalidate()
       addNotification({
         type: NotificationType.INFO,
         message: '恢復連線',
       })
     }
     const handleSocketClose = async () => {
-      console.warn('Socket closed, removed subscriptions')
-      setIsSocketBeenClosed(true)
-      setSubscriptionsEnabled(false)
+      console.warn('Socket closed')
       addNotification({
         type: NotificationType.ERROR,
         message: '連線中斷',
@@ -77,12 +73,6 @@ export default function EventListener() {
 
   /* User Info */
   trpc.user.onUpdate.useSubscription(undefined, {
-    enabled: subscriptionsEnabled,
-    onStarted: async () => {
-      if (isSocketBeenClosed) {
-        trpcContext.user.info.invalidate()
-      }
-    },
     onData: async (user) => {
       setUser(user)
     },
@@ -93,14 +83,6 @@ export default function EventListener() {
   trpc.transaction.onAdd.useSubscription(
     { role: UserRole.USER },
     {
-      enabled: subscriptionsEnabled,
-      onStarted: async () => {
-        if (isSocketBeenClosed) {
-          trpcContext.transaction.list.invalidate({
-            role: UserRole.USER,
-          })
-        }
-      },
       onData: async (transaction) => {
         trpcContext.user.info.invalidate()
         addNotification({
@@ -118,14 +100,6 @@ export default function EventListener() {
     trpc.transaction.onAdd.useSubscription(
       { role: UserRole.STAFF },
       {
-        enabled: subscriptionsEnabled,
-        onStarted: async () => {
-          if (isSocketBeenClosed) {
-            trpcContext.transaction.list.invalidate({
-              role: UserRole.STAFF,
-            })
-          }
-        },
         onData: async (transaction) => {
           addTransactions(UserRole.STAFF, [transaction])
           addNotification({
@@ -145,14 +119,6 @@ export default function EventListener() {
     trpc.transaction.onAdd.useSubscription(
       { role: UserRole.ADMIN },
       {
-        enabled: subscriptionsEnabled,
-        onStarted: async () => {
-          if (isSocketBeenClosed) {
-            trpcContext.transaction.list.invalidate({
-              role: UserRole.ADMIN,
-            })
-          }
-        },
         onData: async (transaction) => {
           addTransactions(UserRole.ADMIN, [transaction])
         },
