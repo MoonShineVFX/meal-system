@@ -61,10 +61,11 @@
     "zustand": "^4.1.4"
   },
   "devDependencies": {
-    "@faker-js/faker": "^7.6.0",
+    "plaiceholder": "^2.5.0",
     "prettier": "^2.7.1",
     "prettier-plugin-tailwindcss": "^0.1.13",
     "prisma-dbml-generator": "^0.10.0",
+    "sharp": "^0.31.2",
     "ts-node": "^10.9.1",
     "tsx": "^3.12.1"
   }

@@ -17,7 +17,7 @@ const fullScreenPaths = ['/login']
 const PageApp: AppType = ({ Component, pageProps }) => {
   const user = useStore((state) => state.user)
   const router = useRouter()
-  const isFullScreen = fullScreenPaths.includes(router.pathname)
+  const isComponentFullscreen = fullScreenPaths.includes(router.pathname)
 
   return (
     <>
@@ -27,7 +27,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         <nav
           className={twMerge(
             'order-last sm:order-none',
-            isFullScreen && 'hidden',
+            isComponentFullscreen && 'hidden',
           )}
         >
           <Navigation />
@@ -35,7 +35,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         <main
           className={twMerge(
             '@container/main',
-            isFullScreen && 'col-span-full row-span-full',
+            isComponentFullscreen && 'col-span-full row-span-full',
           )}
         >
           <Component {...pageProps} />

@@ -50,6 +50,15 @@ export async function getMenu(type: MenuType, date?: Date) {
     orderBy: {
       createdAt: 'desc',
     },
+    select: {
+      id: true,
+      date: true,
+      name: true,
+      description: true,
+      limitPerUser: true,
+      publishedDate: true,
+      closedDate: true,
+    },
   })
 }
 
@@ -176,8 +185,8 @@ export async function createSubCategory(
   return subCategory
 }
 
-export async function getCommoditiesOnMenu(menuId: number, userId: string) {
-  const menuCommodities = await prisma.commodityOnMenu.findMany({
+export async function getCommoditiesOnMenu(menuId: number) {
+  return await prisma.commodityOnMenu.findMany({
     where: {
       menuId,
       isDeleted: false,
@@ -185,12 +194,26 @@ export async function getCommoditiesOnMenu(menuId: number, userId: string) {
         isDeleted: false,
       },
     },
-    include: {
+    select: {
+      overridePrice: true,
+      limitPerUser: true,
+      SKU: true,
       commodity: {
-        include: {
-          subCateogry: {
-            include: {
-              mainCategory: true,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          price: true,
+          optionSets: true,
+          imageUrl: true,
+          subCategory: {
+            select: {
+              name: true,
+              mainCategory: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
         },
@@ -208,8 +231,10 @@ export async function getCommoditiesOnMenu(menuId: number, userId: string) {
       },
     },
   })
+}
 
-  const orderedFromMenu = await prisma.orderItem.groupBy({
+export async function getUserOrdersOnMenu(userId: string, menuId: number) {
+  return await prisma.orderItem.groupBy({
     by: ['commodityId'],
     where: {
       menuId,
@@ -222,9 +247,4 @@ export async function getCommoditiesOnMenu(menuId: number, userId: string) {
       commodityId: true,
     },
   })
-
-  return {
-    menuCommodities,
-    orderedFromMenu,
-  }
 }

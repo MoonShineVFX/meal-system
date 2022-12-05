@@ -73,7 +73,7 @@ export const TransactionRouter = router({
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
-        role: z.enum([UserRole.USER, UserRole.STAFF, UserRole.ADMIN]),
+        role: z.nativeEnum(UserRole),
       }),
     )
     .query(async ({ input, ctx }) => {

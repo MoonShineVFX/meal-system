@@ -1,5 +1,4 @@
 import { MenuType } from '@prisma/client'
-import { faker } from '@faker-js/faker/locale/zh_TW'
 
 import {
   createMenu,
@@ -31,10 +30,10 @@ export default async function seedMenu() {
         const commodity = await createCommodity(
           commodityData.name,
           commodityData.price,
-          faker.commerce.productDescription(),
+          commodityData.description,
           mainCategoryData.optionSets,
           subCategory.id,
-          faker.image.food(640, 480),
+          commodityData.imageUrl,
         )
         // Add to menu
         await addCommodityToMenu(commodity.id, menu.id)

@@ -23,7 +23,7 @@
     "noUnusedLocals": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist", ".next", "prisma"],
+  "exclude": ["node_modules", "dist", ".next", "prisma", "scripts"],
   "ts-node": {
     "transpileOnly": true,
     "compilerOptions": {

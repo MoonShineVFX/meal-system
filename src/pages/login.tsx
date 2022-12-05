@@ -27,7 +27,7 @@ export default function PageLogin() {
   useEffect(() => {
     // Logout the user when enter the page
     document.cookie = generateCookie(undefined) // Remove the cookie
-    trpcContext.user.getInfo.invalidate()
+    trpcContext.user.get.invalidate()
   }, [])
 
   const handleLogin = async (event: FormEvent<LoginFormElement>) => {
@@ -105,9 +105,11 @@ export default function PageLogin() {
       </div>
       <div className='relative hidden grow md:block'>
         <Image
+          placeholder='blur'
           className='object-cover'
           fill
           src={CoverImage}
+          sizes='(min-width: 1280px) 1280px, 100vw'
           alt='Cover Image'
           priority
         />

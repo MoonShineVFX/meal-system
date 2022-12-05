@@ -210,7 +210,7 @@ model Commodity {
   optionSets  Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[] }[]
   isDeleted   Boolean @default(false)
 
-  subCateogry   CommoditySubCategory? @relation(fields: [subCategoryId], references: [id])
+  subCategory   CommoditySubCategory? @relation(fields: [subCategoryId], references: [id])
   subCategoryId Int?
   onMenus       CommodityOnMenu[]
 }
@@ -248,7 +248,7 @@ model Menu {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  date          DateTime? @db.Date // Main type: '2000-01-01'
+  date          DateTime? @db.Date
   type          MenuType
   name          String    @default("")
   description   String    @default("")
