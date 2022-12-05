@@ -6,7 +6,7 @@ import { observable } from '@trpc/server/observable'
 import {
   rechargeUserBalance,
   chargeUserBalance,
-  getTransactions,
+  readTransactions,
 } from '@/lib/server/database'
 import {
   settings,
@@ -86,7 +86,7 @@ export const TransactionRouter = router({
       }
 
       // Get transactions
-      const transactions = await getTransactions(
+      const transactions = await readTransactions(
         ctx.userLite.id,
         input.cursor,
         input.role,

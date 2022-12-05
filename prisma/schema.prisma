@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["filteredRelationCount"]
 }
 
 // generator dbml {
@@ -7,8 +8,9 @@ generator client {
 // }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "foreignKeys"
 }
 
 // User
@@ -138,7 +140,6 @@ model OrderItem {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  quantity Int
   name     String
   imageUrl String?
   price    Int
@@ -156,8 +157,7 @@ model CartItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  quantity Int
-  options  String[]
+  options String[]
 
   user            User            @relation(fields: [userId], references: [id])
   userId          String
@@ -166,7 +166,7 @@ model CartItem {
   commodityId     Int
 }
 
-// Commodity
+// Menu
 model CommodityMainCategory {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())

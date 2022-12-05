@@ -175,3 +175,56 @@ export async function createSubCategory(
 
   return subCategory
 }
+
+export async function readCommoditiesOnMenu(menuId: number, userId: string) {
+  const menuCommodities = await prisma.commodityOnMenu.findMany({
+    where: {
+      menuId,
+      isDeleted: false,
+      commodity: {
+        isDeleted: false,
+      },
+    },
+    include: {
+      commodity: {
+        include: {
+          subCateogry: {
+            include: {
+              mainCategory: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          orderItems: {
+            where: {
+              order: {
+                status: 'SUCCESS',
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+
+  const orderedFromMenu = await prisma.orderItem.groupBy({
+    by: ['commodityId'],
+    where: {
+      menuId,
+      order: {
+        userId,
+        status: 'SUCCESS',
+      },
+    },
+    _count: {
+      commodityId: true,
+    },
+  })
+
+  return {
+    menuCommodities,
+    orderedFromMenu,
+  }
+}
