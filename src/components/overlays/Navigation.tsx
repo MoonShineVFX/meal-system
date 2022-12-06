@@ -60,13 +60,13 @@ function ProfileButton(props: { className?: string }) {
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`}>
-      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-md sm:p-2 sm:hover:bg-gray-300 sm:active:bg-gray-300 sm:ui-open:bg-gray-300'>
+      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:hover:bg-gray-300 sm:active:bg-gray-300 sm:ui-open:bg-gray-300'>
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
           <div className='relative h-8 w-8 overflow-hidden rounded-full border border-gray-300 ring-0 ring-violet-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0 sm:active:ring-0 sm:ui-open:ring-0'>
             <Image
               alt='profile'
               src={settings.RESOURCE_PROFILE_PLACEHOLDER}
-              fill={true}
+              sizes='32px'
             />
           </div>
         </div>
@@ -86,7 +86,7 @@ function ProfileButton(props: { className?: string }) {
         leaveFrom='transform scale-100 opacity-100'
         leaveTo='transform scale-50 opacity-0'
       >
-        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[7em] rounded-md border-[1px] border-gray-300 bg-gray-100 py-2 tracking-wider text-gray-500 drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
+        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[7em] rounded-2xl border-[1px] border-gray-300 bg-gray-100 py-3 tracking-wider text-gray-500 drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
           <div className='w-full cursor-pointer py-2 px-4 hover:bg-gray-200 active:bg-gray-200'>
             <a href={settings.REPORT_URL} target='_blank'>
               回報問題
@@ -144,7 +144,7 @@ function NavButton(props: {
         icons={props.icons}
       />
       {/* Desktop label */}
-      <div className='hidden grow items-center rounded-md py-2 px-2 font-bold tracking-widest text-gray-500 group-data-selected:bg-gray-300 group-data-selected:text-gray-600 group-data-not-selected:hover:bg-gray-300/50 group-data-not-selected:hover:text-gray-600 group-data-not-selected:active:bg-gray-300 sm:flex'>
+      <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-gray-500 group-data-selected:bg-gray-300 group-data-selected:text-gray-600 group-data-not-selected:hover:bg-gray-300/50 group-data-not-selected:hover:text-gray-600 group-data-not-selected:active:bg-gray-300 sm:flex'>
         <NormalIcon className='h-5 w-5' />
         <span className='ml-4'>{props.label}</span>
       </div>

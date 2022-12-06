@@ -137,7 +137,7 @@ function InputField(props: {
         autoComplete={props.autoComplete}
         autoCapitalize='none'
         autoCorrect='off'
-        className='rounded-md border-[1px] border-gray-300 bg-gray-100 p-2 text-lg font-bold text-gray-600 focus:outline-violet-500 disabled:opacity-75'
+        className='rounded-2xl border-[1px] border-gray-300 bg-gray-100 py-2 px-4 text-lg font-bold text-gray-600 focus:outline-violet-500 disabled:opacity-75'
       />
     </div>
   )

@@ -38,7 +38,7 @@ export default function Button(props: {
       disabled={props.isDisabled}
       data-ui={twData({ busy: props.isBusy })}
       className={twMerge(
-        `flex items-center justify-center rounded-md tracking-widest`,
+        `flex items-center justify-center rounded-2xl tracking-widest`,
         themeColor,
         props.className,
       )}
