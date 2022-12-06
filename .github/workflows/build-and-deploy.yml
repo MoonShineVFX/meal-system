@@ -36,9 +36,8 @@ jobs:
           password: ${{ secrets.GCP_SA_KEY }}
 
       - name: Assign secrets to .env
-        shell: bash
         run: |
-          echo "NEXT_PUBLIC_REPORT_URL=${{ secrets.NEXT_PUBLIC_REPORT_URL }}" > .env
+          echo "NEXT_PUBLIC_REPORT_URL=${{ secrets.NEXT_PUBLIC_REPORT_URL }}" >> .env
           echo "NEXT_PUBLIC_WEBSOCKET_URL=${{ secrets.NEXT_PUBLIC_WEBSOCKET_URL }}" >> .env
           echo "NEXT_PUBLIC_RESOURCE_URL=${{ secrets.NEXT_PUBLIC_RESOURCE_URL }}" >> .env
 
