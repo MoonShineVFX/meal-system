@@ -15,7 +15,7 @@ export default function TransactionList(props: {
   }, [props.externalScrollElement])
 
   return (
-    <div className='flex grow flex-col bg-gray-100'>
+    <div className='flex grow flex-col bg-gray-100 px-4'>
       <div className='px-4'>
         <h1 className='text-xl text-gray-600'>交易紀錄</h1>
         <div>搜尋</div>

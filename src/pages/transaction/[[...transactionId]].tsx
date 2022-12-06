@@ -26,7 +26,7 @@ export default function PageTransaction(props: { transactionId?: string }) {
 
   return (
     <div
-      className='group grid h-full grid-cols-1 @2xl/main:grid-cols-2'
+      className='group grid h-full grid-cols-1 bg-gray-200 @2xl/main:grid-cols-2'
       data-ui={twData({ selected: isDetailOpened })}
     >
       {/* Transaction List */}

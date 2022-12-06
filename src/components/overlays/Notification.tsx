@@ -22,7 +22,7 @@ export default function Notification() {
   const notifications = useStore((state) => state.notifications)
 
   return (
-    <div className='pointer-events-none fixed inset-0 z-40 flex justify-center lg:justify-end lg:pr-8'>
+    <div className='pointer-events-none fixed inset-0 z-40 flex justify-center'>
       {notifications.map((notification, i) => (
         <NotificationPod
           key={notification.id}
@@ -61,17 +61,15 @@ function NotificationPod(props: {
 
   return (
     <div
-      className='absolute top-0 flex items-center gap-1 rounded-2xl border border-gray-200 bg-gray-100 py-3 px-4 text-gray-500 shadow-lg transition-all lg:bottom-0 lg:top-auto lg:p-4'
+      className='absolute top-0 flex items-center gap-1 rounded-2xl border border-gray-300 bg-gray-100 py-3 px-4 text-gray-500 shadow-lg transition-all lg:p-4'
       style={{
-        transform: isDesktop
-          ? `translateY(calc(100% - ${targetLength}px${gap}))`
-          : `translateY(calc(${targetLength}px - 100%${gap}))`,
+        transform: `translateY(calc(${targetLength}px - 100%${gap}))`,
         transitionDuration: `${settings.NOTIFICATION_DELAY_MS}ms`,
         opacity: isOpen ? 1 : 0,
       }}
     >
       <Icon className={`h-5 w-5 ${iconStyle}`} />
-      <p className='text-gray-600'>{notification.message}</p>
+      <p className='text-gray-700'>{notification.message}</p>
     </div>
   )
 }

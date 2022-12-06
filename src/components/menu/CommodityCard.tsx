@@ -12,8 +12,8 @@ export default function CommodityCard(props: {
   const { commodityOnMenu } = props
 
   return (
-    <div className='flex w-full shrink-0 gap-4 overflow-hidden rounded-2xl bg-gray-200 p-4'>
-      <div className='relative aspect-square w-2/5 overflow-hidden rounded-2xl'>
+    <div className='flex w-full shrink-0 gap-4 overflow-hidden rounded-2xl bg-gray-50 p-4'>
+      <div className='relative aspect-square w-2/5 overflow-hidden rounded-xl'>
         <Image
           className='object-cover'
           src={

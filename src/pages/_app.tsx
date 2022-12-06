@@ -23,7 +23,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
     <>
       <Title />
       {/* Content */}
-      <div className='grid h-full grid-rows-[auto_64px] sm:grid-cols-[256px_auto] sm:grid-rows-none'>
+      <div className='grid h-full grid-rows-[auto_64px] bg-violet-600 sm:grid-cols-[256px_auto] sm:grid-rows-none'>
         <nav
           className={twMerge(
             'order-last sm:order-none',
@@ -35,7 +35,9 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         <main
           className={twMerge(
             '@container/main',
-            isComponentFullscreen && 'col-span-full row-span-full',
+            isComponentFullscreen
+              ? 'col-span-full row-span-full'
+              : 'overflow-hidden sm:rounded-l-2xl sm:shadow-2xl',
           )}
         >
           <Component {...pageProps} />

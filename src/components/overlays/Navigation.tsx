@@ -19,12 +19,11 @@ import Logo from '@/components/core/Logo'
 
 export default function Navigation() {
   return (
-    <div className='flex h-full items-center justify-evenly bg-gray-100 shadow sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-gray-200 sm:px-8 sm:py-8 sm:shadow-none'>
+    <div className='flex h-full items-center justify-evenly bg-gray-50 shadow sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-violet-600 sm:px-8 sm:py-8 sm:shadow-none'>
       {/* LOGO */}
       <div className='-order-2 hidden pl-2 sm:block'>
-        <Logo className='h-8 w-auto text-violet-400' />
+        <Logo className='h-8 w-auto text-violet-200' />
       </div>
-      {/*  */}
       <NavButton path='/' label='點餐' icons={[HomeIcon, HomeIconSolid]} />
       <NavButton
         label='預訂 / 下午茶'
@@ -42,7 +41,6 @@ export default function Navigation() {
         icons={[WalletIcon, WalletIconSolid]}
       />
       <ProfileButton className='sm:-order-1' />
-      {/* </div> */}
     </div>
   )
 }
@@ -60,9 +58,10 @@ function ProfileButton(props: { className?: string }) {
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`}>
-      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:hover:bg-gray-300 sm:active:bg-gray-300 sm:ui-open:bg-gray-300'>
+      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:hover:bg-violet-500 sm:active:bg-violet-500 sm:ui-open:bg-violet-500'>
+        {/* Profile Image */}
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
-          <div className='relative h-8 w-8 overflow-hidden rounded-full border border-gray-300 ring-0 ring-violet-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0 sm:active:ring-0 sm:ui-open:ring-0'>
+          <div className='relative h-8 w-8 overflow-hidden rounded-full border border-gray-400 ring-0 ring-violet-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0 sm:active:ring-0 sm:ui-open:ring-0'>
             <Image
               alt='profile'
               src={settings.RESOURCE_PROFILE_PLACEHOLDER}
@@ -70,12 +69,15 @@ function ProfileButton(props: { className?: string }) {
             />
           </div>
         </div>
+        {/* User Info */}
         <div className='hidden grow items-center pl-2 sm:flex'>
           <div className='flex grow flex-col text-left'>
-            <span className='tracking-widest'>{user?.name}</span>
-            <span className='text-sm text-gray-400'>@{user?.id}</span>
+            <span className='tracking-widest text-violet-200'>
+              {user?.name}
+            </span>
+            <span className='text-sm text-violet-400'>@{user?.id}</span>
           </div>
-          <ChevronDownIcon className='h-6 w-6 text-gray-400 transition-transform ui-open:rotate-180' />
+          <ChevronDownIcon className='h-6 w-6 text-violet-300 transition-transform ui-open:rotate-180' />
         </div>
       </Popover.Button>
       <Transition
@@ -86,14 +88,14 @@ function ProfileButton(props: { className?: string }) {
         leaveFrom='transform scale-100 opacity-100'
         leaveTo='transform scale-50 opacity-0'
       >
-        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[7em] rounded-2xl border-[1px] border-gray-300 bg-gray-100 py-3 tracking-wider text-gray-500 drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
-          <div className='w-full cursor-pointer py-2 px-4 hover:bg-gray-200 active:bg-gray-200'>
+        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[7em] rounded-2xl border-[1px] border-gray-300 bg-gray-100 py-3 px-2 tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
+          <div className='w-full cursor-pointer rounded-xl py-2 px-4 hover:bg-gray-200 active:bg-gray-200'>
             <a href={settings.REPORT_URL} target='_blank'>
               回報問題
             </a>
           </div>
           <div
-            className='w-full cursor-pointer py-2 px-4 text-red-400 hover:bg-gray-200 active:bg-gray-200'
+            className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-gray-200 active:bg-gray-200'
             onClick={handleLogout}
           >
             登出
@@ -144,7 +146,7 @@ function NavButton(props: {
         icons={props.icons}
       />
       {/* Desktop label */}
-      <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-gray-500 group-data-selected:bg-gray-300 group-data-selected:text-gray-600 group-data-not-selected:hover:bg-gray-300/50 group-data-not-selected:hover:text-gray-600 group-data-not-selected:active:bg-gray-300 sm:flex'>
+      <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-violet-300 group-data-selected:bg-violet-200 group-data-selected:text-violet-700 group-data-not-selected:hover:bg-violet-500 group-data-not-selected:hover:text-violet-200 group-data-not-selected:active:bg-violet-500 sm:flex'>
         <NormalIcon className='h-5 w-5' />
         <span className='ml-4'>{props.label}</span>
       </div>
@@ -166,7 +168,7 @@ function NavIcon(props: {
       data-ui={twData({ selected: props.isSelected })}
       className={`group flex items-center rounded-full p-3 hover:bg-gray-200 active:bg-gray-200 ${props.className}`}
     >
-      <Icon className='h-6 w-6 stroke-1 text-gray-600 group-data-selected:text-violet-500' />
+      <Icon className='h-6 w-6 stroke-1 group-data-selected:text-violet-500' />
     </div>
   )
 }
