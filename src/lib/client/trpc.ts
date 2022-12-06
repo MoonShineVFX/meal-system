@@ -29,7 +29,7 @@ function getWSClient() {
     createWSClient({
       url:
         process.env.NODE_ENV === 'production'
-          ? `ws://${window.location.host}}`
+          ? `wss://${window.location.host}}`
           : `ws://${window.location.hostname}:${settings.WEBSOCKET_DEV_PORT}`,
       onOpen: () => {
         onSocketOpenCallbacks.forEach((cb) => cb())
