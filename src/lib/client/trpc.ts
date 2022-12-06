@@ -27,11 +27,10 @@ function getWSClient() {
   const wsClient =
     global.wsClient ??
     createWSClient({
-      url: `${window.location.protocol === 'http:' ? 'ws' : 'wss'}://${
+      url:
         process.env.NODE_ENV === 'production'
-          ? window.location.host
-          : `${window.location.hostname}:${settings.WEBSOCKET_PORT}`
-      }`,
+          ? settings.WEBSOCKET_URL
+          : `ws://${window.location.hostname}:${settings.WEBSOCKET_DEV_PORT}`,
       onOpen: () => {
         onSocketOpenCallbacks.forEach((cb) => cb())
         wsClient.getConnection().addEventListener('close', () => {

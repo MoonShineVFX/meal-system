@@ -68,10 +68,7 @@ class BlockchainManager {
       currentPromise = new Promise<NonceMetadata>(async (resolve) => {
         const previousNonceMetadata = await previousPromise
         const now = Date.now()
-        if (
-          now - previousNonceMetadata.time >
-          settings.BLOCKCHAIN_NONCE_REFRESH_TIME
-        ) {
+        if (now - previousNonceMetadata.time > settings.BLOCKCHAIN_NONCE_MS) {
           this.log('Previous nonce is too old, refresh new one')
           const newNonce = await this.client.eth.getTransactionCount(
             this.adminAccount.address,

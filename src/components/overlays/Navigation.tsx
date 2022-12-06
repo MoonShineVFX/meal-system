@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Popover, Transition } from '@headlessui/react'
-import Image from 'next/image'
-
 import { HomeIcon as HomeIconSolid } from '@heroicons/react/24/solid'
 import { CalendarDaysIcon as CalendarDaysIconSolid } from '@heroicons/react/24/solid'
 import { DocumentTextIcon as DocumentTextIconSolid } from '@heroicons/react/24/solid'
@@ -12,8 +10,8 @@ import { CalendarDaysIcon } from '@heroicons/react/24/outline'
 import { DocumentTextIcon } from '@heroicons/react/24/outline'
 import { WalletIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
-import ProfileDummyImage from '/public/resource/profile-dummy.png'
 
+import Image from '@/components/core/Image'
 import { useStore } from '@/lib/client/store'
 import { generateCookie } from '@/lib/common'
 import { settings, twData } from '@/lib/common'
@@ -58,12 +56,18 @@ function ProfileButton(props: { className?: string }) {
     window.location.href = '/login'
   }
 
+  if (!user) return null
+
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`}>
       <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-md sm:p-2 sm:hover:bg-gray-300 sm:active:bg-gray-300 sm:ui-open:bg-gray-300'>
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
-          <div className='h-8 w-8 overflow-hidden rounded-full border border-gray-300 ring-0 ring-violet-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0 sm:active:ring-0 sm:ui-open:ring-0'>
-            <Image placeholder='blur' alt='profile' src={ProfileDummyImage} />
+          <div className='relative h-8 w-8 overflow-hidden rounded-full border border-gray-300 ring-0 ring-violet-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0 sm:active:ring-0 sm:ui-open:ring-0'>
+            <Image
+              alt='profile'
+              src={settings.RESOURCE_PROFILE_PLACEHOLDER}
+              fill={true}
+            />
           </div>
         </div>
         <div className='hidden grow items-center pl-2 sm:flex'>

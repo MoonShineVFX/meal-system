@@ -1,11 +1,9 @@
 import { FormEvent, useEffect } from 'react'
-import Image from 'next/image'
 
-import CoverImage from '/public/resource/login-bg.jpg'
-
+import Image from '@/components/core/Image'
 import Title from '@/components/core/Title'
 import trpc from '@/lib/client/trpc'
-import { generateCookie, twData } from '@/lib/common'
+import { generateCookie, settings, twData } from '@/lib/common'
 import { useStore, NotificationType } from '@/lib/client/store'
 import Logo from '@/components/core/Logo'
 import Button from '@/components/core/Button'
@@ -105,11 +103,10 @@ export default function PageLogin() {
       </div>
       <div className='relative hidden grow md:block'>
         <Image
-          placeholder='blur'
           className='object-cover'
           fill
-          src={CoverImage}
-          sizes='(min-width: 1280px) 1280px, 100vw'
+          src={settings.RESOURCE_LOGIN_COVER}
+          sizes='100vw'
           alt='Cover Image'
           priority
         />

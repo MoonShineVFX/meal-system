@@ -35,7 +35,7 @@ export const createNotificationSlice: StateCreator<
       const id = state.notificationIdCounter
       setTimeout(
         () => get().removeNotification(id),
-        settings.NOTIFICATION_DURATION,
+        settings.NOTIFICATION_DURATION_MS,
       )
       return {
         notifications: [...state.notifications, { ...payload, id }],

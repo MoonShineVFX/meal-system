@@ -8,7 +8,7 @@ import { settings } from '@/lib/common'
 export function createWebSocketServer(server?: ws.ServerOptions['server']) {
   const wss = new ws.Server({
     server: server,
-    port: server ? undefined : parseInt(settings.WEBSOCKET_PORT, 10),
+    port: server ? undefined : parseInt(settings.WEBSOCKET_DEV_PORT, 10),
   })
   const handler = applyWSSHandler({ wss, router: appRouter, createContext })
 

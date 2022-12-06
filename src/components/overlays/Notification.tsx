@@ -45,7 +45,7 @@ function NotificationPod(props: {
     setTimeout(() => setIsOpen(true), 100)
     setTimeout(
       () => setIsOpen(false),
-      settings.NOTIFICATION_DURATION - settings.NOTIFICATION_DELAY,
+      settings.NOTIFICATION_DURATION_MS - settings.NOTIFICATION_DELAY_MS,
     )
   }, [])
 
@@ -66,7 +66,7 @@ function NotificationPod(props: {
         transform: isDesktop
           ? `translateY(calc(100% - ${targetLength}px${gap}))`
           : `translateY(calc(${targetLength}px - 100%${gap}))`,
-        transitionDuration: `${settings.NOTIFICATION_DELAY}ms`,
+        transitionDuration: `${settings.NOTIFICATION_DELAY_MS}ms`,
         opacity: isOpen ? 1 : 0,
       }}
     >

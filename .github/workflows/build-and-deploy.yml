@@ -43,6 +43,10 @@ jobs:
           tags: '${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.RUN_IMAGE_TAG }}:latest'
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        env:
+          NEXT_PUBLIC_REPORT_URL: ${{ secrets.NEXT_PUBLIC_REPORT_URL }}
+          NEXT_PUBLIC_WEBSOCKET_URL: ${{ secrets.NEXT_PUBLIC_WEBSOCKET_URL }}
+          NEXT_PUBLIC_RESOURCE_URL: ${{ secrets.NEXT_PUBLIC_RESOURCE_URL }}
 
       - name: Move cache
         run: |

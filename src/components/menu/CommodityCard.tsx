@@ -1,25 +1,24 @@
 import type { RouterOutput } from '@/lib/client/trpc'
-import Image from 'next/image'
 
+import Image from '@/components/core/Image'
 import { settings } from '@/lib/common'
+
 type CommodityOnMenu = RouterOutput['menu']['get']['commoditiesOnMenu'][0]
 
 export default function CommodityCard(props: {
   commodityOnMenu: CommodityOnMenu
 }) {
   return (
-    <div>
-      <div>
+    <div className='w-full max-w-xs'>
+      <h1>{props.commodityOnMenu.commodity.name}</h1>
+      <div className='relative aspect-square'>
         <Image
-          placeholder='blur'
-          blurDataURL='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAPUlEQVR4nGMQl5RqCHVemOuWZcbD4MzA8P/Nuf8/70ZIMTBYMzD0pbr/f39rcaAgQ4gyY7Wbyv/tjbtCGQDhwROLXp66yAAAAABJRU5ErkJggg=='
+          fill={true}
           src={
-            props.commodityOnMenu.commodity.imageUrl
-              ? `${settings.IMAGE_RESOURCE_URL}/${props.commodityOnMenu.commodity.imageUrl}`
-              : ''
+            props.commodityOnMenu.commodity.imageUrl ??
+            settings.RESOURCE_FOOD_PLACEHOLDER
           }
-          width={640}
-          height={640}
+          sizes='(max-width: 400px) 100vw, (max-width: 550x) 75vw, 33vw'
           alt={props.commodityOnMenu.commodity.name}
         />
       </div>

@@ -2,11 +2,7 @@
 
 const nextConfig = {
   images: {
-    remotePatterns: [
-      {
-        hostname: 'storage.googleapis.com',
-      },
-    ],
+    loader: 'custom',
   },
   experimental: {
     swcPlugins: [
