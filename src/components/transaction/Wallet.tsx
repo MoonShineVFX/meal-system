@@ -32,11 +32,11 @@ export default function Wallet() {
       </div>
       {/* Action */}
       <div className='grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] place-content-evenly justify-center gap-4'>
-        <Button className='h-12' textClassName='font-bold' text='儲值' />
+        <Button className='h-12' textClassName='font-bold' label='儲值' />
         <Button
           className='h-12'
           textClassName='font-bold'
-          text='區塊鏈紀錄'
+          label='區塊鏈紀錄'
           theme='secondary'
         />
       </div>

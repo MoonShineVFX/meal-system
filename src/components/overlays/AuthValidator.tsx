@@ -32,7 +32,17 @@ export default function AuthValidator() {
         type: NotificationType.SUCCESS,
         message: '登入成功',
       })
-      router.replace(router.pathname, undefined, { shallow: true })
+      const { login, ...query } = router.query
+      router.replace(
+        {
+          pathname: router.pathname,
+          query,
+        },
+        undefined,
+        {
+          shallow: true,
+        },
+      )
     }
   }, [router.query])
 

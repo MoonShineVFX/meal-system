@@ -1,4 +1,4 @@
-import { ensureUser } from '@/lib/server/database'
+import { ensureUser } from '../../../src/lib/server/database'
 import { userMockData } from './mock'
 
 export default async function seedUser() {

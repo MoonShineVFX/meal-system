@@ -119,7 +119,8 @@ model EthWallet {
 
 // Order
 enum OrderStatus {
-  SUCCESS
+  PENDING
+  COMPLETED
   CANCELED
 }
 
@@ -128,7 +129,7 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  status OrderStatus @default(SUCCESS)
+  status OrderStatus @default(PENDING)
 
   user         User          @relation(fields: [userId], references: [id])
   userId       String
@@ -140,16 +141,17 @@ model OrderItem {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  name     String
-  imageUrl String?
-  price    Int
-  options  String[]
+  name    String
+  price   Int
+  options String[]
 
   order           Order           @relation(fields: [orderId], references: [id])
   orderId         Int
   commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId])
   menuId          Int
   commodityId     Int
+  image           Image?          @relation(fields: [imageId], references: [id])
+  imageId         String?
 }
 
 model CartItem {
@@ -204,14 +206,16 @@ model Commodity {
   updatedAt DateTime @updatedAt
 
   name        String
-  description String  @default("")
+  description String @default("")
   price       Int
-  imageUrl    String?
-  optionSets  Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[] }[]
-  isDeleted   Boolean @default(false)
+
+  optionSets Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[] }[]
+  isDeleted  Boolean @default(false)
 
   subCategory   CommoditySubCategory? @relation(fields: [subCategoryId], references: [id])
   subCategoryId Int?
+  image         Image?                @relation(fields: [imageId], references: [id])
+  imageId       String?
   onMenus       CommodityOnMenu[]
 }
 
@@ -258,4 +262,17 @@ model Menu {
   isDeleted     Boolean   @default(false)
 
   commodities CommodityOnMenu[]
+}
+
+// Resource
+model Image {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  path   String
+  width  Int
+  height Int
+
+  Commodity Commodity[]
+  OrderItem OrderItem[]
 }

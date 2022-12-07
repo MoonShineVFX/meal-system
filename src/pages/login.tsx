@@ -91,8 +91,8 @@ export default function PageLogin() {
             isLoading={loginMutation.isLoading}
             isSuccess={loginMutation.isSuccess}
             type='submit'
-            text='登入'
-            textOnSuccess='登入成功'
+            label='登入'
+            labelOnSuccess='登入成功'
           />
           {loginMutation.isError && (
             <div className='absolute bottom-0 text-sm font-normal text-red-400'>

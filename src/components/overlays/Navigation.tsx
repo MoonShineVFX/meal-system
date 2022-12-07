@@ -19,7 +19,7 @@ import Logo from '@/components/core/Logo'
 
 export default function Navigation() {
   return (
-    <div className='flex h-full items-center justify-evenly bg-gray-50 shadow sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-violet-600 sm:px-8 sm:py-8 sm:shadow-none'>
+    <div className='flex h-full items-center justify-evenly bg-gray-50 shadow sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-violet-500 sm:px-8 sm:py-8 sm:shadow-none'>
       {/* LOGO */}
       <div className='-order-2 hidden pl-2 sm:block'>
         <Logo className='h-8 w-auto text-violet-200' />
@@ -58,7 +58,7 @@ function ProfileButton(props: { className?: string }) {
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`}>
-      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:hover:bg-violet-500 sm:active:bg-violet-500 sm:ui-open:bg-violet-500'>
+      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:hover:bg-violet-400/50 sm:active:bg-violet-400/50 sm:ui-open:bg-violet-400'>
         {/* Profile Image */}
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
           <div className='relative h-8 w-8 overflow-hidden rounded-full border border-gray-400 ring-0 ring-violet-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0 sm:active:ring-0 sm:ui-open:ring-0'>
@@ -72,10 +72,10 @@ function ProfileButton(props: { className?: string }) {
         {/* User Info */}
         <div className='hidden grow items-center pl-2 sm:flex'>
           <div className='flex grow flex-col text-left'>
-            <span className='tracking-widest text-violet-200'>
+            <span className='tracking-widest text-violet-100'>
               {user?.name}
             </span>
-            <span className='text-sm text-violet-400'>@{user?.id}</span>
+            <span className='text-sm text-violet-300'>@{user?.id}</span>
           </div>
           <ChevronDownIcon className='h-6 w-6 text-violet-300 transition-transform ui-open:rotate-180' />
         </div>
@@ -146,7 +146,7 @@ function NavButton(props: {
         icons={props.icons}
       />
       {/* Desktop label */}
-      <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-violet-300 group-data-selected:bg-violet-200 group-data-selected:text-violet-700 group-data-not-selected:hover:bg-violet-500 group-data-not-selected:hover:text-violet-200 group-data-not-selected:active:bg-violet-500 sm:flex'>
+      <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-violet-200 group-data-selected:bg-violet-200 group-data-selected:text-violet-700 group-data-not-selected:hover:bg-violet-400/50 group-data-not-selected:active:bg-violet-400/50 sm:flex'>
         <NormalIcon className='h-5 w-5' />
         <span className='ml-4'>{props.label}</span>
       </div>

@@ -16,18 +16,30 @@ export default function Button(props: {
   isSuccess?: boolean
   onClick?: () => void
   type?: 'button' | 'submit' | 'reset'
-  text: string
-  textOnSuccess?: string
+  label: string | JSX.Element
+  labelOnSuccess?: string | JSX.Element
   textClassName?: string
   spinnerClassName?: string
   theme?: keyof typeof themes
 }) {
+  const label =
+    typeof props.label === 'string' ? (
+      <p className={props.textClassName}>{props.label}</p>
+    ) : (
+      props.label
+    )
+  const labelOnSuccess =
+    typeof props.labelOnSuccess === 'string' ? (
+      <p className={props.textClassName}>{props.labelOnSuccess}</p>
+    ) : (
+      props.labelOnSuccess
+    )
   const content = props.isSuccess ? (
-    <p className={props.textClassName}>{props.textOnSuccess ?? props.text}</p>
+    labelOnSuccess
   ) : props.isLoading ? (
     <Spinner className={props.spinnerClassName ?? 'h-6 w-6'} />
   ) : (
-    <p className={props.textClassName}>{props.text}</p>
+    label
   )
   const themeColor = themes[props.theme ?? 'main']
 
@@ -41,6 +53,7 @@ export default function Button(props: {
         props.className,
       )}
       type={props.type ?? 'button'}
+      onClick={props.onClick}
     >
       {content}
     </button>

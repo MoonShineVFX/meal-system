@@ -1,5 +1,5 @@
 import { UserRole } from '@prisma/client'
-import { settings } from '@/lib/common'
+import { settings } from '../../../src/lib/common'
 
 export const menuMockData = {
   飲料: {

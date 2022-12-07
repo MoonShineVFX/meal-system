@@ -5,7 +5,8 @@ import {
   createCommodity,
   createSubCategory,
   addCommodityToMenu,
-} from '@/lib/server/database'
+  createImage,
+} from '../../../src/lib/server/database'
 import { menuMockData } from './mock'
 
 export default async function seedMenu() {
@@ -26,6 +27,13 @@ export default async function seedMenu() {
       )
       for (const commodityData of subCategoryData) {
         console.log('>> Seed commodity:', commodityData.name)
+        // Create image
+        const image = await createImage(
+          640,
+          640,
+          undefined,
+          commodityData.imageUrl,
+        )
         // Create commodity
         const commodity = await createCommodity(
           commodityData.name,
@@ -33,7 +41,7 @@ export default async function seedMenu() {
           commodityData.description,
           mainCategoryData.optionSets,
           subCategory.id,
-          commodityData.imageUrl,
+          image.id,
         )
         // Add to menu
         await addCommodityToMenu(commodity.id, menu.id)

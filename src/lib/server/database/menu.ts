@@ -102,7 +102,7 @@ export async function createCommodity(
   description?: string,
   optionSets?: OptionSet[],
   subCategoryId?: number,
-  imageUrl?: string,
+  imageId?: string,
 ) {
   const commodity = await prisma.commodity.create({
     data: {
@@ -111,7 +111,7 @@ export async function createCommodity(
       price,
       optionSets: optionSets ?? [],
       subCategoryId,
-      imageUrl,
+      imageId,
     },
   })
 
@@ -205,7 +205,13 @@ export async function getCommoditiesOnMenu(menuId: number) {
           description: true,
           price: true,
           optionSets: true,
-          imageUrl: true,
+          image: {
+            select: {
+              path: true,
+              width: true,
+              height: true,
+            },
+          },
           subCategory: {
             select: {
               name: true,
@@ -223,7 +229,9 @@ export async function getCommoditiesOnMenu(menuId: number) {
           orderItems: {
             where: {
               order: {
-                status: 'SUCCESS',
+                status: {
+                  not: 'CANCELED',
+                },
               },
             },
           },
@@ -240,7 +248,9 @@ export async function getUserOrdersOnMenu(userId: string, menuId: number) {
       menuId,
       order: {
         userId,
-        status: 'SUCCESS',
+        status: {
+          not: 'CANCELED',
+        },
       },
     },
     _count: {
