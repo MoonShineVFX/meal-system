@@ -6,20 +6,6 @@ import { settings } from '@/lib/common'
 import { blockchainManager } from '@/lib/server/blockchain'
 import { forceSyncBlockchainWallet } from './blockchain'
 
-export async function validateUserPassword(userId: string, password: string) {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  })
-
-  if (user && user.password === CryptoJS.SHA256(password).toString()) {
-    return user
-  }
-
-  return null
-}
-
 export async function ensureUser(
   userId: string,
   name?: string,
@@ -70,12 +56,10 @@ export async function ensureUser(
     })
   }
   forceSyncBlockchainWallet(user.id)
-
-  return user
 }
 
-export async function createAuthToken(userId: string) {
-  const authToken = await prisma.userToken.create({
+export async function createUserToken(userId: string) {
+  const userToken = await prisma.userToken.create({
     data: {
       userId: userId,
     },
@@ -91,12 +75,12 @@ export async function createAuthToken(userId: string) {
     },
   })
 
-  const { tokens: userAuthTokens } = authToken.user
+  const { tokens: userTokens } = userToken.user
 
   // Limit tokens per user
-  if (userAuthTokens.length > settings.TOKEN_COUNT_PER_USER) {
-    const toDeleteTokenIds = userAuthTokens
-      .slice(0, userAuthTokens.length - settings.TOKEN_COUNT_PER_USER)
+  if (userTokens.length > settings.TOKEN_COUNT_PER_USER) {
+    const toDeleteTokenIds = userTokens
+      .slice(0, userTokens.length - settings.TOKEN_COUNT_PER_USER)
       .map((t) => t.id)
     await prisma.userToken.deleteMany({
       where: {
@@ -105,22 +89,43 @@ export async function createAuthToken(userId: string) {
     })
   }
 
-  return authToken.id
+  return userToken.id
 }
 
-export async function validateAuthToken(token: string) {
-  const authToken = await prisma.userToken.findUnique({
+export async function validateUserPassword(userId: string, password: string) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  })
+
+  if (user && user.password === CryptoJS.SHA256(password).toString()) {
+    return true
+  }
+
+  return false
+}
+
+export async function getUserLiteByToken(token: string) {
+  const userToken = await prisma.userToken.findUnique({
     where: { id: token },
     include: { user: { select: { id: true, name: true, role: true } } },
   })
-  if (!authToken) return null
+  if (!userToken) return null
 
-  return authToken.user
+  return userToken.user
 }
 
 export async function getUserInfo(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      pointBalance: true,
+      creditBalance: true,
+    },
   })
   return user
 }

@@ -7,8 +7,10 @@ import { NodeHTTPCreateContextFnOptions } from '@trpc/server/adapters/node-http'
 import ws from 'ws'
 import { NextApiRequest, NextApiResponse } from 'next'
 
-import { validateAuthToken } from '@/lib/server/database'
-import { settings, UserLite, validateRole } from '@/lib/common'
+import { getUserLiteByToken } from '@/lib/server/database'
+import { settings, validateRole } from '@/lib/common'
+
+type UserLite = Awaited<ReturnType<typeof getUserLiteByToken>>
 
 /* Context */
 function parseCookies(request: IncomingMessage) {
@@ -44,7 +46,7 @@ export async function createContext(
   }
 
   if (settings.COOKIE_TOKEN_NAME in cookies) {
-    userLite = await validateAuthToken(cookies[settings.COOKIE_TOKEN_NAME]!)
+    userLite = await getUserLiteByToken(cookies[settings.COOKIE_TOKEN_NAME]!)
   }
 
   return {
@@ -62,7 +64,7 @@ const t = initTRPC.context<Context>().create({ transformer: superjson })
 export const router = t.router
 
 async function validateUserLite(
-  userLite: UserLite | null,
+  userLite: UserLite,
   targetRole: UserRole,
   path?: string | string[],
 ) {

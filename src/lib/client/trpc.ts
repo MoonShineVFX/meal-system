@@ -19,6 +19,8 @@ export const onSocketCloseCallbacks: (() => void)[] = []
 /* Types */
 type RouterOutput = inferRouterOutputs<AppRouter>
 
+export type UserInfo = RouterOutput['user']['get']
+
 export type TransactionWithNames =
   RouterOutput['transaction']['getList']['transactions'][0]
 

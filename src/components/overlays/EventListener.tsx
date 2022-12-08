@@ -5,10 +5,11 @@ import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
   onSocketOpenCallbacks,
   onSocketCloseCallbacks,
+  TransactionWithNames,
 } from '@/lib/client/trpc'
-import { validateRole, TransactionWithName, settings } from '@/lib/common'
+import { validateRole, settings } from '@/lib/common'
 
-function makePaymentString(transaction: TransactionWithName) {
+function makePaymentString(transaction: TransactionWithNames) {
   const actionString = settings.TRANSACTION_NAME[transaction.type]
   let paymentStrings: string[] = []
   if (transaction.creditAmount > 0) {

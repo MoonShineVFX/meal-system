@@ -1,12 +1,10 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
-import type { RouterOutput } from '@/lib/client/trpc'
+import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
 import { settings } from '@/lib/common'
 import { PlusIcon } from '@heroicons/react/24/outline'
-
-type CommodityOnMenu = RouterOutput['menu']['get']['commoditiesOnMenu'][0]
 
 export default function CommodityOnMenuCard(props: {
   commodityOnMenu: CommodityOnMenu

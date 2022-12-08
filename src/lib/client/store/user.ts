@@ -1,11 +1,11 @@
-import { User } from '@prisma/client'
 import { StateCreator } from 'zustand'
 
+import type { UserInfo } from '@/lib/client/trpc'
 import type { StoreState } from './define'
 
 export interface UserSlice {
-  user: User | null
-  setUser: (user: User | null) => void
+  user: UserInfo | null
+  setUser: (user: UserInfo | null) => void
 }
 
 export const createUserSlice: StateCreator<StoreState, [], [], UserSlice> = (

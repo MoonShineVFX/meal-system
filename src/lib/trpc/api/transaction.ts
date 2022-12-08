@@ -13,7 +13,7 @@ import { eventEmitter, Event } from '@/lib/server/event'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
 
-type TransactionWithNames = Awaited<ReturnType<typeof getTransactions>>
+type TransactionWithNames = Awaited<ReturnType<typeof getTransactions>>[0]
 
 export const TransactionRouter = router({
   recharge: adminProcedure

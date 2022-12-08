@@ -1,4 +1,4 @@
-import { User, TransactionType, UserRole } from '@prisma/client'
+import { TransactionType, UserRole } from '@prisma/client'
 
 /* Settings */
 export const settings = {
@@ -56,8 +56,6 @@ export const settings = {
 }
 
 /* Types */
-export type UserLite = Pick<User, 'id' | 'name' | 'role'>
-
 export enum CurrencyType {
   CREDIT = 'credit',
   POINT = 'point',

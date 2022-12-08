@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
 
 import {
-  createAuthToken,
+  createUserToken,
   ensureUser,
   getUserInfo,
   validateUserPassword,
@@ -58,14 +58,12 @@ export const UserRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      let user: User
-
       // Use mock user if dev mode
       if (
         process.env.NODE_ENV !== 'production' &&
         input.username.startsWith('_')
       ) {
-        user = await ensureUser(input.username)
+        await ensureUser(input.username)
       } else {
         // Check user existence
         const result = await validateUserPassword(
@@ -73,9 +71,7 @@ export const UserRouter = router({
           input.password,
         )
 
-        if (result) {
-          user = result
-        } else {
+        if (!result) {
           // Validate from LDAP
           const adTokenResponse = await fetch(
             `${settings.AUTH_API_URL}/login`,
@@ -114,15 +110,11 @@ export const UserRouter = router({
           const userAdData = (await userAdDataResponse.json()) as UserAdData
 
           // Generate token and set cookie
-          user = await ensureUser(
-            input.username,
-            userAdData.truename,
-            input.password,
-          )
+          await ensureUser(input.username, userAdData.truename, input.password)
         }
       }
 
-      const token = await createAuthToken(user.id)
+      const token = await createUserToken(input.username)
 
       // Set cookie if http request
       if (ctx.res) {
