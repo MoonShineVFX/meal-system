@@ -17,7 +17,17 @@ export const onSocketOpenCallbacks: (() => void)[] = []
 export const onSocketCloseCallbacks: (() => void)[] = []
 
 /* Types */
-export type RouterOutput = inferRouterOutputs<AppRouter>
+type RouterOutput = inferRouterOutputs<AppRouter>
+
+export type TransactionWithNames =
+  RouterOutput['transaction']['getList']['transactions'][0]
+
+export type CommoditiesOnMenu = RouterOutput['menu']['get']['commoditiesOnMenu']
+export type CommodityOnMenu = CommoditiesOnMenu[0]
+export type CommoditiesOnMenuByCategory = Record<
+  string,
+  Record<string, CommoditiesOnMenu>
+>
 
 /* WebSocket Client */
 declare global {

@@ -4,11 +4,10 @@ import { twMerge } from 'tailwind-merge'
 
 import Title from '@/components/core/Title'
 import { settings, OptionSet, twData } from '@/lib/common'
-import type { RouterOutput } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
+import type { CommodityOnMenu } from '@/lib/client/trpc'
 
-type CommodityOnMenu = RouterOutput['menu']['get']['commoditiesOnMenu'][0]
 type SelectedOptionSet = Record<string, string[]>
 type OptionClickHandler = (
   optionSetName: string,
@@ -127,9 +126,7 @@ export default function CommodityOnMenuDetail(props: {
                   {commodityOnMenu.commodity.name}
                 </p>
                 <p className='text-2xl font-bold text-violet-500'>
-                  $
-                  {commodityOnMenu.overridePrice ??
-                    commodityOnMenu.commodity.price}
+                  ${commodityOnMenu.commodity.price}
                 </p>
                 <p>{commodityOnMenu.commodity.description}</p>
               </div>

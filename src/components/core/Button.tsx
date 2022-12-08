@@ -3,9 +3,9 @@ import { twMerge } from 'tailwind-merge'
 import { twData } from '@/lib/common'
 
 const themes: Record<string, string> = {
-  main: 'bg-violet-500 hover:bg-violet-600 active:bg-violet-600 data-busy:bg-violet-400 data-busy:hover:bg-violet-400 text-violet-50 shadow-md',
+  main: 'bg-yellow-500 hover:bg-yellow-400 active:bg-yellow-400 data-busy:bg-yellow-600 data-busy:hover:bg-yellow-600 text-yellow-900 shadow-md data-busy:text-black',
   secondary:
-    'bg-gray-100 border border-gray-300 hover:bg-violet-100 active:bg-violet-100 data-busy:bg-violet-100 data-busy:hover:bg-violet-100 text-violet-500 shadow-md',
+    'bg-white border border-stone-200 hover:bg-stone-100 active:bg-stone-100 data-busy:bg-stone-200 data-busy:hover:bg-stone-200 shadow-md',
 }
 
 export default function Button(props: {

@@ -5,12 +5,12 @@
 html,
 body,
 #__next {
-  @apply h-full w-full text-gray-600;
+  @apply h-full w-full text-stone-600;
   -webkit-tap-highlight-color: transparent;
 }
 
 #nprogress .bar {
-  @apply h-[3px] bg-violet-600;
+  @apply h-[3px] bg-yellow-500;
   box-shadow: 0 0 8px theme('colors.transparent'),
     0 0 5px theme('colors.transparent');
 }

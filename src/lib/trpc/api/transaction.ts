@@ -8,15 +8,12 @@ import {
   chargeUserBalance,
   getTransactions,
 } from '@/lib/server/database'
-import {
-  settings,
-  validateRole,
-  TransactionWithName,
-  CurrencyType,
-} from '@/lib/common'
+import { settings, validateRole, CurrencyType } from '@/lib/common'
 import { eventEmitter, Event } from '@/lib/server/event'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
+
+type TransactionWithNames = Awaited<ReturnType<typeof getTransactions>>
 
 export const TransactionRouter = router({
   recharge: adminProcedure
@@ -116,8 +113,8 @@ export const TransactionRouter = router({
         })
       }
 
-      return observable<TransactionWithName>((observer) => {
-        const listener = (data: TransactionWithName) => observer.next(data)
+      return observable<TransactionWithNames>((observer) => {
+        const listener = (data: TransactionWithNames) => observer.next(data)
         let eventName: string
 
         if (input.role === UserRole.USER) {

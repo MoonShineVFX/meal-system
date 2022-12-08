@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const defaultTheme = require('tailwindcss/defaultTheme')
+const { fontFamily } = require('tailwindcss/defaultTheme')
 
 let dataPrefixes = {}
 ;['selected', 'loading', 'busy'].forEach((prefix) => {
@@ -10,26 +10,7 @@ let dataPrefixes = {}
 module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    screens: {
-      se: '375px',
-      xs: '576px',
-      ...defaultTheme.screens,
-    },
     data: dataPrefixes,
-    extend: {
-      keyframes: {
-        blink: {
-          '0%': { opacity: 1 },
-          '100%': { opacity: 0 },
-        },
-      },
-      animation: {
-        blink: 'blink 1s cubic-bezier(1, 0, 0, 1) infinite',
-      },
-      screens: {
-        tall: { raw: '(min-height: 580px)' },
-      },
-    },
   },
   plugins: [
     require('@headlessui/tailwindcss'),

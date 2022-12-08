@@ -12,18 +12,20 @@ import RouterProgress from '@/components/overlays/RouteProgress'
 import '@/styles/globals.css'
 import Title from '@/components/core/Title'
 
-const fullScreenPaths = ['/login']
+const FULLSCREEN_COMPONENT_PATHS = ['/login']
 
 const PageApp: AppType = ({ Component, pageProps }) => {
   const user = useStore((state) => state.user)
   const router = useRouter()
-  const isComponentFullscreen = fullScreenPaths.includes(router.pathname)
+  const isComponentFullscreen = FULLSCREEN_COMPONENT_PATHS.includes(
+    router.pathname,
+  )
 
   return (
     <>
       <Title />
       {/* Content */}
-      <div className='grid h-full grid-rows-[auto_64px] bg-violet-500 sm:grid-cols-[256px_auto] sm:grid-rows-none'>
+      <div className='grid h-full grid-rows-[auto_64px] sm:grid-cols-[240px_auto] sm:grid-rows-none'>
         <nav
           className={twMerge(
             'order-last sm:order-none',
@@ -35,9 +37,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         <main
           className={twMerge(
             '@container/main',
-            isComponentFullscreen
-              ? 'col-span-full row-span-full'
-              : 'overflow-hidden sm:rounded-l-2xl sm:shadow-2xl',
+            isComponentFullscreen && 'col-span-full row-span-full',
           )}
         >
           <Component {...pageProps} />

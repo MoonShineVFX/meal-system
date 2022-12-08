@@ -61,7 +61,7 @@ function NotificationPod(props: {
 
   return (
     <div
-      className='absolute top-0 flex items-center gap-1 rounded-2xl border border-gray-300 bg-gray-100 py-3 px-4 text-gray-500 shadow-lg transition-all lg:p-4'
+      className='absolute top-0 flex items-center gap-1 rounded-2xl border border-stone-300 bg-white py-3 px-4 shadow-lg transition-all lg:p-4'
       style={{
         transform: `translateY(calc(${targetLength}px - 100%${gap}))`,
         transitionDuration: `${settings.NOTIFICATION_DELAY_MS}ms`,
@@ -69,7 +69,7 @@ function NotificationPod(props: {
       }}
     >
       <Icon className={`h-5 w-5 ${iconStyle}`} />
-      <p className='text-gray-700'>{notification.message}</p>
+      <p className='text-stone-700'>{notification.message}</p>
     </div>
   )
 }

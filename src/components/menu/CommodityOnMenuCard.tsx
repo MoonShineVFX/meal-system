@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 
 import type { RouterOutput } from '@/lib/client/trpc'
-import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
 import { settings } from '@/lib/common'
 import { PlusIcon } from '@heroicons/react/24/outline'
@@ -25,8 +24,8 @@ export default function CommodityOnMenuCard(props: {
         },
       }}
     >
-      <div className='flex gap-4 overflow-hidden rounded-2xl bg-gray-100 p-4 shadow-md'>
-        <div className='relative w-2/5 overflow-hidden rounded-xl'>
+      <div className='flex flex-col gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow'>
+        <div className='relative aspect-[4/3] overflow-hidden rounded-2xl'>
           <Image
             className='object-cover'
             src={
@@ -37,20 +36,15 @@ export default function CommodityOnMenuCard(props: {
             alt={commodityOnMenu.commodity.name}
           />
         </div>
-        <div className='flex grow flex-col'>
-          <h3 className='min-h-[3em] text-xl font-bold'>
+        <div className='flex grow flex-col gap-1'>
+          <h3 className='text-xl font-bold'>
             {commodityOnMenu.commodity.name}
           </h3>
-          <div className='flex w-full grow items-end justify-between'>
-            <p className='text-xl font-bold text-violet-500'>
-              $
-              {commodityOnMenu.overridePrice ?? commodityOnMenu.commodity.price}
+          <div className='flex w-full grow items-center justify-between'>
+            <p className='text-xl font-bold text-yellow-500'>
+              ${commodityOnMenu.commodity.price}
             </p>
-            <Button
-              className='h-8 w-8 rounded-full'
-              label={<PlusIcon className='h-5 w-5' />}
-              theme='secondary'
-            />
+            <PlusIcon className='h-6 w-6 text-stone-400' />
           </div>
         </div>
       </div>

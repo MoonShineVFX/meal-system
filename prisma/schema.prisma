@@ -168,26 +168,17 @@ model CartItem {
 }
 
 // Menu
-model CommodityMainCategory {
+model CommodityCategory {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name String @unique
+  mainName String
+  subName  String
 
-  subCategories CommoditySubCategory[]
-}
+  commodities Commodity[]
 
-model CommoditySubCategory {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  name String @unique
-
-  mainCategory   CommodityMainCategory @relation(fields: [mainCategoryId], references: [id])
-  mainCategoryId Int
-  commodities    Commodity[]
+  @@unique([mainName, subName])
 }
 
 model CommodityOptionSetTemplate {
@@ -212,11 +203,10 @@ model Commodity {
   optionSets Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[] }[]
   isDeleted  Boolean @default(false)
 
-  subCategory   CommoditySubCategory? @relation(fields: [subCategoryId], references: [id])
-  subCategoryId Int?
-  image         Image?                @relation(fields: [imageId], references: [id])
-  imageId       String?
-  onMenus       CommodityOnMenu[]
+  categories CommodityCategory[]
+  image      Image?              @relation(fields: [imageId], references: [id])
+  imageId    String?
+  onMenus    CommodityOnMenu[]
 }
 
 // Menu
@@ -224,10 +214,9 @@ model CommodityOnMenu {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  overridePrice Int?
-  limitPerUser  Int     @default(0)
-  SKU           Int     @default(0)
-  isDeleted     Boolean @default(false)
+  limitPerUser Int     @default(0)
+  SKU          Int     @default(0)
+  isDeleted    Boolean @default(false)
 
   commodity   Commodity   @relation(fields: [commodityId], references: [id])
   commodityId Int

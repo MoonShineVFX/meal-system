@@ -1,4 +1,4 @@
-import { User, TransactionType, UserRole, Transaction } from '@prisma/client'
+import { User, TransactionType, UserRole } from '@prisma/client'
 
 /* Settings */
 export const settings = {
@@ -48,21 +48,15 @@ export const settings = {
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
+  /* Menu */
+  MENU_CATEGORY_ALL: '全部',
+  MENU_CATEGORY_NULL: '未分類',
   /* Misc */
   TITLE: '夢想餐飲',
 }
 
 /* Types */
 export type UserLite = Pick<User, 'id' | 'name' | 'role'>
-
-export type TransactionWithName = Transaction & {
-  sourceUser: {
-    name: string
-  }
-  targetUser: {
-    name: string
-  }
-}
 
 export enum CurrencyType {
   CREDIT = 'credit',

@@ -1,16 +1,16 @@
 import { StateCreator } from 'zustand'
 import { UserRole } from '@prisma/client'
 
-import { TransactionWithName } from '@/lib/common'
+import type { TransactionWithNames } from '@/lib/client/trpc'
 import type { StoreState } from './define'
 
 export interface TransactionSlice {
-  [UserRole.USER]: TransactionWithName[]
-  [UserRole.STAFF]: TransactionWithName[]
-  [UserRole.ADMIN]: TransactionWithName[]
+  [UserRole.USER]: TransactionWithNames[]
+  [UserRole.STAFF]: TransactionWithNames[]
+  [UserRole.ADMIN]: TransactionWithNames[]
   addTransactions: (
     role: Exclude<UserRole, 'SERVER'>,
-    transactions: TransactionWithName[],
+    transactions: TransactionWithNames[],
   ) => void
 }
 
@@ -27,8 +27,8 @@ export const createTransactionSlice: StateCreator<
     set((state) => {
       const prevTransactions = state[role]
       const transactionsMap: Record<
-        TransactionWithName['id'],
-        TransactionWithName
+        TransactionWithNames['id'],
+        TransactionWithNames
       > = {}
 
       for (const transaction of prevTransactions) {

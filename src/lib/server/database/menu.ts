@@ -101,7 +101,7 @@ export async function createCommodity(
   price: number,
   description?: string,
   optionSets?: OptionSet[],
-  subCategoryId?: number,
+  categoryIds?: number[],
   imageId?: string,
 ) {
   const commodity = await prisma.commodity.create({
@@ -110,8 +110,10 @@ export async function createCommodity(
       description,
       price,
       optionSets: optionSets ?? [],
-      subCategoryId,
       imageId,
+      categories: {
+        connect: categoryIds?.map((id) => ({ id })) ?? [],
+      },
     },
   })
 
@@ -146,43 +148,20 @@ export async function addCommodityToMenu(
   })
 }
 
-export async function createSubCategory(
-  mainCategoryName: string,
-  subCategoryName: string,
-) {
-  const subCategory = await prisma.commoditySubCategory.upsert({
+export async function createCategory(mainName: string, subName: string) {
+  return await prisma.commodityCategory.upsert({
     where: {
-      name: subCategoryName,
+      mainName_subName: {
+        mainName,
+        subName,
+      },
     },
     update: {},
     create: {
-      name: subCategoryName,
-      mainCategory: {
-        connectOrCreate: {
-          where: {
-            name: mainCategoryName,
-          },
-          create: {
-            name: mainCategoryName,
-          },
-        },
-      },
-    },
-    include: {
-      mainCategory: true,
+      mainName,
+      subName,
     },
   })
-
-  // Check if main category is correct
-  if (subCategory) {
-    if (subCategory.mainCategory.name !== mainCategoryName) {
-      throw new Error(
-        `Sub category ${subCategoryName} is already exists and not under main category ${mainCategoryName}`,
-      )
-    }
-  }
-
-  return subCategory
 }
 
 export async function getCommoditiesOnMenu(menuId: number) {
@@ -195,7 +174,6 @@ export async function getCommoditiesOnMenu(menuId: number) {
       },
     },
     select: {
-      overridePrice: true,
       limitPerUser: true,
       SKU: true,
       commodity: {
@@ -212,14 +190,10 @@ export async function getCommoditiesOnMenu(menuId: number) {
               height: true,
             },
           },
-          subCategory: {
+          categories: {
             select: {
-              name: true,
-              mainCategory: {
-                select: {
-                  name: true,
-                },
-              },
+              mainName: true,
+              subName: true,
             },
           },
         },

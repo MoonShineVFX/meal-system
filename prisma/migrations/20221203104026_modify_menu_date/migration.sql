@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE "Menu" ALTER COLUMN "date" DROP NOT NULL,
-ALTER COLUMN "publishedDate" DROP NOT NULL,
-ALTER COLUMN "closedDate" DROP NOT NULL;

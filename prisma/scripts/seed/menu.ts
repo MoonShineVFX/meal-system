@@ -3,7 +3,7 @@ import { MenuType } from '@prisma/client'
 import {
   createMenu,
   createCommodity,
-  createSubCategory,
+  createCategory,
   addCommodityToMenu,
   createImage,
 } from '../../../src/lib/server/database'
@@ -21,7 +21,7 @@ export default async function seedMenu() {
       mainCategoryData.subCategories,
     )) {
       console.log('>> Seed subCategory:', mainCategoryName, subCategoryName)
-      const subCategory = await createSubCategory(
+      const subCategory = await createCategory(
         mainCategoryName,
         subCategoryName,
       )
@@ -40,7 +40,7 @@ export default async function seedMenu() {
           commodityData.price,
           commodityData.description,
           mainCategoryData.optionSets,
-          subCategory.id,
+          [subCategory.id],
           image.id,
         )
         // Add to menu
@@ -48,4 +48,14 @@ export default async function seedMenu() {
       }
     }
   }
+
+  // For empty test
+  const commodity = await createCommodity(
+    '家齊之吻',
+    999,
+    '重量級服務，讓您的家人感受到您的溫暖',
+    [],
+    [],
+  )
+  await addCommodityToMenu(commodity.id, menu.id)
 }
