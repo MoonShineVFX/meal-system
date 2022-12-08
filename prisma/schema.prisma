@@ -37,6 +37,7 @@ model User {
   role          UserRole @default(USER)
   pointBalance  Int      @default(500)
   creditBalance Int      @default(0)
+  password      String?
 
   cartItems          CartItem[]
   tokens             UserToken[]

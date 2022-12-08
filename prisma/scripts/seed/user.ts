@@ -7,6 +7,7 @@ export default async function seedUser() {
     await ensureUser(
       mock.id,
       mock.name,
+      undefined,
       mock.role,
       mock.pointBalance,
       mock.creditBalance,

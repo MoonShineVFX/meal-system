@@ -3,7 +3,12 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
 
-import { createAuthToken, ensureUser, getUserInfo } from '@/lib/server/database'
+import {
+  createAuthToken,
+  ensureUser,
+  getUserInfo,
+  validateUserPassword,
+} from '@/lib/server/database'
 import { settings, generateCookie } from '@/lib/common'
 import { Event, eventEmitter } from '@/lib/server/event'
 
@@ -62,42 +67,59 @@ export const UserRouter = router({
       ) {
         user = await ensureUser(input.username)
       } else {
-        // Validate from LDAP
-        const adTokenResponse = await fetch(`${settings.AUTH_API_URL}/login`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${Buffer.from(
-              `${input.username}:${input.password}`,
-            ).toString('base64')}`,
-          },
-        })
-
-        if (!adTokenResponse.ok) {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: '帳號或密碼錯誤',
-          })
-        }
-
-        const adToken = await adTokenResponse.text()
-        const userAdDataResponse = await fetch(
-          `${settings.AUTH_API_URL}/user`,
-          {
-            headers: { Authorization: `auth_token ${adToken}` },
-          },
+        // Check user existence
+        const result = await validateUserPassword(
+          input.username,
+          input.password,
         )
 
-        if (!userAdDataResponse.ok) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: '找不到用戶資訊',
-          })
+        if (result) {
+          user = result
+        } else {
+          // Validate from LDAP
+          const adTokenResponse = await fetch(
+            `${settings.AUTH_API_URL}/login`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Basic ${Buffer.from(
+                  `${input.username}:${input.password}`,
+                ).toString('base64')}`,
+              },
+            },
+          )
+
+          if (!adTokenResponse.ok) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: '帳號或密碼錯誤',
+            })
+          }
+
+          const adToken = await adTokenResponse.text()
+          const userAdDataResponse = await fetch(
+            `${settings.AUTH_API_URL}/user`,
+            {
+              headers: { Authorization: `auth_token ${adToken}` },
+            },
+          )
+
+          if (!userAdDataResponse.ok) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: '找不到用戶資訊',
+            })
+          }
+
+          const userAdData = (await userAdDataResponse.json()) as UserAdData
+
+          // Generate token and set cookie
+          user = await ensureUser(
+            input.username,
+            userAdData.truename,
+            input.password,
+          )
         }
-
-        const userAdData = (await userAdDataResponse.json()) as UserAdData
-
-        // Generate token and set cookie
-        user = await ensureUser(input.username, userAdData.truename)
       }
 
       const token = await createAuthToken(user.id)

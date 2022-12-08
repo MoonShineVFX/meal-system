@@ -1,13 +1,29 @@
 import { UserRole } from '@prisma/client'
+import CryptoJS from 'crypto-js'
 
 import { prisma, log } from './define'
 import { settings } from '@/lib/common'
 import { blockchainManager } from '@/lib/server/blockchain'
 import { forceSyncBlockchainWallet } from './blockchain'
 
+export async function validateUserPassword(userId: string, password: string) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  })
+
+  if (user && user.password === CryptoJS.SHA256(password).toString()) {
+    return user
+  }
+
+  return null
+}
+
 export async function ensureUser(
   userId: string,
   name?: string,
+  password?: string,
   role?: UserRole,
   pointBalance?: number,
   creditBalance?: number,
@@ -17,6 +33,7 @@ export async function ensureUser(
     role: role,
     pointBalance: pointBalance,
     creditBalance: creditBalance,
+    password: password ? CryptoJS.SHA256(password).toString() : undefined,
   }
 
   const user = await prisma.user.upsert({
