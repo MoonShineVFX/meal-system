@@ -19,11 +19,11 @@ import Logo from '@/components/core/Logo'
 
 export default function Navigation() {
   return (
-    <div className='flex h-full items-center justify-evenly bg-white shadow sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:p-4 sm:shadow-none lg:p-8'>
+    <ul className='relative z-40 flex h-full items-center justify-evenly bg-white shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
       {/* LOGO */}
-      <div className='-order-2 hidden pl-2 sm:block'>
+      <li className='-order-2 hidden pl-2 sm:block'>
         <Logo className='h-8 w-auto text-yellow-500' />
-      </div>
+      </li>
       <NavButton path='/' label='點餐' icons={[HomeIcon, HomeIconSolid]} />
       <NavButton
         label='預訂 / 下午茶'
@@ -41,7 +41,7 @@ export default function Navigation() {
         icons={[WalletIcon, WalletIconSolid]}
       />
       <ProfileButton className='sm:-order-1' />
-    </div>
+    </ul>
   )
 }
 
@@ -57,7 +57,7 @@ function ProfileButton(props: { className?: string }) {
   if (!user) return null
 
   return (
-    <Popover className={`${props.className} relative z-40 sm:w-full`}>
+    <Popover className={`${props.className} relative z-40 sm:w-full`} as='ul'>
       <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:hover:bg-stone-200 sm:active:bg-stone-200 sm:ui-open:bg-stone-200'>
         {/* Profile Image */}
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
@@ -65,7 +65,7 @@ function ProfileButton(props: { className?: string }) {
             <Image
               alt='profile'
               src={settings.RESOURCE_PROFILE_PLACEHOLDER}
-              sizes='32px'
+              sizes='64px'
             />
           </div>
         </div>
@@ -73,9 +73,7 @@ function ProfileButton(props: { className?: string }) {
         <div className='hidden grow items-center pl-2 sm:flex'>
           <div className='flex grow flex-col text-left'>
             <span className='tracking-widest'>{user?.name}</span>
-            <span className='font-custom text-sm text-stone-400'>
-              @{user?.id}
-            </span>
+            <span className='text-sm text-stone-400'>@{user?.id}</span>
           </div>
           <ChevronDownIcon className='h-6 w-6 text-stone-400 transition-transform ui-open:rotate-180' />
         </div>
@@ -128,29 +126,31 @@ function NavButton(props: {
   const NormalIcon = props.icons[0]
 
   return (
-    <Link
-      data-ui={twData({ selected: isSelected })}
-      className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
-      href={{
-        pathname: isShallow ? router.pathname : props.path,
-        query: isShallow
-          ? { ...router.query, [props.path.replace('?', '')]: null }
-          : undefined,
-      }}
-      shallow={props.path.includes('?')}
-    >
-      {/* Mobile icon */}
-      <NavIcon
-        className='sm:hidden'
-        isSelected={isSelected}
-        icons={props.icons}
-      />
-      {/* Desktop label */}
-      <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:bg-stone-600 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
-        <NormalIcon className='h-5 w-5' />
-        <span className='ml-4'>{props.label}</span>
-      </div>
-    </Link>
+    <ul className='sm:w-full'>
+      <Link
+        data-ui={twData({ selected: isSelected })}
+        className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
+        href={{
+          pathname: isShallow ? router.pathname : props.path,
+          query: isShallow
+            ? { ...router.query, [props.path.replace('?', '')]: null }
+            : undefined,
+        }}
+        shallow={props.path.includes('?')}
+      >
+        {/* Mobile icon */}
+        <NavIcon
+          className='sm:hidden'
+          isSelected={isSelected}
+          icons={props.icons}
+        />
+        {/* Desktop label */}
+        <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:bg-stone-600 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
+          <NormalIcon className='h-5 w-5' />
+          <span className='ml-4'>{props.label}</span>
+        </div>
+      </Link>
+    </ul>
   )
 }
 

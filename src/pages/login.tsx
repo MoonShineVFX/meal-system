@@ -58,16 +58,16 @@ export default function PageLogin() {
   return (
     <div className='fixed inset-0 flex'>
       <Title prefix='登入' />
-      <div className='flex w-full shrink-0 flex-col justify-center bg-white md:max-w-md'>
+      <section className='flex w-full shrink-0 flex-col justify-center bg-white md:max-w-md'>
         <form
           className='group relative mx-auto flex w-full max-w-sm flex-col gap-8 py-8 px-10'
           onSubmit={handleLogin}
           data-ui={twData({ loading: isBusy })}
         >
           <Logo className='w-40 text-yellow-500' />
-          <h1 className='text-xl font-bold tracking-wider'>
+          <h3 className='text-xl font-bold tracking-wider'>
             請登入夢想 AD 帳號
-          </h1>
+          </h3>
           <InputField
             disabled={isBusy}
             label='帳號'
@@ -100,7 +100,7 @@ export default function PageLogin() {
             </div>
           )}
         </form>
-      </div>
+      </section>
       <div className='relative hidden grow md:block'>
         <Image
           className='object-cover'

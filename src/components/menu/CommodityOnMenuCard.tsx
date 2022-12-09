@@ -22,29 +22,31 @@ export default function CommodityOnMenuCard(props: {
         },
       }}
     >
-      <div className='flex flex-col gap-4 overflow-hidden rounded-2xl bg-white p-4 shadow'>
-        <div className='relative aspect-[4/3] overflow-hidden rounded-2xl'>
+      <div className='group flex flex-col overflow-hidden rounded-2xl border border-stone-100 bg-white shadow-lg shadow-stone-100 transition-all hover:shadow-stone-200'>
+        {/* Image */}
+        <section className='relative aspect-[4/3] overflow-hidden'>
           <Image
-            className='object-cover'
+            className='object-cover transition-transform group-hover:scale-105'
             src={
               commodityOnMenu.commodity.image?.path ??
               settings.RESOURCE_FOOD_PLACEHOLDER
             }
-            sizes='(max-width: 375px) 50vw, (max-width: 750px) 33vw, 150px'
+            sizes='(max-width: 375px) 50vw, (max-width: 750px) 33vw, 180px'
             alt={commodityOnMenu.commodity.name}
           />
-        </div>
-        <div className='flex grow flex-col gap-1'>
-          <h3 className='text-xl font-bold'>
+        </section>
+        {/* Description */}
+        <section className='flex grow flex-col gap-2 p-4 pt-2'>
+          <h3 className='text-lg font-bold'>
             {commodityOnMenu.commodity.name}
           </h3>
           <div className='flex w-full grow items-center justify-between'>
-            <p className='text-xl font-bold text-yellow-500'>
+            <h2 className='text font-bold text-yellow-500'>
               ${commodityOnMenu.commodity.price}
-            </p>
-            <PlusIcon className='h-6 w-6 text-stone-400' />
+            </h2>
+            <PlusIcon className='h-6 w-6 text-stone-400 transition-colors group-hover:text-yellow-500' />
           </div>
-        </div>
+        </section>
       </div>
     </Link>
   )

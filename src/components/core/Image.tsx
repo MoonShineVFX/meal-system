@@ -13,7 +13,9 @@ const imageLoader = ({
   width: number
   quality?: number
 }) => {
-  return `${settings.RESOURCE_URL}/image/${src}?w=${width}&q=${quality || 75}`
+  return `${settings.RESOURCE_URL}/image/${src}?width=${width}&quality=${
+    quality || 75
+  }`
 }
 
 export default function Image(
@@ -43,21 +45,21 @@ export default function Image(
 
 /* Shimmer */
 
-const SHIMMER_COLOR_A = '#cbd5e1'
-const SHIMMER_COLOR_B = '#d2c9f2'
+const SHIMMER_COLOR_A = '#d6d3d1'
+const SHIMMER_COLOR_B = '#a8a29e'
 
 const generateSvg = (w: number, h: number) => `
 <svg width='${w}' height='${h}' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
   <defs>
     <linearGradient id='g'>
       <stop stop-color='${SHIMMER_COLOR_A}' offset='0%' />
-      <stop stop-color='${SHIMMER_COLOR_B}' offset='80%' />
+      <stop stop-color='${SHIMMER_COLOR_B}' offset='50%' />
       <stop stop-color='${SHIMMER_COLOR_A}' offset='100%' />
     </linearGradient>
   </defs>
   <rect width='${w}' height='${h}' fill='${SHIMMER_COLOR_A}' />
   <rect id='r' width='${w}' height='${h}' fill='url(#g)' />
-  <animate xlink:href='#r' attributeName='x' from='-${w}' to='${w}' dur='1.5s' repeatCount='indefinite' />
+  <animate xlink:href='#r' attributeName='x' from='-${w}' to='${w}' dur='1.0s' repeatCount='indefinite' />
 </svg>`
 
 const toBase64 = (str: string) =>

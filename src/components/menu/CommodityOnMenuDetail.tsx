@@ -1,19 +1,17 @@
 import { Transition } from '@headlessui/react'
-import { Fragment, useState, useEffect } from 'react'
+import { memo, Fragment, useState, useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
+import { XMarkIcon } from '@heroicons/react/24/outline'
+import { PlusIcon } from '@heroicons/react/24/outline'
+import { MinusIcon } from '@heroicons/react/24/outline'
 
 import Title from '@/components/core/Title'
-import { settings, OptionSet, twData } from '@/lib/common'
+import { settings, OptionSet } from '@/lib/common'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 
 type SelectedOptionSet = Record<string, string[]>
-type OptionClickHandler = (
-  optionSetName: string,
-  optionName: string,
-  action: 'ADD' | 'REMOVE' | 'REPLACE',
-) => void
 
 export default function CommodityOnMenuDetail(props: {
   isOpen: boolean
@@ -27,6 +25,7 @@ export default function CommodityOnMenuDetail(props: {
 
   // Reset selected option sets when commodity changes
   useEffect(() => {
+    setQuantity(1)
     if (commodityOnMenu) {
       setSelectedOptionSets(
         (commodityOnMenu.commodity.optionSets as OptionSet[]).reduce(
@@ -44,29 +43,6 @@ export default function CommodityOnMenuDetail(props: {
     const offset = action === 'INCREASE' ? 1 : -1
     setQuantity((prev) => Math.max(1, prev + offset))
   }
-  const handleOptionButtonClick: OptionClickHandler = (
-    optionSetName,
-    optionName,
-    action,
-  ) => {
-    setSelectedOptionSets((prev) => {
-      const selectedOptions = prev[optionSetName]
-      const newSelectedOptions = (() => {
-        switch (action) {
-          case 'ADD':
-            return [...selectedOptions, optionName]
-          case 'REMOVE':
-            return selectedOptions.filter((o) => o !== optionName)
-          case 'REPLACE':
-            return [optionName]
-        }
-      })()
-      return {
-        ...prev,
-        [optionSetName]: newSelectedOptions,
-      }
-    })
-  }
 
   return (
     <>
@@ -80,6 +56,7 @@ export default function CommodityOnMenuDetail(props: {
           !props.isOpen && 'pointer-events-none',
         )}
         onClick={props.onClose}
+        as='section'
       >
         {/* Backdrop */}
         <Transition.Child
@@ -91,81 +68,117 @@ export default function CommodityOnMenuDetail(props: {
           leaveFrom='opacity-100'
           leaveTo='opacity-0'
         >
-          <div className='col-start-1 row-start-1 bg-black/30' />
+          <div className='col-start-1 row-start-1 md:bg-black/30' />
         </Transition.Child>
         {/* Dialog */}
         <Transition.Child
           enter='transition duration-200 ease-out'
-          enterFrom='transform translate-y-full sm:translate-y-0 sm:scale-50 sm:opacity-0'
-          enterTo='transform translate-y-0 sm:scale-100 sm:opacity-100'
-          leave='transition duration-100 ease-out'
-          leaveFrom='transform translate-y-0 sm:scale-100 sm:opacity-100'
-          leaveTo='transform translate-y-full sm:translate-y-0 sm:scale-50 sm:opacity-0'
-          className='col-start-1 row-start-1 flex flex-col justify-center'
+          enterFrom='transform max-sm:translate-y-full sm:scale-50 sm:opacity-0'
+          enterTo='transform max-sm:translate-y-0 sm:scale-100 sm:opacity-100'
+          leave='transition duration-150 ease-out'
+          leaveFrom='transform max-sm:translate-y-0 sm:scale-100 sm:opacity-100'
+          leaveTo='transform max-sm:translate-y-full sm:scale-50 sm:opacity-0'
+          className='col-start-1 row-start-1 flex flex-col justify-center md:p-4 lg:p-8'
         >
           {commodityOnMenu && (
-            <div
-              className='mx-auto mt-8 flex h-full w-full flex-col gap-4 overflow-auto rounded-t-2xl bg-gray-100 p-4 sm:mt-0 sm:h-auto sm:max-h-[80%] sm:max-w-4xl sm:rounded-2xl'
-              onClick={(event) => event.preventDefault()}
+            <section
+              className='relative mx-auto flex h-full w-full flex-col overflow-y-auto bg-white sm:gap-4 sm:p-4 md:h-auto md:max-w-3xl md:flex-row md:rounded-2xl lg:gap-8 lg:p-8'
+              onClick={(event) => event.stopPropagation()}
             >
+              {/* Close button */}
+              <button
+                className='absolute right-5 top-5 z-30 rounded-full bg-black/10 p-1 hover:bg-black/20 active:bg-black/20 active:bg-stone-100 md:bg-transparent md:hover:bg-stone-100 md:max-lg:top-3 md:max-lg:right-3'
+                onClick={props.onClose}
+              >
+                <XMarkIcon className='h-8 w-8 stroke-1 text-white md:text-stone-500' />
+              </button>
               {/* Image */}
-              <div className='relative mt-2 aspect-[4/3] shrink-0 overflow-hidden rounded-2xl'>
+              <section className='relative aspect-[4/3] h-min shrink-0 overflow-hidden sm:aspect-square sm:shrink sm:rounded-2xl md:basis-2/5'>
                 <Image
                   className='object-cover'
                   src={
                     commodityOnMenu.commodity.image?.path ??
                     settings.RESOURCE_FOOD_PLACEHOLDER
                   }
-                  sizes='(max-width: 375px) 50vw, (max-width: 750px) 33vw, 150px'
+                  sizes='(max-width: 375px) 100vw, (max-width: 750px) 75vw, 640px'
                   alt={commodityOnMenu.commodity.name ?? 'food placeholder'}
                 />
-              </div>
-              {/* Info */}
-              <div className='flex flex-col gap-2'>
-                <p className='text-3xl font-bold text-gray-800'>
-                  {commodityOnMenu.commodity.name}
-                </p>
-                <p className='text-2xl font-bold text-violet-500'>
-                  ${commodityOnMenu.commodity.price}
-                </p>
-                <p>{commodityOnMenu.commodity.description}</p>
-              </div>
-              {/* Option Sets */}
-              <div className='flex flex-col gap-4'>
-                {(commodityOnMenu.commodity.optionSets as OptionSet[]).map(
-                  (optionSet) => (
-                    <OptionSet
-                      key={optionSet.name}
-                      optionSet={optionSet}
-                      selectedOptions={selectedOptionSets[optionSet.name]}
-                      onClick={handleOptionButtonClick}
+              </section>
+              {/* Form */}
+              <form className='flex shrink-0 grow flex-col gap-4 overflow-y-auto p-4 @container/detail sm:p-0'>
+                {/* Info */}
+                <header className='mb-4 flex flex-col gap-2'>
+                  <h1 className='text-3xl font-bold text-stone-800'>
+                    {commodityOnMenu.commodity.name}
+                  </h1>
+                  <h2 className='text-2xl font-bold text-yellow-500'>
+                    ${commodityOnMenu.commodity.price}
+                  </h2>
+                  {commodityOnMenu.commodity.description !== '' && (
+                    <p className='text-stone-500'>
+                      {commodityOnMenu.commodity.description}
+                    </p>
+                  )}
+                </header>
+                {/* Option Sets */}
+                <main className='flex flex-col gap-4'>
+                  {(commodityOnMenu.commodity.optionSets as OptionSet[]).map(
+                    (optionSet) => (
+                      <OptionSetMemo
+                        key={optionSet.name}
+                        optionSet={optionSet}
+                        selectedOptions={selectedOptionSets[optionSet.name]}
+                      />
+                    ),
+                  )}
+                </main>
+                <div className='shrink grow'></div>
+                {/* Quantity */}
+                <section className='my-4 flex shrink-0 justify-center'>
+                  <div className='flex items-center gap-2 rounded-full bg-stone-100 p-1'>
+                    <input
+                      type='number'
+                      className='hidden'
+                      min='1'
+                      value={quantity}
+                      readOnly
                     />
-                  ),
-                )}
-              </div>
-              {/* Quantity */}
-              <div className='flex shrink-0 justify-center'>
-                <button onClick={() => handleQuantityButtonClick('DECREASE')}>
-                  {' '}
-                  -{' '}
-                </button>
-                <span>{quantity}</span>
-                <button onClick={() => handleQuantityButtonClick('INCREASE')}>
-                  {' '}
-                  +{' '}
-                </button>
-              </div>
-              {/* Add to cart */}
-              <div className='flex h-12 shrink-0 gap-4'>
-                <Button
-                  className='grow'
-                  label='返回'
-                  theme='secondary'
-                  onClick={props.onClose}
-                />
-                <Button className='grow' label='加到購物車' />
-              </div>
-            </div>
+                    <button
+                      type='button'
+                      onClick={() => handleQuantityButtonClick('DECREASE')}
+                      className='rounded-full p-2 text-stone-500 hover:bg-stone-200 active:bg-stone-200'
+                    >
+                      <MinusIcon className='h-6 w-6' />
+                    </button>
+                    <p className='min-w-[1.5em] text-center text-2xl text-stone-500'>
+                      {quantity}
+                    </p>
+                    <button
+                      type='button'
+                      onClick={() => handleQuantityButtonClick('INCREASE')}
+                      className='rounded-full p-2 text-stone-500 hover:bg-stone-200 active:bg-stone-200'
+                    >
+                      <PlusIcon className='h-6 w-6' />
+                    </button>
+                  </div>
+                </section>
+                {/* Buttons */}
+                <footer className='flex shrink-0 flex-col gap-4 @xs/detail:flex-row-reverse'>
+                  <Button
+                    className='h-12 grow'
+                    type='submit'
+                    textClassName='font-bold'
+                    label='加到購物車'
+                  />
+                  <Button
+                    label='返回'
+                    className='h-12 grow'
+                    theme='support'
+                    onClick={props.onClose}
+                  />
+                </footer>
+              </form>
+            </section>
           )}
         </Transition.Child>
       </Transition>
@@ -173,43 +186,29 @@ export default function CommodityOnMenuDetail(props: {
   )
 }
 
-function OptionSet(props: {
-  optionSet: OptionSet
-  selectedOptions: string[]
-  onClick: OptionClickHandler
-}) {
+function OptionSet(props: { optionSet: OptionSet; selectedOptions: string[] }) {
   const { optionSet } = props
 
   return (
-    <div className='flex flex-col gap-2'>
-      <p className='text font-bold text-gray-800'>{optionSet.name}</p>
+    <section className='flex flex-col gap-2'>
+      <h3 className='text font-bold'>{optionSet.name}</h3>
       <div className='flex flex-wrap gap-2'>
-        {props.optionSet.options.map((optionName) => {
-          const isSelected = props.selectedOptions.includes(optionName)
-          return (
-            <button
-              data-ui={twData({
-                selected: isSelected,
-              })}
-              onClick={() =>
-                props.onClick(
-                  optionSet.name,
-                  optionName,
-                  optionSet.multiSelect
-                    ? isSelected
-                      ? 'REMOVE'
-                      : 'ADD'
-                    : 'REPLACE',
-                )
-              }
-              className='m-[1px] rounded-2xl border border-gray-300 py-2 px-3 data-selected:m-0 data-selected:border-2 data-selected:border-violet-500'
-              key={optionName}
-            >
+        {props.optionSet.options.map((optionName) => (
+          <label key={optionName}>
+            <input
+              className='peer hidden'
+              type={optionSet.multiSelect ? 'checkbox' : 'radio'}
+              name={optionSet.name}
+              value={optionName}
+            />
+            <div className='m-[1px] cursor-pointer rounded-2xl border border-stone-300 py-2 px-3 hover:border-stone-400 active:border-stone-400 peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500'>
               {optionName}
-            </button>
-          )
-        })}
+            </div>
+          </label>
+        ))}
       </div>
-    </div>
+    </section>
   )
 }
+
+const OptionSetMemo = memo(OptionSet)

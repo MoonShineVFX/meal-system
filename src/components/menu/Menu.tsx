@@ -106,37 +106,37 @@ export default function Menu(props: { type: MenuType; date?: Date }) {
   if (isLoading) return <Spinner className='h-6 w-6' />
 
   return (
-    <div className='relative h-full bg-stone-100'>
-      <div className='absolute inset-0 lg:flex'>
+    <div className='relative h-full bg-white'>
+      <div className='absolute inset-0 flex flex-col lg:flex-row'>
         {/* Categories */}
-        <div className='absolute z-10 w-full overflow-x-auto p-4 lg:static lg:w-min lg:p-8'>
-          <div className='flex w-max gap-4 self-start rounded-2xl bg-white p-2 shadow lg:flex-col lg:p-4'>
-            {[
-              settings.MENU_CATEGORY_ALL,
-              ...Object.keys(commoditiesOnMenuByCategory),
-            ].map((mainCategory) => (
-              <div
-                data-ui={twData({
-                  selected: currentCategory === mainCategory,
-                })}
-                key={mainCategory}
-                className='shrink-0 cursor-pointer rounded-2xl px-3 py-2 text-stone-500 data-selected:pointer-events-none data-selected:bg-yellow-500 data-selected:text-yellow-900 data-not-selected:hover:bg-stone-200'
-                onClick={() => handleCategoryClick(mainCategory)}
-              >
-                <h2 className='tracking-widest'>{mainCategory}</h2>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ul className='flex gap-4 overflow-x-auto p-4 shadow lg:w-max lg:flex-col lg:p-8 lg:pr-0 lg:shadow-none'>
+          {[
+            settings.MENU_CATEGORY_ALL,
+            ...Object.keys(commoditiesOnMenuByCategory),
+          ].map((mainCategory) => (
+            <li
+              data-ui={twData({
+                selected: currentCategory === mainCategory,
+              })}
+              key={mainCategory}
+              className='w-fit shrink-0 cursor-pointer rounded-2xl px-3 py-2 text-stone-500 data-selected:pointer-events-none data-selected:bg-yellow-500 data-selected:text-yellow-900 data-not-selected:hover:bg-stone-200'
+              onClick={() => handleCategoryClick(mainCategory)}
+            >
+              <p className='text-justify font-bold tracking-widest'>
+                {mainCategory}
+              </p>
+            </li>
+          ))}
+        </ul>
         {/* Commodities */}
-        <div className='relative h-full grow'>
-          <div className='absolute inset-0 overflow-y-auto p-4 pt-24 lg:p-8 lg:pl-0'>
+        <section className='relative grow'>
+          <div className='absolute inset-0 overflow-y-auto p-4 lg:p-8'>
             <CommodityOnMenuList
               currentCategory={currentCategory}
               commoditiesOnMenuByCategory={commoditiesOnMenuByCategory}
             />
           </div>
-        </div>
+        </section>
       </div>
       {/* Commodity detail */}
       <CommodityOnMenuDetail
