@@ -1,4 +1,3 @@
-import { User } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
@@ -24,6 +23,8 @@ type UserAdData = {
   username: string
 }
 
+type UserInfo = Awaited<ReturnType<typeof getUserInfo>>
+
 export const UserRouter = router({
   get: userProcedure.query(async ({ ctx }) => {
     const user = await getUserInfo(ctx.userLite.id)
@@ -38,8 +39,8 @@ export const UserRouter = router({
     return user
   }),
   onUpdate: userProcedure.subscription(({ ctx }) => {
-    return observable<User>((observer) => {
-      const listener = (user: User) => {
+    return observable<UserInfo>((observer) => {
+      const listener = (user: UserInfo) => {
         observer.next(user)
       }
 
