@@ -43,7 +43,7 @@ export default function CommodityOnMenuDetail(props: {
           leaveFrom='opacity-100'
           leaveTo='opacity-0'
         >
-          <div className='col-start-1 row-start-1 bg-black/50' />
+          <div className='col-start-1 row-start-1 bg-black/50 sm:bg-black/30' />
         </Transition.Child>
         {/* Dialog */}
         <Transition.Child
