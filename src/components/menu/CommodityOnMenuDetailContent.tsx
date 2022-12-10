@@ -55,7 +55,7 @@ function CommodityOnMenuDetailContent(props: {
     >
       {/* Close button */}
       <button
-        className='absolute right-5 top-5 z-30 rounded-full bg-black/10 p-1 hover:bg-black/20 active:bg-black/20 active:bg-stone-100 md:bg-transparent md:hover:bg-stone-100 md:max-lg:top-3 md:max-lg:right-3'
+        className='absolute right-3 top-3 z-30 rounded-full bg-black/10 p-1 hover:bg-black/20 active:bg-black/20 active:bg-stone-100 sm:right-5 sm:top-5 md:bg-transparent md:hover:bg-stone-100'
         onClick={props.onClose}
       >
         <XMarkIcon className='h-8 w-8 stroke-1 text-white md:text-stone-500' />

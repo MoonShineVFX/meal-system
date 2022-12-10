@@ -109,7 +109,7 @@ export default function Menu(props: { type: MenuType; date?: Date }) {
     <div className='relative h-full bg-white'>
       <div className='absolute inset-0 flex flex-col lg:flex-row'>
         {/* Categories */}
-        <ul className='flex gap-4 overflow-x-auto p-4 shadow lg:w-max lg:flex-col lg:p-8 lg:pr-0 lg:shadow-none'>
+        <ul className='absolute z-10 flex w-full gap-4 overflow-x-auto bg-white/80 p-4 shadow backdrop-blur lg:static lg:w-max lg:flex-col lg:p-8 lg:pr-0 lg:shadow-none lg:backdrop-blur-none'>
           {[
             settings.MENU_CATEGORY_ALL,
             ...Object.keys(commoditiesOnMenuByCategory),
@@ -130,7 +130,7 @@ export default function Menu(props: { type: MenuType; date?: Date }) {
         </ul>
         {/* Commodities */}
         <section className='relative grow'>
-          <div className='absolute inset-0 overflow-y-auto p-4 lg:p-8'>
+          <div className='absolute inset-0 overflow-y-auto p-4 pt-[88px] lg:p-8'>
             <CommodityOnMenuList
               currentCategory={currentCategory}
               commoditiesOnMenuByCategory={commoditiesOnMenuByCategory}
