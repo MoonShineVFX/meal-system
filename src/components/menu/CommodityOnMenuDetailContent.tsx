@@ -49,8 +49,7 @@ function CommodityOnMenuDetailContent(props: {
 
   return (
     <section
-      // overflow here
-      className='relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white sm:gap-4 sm:rounded-none sm:p-4 md:h-auto md:max-w-3xl md:flex-row md:rounded-2xl lg:gap-8 lg:p-8'
+      className='relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 md:h-auto md:max-w-3xl md:flex-row md:rounded-2xl md:shadow-2xl lg:gap-8 lg:p-8'
       onClick={(event) => event.stopPropagation()}
     >
       {/* Close button */}
@@ -77,11 +76,11 @@ function CommodityOnMenuDetailContent(props: {
       {/* Form */}
       <form className='flex shrink-0 grow flex-col gap-4 p-4 @container/detail sm:p-0 md:overflow-y-auto'>
         {/* Info */}
-        <header className='mb-4 flex flex-col gap-2'>
+        <header className='mb-4 flex flex-col gap-2 border-b border-stone-200'>
           <h1 className='text-3xl font-bold text-stone-800'>
             {commodityOnMenu.commodity.name}
           </h1>
-          <h2 className='text-2xl font-bold text-yellow-500'>
+          <h2 className='text-3xl text-stone-500'>
             ${commodityOnMenu.commodity.price}
           </h2>
           {commodityOnMenu.commodity.description !== '' && (
@@ -120,7 +119,7 @@ function CommodityOnMenuDetailContent(props: {
             >
               <MinusIcon className='h-6 w-6' />
             </button>
-            <p className='min-w-[1.5em] text-center text-2xl text-stone-500'>
+            <p className='min-w-[1.2em] text-center text-xl text-stone-500'>
               {quantity}
             </p>
             <button

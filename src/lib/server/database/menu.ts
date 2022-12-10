@@ -164,8 +164,8 @@ export async function createCategory(mainName: string, subName: string) {
   })
 }
 
-export async function getCommoditiesOnMenu(menuId: number) {
-  return await prisma.commodityOnMenu.findMany({
+export async function getCommoditiesOnMenu(menuId: number, userId: string) {
+  const COMs = await prisma.commodityOnMenu.findMany({
     where: {
       menuId,
       isDeleted: false,
@@ -175,7 +175,7 @@ export async function getCommoditiesOnMenu(menuId: number) {
     },
     select: {
       limitPerUser: true,
-      SKU: true,
+      stock: true,
       commodity: {
         select: {
           id: true,
@@ -198,37 +198,43 @@ export async function getCommoditiesOnMenu(menuId: number) {
           },
         },
       },
-      _count: {
-        select: {
-          orderItems: {
-            where: {
-              order: {
-                status: {
-                  not: 'CANCELED',
-                },
-              },
+      orderItems: {
+        where: {
+          order: {
+            status: {
+              not: 'CANCELED',
             },
           },
+        },
+        select: {
+          order: {
+            select: {
+              userId: true,
+            },
+          },
+          quantity: true,
         },
       },
     },
   })
-}
 
-export async function getUserOrdersOnMenu(userId: string, menuId: number) {
-  return await prisma.orderItem.groupBy({
-    by: ['commodityId'],
-    where: {
-      menuId,
-      order: {
-        userId,
-        status: {
-          not: 'CANCELED',
-        },
-      },
-    },
-    _count: {
-      commodityId: true,
-    },
+  // Calculate sum of ordered quantity and user's ordered quantity
+  return COMs.map((COM) => {
+    const totalOrderedCount = COM.orderItems.reduce(
+      (acc, cur) => acc + cur.quantity,
+      0,
+    )
+    const userOrderedCount = COM.orderItems.reduce(
+      (acc, cur) => (cur.order.userId === userId ? acc + cur.quantity : acc),
+      0,
+    )
+
+    const { orderItems, ...rest } = COM
+
+    return {
+      ...rest,
+      totalOrderedCount,
+      userOrderedCount,
+    }
   })
 }

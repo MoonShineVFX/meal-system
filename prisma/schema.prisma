@@ -142,9 +142,10 @@ model OrderItem {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  name    String
-  price   Int
-  options String[]
+  name     String
+  price    Int
+  quantity Int
+  options  String[]
 
   order           Order           @relation(fields: [orderId], references: [id])
   orderId         Int
@@ -216,7 +217,7 @@ model CommodityOnMenu {
   updatedAt DateTime @updatedAt
 
   limitPerUser Int     @default(0)
-  SKU          Int     @default(0)
+  stock        Int     @default(0)
   isDeleted    Boolean @default(false)
 
   commodity   Commodity   @relation(fields: [commodityId], references: [id])

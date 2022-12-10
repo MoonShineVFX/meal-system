@@ -3,11 +3,7 @@ import { MenuType } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 
 import { userProcedure, router } from '../trpc'
-import {
-  getMenu,
-  getCommoditiesOnMenu,
-  getUserOrdersOnMenu,
-} from '@/lib/server/database'
+import { getMenu, getCommoditiesOnMenu } from '@/lib/server/database'
 
 export const MenuRouter = router({
   get: userProcedure
@@ -27,13 +23,14 @@ export const MenuRouter = router({
         })
       }
 
-      const commoditiesOnMenu = await getCommoditiesOnMenu(menu.id)
-      const userOrders = await getUserOrdersOnMenu(ctx.userLite.id, menu.id)
+      const commoditiesOnMenu = await getCommoditiesOnMenu(
+        menu.id,
+        ctx.userLite.id,
+      )
 
       return {
         menu,
         commoditiesOnMenu,
-        userOrders,
       }
     }),
 })
