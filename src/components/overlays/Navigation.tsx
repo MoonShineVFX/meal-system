@@ -87,13 +87,13 @@ function ProfileButton(props: { className?: string }) {
         leaveTo='transform scale-50 opacity-0'
       >
         <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[1px] border-stone-200 bg-white py-3 px-2 tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
-          <div className='w-full cursor-pointer rounded-xl py-2 px-4 hover:bg-stone-200 active:bg-stone-200'>
+          <div className='w-full cursor-pointer rounded-xl py-2 px-4 hover:bg-stone-100 active:bg-stone-100'>
             <a href={settings.REPORT_URL} target='_blank'>
               回報問題
             </a>
           </div>
           <div
-            className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-stone-200 active:bg-stone-200'
+            className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'
             onClick={handleLogout}
           >
             登出

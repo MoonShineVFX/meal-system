@@ -23,7 +23,7 @@ export default function CommoditiesOnMenuList(props: {
             {currentCategory === settings.MENU_CATEGORY_ALL && (
               <h1
                 className={twMerge(
-                  'col-span-full text-3xl font-bold',
+                  'col-span-full text-2xl font-bold',
                   index !== 0 && 'mt-8',
                 )}
               >

@@ -36,10 +36,8 @@ export default function CommodityOnMenuCard(props: {
           />
         </section>
         {/* Description */}
-        <section className='flex grow flex-col gap-2 p-4 pt-2'>
-          <h3 className='text-lg font-bold'>
-            {commodityOnMenu.commodity.name}
-          </h3>
+        <section className='flex grow flex-col gap-1 p-3 pt-1'>
+          <h3 className='text font-bold'>{commodityOnMenu.commodity.name}</h3>
           <div className='flex w-full grow items-center justify-between'>
             <h2 className='text font-bold text-yellow-500'>
               ${commodityOnMenu.commodity.price}
