@@ -43,7 +43,7 @@ export default function EventListener() {
   /* Socket management */
   useEffect(() => {
     const handleSocketOpen = async () => {
-      console.warn('Socket reopened')
+      console.warn('TRPC Socket reopened')
       trpcContext.invalidate()
       addNotification({
         type: NotificationType.INFO,
@@ -51,7 +51,7 @@ export default function EventListener() {
       })
     }
     const handleSocketClose = async () => {
-      console.warn('Socket closed')
+      console.warn('TRPC Socket closed')
       addNotification({
         type: NotificationType.ERROR,
         message: '連線中斷',
