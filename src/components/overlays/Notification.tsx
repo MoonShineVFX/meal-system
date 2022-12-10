@@ -14,7 +14,7 @@ import { settings } from '@/lib/common'
 const iconMap = {
   [NotificationType.SUCCESS]: [CheckCircleIcon, 'text-green-500'],
   [NotificationType.ERROR]: [XCircleIcon, 'text-red-500'],
-  [NotificationType.INFO]: [ExclamationCircleIcon, 'text-yellow-500'],
+  [NotificationType.INFO]: [ExclamationCircleIcon, 'text-yellow-400'],
 }
 
 /* Component */

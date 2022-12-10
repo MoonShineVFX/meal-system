@@ -7,7 +7,12 @@ export default function PageIndex() {
   return (
     <>
       <Title prefix='點餐' />
-      <Menu type={MenuType.MAIN} />
+      <div className='flex h-full w-full'>
+        {/* Menu */}
+        <Menu className='grow basis-1/2' type={MenuType.MAIN} />
+        {/* Cart */}
+        <section className='hidden max-w-md grow basis-1/5 bg-stone-100 xl:block'></section>
+      </div>
     </>
   )
 }

@@ -220,21 +220,22 @@ export async function getCommoditiesOnMenu(menuId: number, userId: string) {
 
   // Calculate sum of ordered quantity and user's ordered quantity
   return COMs.map((COM) => {
-    const totalOrderedCount = COM.orderItems.reduce(
-      (acc, cur) => acc + cur.quantity,
-      0,
-    )
-    const userOrderedCount = COM.orderItems.reduce(
-      (acc, cur) => (cur.order.userId === userId ? acc + cur.quantity : acc),
-      0,
+    const orderedCount = COM.orderItems.reduce(
+      (acc, cur) => ({
+        total: acc.total + cur.quantity,
+        user: acc.user + (cur.order.userId === userId ? cur.quantity : 0),
+      }),
+      {
+        total: 0,
+        user: 0,
+      },
     )
 
     const { orderItems, ...rest } = COM
 
     return {
       ...rest,
-      totalOrderedCount,
-      userOrderedCount,
+      orderedCount,
     }
   })
 }

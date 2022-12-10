@@ -12,7 +12,7 @@ export default function CommoditiesOnMenuList(props: {
   const { currentCategory, commoditiesOnMenuByCategory: commodities } = props
 
   return (
-    <section className='grid w-full grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4'>
+    <section className='grid w-full grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-8 @2xl/coms:grid-cols-4 @5xl/coms:grid-cols-5 @7xl/coms:grid-cols-6'>
       {Object.entries(commodities)
         .filter(([mainCategory]) => {
           if (currentCategory === settings.MENU_CATEGORY_ALL) return true
@@ -23,8 +23,8 @@ export default function CommoditiesOnMenuList(props: {
             {currentCategory === settings.MENU_CATEGORY_ALL && (
               <h1
                 className={twMerge(
-                  'col-span-full text-2xl font-bold',
-                  index !== 0 && 'mt-8',
+                  'col-span-full -mb-4 indent-[0.05em] text-xl font-bold tracking-wider',
+                  index !== 0 && 'mt-4',
                 )}
               >
                 {mainCategory}
@@ -33,13 +33,11 @@ export default function CommoditiesOnMenuList(props: {
             {Object.entries(subCategories).map(
               ([subCategory, commoditiesOnMenu]) => (
                 <Fragment key={subCategory}>
-                  <h2 className='col-span-full mt-2 text-lg font-bold text-stone-500'>
-                    {subCategory}
-                  </h2>
                   {commoditiesOnMenu.map((commodityOnMenu) => (
                     <CommodityOnMenuCard
                       key={commodityOnMenu.commodity.id}
                       commodityOnMenu={commodityOnMenu}
+                      category={subCategory}
                     />
                   ))}
                 </Fragment>

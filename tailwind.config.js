@@ -2,7 +2,7 @@
 const { fontFamily } = require('tailwindcss/defaultTheme')
 
 let dataPrefixes = {}
-;['selected', 'loading', 'busy'].forEach((prefix) => {
+;['selected', 'loading', 'busy', 'available'].forEach((prefix) => {
   ;(dataPrefixes[prefix] = `ui~="${prefix}"`),
     (dataPrefixes[`not-${prefix}`] = `ui~="not-${prefix}"`)
 })

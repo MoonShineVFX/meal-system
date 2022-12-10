@@ -125,6 +125,11 @@ export async function getUserInfo(userId: string) {
       role: true,
       pointBalance: true,
       creditBalance: true,
+      profileImage: {
+        select: {
+          path: true,
+        },
+      },
     },
   })
   return user

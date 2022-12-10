@@ -64,7 +64,11 @@ function ProfileButton(props: { className?: string }) {
           <div className='relative h-8 w-8 overflow-hidden rounded-full border border-stone-300 ring-0 ring-yellow-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0 sm:active:ring-0 sm:ui-open:ring-0'>
             <Image
               alt='profile'
-              src={settings.RESOURCE_PROFILE_PLACEHOLDER}
+              src={
+                user.profileImage
+                  ? user.profileImage.path
+                  : settings.RESOURCE_PROFILE_PLACEHOLDER
+              }
               sizes='64px'
             />
           </div>
@@ -72,7 +76,7 @@ function ProfileButton(props: { className?: string }) {
         {/* User Info */}
         <div className='hidden grow items-center pl-2 sm:flex'>
           <div className='flex grow flex-col text-left'>
-            <span className='tracking-widest'>{user?.name}</span>
+            <span className='indent-[0.1em] tracking-widest'>{user?.name}</span>
             <span className='text-sm text-stone-400'>@{user?.id}</span>
           </div>
           <ChevronDownIcon className='h-6 w-6 text-stone-400 transition-transform ui-open:rotate-180' />
@@ -86,7 +90,7 @@ function ProfileButton(props: { className?: string }) {
         leaveFrom='transform scale-100 opacity-100'
         leaveTo='transform scale-50 opacity-0'
       >
-        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[1px] border-stone-200 bg-white py-3 px-2 tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
+        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[1px] border-stone-200 bg-white py-3 px-2 indent-[0.05em] tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
           <div className='w-full cursor-pointer rounded-xl py-2 px-4 hover:bg-stone-100 active:bg-stone-100'>
             <a href={settings.REPORT_URL} target='_blank'>
               回報問題
@@ -145,7 +149,7 @@ function NavButton(props: {
           icons={props.icons}
         />
         {/* Desktop label */}
-        <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:bg-stone-600 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
+        <div className='hidden grow items-center rounded-2xl py-2 px-3 indent-[0.1em] font-bold tracking-widest text-stone-500 group-data-selected:bg-stone-600 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
           <NormalIcon className='h-5 w-5' />
           <span className='ml-4'>{props.label}</span>
         </div>

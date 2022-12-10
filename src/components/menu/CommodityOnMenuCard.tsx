@@ -4,10 +4,10 @@ import { useRouter } from 'next/router'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
 import { settings } from '@/lib/common'
-import { PlusIcon } from '@heroicons/react/24/outline'
 
 export default function CommodityOnMenuCard(props: {
   commodityOnMenu: CommodityOnMenu
+  category: string
 }) {
   const { commodityOnMenu } = props
   const router = useRouter()
@@ -22,11 +22,11 @@ export default function CommodityOnMenuCard(props: {
         },
       }}
     >
-      <div className='group flex flex-col overflow-hidden rounded-2xl border border-stone-100 bg-white shadow-lg shadow-stone-100 transition-all hover:shadow-stone-200'>
+      <div className='group flex flex-col overflow-hidden border-stone-100 bg-white'>
         {/* Image */}
-        <section className='relative aspect-[4/3] overflow-hidden'>
+        <section className='relative aspect-square overflow-hidden rounded-md'>
           <Image
-            className='object-cover transition-transform group-hover:scale-105'
+            className='object-cover transition-transform group-hover:opacity-75 group-active:opacity-75'
             src={
               commodityOnMenu.commodity.image?.path ??
               settings.RESOURCE_FOOD_PLACEHOLDER
@@ -36,14 +36,14 @@ export default function CommodityOnMenuCard(props: {
           />
         </section>
         {/* Description */}
-        <section className='flex grow flex-col gap-1 p-3 pt-1'>
-          <h3 className='text font-bold'>{commodityOnMenu.commodity.name}</h3>
-          <div className='flex w-full grow items-center justify-between'>
-            <h2 className='text font-bold text-yellow-500'>
-              ${commodityOnMenu.commodity.price}
-            </h2>
-            <PlusIcon className='h-6 w-6 text-stone-400 transition-colors group-hover:text-yellow-500' />
-          </div>
+        <section className='flex w-full flex-col items-center gap-1 p-2'>
+          <p className='text-sm text-stone-400'>{props.category}</p>
+          <h2 className='text indent-[0.1em] font-bold tracking-widest'>
+            {commodityOnMenu.commodity.name}
+          </h2>
+          <h3 className='text-yellow-500'>
+            ${commodityOnMenu.commodity.price}
+          </h3>
         </section>
       </div>
     </Link>

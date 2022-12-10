@@ -56,7 +56,9 @@ export default function AuthValidator() {
       >
         <div className='flex items-center gap-2 text-yellow-500'>
           <Spinner className='h-5 w-5 text-yellow-600' />
-          <p className='text-xl font-bold tracking-widest'>身分驗證中</p>
+          <p className='indent-[0.1em] text-xl font-bold tracking-widest'>
+            身分驗證中
+          </p>
         </div>
       </div>
     )

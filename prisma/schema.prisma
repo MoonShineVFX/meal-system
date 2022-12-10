@@ -39,6 +39,8 @@ model User {
   creditBalance Int      @default(0)
   password      String?
 
+  profileImage       Image?        @relation(fields: [profileImageId], references: [id])
+  profileImageId     String?       @unique
   cartItems          CartItem[]
   tokens             UserToken[]
   orders             Order[]
@@ -266,4 +268,5 @@ model Image {
 
   Commodity Commodity[]
   OrderItem OrderItem[]
+  User      User?
 }
