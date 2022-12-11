@@ -10,10 +10,11 @@ import type {
   CommoditiesOnMenu,
   CommoditiesOnMenuByCategory,
 } from '@/lib/client/trpc'
-import Spinner from '@/components/core/Spinner'
 import COMsGrid from './COMsGrid'
 import COMDialog from './COMDialog'
 import { useStore } from '@/lib/client/store'
+
+const categoriesPlaceholder = Array(5).fill('分類')
 
 export default function Menu(props: {
   type: MenuType
@@ -33,7 +34,7 @@ export default function Menu(props: {
   )
   const [comsByCategory, setComsByCategory] =
     useState<CommoditiesOnMenuByCategory>({})
-  const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [isDialogOpen, setIsDetailOpen] = useState(false)
   const detailRef = useRef<HTMLDivElement>(null)
   const setCurrentMenu = useStore((state) => state.setCurrentMenu)
 
@@ -48,7 +49,7 @@ export default function Menu(props: {
         setSelectedCom(com)
         setIsDetailOpen(true)
       }
-    } else if (!router.query.commodityId && isDetailOpen) {
+    } else if (!router.query.commodityId && isDialogOpen) {
       setIsDetailOpen(false)
     }
   }, [router.query.commodityId, data])
@@ -145,29 +146,37 @@ export default function Menu(props: {
   )
 
   if (isError) return <div className='text-red-400'>{error.message}</div>
-  if (isLoading) return <Spinner className='h-6 w-6' />
+
+  const categories = isLoading
+    ? categoriesPlaceholder
+    : [settings.MENU_CATEGORY_ALL, ...Object.keys(comsByCategory)]
+  const coms = isLoading ? undefined : comsByCategory
 
   return (
-    <div className={twMerge('relative h-full bg-white', props.className)}>
+    <div
+      className={twMerge(
+        'group/menu relative h-full bg-white',
+        props.className,
+      )}
+      data-ui={twData({ loading: isLoading })}
+    >
       <div className='absolute inset-0 flex flex-col lg:flex-row'>
         {/* Categories */}
         <ul className='absolute z-10 flex w-full gap-4 overflow-x-auto bg-white/80 p-4 py-2 shadow backdrop-blur lg:static lg:w-max lg:flex-col lg:p-8 lg:pr-0 lg:shadow-none lg:backdrop-blur-none'>
-          {[settings.MENU_CATEGORY_ALL, ...Object.keys(comsByCategory)].map(
-            (mainCategory) => (
-              <li
-                data-ui={twData({
-                  selected: currentCategory === mainCategory,
-                })}
-                key={mainCategory}
-                className='w-fit shrink-0 cursor-pointer rounded-2xl px-2 py-1 text-stone-500 data-selected:pointer-events-none data-selected:bg-yellow-500 data-selected:text-yellow-900 data-not-selected:hover:bg-stone-600/10 data-not-selected:active:bg-stone-600/10 lg:data-not-selected:hover:bg-stone-100 lg:data-not-selected:active:bg-stone-100'
-                onClick={() => handleCategoryClick(mainCategory)}
-              >
-                <p className='text-justify indent-[0.1em] text-sm font-bold tracking-widest sm:text-base'>
-                  {mainCategory}
-                </p>
-              </li>
-            ),
-          )}
+          {categories.map((mainCategory, index) => (
+            <li
+              data-ui={twData({
+                selected: currentCategory === mainCategory,
+              })}
+              key={`category-${index}`}
+              className='w-fit shrink-0 cursor-pointer rounded-2xl px-2 py-1 text-stone-500 data-selected:pointer-events-none data-selected:bg-yellow-500 data-selected:text-yellow-900 data-not-selected:hover:bg-stone-600/10 data-not-selected:active:bg-stone-600/10 group-data-loading/menu:skeleton lg:data-not-selected:hover:bg-stone-100 lg:data-not-selected:active:bg-stone-100'
+              onClick={() => handleCategoryClick(mainCategory)}
+            >
+              <p className='text-justify indent-[0.1em] text-sm font-bold tracking-widest group-data-loading/menu:text-transparent sm:text-base'>
+                {mainCategory}
+              </p>
+            </li>
+          ))}
         </ul>
         {/* Commodities */}
         <section className='relative grow'>
@@ -175,7 +184,7 @@ export default function Menu(props: {
             ref={detailRef}
             className='absolute inset-0 overflow-y-auto p-4 pt-[60px] @container/coms sm:pt-[64px] lg:p-8'
           >
-            {data.unavailableReasons.length > 0 && (
+            {data && data.unavailableReasons.length > 0 && (
               <section className='mb-4 flex flex-col gap-1 rounded-md bg-stone-100 p-4 text-stone-500'>
                 <div className='flex items-center gap-2'>
                   <ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' />
@@ -190,16 +199,13 @@ export default function Menu(props: {
                 </ul>
               </section>
             )}
-            <COMsGrid
-              currentCategory={currentCategory}
-              comsByCategory={comsByCategory}
-            />
+            <COMsGrid currentCategory={currentCategory} comsByCategory={coms} />
           </div>
         </section>
       </div>
       {/* Commodity detail */}
       <COMDialog
-        isOpen={isDetailOpen}
+        isOpen={isDialogOpen}
         com={selectedCom ?? undefined}
         onClose={handleDetailClose}
       />

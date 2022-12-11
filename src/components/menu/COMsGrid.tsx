@@ -5,15 +5,23 @@ import { settings } from '@/lib/common'
 import type { CommoditiesOnMenuByCategory } from '@/lib/client/trpc'
 import COMCard from './COMCard'
 
+const comsByCategoryPlaceHolder: CommoditiesOnMenuByCategory = {
+  main: {
+    sub: Array(10).fill(undefined),
+  },
+}
+
 export default function COMsGrid(props: {
   currentCategory: string
-  comsByCategory: CommoditiesOnMenuByCategory
+  comsByCategory?: CommoditiesOnMenuByCategory
 }) {
-  const { currentCategory, comsByCategory: commodities } = props
+  const { currentCategory } = props
+
+  const comsByCategory = props.comsByCategory ?? comsByCategoryPlaceHolder
 
   return (
     <section className='grid w-full grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4 @2xl/coms:grid-cols-4 @5xl/coms:grid-cols-5 @7xl/coms:grid-cols-6 lg:gap-8'>
-      {Object.entries(commodities)
+      {Object.entries(comsByCategory)
         .filter(([mainCategory]) => {
           if (currentCategory === settings.MENU_CATEGORY_ALL) return true
           return mainCategory === currentCategory
@@ -27,14 +35,20 @@ export default function COMsGrid(props: {
                   index !== 0 && 'mt-4',
                 )}
               >
-                {mainCategory}
+                {props.comsByCategory ? (
+                  mainCategory
+                ) : (
+                  <span className='skeleton rounded-md text-transparent'>
+                    分類
+                  </span>
+                )}
               </h1>
             )}
             {Object.entries(subCategories).map(([subCategory, coms]) => (
               <Fragment key={subCategory}>
-                {coms.map((com) => (
+                {coms.map((com, index) => (
                   <COMCard
-                    key={com.commodity.id}
+                    key={com?.commodity.id ?? index}
                     com={com}
                     category={subCategory}
                   />

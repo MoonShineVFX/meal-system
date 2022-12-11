@@ -9,11 +9,13 @@ body,
   -webkit-tap-highlight-color: transparent;
 }
 
-#nprogress .bar {
-  @apply h-[3px] bg-yellow-500;
-  box-shadow: 0 0 8px theme('colors.transparent'),
-    0 0 5px theme('colors.transparent');
-}
-#nprogress .peg {
-  display: none;
+@layer utilities {
+  #nprogress .bar {
+    @apply h-1 bg-yellow-500;
+    box-shadow: 0 0 8px theme('colors.transparent'),
+      0 0 5px theme('colors.transparent');
+  }
+  #nprogress .peg {
+    display: none;
+  }
 }

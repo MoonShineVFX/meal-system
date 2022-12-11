@@ -29,7 +29,7 @@ export type CommoditiesOnMenu = Menu['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]
 export type CommoditiesOnMenuByCategory = Record<
   string,
-  Record<string, CommoditiesOnMenu>
+  Record<string, (CommodityOnMenu | undefined)[]>
 >
 
 /* WebSocket Client */

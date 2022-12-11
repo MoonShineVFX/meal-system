@@ -110,6 +110,14 @@ export async function getMenu(
                   },
                 },
               },
+              cartItems: {
+                where: {
+                  userId,
+                },
+                select: {
+                  quantity: true,
+                },
+              },
               orderItems: {
                 where: {
                   order: {
@@ -161,6 +169,11 @@ export async function getMenu(
       },
     )
 
+    for (const cartItem of com.cartItems) {
+      menuOrderedCount.user += cartItem.quantity
+      orderedCount.user += cartItem.quantity
+    }
+
     // validate com
     const comUnavailableReasons: ComUnavailableReason[] = []
     if (com.stock !== 0 && orderedCount.total >= com.stock) {
@@ -178,7 +191,7 @@ export async function getMenu(
       menu.limitPerUser !== 0 ? menu.limitPerUser - orderedCount.total : 99,
     )
 
-    const { orderItems, ...rest } = com
+    const { orderItems, cartItems, ...rest } = com
 
     return {
       ...rest,
@@ -286,7 +299,10 @@ export async function addCommodityToMenu(
         commodityId,
       },
     },
-    update: updateData,
+    update: {
+      ...updateData,
+      isDeleted: false,
+    },
     create: {
       menuId,
       commodityId,
