@@ -162,7 +162,8 @@ model CartItem {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  options String[]
+  quantity Int
+  options  String[]
 
   user            User            @relation(fields: [userId], references: [id])
   userId          String

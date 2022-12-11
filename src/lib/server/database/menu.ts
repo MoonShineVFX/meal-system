@@ -1,4 +1,4 @@
-import { MenuType } from '@prisma/client'
+import { Menu, MenuType, OrderStatus } from '@prisma/client'
 
 import type { OptionSet } from '@/lib/common'
 import { prisma, log } from './define'
@@ -18,7 +18,7 @@ export async function createMenu(
   }
 
   // Check menu existence
-  if (await getMenu(type, date)) {
+  if (await getMenu(type, undefined, date)) {
     throw new Error('menu already exists')
   }
 
@@ -35,16 +35,43 @@ export async function createMenu(
   })
 }
 
-export async function getMenu(type: MenuType, date?: Date) {
+type GetMenuResult = Pick<
+  Menu,
+  | 'id'
+  | 'date'
+  | 'name'
+  | 'description'
+  | 'limitPerUser'
+  | 'publishedDate'
+  | 'closedDate'
+> & { userOrderedCount?: number }
+export async function getMenu(
+  menuId: number,
+  userId?: string,
+): Promise<GetMenuResult>
+export async function getMenu(
+  type: MenuType,
+  userId?: string,
+  date?: Date,
+): Promise<GetMenuResult>
+export async function getMenu(
+  menuIdOrType: number | MenuType,
+  userId?: string,
+  date?: Date,
+) {
+  const isGetById = typeof menuIdOrType === 'number'
+
   // Validate date and type
-  if (!date && type !== MenuType.MAIN) {
+  if (!isGetById && !date && menuIdOrType !== MenuType.MAIN) {
     throw new Error('date is required for non-main menu')
   }
 
-  return await prisma.menu.findFirst({
+  // Get order
+  const menu = await prisma.menu.findFirst({
     where: {
-      type,
+      type: !isGetById ? (menuIdOrType as MenuType) : undefined,
       date,
+      id: isGetById ? menuIdOrType : undefined,
       isDeleted: false,
     },
     orderBy: {
@@ -60,6 +87,34 @@ export async function getMenu(type: MenuType, date?: Date) {
       closedDate: true,
     },
   })
+
+  if (!menu) {
+    throw new Error('menu not found')
+  }
+
+  // Get user orders of the menu
+  if (userId) {
+    const menuOrders = await prisma.orderItem.aggregate({
+      where: {
+        menuId: menu.id,
+        order: {
+          userId,
+          status: {
+            not: 'CANCELED',
+          },
+        },
+      },
+      _sum: {
+        quantity: true,
+      },
+    })
+    return {
+      ...menu,
+      userOrderedCount: menuOrders._sum?.quantity ?? 0,
+    }
+  } else {
+    return menu
+  }
 }
 
 export async function deleteMenu(menuId: number) {
@@ -164,10 +219,15 @@ export async function createCategory(mainName: string, subName: string) {
   })
 }
 
-export async function getCommoditiesOnMenu(menuId: number, userId: string) {
+export async function getCommoditiesOnMenu(
+  menuId: number,
+  userId: string,
+  commodityId?: number,
+) {
   const COMs = await prisma.commodityOnMenu.findMany({
     where: {
       menuId,
+      commodityId,
       isDeleted: false,
       commodity: {
         isDeleted: false,
@@ -202,7 +262,7 @@ export async function getCommoditiesOnMenu(menuId: number, userId: string) {
         where: {
           order: {
             status: {
-              not: 'CANCELED',
+              not: OrderStatus.CANCELED,
             },
           },
         },
@@ -237,5 +297,59 @@ export async function getCommoditiesOnMenu(menuId: number, userId: string) {
       ...rest,
       orderedCount,
     }
+  })
+}
+
+export async function createCartItem(
+  userId: string,
+  menuId: number,
+  commodityId: number,
+  quantity: number,
+  options: string[],
+) {
+  return await prisma.$transaction(async (client) => {
+    // Validate quantity
+    const menu = await client.menu.findUnique({
+      where: {
+        id: menuId,
+      },
+    })
+    if (!menu) {
+      throw new Error('menu not found')
+    }
+
+    const now = new Date()
+    if (
+      (menu.publishedDate && now < menu.publishedDate) ||
+      (menu.closedDate && now > menu.closedDate)
+    ) {
+      throw new Error('menu is not available')
+    }
+
+    const COMs = await getCommoditiesOnMenu(menuId, userId, commodityId)
+    if (COMs.length === 0) {
+      throw new Error('commodity not found')
+    }
+    const COM = COMs[0]
+
+    const maxQuantity = Math.min(
+      COM.stock !== 0 ? COM.stock - COM.orderedCount.total : 99,
+      COM.limitPerUser !== 0 ? COM.limitPerUser - COM.orderedCount.user : 99,
+      menu.limitPerUser !== 0 ? menu.limitPerUser - COM.orderedCount.total : 99,
+    )
+    if (quantity > maxQuantity) {
+      throw new Error(`quantity exceeds limit: ${maxQuantity}`)
+    }
+
+    // Create cart item
+    return await client.cartItem.create({
+      data: {
+        userId,
+        menuId,
+        commodityId,
+        quantity,
+        options,
+      },
+    })
   })
 }

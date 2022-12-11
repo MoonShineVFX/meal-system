@@ -5,20 +5,21 @@ import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
 import { settings } from '@/lib/common'
 
-export default function CommodityOnMenuCard(props: {
-  commodityOnMenu: CommodityOnMenu
+export default function COMCard(props: {
+  com: CommodityOnMenu
   category: string
 }) {
-  const { commodityOnMenu } = props
+  const { com } = props
   const router = useRouter()
 
   return (
     <Link
+      className='group-data-not-available/list:pointer-events-none'
       href={{
         pathname: router.pathname,
         query: {
           ...router.query,
-          commodityId: commodityOnMenu.commodity.id,
+          commodityId: com.commodity.id,
         },
       }}
     >
@@ -28,22 +29,19 @@ export default function CommodityOnMenuCard(props: {
           <Image
             className='object-cover transition-transform group-hover:opacity-75 group-active:opacity-75'
             src={
-              commodityOnMenu.commodity.image?.path ??
-              settings.RESOURCE_FOOD_PLACEHOLDER
+              com.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
             }
             sizes='(max-width: 375px) 50vw, (max-width: 750px) 33vw, 180px'
-            alt={commodityOnMenu.commodity.name}
+            alt={com.commodity.name}
           />
         </section>
         {/* Description */}
         <section className='flex w-full flex-col items-center gap-1 p-2'>
           <p className='text-sm text-stone-400'>{props.category}</p>
           <h2 className='text indent-[0.1em] font-bold tracking-widest'>
-            {commodityOnMenu.commodity.name}
+            {com.commodity.name}
           </h2>
-          <h3 className='text-yellow-500'>
-            ${commodityOnMenu.commodity.price}
-          </h3>
+          <h3 className='text-yellow-500'>${com.commodity.price}</h3>
         </section>
       </div>
     </Link>

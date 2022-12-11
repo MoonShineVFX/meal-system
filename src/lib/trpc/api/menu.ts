@@ -14,7 +14,7 @@ export const MenuRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const menu = await getMenu(input.type, input.date)
+      const menu = await getMenu(input.type, ctx.userLite.id, input.date)
 
       if (!menu) {
         throw new TRPCError({

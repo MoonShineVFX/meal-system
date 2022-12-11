@@ -4,25 +4,33 @@ import { PlusIcon } from '@heroicons/react/24/outline'
 import { MinusIcon } from '@heroicons/react/24/outline'
 import { UserPlusIcon } from '@heroicons/react/20/solid'
 import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
+import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
 import { settings, OptionSet, twData } from '@/lib/common'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
+import { useStore } from '@/lib/client/store'
 
 type SelectedOptionSet = Record<string, string[]>
 
-function CommodityOnMenuDetailContent(props: {
+function COMDialogContent(props: {
   onClose: () => void
-  commodityOnMenu: CommodityOnMenu
+  com: CommodityOnMenu
 }) {
-  const { commodityOnMenu } = props
+  const { com } = props
   const [selectedOptionSets, setSelectedOptionSets] =
     useState<SelectedOptionSet>({})
   const [quantity, setQuantity] = useState(1)
-  const [isValidateStock, setIsValidateStock] = useState(false)
-  const [isValidateLimitPerUser, setIsValidateLimitPerUser] = useState(false)
-  const [maxOrderQuantity, setMaxOrderQuantity] = useState(0)
+  const [validateMetadata, setValidateMetadata] = useState({
+    isValidateStock: false,
+    isValidateLimitPerUser: false,
+    maxOrderQuantity: 99,
+    unavailableMessages: [] as string[],
+  })
+  const menuUnavailableMessage = useStore(
+    (state) => state.menuUnavailableMessage,
+  )
 
   // Reset state
   useEffect(() => {
@@ -31,9 +39,9 @@ function CommodityOnMenuDetailContent(props: {
 
   // Reset selected option sets when commodity changes
   useEffect(() => {
-    if (commodityOnMenu) {
+    if (com) {
       setSelectedOptionSets(
-        (commodityOnMenu.commodity.optionSets as OptionSet[]).reduce(
+        (com.commodity.optionSets as OptionSet[]).reduce(
           (acc, optionSet) => ({
             ...acc,
             [optionSet.name]: [],
@@ -42,25 +50,35 @@ function CommodityOnMenuDetailContent(props: {
         ),
       )
 
-      setIsValidateStock(commodityOnMenu.stock !== 0)
-      setIsValidateLimitPerUser(commodityOnMenu.limitPerUser !== 0)
-      setMaxOrderQuantity(
-        Math.min(
-          commodityOnMenu.stock !== 0
-            ? commodityOnMenu.stock - commodityOnMenu.orderedCount.total
-            : 99,
-          commodityOnMenu.limitPerUser !== 0
-            ? commodityOnMenu.limitPerUser - commodityOnMenu.orderedCount.user
+      const isValidateStock = com.stock !== 0
+      const isValidateLimitPerUser = com.limitPerUser !== 0
+      const unavailableMessages = [] as string[]
+
+      if (isValidateStock && com.orderedCount.total >= com.stock)
+        unavailableMessages.push('已全部售完')
+      if (isValidateLimitPerUser && com.orderedCount.user >= com.limitPerUser)
+        unavailableMessages.push('已達該餐點每人訂購上限')
+
+      setValidateMetadata({
+        isValidateStock,
+        isValidateLimitPerUser,
+        maxOrderQuantity: Math.min(
+          isValidateStock ? com.stock - com.orderedCount.total : 99,
+          isValidateLimitPerUser
+            ? com.limitPerUser - com.orderedCount.user
             : 99,
         ),
-      )
+        unavailableMessages,
+      })
     }
-  }, [commodityOnMenu])
+  }, [com])
 
   // Set quantity to maxOrderQuantity when it changes
   useEffect(() => {
-    setQuantity((prev) => Math.min(prev, maxOrderQuantity))
-  }, [maxOrderQuantity])
+    setQuantity((prev) =>
+      Math.min(prev ?? 1, validateMetadata.maxOrderQuantity),
+    )
+  }, [validateMetadata])
 
   const handleQuantityButtonClick = useCallback(
     (action: 'INCREASE' | 'DECREASE') => {
@@ -70,9 +88,13 @@ function CommodityOnMenuDetailContent(props: {
     [],
   )
 
+  const isUnavailable =
+    validateMetadata.unavailableMessages.length > 0 ||
+    menuUnavailableMessage !== null
+
   return (
     <section
-      className='relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 md:h-auto md:max-w-3xl md:flex-row md:rounded-2xl md:shadow-2xl lg:gap-8 lg:p-8'
+      className='relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-3xl md:flex-row md:gap-0 md:rounded-2xl md:p-0 md:shadow-2xl'
       onClick={(event) => event.stopPropagation()}
     >
       {/* Close button */}
@@ -83,80 +105,66 @@ function CommodityOnMenuDetailContent(props: {
         <XMarkIcon className='h-8 w-8 stroke-1 text-white md:text-stone-500' />
       </button>
       {/* Image */}
-      <section className='relative aspect-[4/3] h-min shrink-0 overflow-hidden sm:aspect-square sm:shrink sm:rounded-2xl md:basis-2/5'>
+      <section className='relative aspect-[4/3] h-min shrink-0 overflow-hidden sm:aspect-square sm:rounded-2xl sm:max-md:w-48 md:m-4 md:mr-0 md:shrink md:basis-2/5 lg:m-8 lg:mr-0'>
         <Image
           style={{ WebkitTouchCallout: 'none' }}
           draggable={false}
           className='object-cover'
-          src={
-            commodityOnMenu.commodity.image?.path ??
-            settings.RESOURCE_FOOD_PLACEHOLDER
-          }
+          src={com.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER}
           sizes='(max-width: 375px) 100vw, (max-width: 750px) 75vw, 640px'
-          alt={commodityOnMenu.commodity.name ?? 'food placeholder'}
+          alt={com.commodity.name ?? 'food placeholder'}
         />
       </section>
       {/* Form */}
       <form
-        className='group flex shrink-0 grow flex-col gap-8 p-4 @container/detail sm:p-0 md:overflow-y-auto'
-        data-ui={twData({ available: maxOrderQuantity !== 0 })}
+        className='group flex shrink-0 grow flex-col gap-8 p-4 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-8'
+        data-ui={twData({ available: !isUnavailable })}
       >
         {/* Info */}
-        <header className='flex flex-col gap-2'>
+        <header className='flex flex-col gap-2 lg:gap-4'>
           <h1 className='indent-[0.1em] text-3xl font-bold tracking-widest text-stone-800'>
-            {commodityOnMenu.commodity.name}
+            {com.commodity.name}
           </h1>
           <h2 className='indent-[0.05em] text-3xl tracking-wider text-yellow-500'>
-            ${commodityOnMenu.commodity.price}
+            ${com.commodity.price}
           </h2>
-          {commodityOnMenu.commodity.description !== '' && (
-            <p className='text-stone-500'>
-              {commodityOnMenu.commodity.description}
-            </p>
+          {com.commodity.description !== '' && (
+            <p className='text-stone-500'>{com.commodity.description}</p>
           )}
         </header>
         {/* Metadata */}
-        {(isValidateStock || isValidateLimitPerUser) && (
-          <div className='flex flex-col gap-2'>
-            {isValidateStock && (
+        {(validateMetadata.isValidateStock ||
+          validateMetadata.isValidateLimitPerUser) && (
+          <div className='flex flex-col gap-2 text-sm'>
+            {validateMetadata.isValidateStock && (
               <div className='flex items-center gap-2'>
                 <Square3Stack3DIcon className='h-4 w-4 text-stone-300' />
-                <p className='indent-[0.05em] tracking-wider text-stone-500'>{`限量 ${commodityOnMenu.stock} 份`}</p>
-                {commodityOnMenu.orderedCount.total >=
-                  commodityOnMenu.stock && (
-                  <p className='text-red-400'>已售完</p>
-                )}
+                <p className='indent-[0.05em] tracking-wider text-stone-500'>{`限量 ${com.stock} 份`}</p>
               </div>
             )}
-            {isValidateLimitPerUser && (
+            {validateMetadata.isValidateLimitPerUser && (
               <div className='flex items-center gap-2'>
                 <UserPlusIcon className='h-4 w-4 text-stone-300' />
-                <p className='indent-[0.05em] tracking-wider text-stone-500'>{`每人限點 ${commodityOnMenu.limitPerUser} 份`}</p>
-                {commodityOnMenu.orderedCount.user >=
-                  commodityOnMenu.limitPerUser && (
-                  <p className='text-red-400'>已達購買上限</p>
-                )}
+                <p className='indent-[0.05em] tracking-wider text-stone-500'>{`每人限點 ${com.limitPerUser} 份`}</p>
               </div>
             )}
           </div>
         )}
         <div className='border-b border-stone-200'></div>
         {/* Option Sets */}
-        <main className='flex flex-col gap-4 group-data-not-available:pointer-events-none group-data-not-available:opacity-50'>
-          {(commodityOnMenu.commodity.optionSets as OptionSet[]).map(
-            (optionSet) => (
-              <OptionSetMemo
-                key={optionSet.name}
-                optionSet={optionSet}
-                selectedOptions={selectedOptionSets[optionSet.name]}
-              />
-            ),
-          )}
+        <main className='flex flex-col gap-4 group-data-not-available:pointer-events-none group-data-not-available:opacity-60'>
+          {(com.commodity.optionSets as OptionSet[]).map((optionSet) => (
+            <OptionSetMemo
+              key={optionSet.name}
+              optionSet={optionSet}
+              selectedOptions={selectedOptionSets[optionSet.name]}
+            />
+          ))}
         </main>
         {/* Spacer For sm */}
         <div className='-my-4 shrink grow'></div>
         {/* Quantity */}
-        <section className='flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:opacity-50'>
+        <section className='flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:hidden'>
           <div className='flex items-center gap-2 rounded-full bg-stone-100 p-1'>
             <input type='number' className='hidden' value={quantity} readOnly />
             <button
@@ -173,21 +181,40 @@ function CommodityOnMenuDetailContent(props: {
             <button
               type='button'
               onClick={() => handleQuantityButtonClick('INCREASE')}
-              disabled={quantity === maxOrderQuantity}
+              disabled={isUnavailable}
               className='rounded-full p-1 text-stone-500 hover:bg-stone-200 active:bg-stone-200 disabled:pointer-events-none disabled:text-stone-300'
             >
               <PlusIcon className='h-5 w-5' />
             </button>
           </div>
         </section>
-        {/* Buttons */}
+        {/* Unavailable message */}
+        {isUnavailable && (
+          <section className='flex flex-col gap-1 rounded-md bg-stone-100 p-4 text-stone-500'>
+            <div className='flex items-center gap-2'>
+              <ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' />
+              無法加入購物車
+            </div>
+            <ul className='flex flex-col gap-1 text-stone-400'>
+              {[
+                ...(menuUnavailableMessage ? [menuUnavailableMessage] : []),
+                ...validateMetadata.unavailableMessages,
+              ].map((message) => (
+                <li className='ml-7 text-sm' key={message}>
+                  {message}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {/* Submit */}
         <footer className='flex shrink-0 flex-col gap-4 @xs/detail:flex-row-reverse'>
           <Button
-            isDisabled={maxOrderQuantity === 0}
+            isDisabled={isUnavailable}
             className='h-12 grow'
             type='submit'
             textClassName='font-bold'
-            label={maxOrderQuantity === 0 ? '無法購買' : '加到購物車'}
+            label={isUnavailable ? '無法訂購' : '加到購物車'}
           />
           <Button
             label='返回'
@@ -201,7 +228,7 @@ function CommodityOnMenuDetailContent(props: {
   )
 }
 
-export default memo(CommodityOnMenuDetailContent)
+export default memo(COMDialogContent)
 
 function OptionSet(props: { optionSet: OptionSet; selectedOptions: string[] }) {
   const { optionSet } = props

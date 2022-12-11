@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge'
 
 const CLOSE_TRIGGER_THRESHOLD_RATIO = 0.5
 
-export default function SwipeableContent(props: {
+export default function Swiper(props: {
   children: ReactNode
   onClose: () => void
   breakingPoint?: number

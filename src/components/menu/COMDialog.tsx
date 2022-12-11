@@ -4,15 +4,15 @@ import { twMerge } from 'tailwind-merge'
 
 import Title from '@/components/core/Title'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
-import CommodityOnMenuDetailContent from './CommodityOnMenuDetailContent'
-import SwipeableContent from '../core/SwipeableContent'
+import COMDialogContent from './COMDialogContent'
+import Swiper from '../core/Swiper'
 
-export default function CommodityOnMenuDetail(props: {
+export default function COMDialog(props: {
   isOpen: boolean
   onClose: () => void
-  commodityOnMenu?: CommodityOnMenu
+  com?: CommodityOnMenu
 }) {
-  const { commodityOnMenu } = props
+  const { com } = props
 
   // Reset state
   useEffect(() => {
@@ -21,9 +21,7 @@ export default function CommodityOnMenuDetail(props: {
 
   return (
     <>
-      {props.isOpen && commodityOnMenu && (
-        <Title prefix={commodityOnMenu.commodity.name} />
-      )}
+      {props.isOpen && com && <Title prefix={com.commodity.name} />}
       <Transition
         show={props.isOpen}
         className={twMerge(
@@ -55,13 +53,10 @@ export default function CommodityOnMenuDetail(props: {
           leaveTo='transform max-sm:translate-y-full sm:scale-50 sm:opacity-0'
           className='col-start-1 row-start-1 flex transform-gpu flex-col justify-center md:p-4 lg:p-8'
         >
-          {props.commodityOnMenu && (
-            <SwipeableContent onClose={props.onClose} breakingPoint={640}>
-              <CommodityOnMenuDetailContent
-                onClose={props.onClose}
-                commodityOnMenu={props.commodityOnMenu}
-              />
-            </SwipeableContent>
+          {props.com && (
+            <Swiper onClose={props.onClose} breakingPoint={640}>
+              <COMDialogContent onClose={props.onClose} com={props.com} />
+            </Swiper>
           )}
         </Transition.Child>
       </Transition>
