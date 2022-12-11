@@ -35,16 +35,13 @@ export default function Menu(props: {
     useState<CommoditiesOnMenuByCategory>({})
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const detailRef = useRef<HTMLDivElement>(null)
-  const unavailableMessage = useStore((state) => state.menuUnavailableMessage)
-  const setUnavailableMessage = useStore(
-    (state) => state.setMenuUnavailableMessage,
-  )
+  const setCurrentMenu = useStore((state) => state.setCurrentMenu)
 
   // Detect commodityId from query and open
   useEffect(() => {
     if (router.query.commodityId && data) {
       const commodityId = Number(router.query.commodityId)
-      const com = data.commoditiesOnMenu.find(
+      const com = data.commodities.find(
         (com) => com.commodity.id === commodityId,
       )
       if (com) {
@@ -74,7 +71,7 @@ export default function Menu(props: {
 
     // Group commodities by category
     const comsByCategory: CommoditiesOnMenuByCategory = {}
-    for (const com of data.commoditiesOnMenu) {
+    for (const com of data.commodities) {
       const categories = com.commodity.categories
       if (categories.length > 0) {
         for (const category of categories) {
@@ -110,24 +107,8 @@ export default function Menu(props: {
       }, {})
 
     setComsByCategory(result)
-
-    // Reset category
     setCurrentCategory(settings.MENU_CATEGORY_ALL)
-
-    // Validate menu
-    const now = new Date()
-    if (data.menu.closedDate && data.menu.closedDate < now) {
-      setUnavailableMessage('已經關閉訂購')
-    } else if (data.menu.publishedDate && data.menu.publishedDate > now) {
-      setUnavailableMessage('尚未開放訂購')
-    } else if (
-      data.menu.limitPerUser > 0 &&
-      data.menu.limitPerUser - data.menu.userOrderedCount! <= 0
-    ) {
-      setUnavailableMessage('已達全部餐點每人訂購上限')
-    } else {
-      setUnavailableMessage(null)
-    }
+    setCurrentMenu(data)
   }, [data])
 
   const handleDetailClose = useCallback(() => {
@@ -194,10 +175,19 @@ export default function Menu(props: {
             ref={detailRef}
             className='absolute inset-0 overflow-y-auto p-4 pt-[60px] @container/coms sm:pt-[64px] lg:p-8'
           >
-            {unavailableMessage && (
-              <section className='mb-4 flex items-center gap-2 rounded-md bg-stone-100 p-4 text-stone-500'>
-                <ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' />
-                {unavailableMessage}
+            {data.unavailableReasons.length > 0 && (
+              <section className='mb-4 flex flex-col gap-1 rounded-md bg-stone-100 p-4 text-stone-500'>
+                <div className='flex items-center gap-2'>
+                  <ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' />
+                  目前無法訂購餐點
+                </div>
+                <ul className='flex flex-col gap-1 text-stone-400'>
+                  {data.unavailableReasons.map((reson) => (
+                    <li className='ml-7 text-sm' key={reson}>
+                      {settings.MENU_UNAVAILABLE_REASON_MESSAGE[reson]}
+                    </li>
+                  ))}
+                </ul>
               </section>
             )}
             <COMsGrid

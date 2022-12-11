@@ -24,7 +24,8 @@ export type UserInfo = RouterOutput['user']['get']
 export type TransactionWithNames =
   RouterOutput['transaction']['getList']['transactions'][0]
 
-export type CommoditiesOnMenu = RouterOutput['menu']['get']['commoditiesOnMenu']
+export type Menu = RouterOutput['menu']['get']
+export type CommoditiesOnMenu = Menu['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]
 export type CommoditiesOnMenuByCategory = Record<
   string,

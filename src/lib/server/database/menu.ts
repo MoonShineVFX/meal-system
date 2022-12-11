@@ -1,6 +1,7 @@
-import { Menu, MenuType, OrderStatus } from '@prisma/client'
+import { MenuType, OrderStatus, Prisma } from '@prisma/client'
 
 import type { OptionSet } from '@/lib/common'
+import { MenuUnavailableReason, ComUnavailableReason } from '@/lib/common'
 import { prisma, log } from './define'
 
 export async function createMenu(
@@ -18,7 +19,7 @@ export async function createMenu(
   }
 
   // Check menu existence
-  if (await getMenu(type, undefined, date)) {
+  if (await getMenu(type, date, undefined, undefined)) {
     throw new Error('menu already exists')
   }
 
@@ -35,43 +36,33 @@ export async function createMenu(
   })
 }
 
-type GetMenuResult = Pick<
-  Menu,
-  | 'id'
-  | 'date'
-  | 'name'
-  | 'description'
-  | 'limitPerUser'
-  | 'publishedDate'
-  | 'closedDate'
-> & { userOrderedCount?: number }
+/** If userId is provided, userOrderAvailability will be returned */
 export async function getMenu(
-  menuId: number,
-  userId?: string,
-): Promise<GetMenuResult>
-export async function getMenu(
-  type: MenuType,
-  userId?: string,
+  type?: MenuType,
   date?: Date,
-): Promise<GetMenuResult>
-export async function getMenu(
-  menuIdOrType: number | MenuType,
+  menuId?: number,
   userId?: string,
-  date?: Date,
+  commodityId?: number,
+  transactionClient?: Prisma.TransactionClient,
 ) {
-  const isGetById = typeof menuIdOrType === 'number'
+  if (!type && !menuId) {
+    throw new Error('type or menuId is required')
+  }
+
+  const isGetById = !!menuId
+  const thisPrisma = transactionClient ?? prisma
 
   // Validate date and type
-  if (!isGetById && !date && menuIdOrType !== MenuType.MAIN) {
+  if (!isGetById && !date && type !== MenuType.MAIN) {
     throw new Error('date is required for non-main menu')
   }
 
-  // Get order
-  const menu = await prisma.menu.findFirst({
+  // Get menu
+  const menu = await thisPrisma.menu.findFirst({
     where: {
-      type: !isGetById ? (menuIdOrType as MenuType) : undefined,
+      type: !isGetById ? type : undefined,
       date,
-      id: isGetById ? menuIdOrType : undefined,
+      id: isGetById ? menuId : undefined,
       isDeleted: false,
     },
     orderBy: {
@@ -85,6 +76,60 @@ export async function getMenu(
       limitPerUser: true,
       publishedDate: true,
       closedDate: true,
+      commodities: userId
+        ? {
+            where: {
+              commodityId,
+              isDeleted: false,
+              commodity: {
+                isDeleted: false,
+              },
+            },
+            select: {
+              limitPerUser: true,
+              stock: true,
+              commodity: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  price: true,
+                  optionSets: true,
+                  image: {
+                    select: {
+                      path: true,
+                      width: true,
+                      height: true,
+                    },
+                  },
+                  categories: {
+                    select: {
+                      mainName: true,
+                      subName: true,
+                    },
+                  },
+                },
+              },
+              orderItems: {
+                where: {
+                  order: {
+                    status: {
+                      not: OrderStatus.CANCELED,
+                    },
+                  },
+                },
+                select: {
+                  order: {
+                    select: {
+                      userId: true,
+                    },
+                  },
+                  quantity: true,
+                },
+              },
+            },
+          }
+        : undefined,
     },
   })
 
@@ -92,28 +137,75 @@ export async function getMenu(
     throw new Error('menu not found')
   }
 
-  // Get user orders of the menu
-  if (userId) {
-    const menuOrders = await prisma.orderItem.aggregate({
-      where: {
-        menuId: menu.id,
-        order: {
-          userId,
-          status: {
-            not: 'CANCELED',
-          },
-        },
+  // Validate menu and coms status
+  let menuOrderedCount = {
+    total: 0,
+    user: 0,
+  }
+
+  // coms
+  const validatedComs = menu.commodities?.map((com) => {
+    const orderedCount = com.orderItems.reduce(
+      (acc, cur) => {
+        if (cur.order.userId === userId) {
+          menuOrderedCount.user += cur.quantity
+          acc.user += cur.quantity
+        }
+        menuOrderedCount.total += cur.quantity
+        acc.total += cur.quantity
+        return acc
       },
-      _sum: {
-        quantity: true,
+      {
+        total: 0,
+        user: 0,
       },
-    })
-    return {
-      ...menu,
-      userOrderedCount: menuOrders._sum?.quantity ?? 0,
+    )
+
+    // validate com
+    const comUnavailableReasons: ComUnavailableReason[] = []
+    if (com.stock !== 0 && orderedCount.total >= com.stock) {
+      comUnavailableReasons.push(ComUnavailableReason.STOCK_OUT)
     }
-  } else {
-    return menu
+    if (com.limitPerUser !== 0 && orderedCount.user >= com.limitPerUser) {
+      comUnavailableReasons.push(
+        ComUnavailableReason.COM_LIMIT_PER_USER_EXCEEDED,
+      )
+    }
+
+    const maxQuantity = Math.min(
+      com.stock !== 0 ? com.stock - orderedCount.total : 99,
+      com.limitPerUser !== 0 ? com.limitPerUser - orderedCount.user : 99,
+      menu.limitPerUser !== 0 ? menu.limitPerUser - orderedCount.total : 99,
+    )
+
+    const { orderItems, ...rest } = com
+
+    return {
+      ...rest,
+      maxQuantity,
+      unavailableReasons: comUnavailableReasons,
+    }
+  })
+
+  // validate menu
+  const menuUnavailableReasons: MenuUnavailableReason[] = []
+  const now = new Date()
+  if (menu.publishedDate && menu.publishedDate > now) {
+    menuUnavailableReasons.push(MenuUnavailableReason.NOT_PUBLISHED)
+  }
+  if (menu.closedDate && menu.closedDate < now) {
+    menuUnavailableReasons.push(MenuUnavailableReason.CLOSED)
+  }
+  if (menu.limitPerUser !== 0 && menuOrderedCount.total >= menu.limitPerUser) {
+    menuUnavailableReasons.push(
+      MenuUnavailableReason.MENU_LIMIT_PER_USER_EXCEEDED,
+    )
+  }
+
+  return {
+    ...menu,
+    commodities: validatedComs,
+    unavailableReasons: menuUnavailableReasons,
   }
 }
 
@@ -219,87 +311,6 @@ export async function createCategory(mainName: string, subName: string) {
   })
 }
 
-export async function getCommoditiesOnMenu(
-  menuId: number,
-  userId: string,
-  commodityId?: number,
-) {
-  const COMs = await prisma.commodityOnMenu.findMany({
-    where: {
-      menuId,
-      commodityId,
-      isDeleted: false,
-      commodity: {
-        isDeleted: false,
-      },
-    },
-    select: {
-      limitPerUser: true,
-      stock: true,
-      commodity: {
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          price: true,
-          optionSets: true,
-          image: {
-            select: {
-              path: true,
-              width: true,
-              height: true,
-            },
-          },
-          categories: {
-            select: {
-              mainName: true,
-              subName: true,
-            },
-          },
-        },
-      },
-      orderItems: {
-        where: {
-          order: {
-            status: {
-              not: OrderStatus.CANCELED,
-            },
-          },
-        },
-        select: {
-          order: {
-            select: {
-              userId: true,
-            },
-          },
-          quantity: true,
-        },
-      },
-    },
-  })
-
-  // Calculate sum of ordered quantity and user's ordered quantity
-  return COMs.map((COM) => {
-    const orderedCount = COM.orderItems.reduce(
-      (acc, cur) => ({
-        total: acc.total + cur.quantity,
-        user: acc.user + (cur.order.userId === userId ? cur.quantity : 0),
-      }),
-      {
-        total: 0,
-        user: 0,
-      },
-    )
-
-    const { orderItems, ...rest } = COM
-
-    return {
-      ...rest,
-      orderedCount,
-    }
-  })
-}
-
 export async function createCartItem(
   userId: string,
   menuId: number,
@@ -308,37 +319,34 @@ export async function createCartItem(
   options: string[],
 ) {
   return await prisma.$transaction(async (client) => {
-    // Validate quantity
-    const menu = await client.menu.findUnique({
-      where: {
-        id: menuId,
-      },
-    })
+    // Validate availability
+    const menu = await getMenu(
+      undefined,
+      undefined,
+      menuId,
+      userId,
+      commodityId,
+      client,
+    )
     if (!menu) {
       throw new Error('menu not found')
     }
 
-    const now = new Date()
-    if (
-      (menu.publishedDate && now < menu.publishedDate) ||
-      (menu.closedDate && now > menu.closedDate)
-    ) {
-      throw new Error('menu is not available')
-    }
-
-    const COMs = await getCommoditiesOnMenu(menuId, userId, commodityId)
-    if (COMs.length === 0) {
+    const com = menu.commodities.find((com) => com.commodity.id === commodityId)
+    if (!com) {
       throw new Error('commodity not found')
     }
-    const COM = COMs[0]
 
-    const maxQuantity = Math.min(
-      COM.stock !== 0 ? COM.stock - COM.orderedCount.total : 99,
-      COM.limitPerUser !== 0 ? COM.limitPerUser - COM.orderedCount.user : 99,
-      menu.limitPerUser !== 0 ? menu.limitPerUser - COM.orderedCount.total : 99,
-    )
-    if (quantity > maxQuantity) {
-      throw new Error(`quantity exceeds limit: ${maxQuantity}`)
+    if (menu.unavailableReasons.length > 0) {
+      throw new Error(`menu unavailable: ${menu.unavailableReasons.join(', ')}`)
+    }
+    if (com.unavailableReasons.length > 0) {
+      throw new Error(
+        `commodity unavailable: ${com.unavailableReasons.join(', ')}`,
+      )
+    }
+    if (quantity > com.maxQuantity) {
+      throw new Error(`quantity exceeds max quantity: ${com.maxQuantity}`)
     }
 
     // Create cart item

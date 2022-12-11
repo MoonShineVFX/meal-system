@@ -1,16 +1,16 @@
 import { StateCreator } from 'zustand'
 
 import type { StoreState } from './define'
+import type { Menu } from '@/lib/client/trpc'
 
 export interface MenuSlice {
-  menuUnavailableMessage: string | null
-  setMenuUnavailableMessage: (menuUnavailableMessage: string | null) => void
+  currentMenu: Menu | null
+  setCurrentMenu: (menu: Menu | null) => void
 }
 
 export const createMenuSlice: StateCreator<StoreState, [], [], MenuSlice> = (
   set,
 ) => ({
-  menuUnavailableMessage: null,
-  setMenuUnavailableMessage: (menuUnavailableMessage) =>
-    set({ menuUnavailableMessage }),
+  currentMenu: null,
+  setCurrentMenu: (menu) => set({ currentMenu: menu }),
 })

@@ -44,6 +44,7 @@ export default function EventListener() {
   useEffect(() => {
     const handleSocketOpen = async () => {
       console.warn('TRPC Socket reopened')
+      // Revalidate due to tanstack query not support websocket refetchOnReconnect
       trpcContext.invalidate()
       addNotification({
         type: NotificationType.INFO,

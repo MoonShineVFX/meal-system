@@ -1,5 +1,28 @@
 import { TransactionType, UserRole } from '@prisma/client'
 
+/* Types */
+export enum CurrencyType {
+  CREDIT = 'credit',
+  POINT = 'point',
+}
+
+export type OptionSet = {
+  name: string
+  multiSelect: boolean
+  options: string[]
+}
+
+export enum MenuUnavailableReason {
+  NOT_PUBLISHED = 'NOT_PUBLISHED',
+  CLOSED = 'CLOSED',
+  MENU_LIMIT_PER_USER_EXCEEDED = 'MENU_LIMIT_PER_USER_EXCEEDED',
+}
+
+export enum ComUnavailableReason {
+  STOCK_OUT = 'STOCK_OUT',
+  COM_LIMIT_PER_USER_EXCEEDED = 'COM_LIMIT_PER_USER_EXCEEDED',
+}
+
 /* Settings */
 export const settings = {
   /* Auth */
@@ -51,20 +74,17 @@ export const settings = {
   /* Menu */
   MENU_CATEGORY_ALL: '全部',
   MENU_CATEGORY_NULL: '未分類',
+  MENU_UNAVAILABLE_REASON_MESSAGE: {
+    [MenuUnavailableReason.NOT_PUBLISHED]: '尚未到達開放訂購時間',
+    [MenuUnavailableReason.CLOSED]: '已過開放訂購時間',
+    [MenuUnavailableReason.MENU_LIMIT_PER_USER_EXCEEDED]:
+      '已達使用者的全部餐點訂購總計上限',
+    [ComUnavailableReason.STOCK_OUT]: '餐點已售完',
+    [ComUnavailableReason.COM_LIMIT_PER_USER_EXCEEDED]:
+      '此餐點已達使用者訂購上限',
+  },
   /* Misc */
   TITLE: '夢想餐飲',
-}
-
-/* Types */
-export enum CurrencyType {
-  CREDIT = 'credit',
-  POINT = 'point',
-}
-
-export type OptionSet = {
-  name: string
-  multiSelect: boolean
-  options: string[]
 }
 
 /* Functions */

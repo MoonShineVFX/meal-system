@@ -22,15 +22,8 @@ function COMDialogContent(props: {
   const [selectedOptionSets, setSelectedOptionSets] =
     useState<SelectedOptionSet>({})
   const [quantity, setQuantity] = useState(1)
-  const [validateMetadata, setValidateMetadata] = useState({
-    isValidateStock: false,
-    isValidateLimitPerUser: false,
-    maxOrderQuantity: 99,
-    unavailableMessages: [] as string[],
-  })
-  const menuUnavailableMessage = useStore(
-    (state) => state.menuUnavailableMessage,
-  )
+  const [isLimited, setIsLimited] = useState(false)
+  const menu = useStore((state) => state.currentMenu)
 
   // Reset state
   useEffect(() => {
@@ -50,35 +43,10 @@ function COMDialogContent(props: {
         ),
       )
 
-      const isValidateStock = com.stock !== 0
-      const isValidateLimitPerUser = com.limitPerUser !== 0
-      const unavailableMessages = [] as string[]
-
-      if (isValidateStock && com.orderedCount.total >= com.stock)
-        unavailableMessages.push('已全部售完')
-      if (isValidateLimitPerUser && com.orderedCount.user >= com.limitPerUser)
-        unavailableMessages.push('已達該餐點每人訂購上限')
-
-      setValidateMetadata({
-        isValidateStock,
-        isValidateLimitPerUser,
-        maxOrderQuantity: Math.min(
-          isValidateStock ? com.stock - com.orderedCount.total : 99,
-          isValidateLimitPerUser
-            ? com.limitPerUser - com.orderedCount.user
-            : 99,
-        ),
-        unavailableMessages,
-      })
+      setIsLimited(com.limitPerUser > 0 || com.stock > 0)
+      setQuantity((prev) => Math.min(prev ?? 1, com.maxQuantity))
     }
   }, [com])
-
-  // Set quantity to maxOrderQuantity when it changes
-  useEffect(() => {
-    setQuantity((prev) =>
-      Math.min(prev ?? 1, validateMetadata.maxOrderQuantity),
-    )
-  }, [validateMetadata])
 
   const handleQuantityButtonClick = useCallback(
     (action: 'INCREASE' | 'DECREASE') => {
@@ -89,8 +57,7 @@ function COMDialogContent(props: {
   )
 
   const isUnavailable =
-    validateMetadata.unavailableMessages.length > 0 ||
-    menuUnavailableMessage !== null
+    (menu?.unavailableReasons.length ?? 0 + com.unavailableReasons.length) > 0
 
   return (
     <section
@@ -133,16 +100,15 @@ function COMDialogContent(props: {
           )}
         </header>
         {/* Metadata */}
-        {(validateMetadata.isValidateStock ||
-          validateMetadata.isValidateLimitPerUser) && (
+        {isLimited && (
           <div className='flex flex-col gap-2 text-sm'>
-            {validateMetadata.isValidateStock && (
+            {com.stock > 0 && (
               <div className='flex items-center gap-2'>
                 <Square3Stack3DIcon className='h-4 w-4 text-stone-300' />
                 <p className='indent-[0.05em] tracking-wider text-stone-500'>{`限量 ${com.stock} 份`}</p>
               </div>
             )}
-            {validateMetadata.isValidateLimitPerUser && (
+            {com.limitPerUser > 0 && (
               <div className='flex items-center gap-2'>
                 <UserPlusIcon className='h-4 w-4 text-stone-300' />
                 <p className='indent-[0.05em] tracking-wider text-stone-500'>{`每人限點 ${com.limitPerUser} 份`}</p>
@@ -197,11 +163,11 @@ function COMDialogContent(props: {
             </div>
             <ul className='flex flex-col gap-1 text-stone-400'>
               {[
-                ...(menuUnavailableMessage ? [menuUnavailableMessage] : []),
-                ...validateMetadata.unavailableMessages,
-              ].map((message) => (
-                <li className='ml-7 text-sm' key={message}>
-                  {message}
+                ...(menu?.unavailableReasons ?? []),
+                ...com.unavailableReasons,
+              ].map((reason) => (
+                <li className='ml-7 text-sm' key={reason}>
+                  {settings.MENU_UNAVAILABLE_REASON_MESSAGE[reason]}
                 </li>
               ))}
             </ul>
