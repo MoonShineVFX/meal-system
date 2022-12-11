@@ -54,9 +54,7 @@ function NotificationPod(props: {
   const targetLength = isOpen ? (isDesktop ? 90 : 72) : 0 // border padding
   const gap =
     props.index !== 0
-      ? ` ${isDesktop ? '-' : '+'} (100% + ${isDesktop ? 24 : 16}px) * ${
-          props.index
-        }`
+      ? ` + (100% + ${isDesktop ? 24 : 16}px) * ${props.index}`
       : ''
 
   return (
