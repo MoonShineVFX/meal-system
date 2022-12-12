@@ -25,7 +25,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
     <>
       <Title />
       {/* Content */}
-      <div className='grid h-full grid-rows-[auto_64px] sm:grid-cols-[240px_auto] sm:grid-rows-none'>
+      <div className='grid h-full grid-rows-[auto_4rem] sm:grid-cols-[15rem_auto] sm:grid-rows-none'>
         <nav
           className={twMerge(
             'order-last sm:order-none',

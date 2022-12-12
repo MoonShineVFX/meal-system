@@ -34,7 +34,7 @@ export default function PageTransaction(props: { transactionId?: string }) {
         <div className='relative h-full'>
           <div
             ref={transactionListScrollRef} // for iphone 5 width
-            className='absolute inset-0 grid grid-rows-[min-content_auto] overflow-y-auto @xl:grid-cols-[minmax(0,256px)_minmax(0,1fr)] @xl:grid-rows-none'
+            className='absolute inset-0 grid grid-rows-[min-content_auto] overflow-y-auto @xl:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] @xl:grid-rows-none'
           >
             <Wallet />
             <TransactionList

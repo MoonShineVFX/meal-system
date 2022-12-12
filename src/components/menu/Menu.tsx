@@ -182,7 +182,7 @@ export default function Menu(props: {
         <section className='relative grow'>
           <div
             ref={detailRef}
-            className='absolute inset-0 overflow-y-auto p-4 pt-[60px] @container/coms sm:pt-[64px] lg:p-8'
+            className='absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] @container/coms sm:pt-[4rem] lg:p-8'
           >
             {data && data.unavailableReasons.length > 0 && (
               <section className='mb-4 flex flex-col gap-1 rounded-md bg-stone-100 p-4 text-stone-500'>

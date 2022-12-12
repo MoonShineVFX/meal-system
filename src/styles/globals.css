@@ -10,9 +10,9 @@ body,
 }
 
 #nprogress .bar {
-  @apply h-[3px] bg-yellow-500;
-  box-shadow: 0 0 8px theme('colors.transparent'),
-    0 0 5px theme('colors.transparent');
+  @apply h-[0.1875rem] bg-yellow-500;
+  box-shadow: 0 0 0.5rem theme('colors.transparent'),
+    0 0 0.3125rem theme('colors.transparent');
 }
 #nprogress .peg {
   display: none;

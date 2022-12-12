@@ -51,17 +51,17 @@ function NotificationPod(props: {
 
   const [Icon, iconStyle] = iconMap[notification.type]
   const isDesktop = window.innerWidth > 1024
-  const targetLength = isOpen ? (isDesktop ? 90 : 72) : 0 // border padding
+  const targetLength = isOpen ? (isDesktop ? 5.625 : 4.5) : 0 // border padding
   const gap =
     props.index !== 0
-      ? ` + (100% + ${isDesktop ? 24 : 16}px) * ${props.index}`
+      ? ` + (100% + ${isDesktop ? 1.5 : 1}rem) * ${props.index}`
       : ''
 
   return (
     <div
       className='absolute top-0 flex items-center gap-1 rounded-2xl border border-stone-300 bg-white py-3 px-4 shadow-lg transition-all lg:p-4'
       style={{
-        transform: `translateY(calc(${targetLength}px - 100%${gap}))`,
+        transform: `translateY(calc(${targetLength}rem - 100%${gap}))`,
         transitionDuration: `${settings.NOTIFICATION_DELAY_MS}ms`,
         opacity: isOpen ? 1 : 0,
       }}

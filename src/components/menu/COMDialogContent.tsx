@@ -92,7 +92,7 @@ function COMDialogContent(props: {
           <h1 className='indent-[0.1em] text-3xl font-bold tracking-widest text-stone-800'>
             {com.commodity.name}
           </h1>
-          <h2 className='indent-[0.05em] text-3xl tracking-wider text-yellow-500'>
+          <h2 className='indent-[0.05em] text-2xl tracking-wider text-yellow-500 lg:-mt-2'>
             ${com.commodity.price}
           </h2>
           {com.commodity.description !== '' && (
@@ -211,7 +211,7 @@ function OptionSet(props: { optionSet: OptionSet; selectedOptions: string[] }) {
               name={optionSet.name}
               value={optionName}
             />
-            <div className='m-[1px] cursor-pointer rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider hover:border-stone-400 active:border-stone-400 peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500'>
+            <div className='m-[0.0625rem] cursor-pointer rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider hover:border-stone-400 active:border-stone-400 peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500'>
               {optionName}
             </div>
           </label>

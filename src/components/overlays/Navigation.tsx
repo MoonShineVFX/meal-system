@@ -90,7 +90,7 @@ function ProfileButton(props: { className?: string }) {
         leaveFrom='transform scale-100 opacity-100'
         leaveTo='transform scale-50 opacity-0'
       >
-        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[1px] border-stone-200 bg-white py-3 px-2 indent-[0.05em] tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
+        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[0.0625rem] border-stone-200 bg-white py-3 px-2 indent-[0.05em] tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
           <div className='w-full cursor-pointer rounded-xl py-2 px-4 hover:bg-stone-100 active:bg-stone-100'>
             <a href={settings.REPORT_URL} target='_blank'>
               回報問題
@@ -103,7 +103,7 @@ function ProfileButton(props: { className?: string }) {
             登出
           </div>
           {/* Arrow */}
-          <div className='absolute right-[14px] bottom-0 h-4 w-10 translate-y-full overflow-hidden sm:hidden'>
+          <div className='absolute right-[0.875rem] bottom-0 h-4 w-10 translate-y-full overflow-hidden sm:hidden'>
             <div className='h-6 w-6 origin-top-right translate-x-4 -translate-y-1 rotate-45 border border-stone-200 bg-white'></div>
           </div>
         </Popover.Panel>
