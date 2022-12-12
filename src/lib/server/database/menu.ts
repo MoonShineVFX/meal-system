@@ -1,6 +1,6 @@
 import { MenuType, OrderStatus, Prisma } from '@prisma/client'
 
-import type { OptionSet, ComodityOptions } from '@/lib/common'
+import type { OptionSet, CommodityOptions } from '@/lib/common'
 import { MenuUnavailableReason, ComUnavailableReason } from '@/lib/common'
 import { prisma, log } from './define'
 
@@ -337,7 +337,7 @@ export async function createCartItem(
   menuId: number,
   commodityId: number,
   quantity: number,
-  options: ComodityOptions,
+  options: CommodityOptions,
 ) {
   // Generate optionsKey
   const optionsKey = Object.entries(options)
@@ -359,21 +359,19 @@ export async function createCartItem(
       client,
     )
     if (!menu) {
-      throw new Error('menu not found')
+      throw new Error('找不到指定菜單')
     }
 
     const com = menu.commodities.find((com) => com.commodity.id === commodityId)
     if (!com) {
-      throw new Error('commodity not found')
+      throw new Error('找不到指定餐點')
     }
 
     if (menu.unavailableReasons.length > 0) {
-      throw new Error(`menu unavailable: ${menu.unavailableReasons.join(', ')}`)
+      throw new Error(`菜單目前沒有開放: ${menu.unavailableReasons.join(', ')}`)
     }
     if (com.unavailableReasons.length > 0) {
-      throw new Error(
-        `commodity unavailable: ${com.unavailableReasons.join(', ')}`,
-      )
+      throw new Error(`餐點無法訂購: ${com.unavailableReasons.join(', ')}`)
     }
     if (quantity > com.maxQuantity) {
       throw new Error(`quantity exceeds max quantity: ${com.maxQuantity}`)
@@ -386,24 +384,24 @@ export async function createCartItem(
         (optionSet) => optionSet.name === optionName,
       )
       if (!matchOptionSet) {
-        throw new Error(`optionSet not found: ${optionName}`)
+        throw new Error(`找不到選項: ${optionName}`)
       }
 
       if (Array.isArray(optionValue)) {
         if (!matchOptionSet.multiSelect) {
-          throw new Error(`optionSet not multi-selectable: ${optionName}`)
+          throw new Error(`選項不是多選: ${optionName}`)
         }
         if (
           !optionValue.every((value) => matchOptionSet.options.includes(value))
         ) {
-          throw new Error(`option not found: ${optionName} - ${optionValue}`)
+          throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
         }
       } else {
         if (matchOptionSet.multiSelect) {
-          throw new Error(`optionSet is multi-selectable: ${optionName}`)
+          throw new Error(`選項不是單選: ${optionName}`)
         }
         if (!matchOptionSet.options.includes(optionValue)) {
-          throw new Error(`option not found: ${optionName} - ${optionValue}`)
+          throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
         }
       }
     }

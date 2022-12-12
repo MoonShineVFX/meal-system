@@ -1,6 +1,10 @@
 import { TransactionType, UserRole } from '@prisma/client'
 
 /* Types */
+export enum EVENT_MESSAGE {
+  ADD_CART = '成功加入購物車',
+}
+
 export enum CurrencyType {
   CREDIT = 'credit',
   POINT = 'point',
@@ -12,7 +16,7 @@ export type OptionSet = {
   options: string[]
 }
 
-export type ComodityOptions = Record<string, string | string[]>
+export type CommodityOptions = Record<string, string | string[]>
 
 export enum MenuUnavailableReason {
   NOT_PUBLISHED = 'NOT_PUBLISHED',
@@ -80,10 +84,10 @@ export const settings = {
     [MenuUnavailableReason.NOT_PUBLISHED]: '尚未到達開放訂購時間',
     [MenuUnavailableReason.CLOSED]: '已過開放訂購時間',
     [MenuUnavailableReason.MENU_LIMIT_PER_USER_EXCEEDED]:
-      '已達使用者的全部餐點訂購總計上限',
+      '您已達全部餐點的訂購上限',
     [ComUnavailableReason.STOCK_OUT]: '餐點已售完',
     [ComUnavailableReason.COM_LIMIT_PER_USER_EXCEEDED]:
-      '此餐點已達使用者訂購上限',
+      '您已達此餐點的訂購上限',
   },
   /* Misc */
   TITLE: '夢想餐飲',

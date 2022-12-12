@@ -1,33 +1,37 @@
-import { memo, useState, useEffect, useCallback } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
-import { PlusIcon } from '@heroicons/react/24/outline'
-import { MinusIcon } from '@heroicons/react/24/outline'
-import { UserPlusIcon } from '@heroicons/react/20/solid'
-import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
-import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
+import { memo, useState, useCallback, useEffect } from 'react'
 import {
   useForm,
   SubmitHandler,
   UseFormRegister,
   Control,
   useController,
+  FieldErrorsImpl,
 } from 'react-hook-form'
+import { XMarkIcon } from '@heroicons/react/24/outline'
+import { PlusIcon } from '@heroicons/react/24/outline'
+import { MinusIcon } from '@heroicons/react/24/outline'
+import { UserPlusIcon } from '@heroicons/react/20/solid'
+import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
+import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
-import { settings, OptionSet, twData } from '@/lib/common'
+import { settings, OptionSet, twData, CommodityOptions } from '@/lib/common'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
-import { useStore } from '@/lib/client/store'
+import { useStore, NotificationType } from '@/lib/client/store'
+import trpc from '@/lib/client/trpc'
 
 type FormInputs = {
   quantity: number
-  options: Record<string, string>
+  options: CommodityOptions
 }
 
 function COMDialogContent(props: {
   onClose: () => void
   com: CommodityOnMenu
 }) {
+  const addCartMutation = trpc.menu.addComToCart.useMutation()
+  const addNotification = useStore((state) => state.addNotification)
   const { com } = props
   const [isLimited, setIsLimited] = useState(false)
   const menu = useStore((state) => state.currentMenu)
@@ -37,7 +41,20 @@ function COMDialogContent(props: {
     control,
     reset,
     formState: { errors },
-  } = useForm<FormInputs>({ defaultValues: { quantity: 1 } })
+  } = useForm<FormInputs>({
+    defaultValues: {
+      quantity: 1,
+      options: (com.commodity.optionSets as OptionSet[])
+        ?.filter((optionSet) => optionSet.multiSelect)
+        .reduce(
+          (acc: CommodityOptions, optionSet) => ({
+            ...acc,
+            [optionSet.name]: [],
+          }),
+          {},
+        ),
+    },
+  })
 
   // Reset selected option sets when commodity changes
   useEffect(() => {
@@ -48,14 +65,35 @@ function COMDialogContent(props: {
   }, [com])
 
   const handleCreateCartItem: SubmitHandler<FormInputs> = useCallback(
-    (formData) => {
-      console.log(formData)
+    async (formData) => {
+      addCartMutation.mutate(
+        {
+          commodityId: com.commodity.id,
+          menuId: menu!.id,
+          quantity: formData.quantity,
+          options: formData.options,
+        },
+        {
+          onSuccess: async () => {
+            props.onClose()
+          },
+          onError: async (error) => {
+            addNotification({
+              type: NotificationType.ERROR,
+              message: error.message,
+            })
+          },
+        },
+      )
     },
     [],
   )
 
-  const isUnavailable =
-    (menu?.unavailableReasons.length ?? 0 + com.unavailableReasons.length) > 0
+  // const isUnavailable =
+  //   (menu?.unavailableReasons.length ?? 0) + com.unavailableReasons.length > 0
+  const isUnavailable = false
+
+  const isBusy = addCartMutation.isLoading || addCartMutation.isSuccess
 
   return (
     <section
@@ -123,6 +161,7 @@ function COMDialogContent(props: {
               key={optionSet.name}
               optionSet={optionSet}
               register={register}
+              errors={errors}
             />
           ))}
         </main>
@@ -133,7 +172,7 @@ function COMDialogContent(props: {
           <QuantityInput
             control={control}
             isUnavailable={isUnavailable}
-            maxQuantity={com.maxQuantity}
+            maxQuantity={10}
             register={register}
           />
         </section>
@@ -159,15 +198,17 @@ function COMDialogContent(props: {
         {/* Submit */}
         <footer className='flex shrink-0 flex-col gap-4 @xs/detail:flex-row-reverse'>
           <Button
+            isBusy={isBusy}
+            isLoading={addCartMutation.isLoading || addCartMutation.isSuccess}
             isDisabled={isUnavailable}
-            className='h-12 grow'
+            className='h-12 grow @xs/detail:basis-3/5'
             type='submit'
             textClassName='font-bold'
             label={isUnavailable ? '無法訂購' : '加到購物車'}
           />
           <Button
             label='返回'
-            className='h-12 grow'
+            className='h-12 grow @xs/detail:basis-2/5'
             theme='support'
             onClick={props.onClose}
           />
@@ -182,12 +223,19 @@ export default memo(COMDialogContent)
 function OptionSet(props: {
   optionSet: OptionSet
   register: UseFormRegister<FormInputs>
+  errors: FieldErrorsImpl<FormInputs>
 }) {
   const { optionSet } = props
+  const error = props.errors.options?.[optionSet.name]
 
   return (
     <section className='flex flex-col gap-2'>
-      <h3 className='text font-bold'>{optionSet.name}</h3>
+      <h3 className='text font-bold'>
+        {optionSet.name}
+        <span className='ml-2 text-sm font-normal text-red-400'>
+          {error && error.message}
+        </span>
+      </h3>
       <div className='flex flex-wrap gap-2'>
         {props.optionSet.options.map((optionName) => (
           <label key={optionName}>
@@ -196,7 +244,7 @@ function OptionSet(props: {
               type={optionSet.multiSelect ? 'checkbox' : 'radio'}
               value={optionName}
               {...props.register(`options.${optionSet.name}`, {
-                required: !optionSet.multiSelect,
+                required: !optionSet.multiSelect && '請選擇一個選項',
               })}
             />
             <div className='m-[0.0625rem] cursor-pointer rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider hover:border-stone-400 active:border-stone-400 peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500'>
@@ -255,7 +303,7 @@ function QuantityInput(props: {
       <button
         type='button'
         onClick={() => handleQuantityButtonClick('INCREASE')}
-        disabled={props.isUnavailable}
+        disabled={props.isUnavailable || field.value >= props.maxQuantity}
         className='rounded-full p-1 text-stone-500 hover:bg-stone-200 active:bg-stone-200 disabled:pointer-events-none disabled:text-stone-300'
       >
         <PlusIcon className='h-5 w-5' />

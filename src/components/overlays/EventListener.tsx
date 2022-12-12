@@ -7,7 +7,7 @@ import trpc, {
   onSocketCloseCallbacks,
   TransactionWithNames,
 } from '@/lib/client/trpc'
-import { validateRole, settings } from '@/lib/common'
+import { validateRole, settings, EVENT_MESSAGE } from '@/lib/common'
 
 function makePaymentString(transaction: TransactionWithNames) {
   const actionString = settings.TRANSACTION_NAME[transaction.type]
@@ -72,6 +72,23 @@ export default function EventListener() {
       )
     }
   }, [])
+
+  /* User Message */
+  trpc.user.onMessage.useSubscription(undefined, {
+    onData: async (message) => {
+      addNotification({
+        type: NotificationType.SUCCESS,
+        message: message,
+      })
+
+      switch (message) {
+        case EVENT_MESSAGE.ADD_CART:
+          trpcContext.menu.get.invalidate()
+          break
+      }
+    },
+    onError: handleError,
+  })
 
   /* User Info */
   trpc.user.onUpdate.useSubscription(undefined, {

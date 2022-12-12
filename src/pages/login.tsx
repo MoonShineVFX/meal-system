@@ -50,7 +50,7 @@ export default function PageLogin() {
             message: '登入成功',
           })
         },
-        onError: (error) => {
+        onError: async (error) => {
           addNotification({
             type: NotificationType.ERROR,
             message: error.message,

@@ -67,7 +67,9 @@ function NotificationPod(props: {
       }}
     >
       <Icon className={`h-5 w-5 ${iconStyle}`} />
-      <p className='text-stone-700'>{notification.message}</p>
+      <p className='indent-[0.05em] tracking-wider text-stone-700'>
+        {notification.message}
+      </p>
     </div>
   )
 }
