@@ -3,8 +3,8 @@ import { MenuType } from '@prisma/client'
 
 import { userProcedure, router } from '../trpc'
 import { getMenu, createCartItem } from '@/lib/server/database'
-import { Event, eventEmitter } from '@/lib/server/event'
-import { EVENT_MESSAGE } from '@/lib/common'
+import { ServerEventName, eventEmitter } from '@/lib/server/event'
+import { SERVER_NOTIFY } from '@/lib/common'
 
 export const MenuRouter = router({
   get: userProcedure
@@ -43,8 +43,8 @@ export const MenuRouter = router({
       )
 
       eventEmitter.emit(
-        Event.USER_MESSAGE(ctx.userLite.id),
-        EVENT_MESSAGE.ADD_CART,
+        ServerEventName.USER_NOTIFY(ctx.userLite.id),
+        SERVER_NOTIFY.ADD_CART,
       )
     }),
 })

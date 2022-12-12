@@ -1,33 +1,15 @@
-import { UserRole } from '@prisma/client'
 import { useEffect, useCallback } from 'react'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
   onSocketOpenCallbacks,
   onSocketCloseCallbacks,
-  TransactionWithNames,
 } from '@/lib/client/trpc'
-import { validateRole, settings, EVENT_MESSAGE } from '@/lib/common'
-
-function makePaymentString(transaction: TransactionWithNames) {
-  const actionString = settings.TRANSACTION_NAME[transaction.type]
-  let paymentStrings: string[] = []
-  if (transaction.creditAmount > 0) {
-    paymentStrings.push(`${transaction.creditAmount} 元`)
-  }
-  if (transaction.pointAmount > 0) {
-    paymentStrings.push(`${transaction.pointAmount} 點`)
-  }
-
-  return `${actionString} ${paymentStrings.join(' 和 ')}`
-}
+import { SERVER_NOTIFY } from '@/lib/common'
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
-  const user = useStore((state) => state.user)
-  const setUser = useStore((state) => state.setUser)
   const addNotification = useStore((state) => state.addNotification)
-  const addTransactions = useStore((state) => state.addTransactions)
 
   const handleError = useCallback(async (error: Omit<Error, 'name'>) => {
     // Catch socket closed error
@@ -73,8 +55,8 @@ export default function EventListener() {
     }
   }, [])
 
-  /* User Message */
-  trpc.user.onMessage.useSubscription(undefined, {
+  /* Server Notification */
+  trpc.user.onNotify.useSubscription(undefined, {
     onData: async (message) => {
       addNotification({
         type: NotificationType.SUCCESS,
@@ -82,69 +64,13 @@ export default function EventListener() {
       })
 
       switch (message) {
-        case EVENT_MESSAGE.ADD_CART:
+        case SERVER_NOTIFY.ADD_CART:
           trpcContext.menu.get.invalidate()
           break
       }
     },
     onError: handleError,
   })
-
-  /* User Info */
-  trpc.user.onUpdate.useSubscription(undefined, {
-    onData: async (user) => {
-      setUser(user)
-    },
-    onError: handleError,
-  })
-
-  /* User Transactions */
-  trpc.transaction.onAdd.useSubscription(
-    { role: UserRole.USER },
-    {
-      onData: async (transaction) => {
-        trpcContext.user.get.invalidate()
-        addNotification({
-          type: NotificationType.SUCCESS,
-          message: `成功${makePaymentString(transaction)}`,
-        })
-        addTransactions(UserRole.USER, [transaction])
-      },
-      onError: handleError,
-    },
-  )
-
-  /* Staff Transactions */
-  if (validateRole(user!.role, UserRole.STAFF)) {
-    trpc.transaction.onAdd.useSubscription(
-      { role: UserRole.STAFF },
-      {
-        onData: async (transaction) => {
-          addTransactions(UserRole.STAFF, [transaction])
-          addNotification({
-            type: NotificationType.SUCCESS,
-            message: `${transaction.sourceUser.name} ${makePaymentString(
-              transaction,
-            )}`,
-          })
-        },
-        onError: handleError,
-      },
-    )
-  }
-
-  /* Admin Transactions */
-  if (validateRole(user!.role, UserRole.ADMIN)) {
-    trpc.transaction.onAdd.useSubscription(
-      { role: UserRole.ADMIN },
-      {
-        onData: async (transaction) => {
-          addTransactions(UserRole.ADMIN, [transaction])
-        },
-        onError: handleError,
-      },
-    )
-  }
 
   return null
 }

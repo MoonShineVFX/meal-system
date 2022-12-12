@@ -89,9 +89,8 @@ function COMDialogContent(props: {
     [],
   )
 
-  // const isUnavailable =
-  //   (menu?.unavailableReasons.length ?? 0) + com.unavailableReasons.length > 0
-  const isUnavailable = false
+  const isUnavailable =
+    (menu?.unavailableReasons.length ?? 0) + com.unavailableReasons.length > 0
 
   const isBusy = addCartMutation.isLoading || addCartMutation.isSuccess
 
@@ -172,7 +171,7 @@ function COMDialogContent(props: {
           <QuantityInput
             control={control}
             isUnavailable={isUnavailable}
-            maxQuantity={10}
+            maxQuantity={com.maxQuantity}
             register={register}
           />
         </section>
@@ -189,7 +188,7 @@ function COMDialogContent(props: {
                 ...com.unavailableReasons,
               ].map((reason) => (
                 <li className='ml-7 text-sm' key={reason}>
-                  {settings.MENU_UNAVAILABLE_REASON_MESSAGE[reason]}
+                  {reason}
                 </li>
               ))}
             </ul>

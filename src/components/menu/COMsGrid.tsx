@@ -20,7 +20,7 @@ function COMsGrid(props: {
   const comsByCategory = props.comsByCategory ?? comsByCategoryPlaceHolder
 
   return (
-    <section className='grid w-full grid-cols-[repeat(auto-fit,minmax(9.375rem,1fr))] gap-4 @2xl/coms:grid-cols-4 @5xl/coms:grid-cols-5 @7xl/coms:grid-cols-6 lg:gap-8'>
+    <section className='grid w-full grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-4 @2xl/coms:grid-cols-4 @5xl/coms:grid-cols-5 @7xl/coms:grid-cols-6 lg:gap-8'>
       {Object.entries(comsByCategory)
         .filter(([mainCategory]) => {
           if (currentCategory === settings.MENU_CATEGORY_ALL) return true

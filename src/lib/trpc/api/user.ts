@@ -8,8 +8,8 @@ import {
   getUserInfo,
   validateUserPassword,
 } from '@/lib/server/database'
-import { settings, generateCookie, EVENT_MESSAGE } from '@/lib/common'
-import { Event, eventEmitter } from '@/lib/server/event'
+import { settings, generateCookie, SERVER_NOTIFY } from '@/lib/common'
+import { ServerEventName, eventEmitter } from '@/lib/server/event'
 
 import { userProcedure, publicProcedure, router } from '../trpc'
 
@@ -22,8 +22,6 @@ type UserAdData = {
   truename: string
   username: string
 }
-
-type UserInfo = Awaited<ReturnType<typeof getUserInfo>>
 
 export const UserRouter = router({
   get: userProcedure.query(async ({ ctx }) => {
@@ -38,26 +36,13 @@ export const UserRouter = router({
 
     return user
   }),
-  onMessage: userProcedure.subscription(({ ctx }) => {
-    return observable<EVENT_MESSAGE>((observer) => {
-      const listener = (eventMessage: EVENT_MESSAGE) => {
+  onNotify: userProcedure.subscription(({ ctx }) => {
+    return observable<SERVER_NOTIFY>((observer) => {
+      const listener = (eventMessage: SERVER_NOTIFY) => {
         observer.next(eventMessage)
       }
 
-      const eventName = Event.USER_MESSAGE(ctx.userLite.id)
-      eventEmitter.on(eventName, listener)
-      return () => {
-        eventEmitter.off(eventName, listener)
-      }
-    })
-  }),
-  onUpdate: userProcedure.subscription(({ ctx }) => {
-    return observable<UserInfo>((observer) => {
-      const listener = (user: UserInfo) => {
-        observer.next(user)
-      }
-
-      const eventName = Event.USER_UPDATE(ctx.userLite.id)
+      const eventName = ServerEventName.USER_NOTIFY(ctx.userLite.id)
       eventEmitter.on(eventName, listener)
       return () => {
         eventEmitter.off(eventName, listener)

@@ -1,7 +1,7 @@
 import { TransactionType, UserRole } from '@prisma/client'
 
 /* Types */
-export enum EVENT_MESSAGE {
+export enum SERVER_NOTIFY {
   ADD_CART = '成功加入購物車',
 }
 
@@ -19,14 +19,14 @@ export type OptionSet = {
 export type CommodityOptions = Record<string, string | string[]>
 
 export enum MenuUnavailableReason {
-  NOT_PUBLISHED = 'NOT_PUBLISHED',
-  CLOSED = 'CLOSED',
-  MENU_LIMIT_PER_USER_EXCEEDED = 'MENU_LIMIT_PER_USER_EXCEEDED',
+  NOT_PUBLISHED = '尚未到達開放訂購時間',
+  CLOSED = '已過開放訂購時間',
+  MENU_LIMIT_PER_USER_EXCEEDED = '您已達全部餐點的訂購上限',
 }
 
 export enum ComUnavailableReason {
-  STOCK_OUT = 'STOCK_OUT',
-  COM_LIMIT_PER_USER_EXCEEDED = 'COM_LIMIT_PER_USER_EXCEEDED',
+  STOCK_OUT = '餐點已售完',
+  COM_LIMIT_PER_USER_EXCEEDED = '您已達此餐點的訂購上限',
 }
 
 /* Settings */
@@ -80,15 +80,6 @@ export const settings = {
   /* Menu */
   MENU_CATEGORY_ALL: '全部',
   MENU_CATEGORY_NULL: '未分類',
-  MENU_UNAVAILABLE_REASON_MESSAGE: {
-    [MenuUnavailableReason.NOT_PUBLISHED]: '尚未到達開放訂購時間',
-    [MenuUnavailableReason.CLOSED]: '已過開放訂購時間',
-    [MenuUnavailableReason.MENU_LIMIT_PER_USER_EXCEEDED]:
-      '您已達全部餐點的訂購上限',
-    [ComUnavailableReason.STOCK_OUT]: '餐點已售完',
-    [ComUnavailableReason.COM_LIMIT_PER_USER_EXCEEDED]:
-      '您已達此餐點的訂購上限',
-  },
   /* Misc */
   TITLE: '夢想餐飲',
 }
