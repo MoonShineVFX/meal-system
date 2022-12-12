@@ -12,6 +12,8 @@ export type OptionSet = {
   options: string[]
 }
 
+export type ComodityOptions = Record<string, string | string[]>
+
 export enum MenuUnavailableReason {
   NOT_PUBLISHED = 'NOT_PUBLISHED',
   CLOSED = 'CLOSED',

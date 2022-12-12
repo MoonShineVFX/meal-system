@@ -1,4 +1,11 @@
-import { FormEvent, useEffect } from 'react'
+import { useEffect } from 'react'
+import {
+  useForm,
+  SubmitHandler,
+  UseFormRegister,
+  Path,
+  FieldErrorsImpl,
+} from 'react-hook-form'
 
 import Image from '@/components/core/Image'
 import Title from '@/components/core/Title'
@@ -8,19 +15,20 @@ import { useStore, NotificationType } from '@/lib/client/store'
 import Logo from '@/components/core/Logo'
 import Button from '@/components/core/Button'
 
-interface LoginFormElements extends HTMLFormControlsCollection {
-  username: HTMLInputElement
-  password: HTMLInputElement
-}
-
-interface LoginFormElement extends HTMLFormElement {
-  readonly elements: LoginFormElements
+type FormInputs = {
+  username: string
+  password: string
 }
 
 export default function PageLogin() {
   const loginMutation = trpc.user.login.useMutation()
   const trpcContext = trpc.useContext()
   const addNotification = useStore((state) => state.addNotification)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormInputs>()
 
   useEffect(() => {
     // Logout the user when enter the page
@@ -28,12 +36,11 @@ export default function PageLogin() {
     trpcContext.user.get.invalidate()
   }, [])
 
-  const handleLogin = async (event: FormEvent<LoginFormElement>) => {
-    event.preventDefault()
+  const handleLogin: SubmitHandler<FormInputs> = async (formData) => {
     loginMutation.mutate(
       {
-        username: event.currentTarget.elements.username.value,
-        password: event.currentTarget.elements.password.value,
+        username: formData.username,
+        password: formData.password,
       },
       {
         // If the login is successful, reload to the home page
@@ -61,7 +68,7 @@ export default function PageLogin() {
       <section className='flex w-full shrink-0 flex-col justify-center bg-white md:max-w-md'>
         <form
           className='group relative mx-auto flex w-full max-w-sm flex-col gap-8 py-8 px-10'
-          onSubmit={handleLogin}
+          onSubmit={handleSubmit(handleLogin)}
           data-ui={twData({ loading: isBusy })}
         >
           <Logo className='w-40 text-yellow-500' />
@@ -72,17 +79,21 @@ export default function PageLogin() {
             disabled={isBusy}
             label='帳號'
             type='text'
-            name='username'
             placeholder=''
             autoComplete='username'
+            name='username'
+            register={register}
+            errors={errors}
           />
           <InputField
             disabled={isBusy}
             label='密碼'
             type='password'
-            name='password'
             placeholder=''
             autoComplete='password'
+            name='password'
+            register={register}
+            errors={errors}
           />
           <Button
             className='h-12'
@@ -115,26 +126,30 @@ export default function PageLogin() {
   )
 }
 
-function InputField(props: {
-  disabled: boolean
+interface InputFieldProps extends React.HTMLProps<HTMLInputElement> {
   label: string
-  type: string
-  name: string
-  placeholder: string
-  defaultValue?: string
-  autoComplete?: string
-}) {
+  register: UseFormRegister<FormInputs>
+  name: Path<FormInputs>
+  errors: FieldErrorsImpl<FormInputs>
+}
+const InputField: React.FC<InputFieldProps> = ({
+  label,
+  name,
+  register,
+  ...props
+}) => {
+  const error = props.errors[name]
   return (
     <div className='flex flex-col gap-2'>
-      <p className='text-sm'>{props.label}</p>
+      <p className='text-sm'>
+        {label}
+        <span className='ml-[1ch] text-red-400'>{error && error.message}</span>
+      </p>
       <input
-        required={true}
-        disabled={props.disabled}
-        type={props.type}
-        name={props.name}
-        placeholder={props.placeholder}
-        defaultValue={props.defaultValue}
-        autoComplete={props.autoComplete}
+        {...props}
+        {...register(name, {
+          required: '此欄位為必填',
+        })}
         autoCapitalize='none'
         autoCorrect='off'
         className='rounded-2xl border-[0.0625rem] border-stone-300 bg-stone-100 py-2 px-4 text-lg font-bold focus:outline-yellow-500 disabled:opacity-75'

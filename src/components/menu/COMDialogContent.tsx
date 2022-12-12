@@ -5,6 +5,13 @@ import { MinusIcon } from '@heroicons/react/24/outline'
 import { UserPlusIcon } from '@heroicons/react/20/solid'
 import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
+import {
+  useForm,
+  SubmitHandler,
+  UseFormRegister,
+  Control,
+  useController,
+} from 'react-hook-form'
 
 import { settings, OptionSet, twData } from '@/lib/common'
 import Image from '@/components/core/Image'
@@ -12,46 +19,37 @@ import Button from '@/components/core/Button'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import { useStore } from '@/lib/client/store'
 
-type SelectedOptionSet = Record<string, string[]>
+type FormInputs = {
+  quantity: number
+  options: Record<string, string>
+}
 
 function COMDialogContent(props: {
   onClose: () => void
   com: CommodityOnMenu
 }) {
   const { com } = props
-  const [selectedOptionSets, setSelectedOptionSets] =
-    useState<SelectedOptionSet>({})
-  const [quantity, setQuantity] = useState(1)
   const [isLimited, setIsLimited] = useState(false)
   const menu = useStore((state) => state.currentMenu)
-
-  // Reset state
-  useEffect(() => {
-    setQuantity(1)
-  }, [])
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<FormInputs>({ defaultValues: { quantity: 1 } })
 
   // Reset selected option sets when commodity changes
   useEffect(() => {
     if (com) {
-      setSelectedOptionSets(
-        (com.commodity.optionSets as OptionSet[]).reduce(
-          (acc, optionSet) => ({
-            ...acc,
-            [optionSet.name]: [],
-          }),
-          {},
-        ),
-      )
-
       setIsLimited(com.limitPerUser > 0 || com.stock > 0)
-      setQuantity((prev) => Math.min(prev ?? 1, com.maxQuantity))
+      reset()
     }
   }, [com])
 
-  const handleQuantityButtonClick = useCallback(
-    (action: 'INCREASE' | 'DECREASE') => {
-      const offset = action === 'INCREASE' ? 1 : -1
-      setQuantity((prev) => Math.max(1, prev + offset))
+  const handleCreateCartItem: SubmitHandler<FormInputs> = useCallback(
+    (formData) => {
+      console.log(formData)
     },
     [],
   )
@@ -86,6 +84,7 @@ function COMDialogContent(props: {
       <form
         className='group flex shrink-0 grow flex-col gap-8 p-4 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-8'
         data-ui={twData({ available: !isUnavailable })}
+        onSubmit={handleSubmit(handleCreateCartItem)}
       >
         {/* Info */}
         <header className='flex flex-col gap-2 lg:gap-4'>
@@ -120,39 +119,23 @@ function COMDialogContent(props: {
         {/* Option Sets */}
         <main className='flex flex-col gap-4 group-data-not-available:pointer-events-none group-data-not-available:opacity-60'>
           {(com.commodity.optionSets as OptionSet[]).map((optionSet) => (
-            <OptionSetMemo
+            <OptionSet
               key={optionSet.name}
               optionSet={optionSet}
-              selectedOptions={selectedOptionSets[optionSet.name]}
+              register={register}
             />
           ))}
         </main>
         {/* Spacer For sm */}
         <div className='-my-4 shrink grow'></div>
         {/* Quantity */}
-        <section className='flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:hidden'>
-          <div className='flex items-center gap-2 rounded-full bg-stone-100 p-1'>
-            <input type='number' className='hidden' value={quantity} readOnly />
-            <button
-              type='button'
-              onClick={() => handleQuantityButtonClick('DECREASE')}
-              disabled={quantity <= 1}
-              className='rounded-full p-1 text-stone-500 hover:bg-stone-200 active:bg-stone-200 disabled:pointer-events-none disabled:text-stone-300'
-            >
-              <MinusIcon className='h-5 w-5' />
-            </button>
-            <p className='min-w-[1.2em] text-center text-xl text-stone-500'>
-              {quantity}
-            </p>
-            <button
-              type='button'
-              onClick={() => handleQuantityButtonClick('INCREASE')}
-              disabled={isUnavailable}
-              className='rounded-full p-1 text-stone-500 hover:bg-stone-200 active:bg-stone-200 disabled:pointer-events-none disabled:text-stone-300'
-            >
-              <PlusIcon className='h-5 w-5' />
-            </button>
-          </div>
+        <section className='relative flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:hidden'>
+          <QuantityInput
+            control={control}
+            isUnavailable={isUnavailable}
+            maxQuantity={com.maxQuantity}
+            register={register}
+          />
         </section>
         {/* Unavailable message */}
         {isUnavailable && (
@@ -196,7 +179,10 @@ function COMDialogContent(props: {
 
 export default memo(COMDialogContent)
 
-function OptionSet(props: { optionSet: OptionSet; selectedOptions: string[] }) {
+function OptionSet(props: {
+  optionSet: OptionSet
+  register: UseFormRegister<FormInputs>
+}) {
   const { optionSet } = props
 
   return (
@@ -208,8 +194,10 @@ function OptionSet(props: { optionSet: OptionSet; selectedOptions: string[] }) {
             <input
               className='peer hidden'
               type={optionSet.multiSelect ? 'checkbox' : 'radio'}
-              name={optionSet.name}
               value={optionName}
+              {...props.register(`options.${optionSet.name}`, {
+                required: !optionSet.multiSelect,
+              })}
             />
             <div className='m-[0.0625rem] cursor-pointer rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider hover:border-stone-400 active:border-stone-400 peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500'>
               {optionName}
@@ -221,4 +209,57 @@ function OptionSet(props: { optionSet: OptionSet; selectedOptions: string[] }) {
   )
 }
 
-const OptionSetMemo = memo(OptionSet)
+function QuantityInput(props: {
+  register: UseFormRegister<FormInputs>
+  maxQuantity: number
+  isUnavailable: boolean
+  control: Control<FormInputs>
+}) {
+  const { field } = useController({ name: 'quantity', control: props.control })
+  const handleQuantityButtonClick = useCallback(
+    (action: 'INCREASE' | 'DECREASE') => {
+      switch (action) {
+        case 'INCREASE':
+          field.onChange(field.value + 1)
+          break
+        case 'DECREASE':
+          field.onChange(field.value - 1)
+          break
+      }
+    },
+    [field],
+  )
+
+  return (
+    <div className='flex items-center gap-2 rounded-full bg-stone-100 p-1'>
+      <input
+        type='number'
+        className='hidden'
+        {...props.register('quantity', {
+          min: 1,
+          max: props.maxQuantity,
+        })}
+        required
+      />
+      <button
+        type='button'
+        onClick={() => handleQuantityButtonClick('DECREASE')}
+        disabled={field.value <= 1}
+        className='rounded-full p-1 text-stone-500 hover:bg-stone-200 active:bg-stone-200 disabled:pointer-events-none disabled:text-stone-300'
+      >
+        <MinusIcon className='h-5 w-5' />
+      </button>
+      <p className='min-w-[1.2em] text-center text-xl text-stone-500'>
+        {field.value}
+      </p>
+      <button
+        type='button'
+        onClick={() => handleQuantityButtonClick('INCREASE')}
+        disabled={props.isUnavailable}
+        className='rounded-full p-1 text-stone-500 hover:bg-stone-200 active:bg-stone-200 disabled:pointer-events-none disabled:text-stone-300'
+      >
+        <PlusIcon className='h-5 w-5' />
+      </button>
+    </div>
+  )
+}

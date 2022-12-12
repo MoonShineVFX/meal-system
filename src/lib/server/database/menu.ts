@@ -1,6 +1,6 @@
 import { MenuType, OrderStatus, Prisma } from '@prisma/client'
 
-import type { OptionSet } from '@/lib/common'
+import type { OptionSet, ComodityOptions } from '@/lib/common'
 import { MenuUnavailableReason, ComUnavailableReason } from '@/lib/common'
 import { prisma, log } from './define'
 
@@ -19,7 +19,12 @@ export async function createMenu(
   }
 
   // Check menu existence
-  if (await getMenu(type, date, undefined, undefined)) {
+  let isFound = false
+  try {
+    await getMenu(type, date, undefined, undefined)
+    isFound = true
+  } catch (error) {}
+  if (isFound) {
     throw new Error('menu already exists')
   }
 
@@ -332,8 +337,17 @@ export async function createCartItem(
   menuId: number,
   commodityId: number,
   quantity: number,
-  options: string[],
+  options: ComodityOptions,
 ) {
+  // Generate optionsKey
+  const optionsKey = Object.entries(options)
+    .sort()
+    .reduce((acc, cur) => {
+      const prefix = acc === '' ? '' : '_'
+      const value = Array.isArray(cur[1]) ? cur[1].sort().join(',') : cur[1]
+      return `${acc}${prefix}${cur[0]}:${value}`
+    }, '')
+
   return await prisma.$transaction(async (client) => {
     // Validate availability
     const menu = await getMenu(
@@ -365,14 +379,57 @@ export async function createCartItem(
       throw new Error(`quantity exceeds max quantity: ${com.maxQuantity}`)
     }
 
+    // Validate options
+    const comOptionSets = com.commodity.optionSets as OptionSet[]
+    for (const [optionName, optionValue] of Object.entries(options)) {
+      const matchOptionSet = comOptionSets.find(
+        (optionSet) => optionSet.name === optionName,
+      )
+      if (!matchOptionSet) {
+        throw new Error(`optionSet not found: ${optionName}`)
+      }
+
+      if (Array.isArray(optionValue)) {
+        if (!matchOptionSet.multiSelect) {
+          throw new Error(`optionSet not multi-selectable: ${optionName}`)
+        }
+        if (
+          !optionValue.every((value) => matchOptionSet.options.includes(value))
+        ) {
+          throw new Error(`option not found: ${optionName} - ${optionValue}`)
+        }
+      } else {
+        if (matchOptionSet.multiSelect) {
+          throw new Error(`optionSet is multi-selectable: ${optionName}`)
+        }
+        if (!matchOptionSet.options.includes(optionValue)) {
+          throw new Error(`option not found: ${optionName} - ${optionValue}`)
+        }
+      }
+    }
+
     // Create cart item
-    return await client.cartItem.create({
-      data: {
+    return await client.cartItem.upsert({
+      where: {
+        userId_menuId_commodityId_optionsKey: {
+          userId,
+          menuId,
+          commodityId,
+          optionsKey,
+        },
+      },
+      update: {
+        quantity: {
+          increment: quantity,
+        },
+      },
+      create: {
         userId,
         menuId,
         commodityId,
-        quantity,
+        optionsKey,
         options,
+        quantity,
       },
     })
   })

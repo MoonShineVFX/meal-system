@@ -10,6 +10,7 @@ import { CalendarDaysIcon } from '@heroicons/react/24/outline'
 import { DocumentTextIcon } from '@heroicons/react/24/outline'
 import { WalletIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
+import { memo } from 'react'
 
 import Image from '@/components/core/Image'
 import { useStore } from '@/lib/client/store'
@@ -17,7 +18,7 @@ import { generateCookie } from '@/lib/common'
 import { settings, twData } from '@/lib/common'
 import Logo from '@/components/core/Logo'
 
-export default function Navigation() {
+function Navigation() {
   return (
     <ul className='relative z-40 flex h-full items-center justify-evenly bg-white shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
       {/* LOGO */}
@@ -111,6 +112,7 @@ function ProfileButton(props: { className?: string }) {
     </Popover>
   )
 }
+export default memo(Navigation)
 
 function NavButton(props: {
   label: string

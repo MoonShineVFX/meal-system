@@ -147,7 +147,7 @@ model OrderItem {
   name     String
   price    Int
   quantity Int
-  options  String[]
+  options  Json   @db.Json // { "optionName": "optionValue"}
 
   order           Order           @relation(fields: [orderId], references: [id])
   orderId         Int
@@ -159,17 +159,20 @@ model OrderItem {
 }
 
 model CartItem {
-  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  quantity Int
-  options  String[]
+  quantity   Int
+  options    Json   @db.Json // { "optionName": "optionValue"}
+  optionsKey String
 
   user            User            @relation(fields: [userId], references: [id])
   userId          String
   commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId], onDelete: Cascade)
   menuId          Int
   commodityId     Int
+
+  @@id([userId, menuId, commodityId, optionsKey])
 }
 
 // Menu

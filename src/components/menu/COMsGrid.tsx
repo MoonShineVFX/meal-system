@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, memo } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import { settings } from '@/lib/common'
@@ -11,7 +11,7 @@ const comsByCategoryPlaceHolder: CommoditiesOnMenuByCategory = {
   },
 }
 
-export default function COMsGrid(props: {
+function COMsGrid(props: {
   currentCategory: string
   comsByCategory?: CommoditiesOnMenuByCategory
 }) {
@@ -60,3 +60,5 @@ export default function COMsGrid(props: {
     </section>
   )
 }
+
+export default memo(COMsGrid)

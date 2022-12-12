@@ -5,13 +5,11 @@ import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
 import { settings } from '@/lib/common'
 
-export default function COMCard(props: {
+function LinkWrapper(props: {
+  children: React.ReactNode
   com?: CommodityOnMenu
-  category: string
 }) {
-  const { com } = props
   const router = useRouter()
-
   return (
     <Link
       className='group-data-loading/menu:pointer-events-none'
@@ -19,10 +17,23 @@ export default function COMCard(props: {
         pathname: router.pathname,
         query: {
           ...router.query,
-          commodityId: com?.commodity.id,
+          commodityId: props.com?.commodity.id,
         },
       }}
     >
+      {props.children}
+    </Link>
+  )
+}
+
+export default function COMCard(props: {
+  com?: CommodityOnMenu
+  category: string
+}) {
+  const { com } = props
+
+  return (
+    <LinkWrapper com={com}>
       <div className='group flex flex-col overflow-hidden border-stone-100 bg-white'>
         {/* Image */}
         <section className='relative aspect-square overflow-hidden rounded-md group-data-loading/menu:skeleton'>
@@ -62,6 +73,6 @@ export default function COMCard(props: {
           </h3>
         </section>
       </div>
-    </Link>
+    </LinkWrapper>
   )
 }

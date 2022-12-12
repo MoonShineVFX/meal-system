@@ -10,7 +10,7 @@ body,
 }
 
 #nprogress .bar {
-  @apply h-[0.1875rem] bg-yellow-500;
+  @apply h-[0.1875rem] bg-yellow-500 lg:h-1;
   box-shadow: 0 0 0.5rem theme('colors.transparent'),
     0 0 0.3125rem theme('colors.transparent');
 }
