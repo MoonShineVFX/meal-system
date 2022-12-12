@@ -191,9 +191,9 @@ export default function Menu(props: {
                   目前無法訂購餐點
                 </div>
                 <ul className='flex flex-col gap-1 text-stone-400'>
-                  {data.unavailableReasons.map((reson) => (
-                    <li className='ml-7 text-sm' key={reson}>
-                      {settings.MENU_UNAVAILABLE_REASON_MESSAGE[reson]}
+                  {data.unavailableReasons.map((reason) => (
+                    <li className='ml-7 text-sm' key={reason}>
+                      {reason}
                     </li>
                   ))}
                 </ul>
