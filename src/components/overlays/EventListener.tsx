@@ -66,6 +66,7 @@ export default function EventListener() {
       switch (message) {
         case SERVER_NOTIFY.ADD_CART:
           trpcContext.menu.get.invalidate()
+          trpcContext.menu.getCart.invalidate()
           break
       }
     },

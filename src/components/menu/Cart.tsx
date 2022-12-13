@@ -8,18 +8,20 @@ export default function Cart() {
   if (isError) return <div className='text-red-400'>{error?.message}</div>
 
   return (
-    <div className='h-full'>
-      <p>{data.isModified ? 'modified' : 'not-nodified'}</p>
-      {data.cartItems.map((cartItem) => (
-        <div
-          key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
-        >
-          <p>
-            {cartItem.commodityOnMenu.commodity.name} - {cartItem.quantity}
-          </p>
-          <p>{JSON.stringify(cartItem.options as OrderOptions)}</p>
-        </div>
-      ))}
+    <div className='relative h-full w-full'>
+      <div className='absolute inset-0 overflow-auto'>
+        <p>{data.isModified ? 'modified' : 'not-nodified'}</p>
+        {data.cartItems.map((cartItem) => (
+          <div
+            key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
+          >
+            <p>
+              {cartItem.commodityOnMenu.commodity.name} - {cartItem.quantity}
+            </p>
+            <p>{JSON.stringify(cartItem.options as OrderOptions)}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

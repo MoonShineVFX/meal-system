@@ -60,7 +60,6 @@ export const settings = {
   /* Server */
   WEBSOCKET_DEV_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_DEV_PORT ?? '3001',
   HTTP_PORT: process.env.PORT ?? '3000',
-  REPORT_URL: process.env.NEXT_PUBLIC_REPORT_URL ?? '',
   /* Blockchain */
   BLOCKCHAIN_URL: process.env.BLOCKCHAIN_URL!,
   BLOCKCHAIN_CREDIT_ADDRESS: process.env.BLOCKCHAIN_CREDIT_ADDRESS!,

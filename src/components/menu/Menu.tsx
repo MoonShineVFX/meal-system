@@ -146,6 +146,7 @@ export default function Menu(props: {
 
     setComsByCategory(result)
     setCurrentMenu(data)
+    setCurrentCategory(comsByCategory.keys().next().value)
   }, [data])
 
   const handleDialogClose = useCallback(() => {
