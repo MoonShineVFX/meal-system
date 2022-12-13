@@ -165,11 +165,14 @@ export default function Menu(props: {
     return
   }, [])
 
-  if (isError) return <div className='text-red-400'>{error.message}</div>
+  if (isError)
+    return (
+      <div className='grid h-full w-full place-items-center text-red-400'>
+        {error.message}
+      </div>
+    )
 
   const coms = isLoading ? undefined : comsByCategory
-
-  console.log('render menu')
 
   return (
     <div
