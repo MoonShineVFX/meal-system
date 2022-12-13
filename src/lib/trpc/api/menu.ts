@@ -2,7 +2,7 @@ import z from 'zod'
 import { MenuType } from '@prisma/client'
 
 import { userProcedure, router } from '../trpc'
-import { getMenu, createCartItem } from '@/lib/server/database'
+import { getMenu, createCartItem, getCartItems } from '@/lib/server/database'
 import { ServerEventName, eventEmitter } from '@/lib/server/event'
 import { SERVER_NOTIFY } from '@/lib/common'
 
@@ -47,4 +47,7 @@ export const MenuRouter = router({
         SERVER_NOTIFY.ADD_CART,
       )
     }),
+  getCart: userProcedure.query(async ({ ctx }) => {
+    return await getCartItems(ctx.userLite.id)
+  }),
 })

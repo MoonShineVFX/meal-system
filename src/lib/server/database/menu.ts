@@ -464,7 +464,7 @@ export async function getCartItems(userId: string) {
       decrementAmount: number
     })[] = []
 
-    const menuWithComnmodityIds: {
+    const menuAndCommoditiesMetas: {
       [menuId: number]: {
         cartQuantity: number
         coms: {
@@ -493,29 +493,36 @@ export async function getCartItems(userId: string) {
 
       // group by menu and sum cartItem quantities
       const { menuId, commodityId } = cartItem
-      if (!menuWithComnmodityIds[menuId]) {
-        menuWithComnmodityIds[menuId] = {
+      if (!menuAndCommoditiesMetas[menuId]) {
+        menuAndCommoditiesMetas[menuId] = {
           coms: [],
           cartQuantity: cartItem.quantity,
         }
       } else {
-        menuWithComnmodityIds[menuId].cartQuantity += cartItem.quantity
+        menuAndCommoditiesMetas[menuId].cartQuantity += cartItem.quantity
       }
 
-      if (!menuWithComnmodityIds[menuId].coms[commodityId]) {
-        menuWithComnmodityIds[menuId].coms[commodityId] = {
+      const comMetaIndex = menuAndCommoditiesMetas[menuId].coms.findIndex(
+        (comMeta) => comMeta.commodityId === commodityId,
+      )
+      if (comMetaIndex === -1) {
+        menuAndCommoditiesMetas[menuId].coms.push({
           commodityId: commodityId,
           cartQuantity: cartItem.quantity,
           cartItems: [cartItem],
-        }
+        })
       } else {
-        menuWithComnmodityIds[menuId].coms[commodityId].cartQuantity +=
+        menuAndCommoditiesMetas[menuId].coms[comMetaIndex].cartQuantity +=
           cartItem.quantity
-        menuWithComnmodityIds[menuId].coms[commodityId].cartItems.push(cartItem)
+        menuAndCommoditiesMetas[menuId].coms[comMetaIndex].cartItems.push(
+          cartItem,
+        )
       }
     }
 
-    for (const [menuIdKey, menuMeta] of Object.entries(menuWithComnmodityIds)) {
+    for (const [menuIdKey, menuMeta] of Object.entries(
+      menuAndCommoditiesMetas,
+    )) {
       // validate menu
       const menuId = Number(menuIdKey)
       const commodityIds = menuMeta.coms.map((com) => com.commodityId)
@@ -635,6 +642,9 @@ export async function getCartItems(userId: string) {
         userId,
       },
       select: {
+        menuId: true,
+        commodityId: true,
+        optionsKey: true,
         quantity: true,
         options: true,
         invalid: true,
@@ -657,7 +667,7 @@ export async function getCartItems(userId: string) {
     })
 
     return {
-      ...result,
+      cartItems: result,
       isModified: invalidCartItems.length > 0 || decrementCartItems.length > 0,
     }
   })

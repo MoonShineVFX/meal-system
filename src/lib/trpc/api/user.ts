@@ -36,7 +36,7 @@ export const UserRouter = router({
 
     return user
   }),
-  onNotify: userProcedure.subscription(({ ctx }) => {
+  onNotify: userProcedure.subscription(async ({ ctx }) => {
     return observable<SERVER_NOTIFY>((observer) => {
       const listener = (eventMessage: SERVER_NOTIFY) => {
         observer.next(eventMessage)

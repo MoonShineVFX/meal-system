@@ -2,6 +2,7 @@ import { MenuType } from '@prisma/client'
 
 import Title from '@/components/core/Title'
 import Menu from '@/components/menu/Menu'
+import Cart from '@/components/menu/Cart'
 
 export default function PageIndex() {
   return (
@@ -11,7 +12,9 @@ export default function PageIndex() {
         {/* Menu */}
         <Menu className='grow basis-1/2' type={MenuType.MAIN} />
         {/* Cart */}
-        <section className='hidden max-w-md grow basis-1/5 bg-stone-100 xl:block'></section>
+        <section className='hidden max-w-md grow basis-1/5 xl:block'>
+          <Cart />
+        </section>
       </div>
     </>
   )
