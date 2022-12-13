@@ -10,7 +10,7 @@ export default function TransactionDetail(props: { transactionId?: string }) {
       <Link className='lg:hidden' href='/transaction'>
         返回
       </Link>
-      {Array.from(Array(10).keys()).map((i) => (
+      {[...Array(10).keys()].map((i) => (
         <div key={i} className='border-b p-2'>
           交易細節{i}
         </div>

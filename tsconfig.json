@@ -9,7 +9,7 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "target": "es5",
+    "target": "es6",
     "allowJs": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

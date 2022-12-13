@@ -31,7 +31,7 @@ export default function Menu(props: {
     null,
   )
   const [comsByCategory, setComsByCategory] =
-    useState<CommoditiesOnMenuByCategory>({})
+    useState<CommoditiesOnMenuByCategory>(new Map())
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const setCurrentMenu = useStore((state) => state.setCurrentMenu)
   const currentCategory = useStore((state) => state.currentCategory)
@@ -40,7 +40,7 @@ export default function Menu(props: {
 
   const categories = isLoading
     ? categoriesPlaceholder
-    : Object.keys(comsByCategory)
+    : [...comsByCategory.keys()]
 
   // Detect grid scroll
   useEffect(() => {
@@ -104,41 +104,45 @@ export default function Menu(props: {
     if (!data) return
 
     // Group commodities by category
-    const comsByCategory: CommoditiesOnMenuByCategory = {}
+    const comsByCategory: CommoditiesOnMenuByCategory = new Map()
     for (const com of data.commodities) {
       const categories = com.commodity.categories
       if (categories.length > 0) {
         for (const category of categories) {
-          if (!comsByCategory[category.mainName]) {
-            comsByCategory[category.mainName] = {}
+          if (!comsByCategory.has(category.mainName)) {
+            comsByCategory.set(category.mainName, new Map())
           }
-          if (!comsByCategory[category.mainName][category.subName]) {
-            comsByCategory[category.mainName][category.subName] = []
+          if (!comsByCategory.get(category.mainName)!.has(category.subName)) {
+            comsByCategory.get(category.mainName)!.set(category.subName, [])
           }
-          comsByCategory[category.mainName][category.subName].push(com)
+          comsByCategory
+            .get(category.mainName)!
+            .get(category.subName)!
+            .push(com)
         }
       } else {
-        if (!(settings.MENU_CATEGORY_NULL in comsByCategory)) {
-          comsByCategory[settings.MENU_CATEGORY_NULL] = { 未分類: [] }
+        if (!comsByCategory.has(settings.MENU_CATEGORY_NULL)) {
+          comsByCategory.set(
+            settings.MENU_CATEGORY_NULL,
+            new Map([[settings.MENU_CATEGORY_NULL, []]]),
+          )
         }
-        comsByCategory[settings.MENU_CATEGORY_NULL][
-          settings.MENU_CATEGORY_NULL
-        ].push(com)
+        comsByCategory
+          .get(settings.MENU_CATEGORY_NULL)!
+          .get(settings.MENU_CATEGORY_NULL)!
+          .push(com)
       }
     }
 
-    const result = Object.keys(comsByCategory)
-      .sort((a, b) =>
-        b === settings.MENU_CATEGORY_NULL
+    const result = new Map(
+      [...comsByCategory].sort((a, b) =>
+        b[0] === settings.MENU_CATEGORY_NULL
           ? -1
-          : a === settings.MENU_CATEGORY_NULL
+          : a[0] === settings.MENU_CATEGORY_NULL
           ? 1
           : 0,
-      )
-      .reduce((acc: CommoditiesOnMenuByCategory, key) => {
-        acc[key] = comsByCategory[key]
-        return acc
-      }, {})
+      ),
+    )
 
     setComsByCategory(result)
     setCurrentMenu(data)

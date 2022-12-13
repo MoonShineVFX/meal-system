@@ -4,24 +4,19 @@ import { twMerge } from 'tailwind-merge'
 import type { CommoditiesOnMenuByCategory } from '@/lib/client/trpc'
 import COMCard from './COMCard'
 
-const comsByCategoryPlaceHolder: CommoditiesOnMenuByCategory = {
-  main: {
-    sub: Array(10).fill(undefined),
-  },
-}
+const comsByCategoryPlaceHolder: CommoditiesOnMenuByCategory = new Map([
+  ['main', new Map([['sub', Array(10).fill(undefined)]])],
+])
 
 const TOTAL_FILLER_COUNT = 10
 
 function COMsGrid(props: { comsByCategory?: CommoditiesOnMenuByCategory }) {
   const comsByCategory = props.comsByCategory ?? comsByCategoryPlaceHolder
-  const consByCategoryEntries = Object.entries(comsByCategory)
-  const fillerCount = Math.max(
-    TOTAL_FILLER_COUNT - consByCategoryEntries.length,
-  )
+  const fillerCount = Math.max(TOTAL_FILLER_COUNT - comsByCategory.size)
 
   return (
     <section className='grid w-full grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-4 lg:gap-8'>
-      {consByCategoryEntries.map(([mainCategory, subCategories], index) => (
+      {[...comsByCategory].map(([mainCategory, subCategories], index) => (
         <Fragment key={mainCategory}>
           <h1
             id={mainCategory}
@@ -36,7 +31,7 @@ function COMsGrid(props: { comsByCategory?: CommoditiesOnMenuByCategory }) {
               <span className='skeleton rounded-md text-transparent'>分類</span>
             )}
           </h1>
-          {Object.entries(subCategories).map(([subCategory, coms]) => (
+          {[...subCategories].map(([subCategory, coms]) => (
             <Fragment key={subCategory}>
               {coms.map((com, index) => (
                 <COMCard
@@ -49,7 +44,7 @@ function COMsGrid(props: { comsByCategory?: CommoditiesOnMenuByCategory }) {
           ))}
         </Fragment>
       ))}
-      {Array.from(Array(fillerCount).keys()).map((index) => (
+      {[...Array(fillerCount).keys()].map((index) => (
         <div key={index} />
       ))}
     </section>

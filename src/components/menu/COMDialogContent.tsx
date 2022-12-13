@@ -14,7 +14,7 @@ import { UserPlusIcon } from '@heroicons/react/20/solid'
 import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
-import { settings, OptionSet, twData, CommodityOptions } from '@/lib/common'
+import { settings, OptionSet, twData, OrderOptions } from '@/lib/common'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
@@ -23,7 +23,7 @@ import trpc from '@/lib/client/trpc'
 
 type FormInputs = {
   quantity: number
-  options: CommodityOptions
+  options: OrderOptions
 }
 
 function COMDialogContent(props: {
@@ -47,7 +47,7 @@ function COMDialogContent(props: {
       options: (com.commodity.optionSets as OptionSet[])
         ?.filter((optionSet) => optionSet.multiSelect)
         .reduce(
-          (acc: CommodityOptions, optionSet) => ({
+          (acc: OrderOptions, optionSet) => ({
             ...acc,
             [optionSet.name]: [],
           }),
@@ -171,7 +171,7 @@ function COMDialogContent(props: {
           <QuantityInput
             control={control}
             isUnavailable={isUnavailable}
-            maxQuantity={com.maxQuantity}
+            maxQuantity={Math.min(com.maxQuantity, menu?.maxQuantity ?? 99)}
             register={register}
           />
         </section>

@@ -27,9 +27,9 @@ export type TransactionWithNames =
 export type Menu = RouterOutput['menu']['get']
 export type CommoditiesOnMenu = Menu['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]
-export type CommoditiesOnMenuByCategory = Record<
+export type CommoditiesOnMenuByCategory = Map<
   string,
-  Record<string, (CommodityOnMenu | undefined)[]>
+  Map<string, (CommodityOnMenu | undefined)[]>
 >
 
 /* WebSocket Client */

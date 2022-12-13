@@ -16,7 +16,7 @@ export type OptionSet = {
   options: string[]
 }
 
-export type CommodityOptions = Record<string, string | string[]>
+export type OrderOptions = Record<string, string | string[]>
 
 export enum MenuUnavailableReason {
   NOT_PUBLISHED = '尚未到達開放訂購時間',

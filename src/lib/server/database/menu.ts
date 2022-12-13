@@ -1,6 +1,6 @@
 import { MenuType, OrderStatus, Prisma } from '@prisma/client'
 
-import type { OptionSet, CommodityOptions } from '@/lib/common'
+import type { OptionSet, OrderOptions } from '@/lib/common'
 import { MenuUnavailableReason, ComUnavailableReason } from '@/lib/common'
 import { prisma, log } from './define'
 
@@ -47,7 +47,8 @@ export async function getMenu(
   date?: Date,
   menuId?: number,
   userId?: string,
-  commodityId?: number,
+  commodityIds?: number[],
+  excludeCartItems?: boolean,
   transactionClient?: Prisma.TransactionClient,
 ) {
   if (!type && !menuId) {
@@ -84,7 +85,7 @@ export async function getMenu(
       commodities: userId
         ? {
             where: {
-              commodityId,
+              commodityId: commodityIds ? { in: commodityIds } : undefined,
               isDeleted: false,
               commodity: {
                 isDeleted: false,
@@ -103,8 +104,6 @@ export async function getMenu(
                   image: {
                     select: {
                       path: true,
-                      width: true,
-                      height: true,
                     },
                   },
                   categories: {
@@ -115,14 +114,17 @@ export async function getMenu(
                   },
                 },
               },
-              cartItems: {
-                where: {
-                  userId,
-                },
-                select: {
-                  quantity: true,
-                },
-              },
+              cartItems: excludeCartItems
+                ? undefined
+                : {
+                    where: {
+                      userId,
+                      invalid: false,
+                    },
+                    select: {
+                      quantity: true,
+                    },
+                  },
               orderItems: {
                 where: {
                   order: {
@@ -174,9 +176,11 @@ export async function getMenu(
       },
     )
 
-    for (const cartItem of com.cartItems) {
-      menuOrderedCount.user += cartItem.quantity
-      orderedCount.user += cartItem.quantity
+    if (!excludeCartItems) {
+      for (const cartItem of com.cartItems) {
+        menuOrderedCount.user += cartItem.quantity
+        orderedCount.user += cartItem.quantity
+      }
     }
 
     // validate com
@@ -190,6 +194,7 @@ export async function getMenu(
       )
     }
 
+    // calculate max quantity
     const maxQuantity = Math.min(
       com.stock !== 0 ? com.stock - orderedCount.total : 99,
       com.limitPerUser !== 0 ? com.limitPerUser - orderedCount.user : 99,
@@ -219,11 +224,15 @@ export async function getMenu(
       MenuUnavailableReason.MENU_LIMIT_PER_USER_EXCEEDED,
     )
   }
+  const maxQuantity = Math.min(
+    menu.limitPerUser !== 0 ? menu.limitPerUser - menuOrderedCount.total : 99,
+  )
 
   return {
     ...menu,
     commodities: validatedComs,
     unavailableReasons: menuUnavailableReasons,
+    maxQuantity,
   }
 }
 
@@ -240,6 +249,16 @@ export async function deleteMenu(menuId: number) {
 
     if (orderCount > 0) {
       log('menu has been ordered, cannot be deleted, acrhived instead')
+      // invalidate cart items
+      await client.cartItem.updateMany({
+        where: {
+          menuId: menuId,
+        },
+        data: {
+          invalid: true,
+        },
+      })
+
       return await client.menu.update({
         where: {
           id: menuId,
@@ -337,7 +356,7 @@ export async function createCartItem(
   menuId: number,
   commodityId: number,
   quantity: number,
-  options: CommodityOptions,
+  options: OrderOptions,
 ) {
   // Generate optionsKey
   const optionsKey = Object.entries(options)
@@ -355,7 +374,8 @@ export async function createCartItem(
       undefined,
       menuId,
       userId,
-      commodityId,
+      [commodityId],
+      false,
       client,
     )
     if (!menu) {
@@ -379,32 +399,7 @@ export async function createCartItem(
 
     // Validate options
     const comOptionSets = com.commodity.optionSets as OptionSet[]
-    for (const [optionName, optionValue] of Object.entries(options)) {
-      const matchOptionSet = comOptionSets.find(
-        (optionSet) => optionSet.name === optionName,
-      )
-      if (!matchOptionSet) {
-        throw new Error(`找不到選項: ${optionName}`)
-      }
-
-      if (Array.isArray(optionValue)) {
-        if (!matchOptionSet.multiSelect) {
-          throw new Error(`選項不是多選: ${optionName}`)
-        }
-        if (
-          !optionValue.every((value) => matchOptionSet.options.includes(value))
-        ) {
-          throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
-        }
-      } else {
-        if (matchOptionSet.multiSelect) {
-          throw new Error(`選項不是單選: ${optionName}`)
-        }
-        if (!matchOptionSet.options.includes(optionValue)) {
-          throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
-        }
-      }
-    }
+    validateCartOptions(options, comOptionSets)
 
     // Create cart item
     return await client.cartItem.upsert({
@@ -431,4 +426,272 @@ export async function createCartItem(
       },
     })
   })
+}
+
+/** Validate user cart items and return */
+export async function getCartItems(userId: string) {
+  return await prisma.$transaction(async (client) => {
+    const cartItems = await client.cartItem.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        userId: true,
+        optionsKey: true,
+        quantity: true,
+        options: true,
+        invalid: true,
+        commodityId: true,
+        menuId: true,
+        commodityOnMenu: {
+          select: {
+            commodity: {
+              select: {
+                optionSets: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    })
+
+    const invalidCartItems: typeof cartItems = []
+    const validCartItems: typeof cartItems = []
+    const decrementCartItems: (typeof cartItems[0] & {
+      decrementAmount: number
+    })[] = []
+
+    const menuWithComnmodityIds: {
+      [menuId: number]: {
+        cartQuantity: number
+        coms: {
+          commodityId: number
+          cartQuantity: number
+          cartItems: typeof cartItems
+        }[]
+      }
+    } = {}
+
+    for (const cartItem of cartItems) {
+      if (cartItem.invalid) {
+        invalidCartItems.push(cartItem)
+        continue
+      }
+
+      // validate options
+      const comOptionSets = cartItem.commodityOnMenu.commodity
+        .optionSets as OptionSet[]
+      try {
+        validateCartOptions(cartItem.options as OrderOptions, comOptionSets)
+      } catch (e) {
+        invalidCartItems.push(cartItem)
+        continue
+      }
+
+      // group by menu and sum cartItem quantities
+      const { menuId, commodityId } = cartItem
+      if (!menuWithComnmodityIds[menuId]) {
+        menuWithComnmodityIds[menuId] = {
+          coms: [],
+          cartQuantity: cartItem.quantity,
+        }
+      } else {
+        menuWithComnmodityIds[menuId].cartQuantity += cartItem.quantity
+      }
+
+      if (!menuWithComnmodityIds[menuId].coms[commodityId]) {
+        menuWithComnmodityIds[menuId].coms[commodityId] = {
+          commodityId: commodityId,
+          cartQuantity: cartItem.quantity,
+          cartItems: [cartItem],
+        }
+      } else {
+        menuWithComnmodityIds[menuId].coms[commodityId].cartQuantity +=
+          cartItem.quantity
+        menuWithComnmodityIds[menuId].coms[commodityId].cartItems.push(cartItem)
+      }
+    }
+
+    for (const [menuIdKey, menuMeta] of Object.entries(menuWithComnmodityIds)) {
+      // validate menu
+      const menuId = Number(menuIdKey)
+      const commodityIds = menuMeta.coms.map((com) => com.commodityId)
+
+      let menu: Awaited<ReturnType<typeof getMenu>>
+
+      try {
+        menu = await getMenu(
+          undefined,
+          undefined,
+          menuId,
+          userId,
+          commodityIds,
+          true,
+          client,
+        )
+        // validate menu availability
+        if (menu.unavailableReasons.length > 0) {
+          throw new Error(`菜單驗證失敗: ${menu.unavailableReasons.join(', ')}`)
+        }
+      } catch (e) {
+        invalidCartItems.push(...menuMeta.coms.flatMap((com) => com.cartItems))
+        continue
+      }
+
+      // validate menu quantities
+      if (menuMeta.cartQuantity > menu.maxQuantity) {
+        let remainQuantity = menu.maxQuantity
+        for (const cartItem of menuMeta.coms.flatMap((com) => com.cartItems)) {
+          if (remainQuantity <= 0) {
+            invalidCartItems.push(cartItem)
+            continue
+          }
+          if (cartItem.quantity > remainQuantity) {
+            decrementCartItems.push({
+              ...cartItem,
+              decrementAmount: cartItem.quantity - remainQuantity,
+            })
+            remainQuantity = 0
+          } else {
+            remainQuantity -= cartItem.quantity
+            validCartItems.push(cartItem)
+          }
+        }
+        continue
+      } else {
+        // validate commodity
+        for (const comMeta of menuMeta.coms) {
+          const com = menu.commodities.find(
+            (com) => com.commodity.id === comMeta.commodityId,
+          )
+
+          // validate commodity availability
+          if (!com || com.unavailableReasons.length > 0) {
+            invalidCartItems.push(...comMeta.cartItems)
+            continue
+          }
+
+          // validate commodity quantities
+          if (comMeta.cartQuantity > com.maxQuantity) {
+            let remainQuantity = com.maxQuantity
+            for (const cartItem of comMeta.cartItems) {
+              if (remainQuantity <= 0) {
+                invalidCartItems.push(cartItem)
+                continue
+              }
+              if (cartItem.quantity > remainQuantity) {
+                decrementCartItems.push({
+                  ...cartItem,
+                  decrementAmount: cartItem.quantity - remainQuantity,
+                })
+                remainQuantity = 0
+              } else {
+                remainQuantity -= cartItem.quantity
+                validCartItems.push(cartItem)
+              }
+            }
+          } else {
+            validCartItems.push(...comMeta.cartItems)
+          }
+        }
+      }
+    }
+
+    // update invalid cart items
+    for (const cartItem of invalidCartItems) {
+      await client.cartItem.update({
+        where: {
+          userId_menuId_commodityId_optionsKey: {
+            userId: cartItem.userId,
+            menuId: cartItem.menuId,
+            commodityId: cartItem.commodityId,
+            optionsKey: cartItem.optionsKey,
+          },
+        },
+        data: { invalid: true },
+      })
+    }
+
+    // update decrement cart items
+    for (const cartItem of decrementCartItems) {
+      await client.cartItem.update({
+        where: {
+          userId_menuId_commodityId_optionsKey: {
+            userId: cartItem.userId,
+            menuId: cartItem.menuId,
+            commodityId: cartItem.commodityId,
+            optionsKey: cartItem.optionsKey,
+          },
+        },
+        data: { quantity: { decrement: cartItem.decrementAmount } },
+      })
+    }
+
+    const result = await client.cartItem.findMany({
+      where: {
+        userId,
+      },
+      select: {
+        quantity: true,
+        options: true,
+        invalid: true,
+        commodityOnMenu: {
+          select: {
+            commodity: {
+              select: {
+                name: true,
+                price: true,
+                image: {
+                  select: {
+                    path: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return {
+      ...result,
+      isModified: invalidCartItems.length > 0 || decrementCartItems.length > 0,
+    }
+  })
+}
+
+async function validateCartOptions(
+  options: OrderOptions,
+  targetOptionSets: OptionSet[],
+) {
+  // Validate options
+  for (const [optionName, optionValue] of Object.entries(options)) {
+    const matchOptionSet = targetOptionSets.find(
+      (optionSet) => optionSet.name === optionName,
+    )
+    if (!matchOptionSet) {
+      throw new Error(`找不到選項: ${optionName}`)
+    }
+
+    if (Array.isArray(optionValue)) {
+      if (!matchOptionSet.multiSelect) {
+        throw new Error(`選項不是多選: ${optionName}`)
+      }
+      if (
+        !optionValue.every((value) => matchOptionSet.options.includes(value))
+      ) {
+        throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
+      }
+    } else {
+      if (matchOptionSet.multiSelect) {
+        throw new Error(`選項不是單選: ${optionName}`)
+      }
+      if (!matchOptionSet.options.includes(optionValue)) {
+        throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
+      }
+    }
+  }
 }

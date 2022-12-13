@@ -147,7 +147,7 @@ model OrderItem {
   name     String
   price    Int
   quantity Int
-  options  Json   @db.Json // { "optionName": "optionValue"}
+  options  Json   @db.Json // { "optionName": string | string[]}
 
   order           Order           @relation(fields: [orderId], references: [id])
   orderId         Int
@@ -163,8 +163,9 @@ model CartItem {
   updatedAt DateTime @updatedAt
 
   quantity   Int
-  options    Json   @db.Json // { "optionName": "optionValue"}
+  options    Json    @db.Json // { "optionName": string | string[]}
   optionsKey String
+  invalid    Boolean @default(false)
 
   user            User            @relation(fields: [userId], references: [id])
   userId          String
