@@ -9,7 +9,7 @@ on:
 
 jobs:
   Deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: Build and Deploy to Cloud Run
     environment: ${{ inputs.env_input }}
 
