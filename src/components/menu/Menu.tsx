@@ -15,6 +15,7 @@ import COMDialog from './COMDialog'
 import { useStore } from '@/lib/client/store'
 
 const categoriesPlaceholder = Array(5).fill('分類')
+const CATEGORY_SCROLL_TOP_TRIGGER = 64
 
 export default function Menu(props: {
   type: MenuType
@@ -25,18 +26,62 @@ export default function Menu(props: {
     type: props.type,
     date: props.date,
   })
-  const [currentCategory, setCurrentCategory] = useState(
-    settings.MENU_CATEGORY_ALL,
-  )
   const router = useRouter()
   const [selectedCom, setSelectedCom] = useState<CommoditiesOnMenu[0] | null>(
     null,
   )
   const [comsByCategory, setComsByCategory] =
     useState<CommoditiesOnMenuByCategory>({})
-  const [isDialogOpen, setIsDetailOpen] = useState(false)
-  const detailRef = useRef<HTMLDivElement>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const setCurrentMenu = useStore((state) => state.setCurrentMenu)
+  const currentCategory = useStore((state) => state.currentCategory)
+  const setCurrentCategory = useStore((state) => state.setCurrentCategory)
+  const gridRef = useRef<HTMLDivElement>(null)
+
+  const categories = isLoading
+    ? categoriesPlaceholder
+    : Object.keys(comsByCategory)
+
+  // Detect grid scroll
+  useEffect(() => {
+    if (!gridRef.current || isLoading) return
+    const handleScroll = () => {
+      if (!gridRef.current) return
+
+      let topCategory: string | undefined = undefined
+
+      // Detect bottom
+      if (
+        gridRef.current.scrollHeight - gridRef.current.scrollTop ===
+        gridRef.current.clientHeight
+      ) {
+        topCategory = categories[categories.length - 1]
+      } else {
+        // Detect distance
+        let topDistance = Infinity
+
+        for (const category of categories) {
+          const el = document.getElementById(category)
+          if (!el) continue
+          const topPosition = el.getBoundingClientRect().top
+          if (topPosition > CATEGORY_SCROLL_TOP_TRIGGER) continue
+          const thisTopDistance = CATEGORY_SCROLL_TOP_TRIGGER - topPosition
+          if (thisTopDistance < topDistance) {
+            topDistance = thisTopDistance
+            topCategory = category
+          }
+        }
+      }
+
+      if (topCategory && topCategory !== currentCategory) {
+        setCurrentCategory(topCategory)
+      }
+    }
+    gridRef.current.addEventListener('scroll', handleScroll)
+    return () => {
+      gridRef.current?.removeEventListener('scroll', handleScroll)
+    }
+  }, [gridRef, categories, isLoading, currentCategory])
 
   // Detect commodityId from query and open
   useEffect(() => {
@@ -47,24 +92,12 @@ export default function Menu(props: {
       )
       if (com) {
         setSelectedCom(com)
-        setIsDetailOpen(true)
+        setIsDialogOpen(true)
       }
     } else if (!router.query.commodityId && isDialogOpen) {
-      setIsDetailOpen(false)
+      setIsDialogOpen(false)
     }
   }, [router.query.commodityId, data])
-
-  // Detect category from query and scroll to top
-  useEffect(() => {
-    if (router.query.category && data) {
-      setCurrentCategory(router.query.category as string)
-    } else if (!router.query.category) {
-      setCurrentCategory(settings.MENU_CATEGORY_ALL)
-    }
-    if (detailRef.current) {
-      detailRef.current.scrollTop = 0
-    }
-  }, [router.query.category, data, detailRef.current])
 
   // On data change
   useEffect(() => {
@@ -108,11 +141,10 @@ export default function Menu(props: {
       }, {})
 
     setComsByCategory(result)
-    setCurrentCategory(settings.MENU_CATEGORY_ALL)
     setCurrentMenu(data)
   }, [data])
 
-  const handleDetailClose = useCallback(() => {
+  const handleDialogClose = useCallback(() => {
     if (router.query.commodityId) {
       const { commodityId, ...query } = router.query
       router.push(
@@ -126,31 +158,18 @@ export default function Menu(props: {
     }
   }, [router.query])
 
-  const handleCategoryClick = useCallback(
-    (category: string) => {
-      if (router.query.category !== category) {
-        router.push(
-          {
-            pathname: router.pathname,
-            query: {
-              ...router.query,
-              category,
-            },
-          },
-          undefined,
-          { shallow: true },
-        )
-      }
-    },
-    [router],
-  )
+  const handleCategoryClick = useCallback((category: string) => {
+    document.getElementById(category)?.scrollIntoView({
+      behavior: 'smooth',
+    })
+    return
+  }, [])
 
   if (isError) return <div className='text-red-400'>{error.message}</div>
 
-  const categories = isLoading
-    ? categoriesPlaceholder
-    : [settings.MENU_CATEGORY_ALL, ...Object.keys(comsByCategory)]
   const coms = isLoading ? undefined : comsByCategory
+
+  console.log('render menu')
 
   return (
     <div
@@ -181,7 +200,7 @@ export default function Menu(props: {
         {/* Commodities */}
         <section className='relative grow'>
           <div
-            ref={detailRef}
+            ref={gridRef}
             className='absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] sm:pt-[4rem] lg:p-8'
           >
             {data && data.unavailableReasons.length > 0 && (
@@ -199,7 +218,7 @@ export default function Menu(props: {
                 </ul>
               </section>
             )}
-            <COMsGrid currentCategory={currentCategory} comsByCategory={coms} />
+            <COMsGrid comsByCategory={coms} />
           </div>
         </section>
       </div>
@@ -207,7 +226,7 @@ export default function Menu(props: {
       <COMDialog
         isOpen={isDialogOpen}
         com={selectedCom ?? undefined}
-        onClose={handleDetailClose}
+        onClose={handleDialogClose}
       />
     </div>
   )

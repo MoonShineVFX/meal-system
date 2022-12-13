@@ -78,7 +78,6 @@ export const settings = {
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
   /* Menu */
-  MENU_CATEGORY_ALL: '全部',
   MENU_CATEGORY_NULL: '未分類',
   /* Misc */
   TITLE: '夢想餐飲',

@@ -1,7 +1,6 @@
 import { Fragment, memo } from 'react'
 import { twMerge } from 'tailwind-merge'
 
-import { settings } from '@/lib/common'
 import type { CommoditiesOnMenuByCategory } from '@/lib/client/trpc'
 import COMCard from './COMCard'
 
@@ -13,43 +12,30 @@ const comsByCategoryPlaceHolder: CommoditiesOnMenuByCategory = {
 
 const TOTAL_FILLER_COUNT = 10
 
-function COMsGrid(props: {
-  currentCategory: string
-  comsByCategory?: CommoditiesOnMenuByCategory
-}) {
-  const { currentCategory } = props
-
+function COMsGrid(props: { comsByCategory?: CommoditiesOnMenuByCategory }) {
   const comsByCategory = props.comsByCategory ?? comsByCategoryPlaceHolder
-  const consByCategoryFiltered = Object.entries(comsByCategory).filter(
-    ([mainCategory]) => {
-      if (currentCategory === settings.MENU_CATEGORY_ALL) return true
-      return mainCategory === currentCategory
-    },
-  )
+  const consByCategoryEntries = Object.entries(comsByCategory)
   const fillerCount = Math.max(
-    TOTAL_FILLER_COUNT - consByCategoryFiltered.length,
+    TOTAL_FILLER_COUNT - consByCategoryEntries.length,
   )
 
   return (
     <section className='grid w-full grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-4 lg:gap-8'>
-      {consByCategoryFiltered.map(([mainCategory, subCategories], index) => (
+      {consByCategoryEntries.map(([mainCategory, subCategories], index) => (
         <Fragment key={mainCategory}>
-          {currentCategory === settings.MENU_CATEGORY_ALL && (
-            <h1
-              className={twMerge(
-                'col-span-full indent-[0.05em] text-xl font-bold tracking-wider lg:-mb-4',
-                index !== 0 && 'mt-4',
-              )}
-            >
-              {props.comsByCategory ? (
-                mainCategory
-              ) : (
-                <span className='skeleton rounded-md text-transparent'>
-                  分類
-                </span>
-              )}
-            </h1>
-          )}
+          <h1
+            id={mainCategory}
+            className={twMerge(
+              'col-span-full scroll-mt-16 indent-[0.05em] text-xl font-bold tracking-wider lg:-mb-4 lg:scroll-mt-8',
+              index !== 0 && 'mt-4',
+            )}
+          >
+            {props.comsByCategory ? (
+              mainCategory
+            ) : (
+              <span className='skeleton rounded-md text-transparent'>分類</span>
+            )}
+          </h1>
           {Object.entries(subCategories).map(([subCategory, coms]) => (
             <Fragment key={subCategory}>
               {coms.map((com, index) => (
