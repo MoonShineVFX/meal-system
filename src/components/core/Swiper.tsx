@@ -89,7 +89,7 @@ export default function Swiper(props: {
       )}
     >
       <div className={twMerge('h-screen', isCloseable && 'snap-start')}></div>
-      <div ref={coreRef} className={'snap-start pt-8'}>
+      <div ref={coreRef} className={'snap-start pt-4'}>
         {props.children}
       </div>
     </div>
