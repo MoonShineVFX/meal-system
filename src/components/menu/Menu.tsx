@@ -212,7 +212,7 @@ export default function Menu(props: {
             className='absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md sm:pt-[4rem] lg:p-8'
           >
             {data && data.unavailableReasons.length > 0 && (
-              <section className='mb-4 flex flex-col gap-1 rounded-md bg-red-50 p-4 text-stone-500'>
+              <section className='mb-4 flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-stone-500'>
                 <div className='flex items-center gap-2 text-red-400'>
                   <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
                   目前無法訂購餐點

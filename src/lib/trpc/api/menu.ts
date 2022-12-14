@@ -28,7 +28,7 @@ export const MenuRouter = router({
     .input(
       z.object({
         menuId: z.number(),
-        quantity: z.number().min(1).max(settings.MENU_MAX_ORDER_QUANTITY),
+        quantity: z.number().min(1).max(settings.MENU_MAX_QUANTITY_PER_ORDER),
         commodityId: z.number(),
         options: z.record(z.union([z.string(), z.array(z.string())])),
       }),

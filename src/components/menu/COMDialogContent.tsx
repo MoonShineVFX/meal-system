@@ -173,14 +173,14 @@ function COMDialogContent(props: {
             isUnavailable={isUnavailable}
             maxQuantity={Math.min(
               com.maxQuantity,
-              menu?.maxQuantity ?? settings.MENU_MAX_ORDER_QUANTITY,
+              menu?.maxQuantity ?? Infinity,
             )}
             register={register}
           />
         </section>
         {/* Unavailable message */}
         {isUnavailable && (
-          <section className='flex flex-col gap-1 rounded-md bg-red-50 p-4 text-red-400'>
+          <section className='flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-red-400'>
             <div className='flex items-center gap-2'>
               <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
               無法加入購物車

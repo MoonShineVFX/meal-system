@@ -104,7 +104,7 @@ export default function Cart() {
           ))}
         </ul>
         {/* Checkout */}
-        <summary className='flex flex-col gap-4 rounded-md bg-stone-100 p-6'>
+        <summary className='flex flex-col gap-4 rounded-2xl bg-stone-100 p-6'>
           <h2 className='text-xl font-bold'>結帳</h2>
           <section>
             {/* Total */}

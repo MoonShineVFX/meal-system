@@ -1,7 +1,11 @@
 import { MenuType, OrderStatus, Prisma } from '@prisma/client'
 
 import { OptionSet, OrderOptions } from '@/lib/common'
-import { MenuUnavailableReason, ComUnavailableReason } from '@/lib/common'
+import {
+  MenuUnavailableReason,
+  ComUnavailableReason,
+  settings,
+} from '@/lib/common'
 import { prisma, log } from './define'
 
 export async function createMenu(
@@ -174,6 +178,7 @@ export async function getMenu(
       {
         total: 0,
         user: 0,
+        cart: 0,
       },
     )
 
@@ -181,6 +186,7 @@ export async function getMenu(
       for (const cartItem of com.cartItems) {
         menuOrderedCount.user += cartItem.quantity
         orderedCount.user += cartItem.quantity
+        orderedCount.cart += cartItem.quantity
       }
     }
 
@@ -194,14 +200,21 @@ export async function getMenu(
         ComUnavailableReason.COM_LIMIT_PER_USER_EXCEEDED,
       )
     }
+    if (orderedCount.cart >= settings.MENU_MAX_QUANTITY_PER_ORDER) {
+      comUnavailableReasons.push(
+        ComUnavailableReason.COM_LIMIT_PER_ORDER_EXCEEDED,
+      )
+    }
 
     // calculate max quantity
     const maxQuantity = Math.min(
-      com.stock !== 0 ? com.stock - orderedCount.total : Infinity,
-      com.limitPerUser !== 0 ? com.limitPerUser - orderedCount.user : Infinity,
-      menu.limitPerUser !== 0
-        ? menu.limitPerUser - orderedCount.total
-        : Infinity,
+      com.stock !== 0
+        ? com.stock - orderedCount.total
+        : settings.MENU_MAX_QUANTITY_PER_ORDER,
+      com.limitPerUser !== 0
+        ? com.limitPerUser - orderedCount.user
+        : settings.MENU_MAX_QUANTITY_PER_ORDER,
+      settings.MENU_MAX_QUANTITY_PER_ORDER - orderedCount.cart,
     )
 
     const { orderItems, cartItems, ...rest } = com
@@ -232,6 +245,13 @@ export async function getMenu(
       ? menu.limitPerUser - menuOrderedCount.total
       : Infinity,
   )
+
+  // lower coms max quantity if menu max quantity is lower
+  if (maxQuantity < settings.MENU_MAX_QUANTITY_PER_ORDER) {
+    for (const com of validatedComs) {
+      com.maxQuantity = Math.min(com.maxQuantity, maxQuantity)
+    }
+  }
 
   return {
     ...menu,
@@ -436,7 +456,6 @@ export async function createCartItem(
 /** Validate user cart items and return */
 export async function getCartItems(userId: string) {
   return await prisma.$transaction(async (client) => {
-    console.time('getCartItems')
     const cartItems = await client.cartItem.findMany({
       where: {
         userId,
@@ -477,7 +496,7 @@ export async function getCartItems(userId: string) {
         createdAt: 'asc',
       },
     })
-    console.timeEnd('getCartItems')
+
     const invalidCartItems: typeof cartItems = []
     const validCartItems: typeof cartItems = []
     const decrementCartItems: (typeof cartItems[0] & {
@@ -552,7 +571,7 @@ export async function getCartItems(userId: string) {
       const commodityIds = menuMeta.coms.map((com) => com.commodityId)
 
       let menu: Awaited<ReturnType<typeof getMenu>>
-      console.time('getMenu')
+
       try {
         menu = await getMenu(
           undefined,
@@ -572,24 +591,22 @@ export async function getCartItems(userId: string) {
         continue
       }
       menuMap.set(menuId, menu)
-      console.timeEnd('getMenu')
 
       // validate menu quantities
       if (menuMeta.cartQuantity > menu.maxQuantity) {
-        let remainQuantity = menu.maxQuantity
         for (const cartItem of menuMeta.coms.flatMap((com) => com.cartItems)) {
-          if (remainQuantity <= 0) {
+          if (menu.maxQuantity <= 0) {
             invalidCartItems.push(cartItem)
             continue
           }
-          if (cartItem.quantity > remainQuantity) {
+          if (cartItem.quantity > menu.maxQuantity) {
             decrementCartItems.push({
               ...cartItem,
-              decrementAmount: cartItem.quantity - remainQuantity,
+              decrementAmount: cartItem.quantity - menu.maxQuantity,
             })
-            remainQuantity = 0
+            menu.maxQuantity = 0
           } else {
-            remainQuantity -= cartItem.quantity
+            menu.maxQuantity -= cartItem.quantity
             validCartItems.push(cartItem)
           }
         }
@@ -606,28 +623,22 @@ export async function getCartItems(userId: string) {
             invalidCartItems.push(...comMeta.cartItems)
             continue
           }
-
           // validate commodity quantities
-          if (comMeta.cartQuantity > com.maxQuantity) {
-            let remainQuantity = com.maxQuantity
-            for (const cartItem of comMeta.cartItems) {
-              if (remainQuantity <= 0) {
-                invalidCartItems.push(cartItem)
-                continue
-              }
-              if (cartItem.quantity > remainQuantity) {
-                decrementCartItems.push({
-                  ...cartItem,
-                  decrementAmount: cartItem.quantity - remainQuantity,
-                })
-                remainQuantity = 0
-              } else {
-                remainQuantity -= cartItem.quantity
-                validCartItems.push(cartItem)
-              }
+          for (const cartItem of comMeta.cartItems) {
+            if (com.maxQuantity <= 0) {
+              invalidCartItems.push(cartItem)
+              continue
             }
-          } else {
-            validCartItems.push(...comMeta.cartItems)
+            if (cartItem.quantity > com.maxQuantity) {
+              decrementCartItems.push({
+                ...cartItem,
+                decrementAmount: cartItem.quantity - com.maxQuantity,
+              })
+              com.maxQuantity = 0
+            } else {
+              com.maxQuantity -= cartItem.quantity
+              validCartItems.push(cartItem)
+            }
           }
         }
       }
@@ -692,10 +703,10 @@ export async function getCartItems(userId: string) {
     const injectedValidCartItems = validCartItems.map((cartItem) => {
       const thisMenu = menuMap.get(cartItem.menuId)
       if (!thisMenu) throw new Error('整合時發生錯誤，菜單不存在')
-      const thisCommodity = thisMenu.commodities.find(
+      const thisCOM = thisMenu.commodities.find(
         (com) => com.commodity.id === cartItem.commodityId,
       )
-      if (!thisCommodity) throw new Error('整合時發生錯誤，餐點不存在')
+      if (!thisCOM) throw new Error('整合時發生錯誤，餐點不存在')
 
       return {
         menuId: cartItem.menuId,
@@ -705,6 +716,7 @@ export async function getCartItems(userId: string) {
         options: cartItem.options,
         invalid: cartItem.invalid,
         commodityOnMenu: {
+          maxQuantity: thisCOM.maxQuantity,
           menu: {
             name: thisMenu.name,
             date: thisMenu.date,
@@ -712,10 +724,9 @@ export async function getCartItems(userId: string) {
             maxQuantity: thisMenu.maxQuantity,
           },
           commodity: {
-            name: thisCommodity.commodity.name,
-            price: thisCommodity.commodity.price,
-            image: thisCommodity.commodity.image,
-            maxQuantity: thisCommodity.maxQuantity,
+            name: thisCOM.commodity.name,
+            price: thisCOM.commodity.price,
+            image: thisCOM.commodity.image,
           },
         },
       }

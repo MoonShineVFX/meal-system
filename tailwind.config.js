@@ -47,6 +47,7 @@ module.exports = {
     require('@tailwindcss/container-queries'),
     skeletonPlugin,
     require('tailwind-scrollbar')({ nocompatible: true }),
+    require('@tailwindcss/forms')({ strategy: 'class' }),
   ],
   future: {
     hoverOnlyWhenSupported: true,

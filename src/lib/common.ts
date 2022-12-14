@@ -26,7 +26,8 @@ export enum MenuUnavailableReason {
 
 export enum ComUnavailableReason {
   STOCK_OUT = '餐點已售完',
-  COM_LIMIT_PER_USER_EXCEEDED = '您已達此餐點的訂購上限',
+  COM_LIMIT_PER_USER_EXCEEDED = '您已達此餐點的每人訂購數量上限',
+  COM_LIMIT_PER_ORDER_EXCEEDED = '您已達此餐點的單筆訂購數量上限',
 }
 
 /* Settings */
@@ -78,7 +79,7 @@ export const settings = {
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
   /* Menu */
   MENU_CATEGORY_NULL: '未分類',
-  MENU_MAX_ORDER_QUANTITY: 10,
+  MENU_MAX_QUANTITY_PER_ORDER: 10,
   /* Misc */
   TITLE: '夢想餐飲',
 }

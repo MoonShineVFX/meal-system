@@ -14,6 +14,15 @@ export default function CartCard(props: {
     console.log(event.target.value)
   }
 
+  const quantities = cartItem.invalid
+    ? [cartItem.quantity - 1]
+    : [
+        ...Array(
+          (cartItem as CartItems[0]).commodityOnMenu.maxQuantity +
+            cartItem.quantity,
+        ).keys(),
+      ]
+
   return (
     <div
       data-ui={twData({ available: !cartItem.invalid })}
@@ -57,34 +66,26 @@ export default function CartCard(props: {
         )}
       </section>
       {/* Quantity and remove*/}
-      {cartItem.invalid ? (
-        <section>
-          <div>{cartItem.quantity}</div>
-        </section>
-      ) : (
+      {
         <section className='flex flex-col'>
           <select
             value={cartItem.quantity}
-            className='rounded-2xl border border-stone-200 py-1 px-2 text-left text-sm focus:outline-none'
+            className='form-select cursor-pointer rounded-2xl border border-stone-200 py-1 pr-4'
             onChange={handleQuantityChange}
+            disabled={cartItem.invalid}
           >
-            {[
-              -1,
-              ...Array(
-                Math.min(
-                  (cartItem as CartItems[0]).commodityOnMenu.commodity
-                    .maxQuantity,
-                  settings.MENU_MAX_ORDER_QUANTITY,
-                ),
-              ).keys(),
-            ].map((quantity) => (
-              <option value={quantity + 1} key={quantity}>
+            {[-1, ...quantities].map((quantity) => (
+              <option
+                value={quantity + 1}
+                key={quantity}
+                className='text-center text-red-400'
+              >
                 {quantity === -1 ? '刪除' : quantity + 1}
               </option>
             ))}
           </select>
         </section>
-      )}
+      }
 
       {/* Price */}
       <section className='w-[5ch]'>
