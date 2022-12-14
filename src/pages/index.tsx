@@ -12,7 +12,7 @@ export default function PageIndex() {
         {/* Menu */}
         <Menu className='grow basis-1/2' type={MenuType.MAIN} />
         {/* Cart */}
-        <section className='hidden max-w-2xl grow basis-1/5 xl:block'>
+        <section className='hidden max-w-2xl grow basis-1/5 border-l border-stone-100 xl:block'>
           <Cart />
         </section>
       </div>

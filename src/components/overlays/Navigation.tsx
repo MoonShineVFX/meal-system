@@ -16,7 +16,6 @@ import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
 
 import Image from '@/components/core/Image'
-import { useStore } from '@/lib/client/store'
 import { generateCookie } from '@/lib/common'
 import { settings, twData } from '@/lib/common'
 import Logo from '@/components/core/Logo'
@@ -59,7 +58,12 @@ function Navigation() {
 }
 
 function ProfileButton(props: { className?: string }) {
-  const user = useStore((state) => state.user)
+  const {
+    data: user,
+    isLoading,
+    isError,
+    error,
+  } = trpc.user.get.useQuery(undefined)
 
   const handleLogout = () => {
     const cookie = generateCookie(undefined)
@@ -67,14 +71,15 @@ function ProfileButton(props: { className?: string }) {
     window.location.href = '/login'
   }
 
-  if (!user) return null
+  if (isLoading) return <Spinner className='h-8 w-8' />
+  if (isError) return <div>{error.message}</div>
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`} as='ul'>
-      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:hover:bg-stone-200 sm:active:bg-stone-200 sm:ui-open:bg-stone-200'>
+      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:ui-open:bg-stone-200 sm:hover:bg-stone-200 sm:active:bg-stone-200'>
         {/* Profile Image */}
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
-          <div className='relative h-8 w-8 overflow-hidden rounded-full border border-stone-300 ring-0 ring-yellow-500 hover:ring-2 active:ring-2 ui-open:ring-2 sm:h-12 sm:w-12 sm:hover:ring-0 sm:active:ring-0 sm:ui-open:ring-0'>
+          <div className='relative h-8 w-8 overflow-hidden rounded-full border border-stone-300 ring-0 ring-yellow-500 ui-open:ring-2 hover:ring-2 active:ring-2 sm:h-12 sm:w-12 sm:ui-open:ring-0 sm:hover:ring-0 sm:active:ring-0'>
             <Image
               alt='profile'
               src={
@@ -104,18 +109,20 @@ function ProfileButton(props: { className?: string }) {
         leaveTo='transform scale-50 opacity-0'
       >
         <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[0.0625rem] border-stone-200 bg-white py-3 px-2 indent-[0.05em] tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
-          <Link
+          <Popover.Button
+            as={Link}
             href='/transaction'
             className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
           >
             錢包
-          </Link>
-          <div
+          </Popover.Button>
+          <Popover.Button
+            as={'div'}
             className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'
             onClick={handleLogout}
           >
             登出
-          </div>
+          </Popover.Button>
           {/* Arrow */}
           <div className='absolute right-[0.875rem] bottom-0 h-4 w-10 translate-y-full overflow-hidden sm:hidden'>
             <div className='h-6 w-6 origin-top-right translate-x-4 -translate-y-1 rotate-45 border border-stone-200 bg-white'></div>
@@ -217,7 +224,7 @@ function CartBadge() {
   if (data.cartItems.length === 0) return null
 
   return (
-    <div className='flex h-4 w-4 justify-center rounded-full bg-yellow-500 -indent-[0.05em] text-xs tracking-tighter text-white group-data-selected:bg-stone-300 group-data-selected:text-stone-500 sm:h-5 sm:w-5 sm:rounded-md sm:text-sm'>
+    <div className='flex h-4 w-4 justify-center rounded-full bg-yellow-500 -indent-[0.2em] text-xs tracking-tighter text-white group-data-selected:bg-stone-300 group-data-selected:text-stone-500 sm:h-5 sm:w-5 sm:rounded-md sm:text-sm'>
       {data.cartItems.length}
     </div>
   )

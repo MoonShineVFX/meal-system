@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
@@ -10,12 +10,19 @@ import { SERVER_NOTIFY } from '@/lib/common'
 export default function EventListener() {
   const trpcContext = trpc.useContext()
   const addNotification = useStore((state) => state.addNotification)
+  const [hasDisconnected, setHasDisconnected] = useState(false)
+  const userInfoQuery = trpc.user.get.useQuery(undefined)
 
   const handleError = useCallback(async (error: Omit<Error, 'name'>) => {
     // Catch socket closed error
     if (error.message === 'WebSocket closed prematurely') {
       return
     }
+    // Catch error when not login
+    if (!userInfoQuery.isSuccess) {
+      return
+    }
+
     addNotification({
       type: NotificationType.ERROR,
       message: error.message,
@@ -25,6 +32,7 @@ export default function EventListener() {
   /* Socket management */
   useEffect(() => {
     const handleSocketOpen = async () => {
+      if (!hasDisconnected) return
       console.warn('TRPC Socket reopened')
       // Revalidate due to tanstack query not support websocket refetchOnReconnect
       trpcContext.invalidate()
@@ -35,6 +43,7 @@ export default function EventListener() {
     }
     const handleSocketClose = async () => {
       console.warn('TRPC Socket closed')
+      setHasDisconnected(true)
       addNotification({
         type: NotificationType.ERROR,
         message: '連線中斷',

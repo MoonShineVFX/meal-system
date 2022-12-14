@@ -41,7 +41,7 @@ export async function createMenu(
   })
 }
 
-/** If userId is provided, userOrderAvailability will be returned */
+/** Get menu and return with unavailableReasons from validation */
 export async function getMenu(
   type?: MenuType,
   date?: Date,
@@ -399,7 +399,7 @@ export async function createCartItem(
 
     // Validate options
     const comOptionSets = com.commodity.optionSets as OptionSet[]
-    validateCartOptions(options, comOptionSets)
+    await validateCartOptions(options, comOptionSets)
 
     // Create cart item
     return await client.cartItem.upsert({
@@ -485,7 +485,10 @@ export async function getCartItems(userId: string) {
       const comOptionSets = cartItem.commodityOnMenu.commodity
         .optionSets as OptionSet[]
       try {
-        validateCartOptions(cartItem.options as OrderOptions, comOptionSets)
+        await validateCartOptions(
+          cartItem.options as OrderOptions,
+          comOptionSets,
+        )
       } catch (e) {
         invalidCartItems.push(cartItem)
         continue
@@ -607,8 +610,12 @@ export async function getCartItems(userId: string) {
       }
     }
 
+    let isModified = false
+
     // update invalid cart items
     for (const cartItem of invalidCartItems) {
+      if (cartItem.invalid) continue
+
       await client.cartItem.update({
         where: {
           userId_menuId_commodityId_optionsKey: {
@@ -620,6 +627,8 @@ export async function getCartItems(userId: string) {
         },
         data: { invalid: true },
       })
+
+      if (!isModified) isModified = true
     }
 
     // update decrement cart items
@@ -635,6 +644,8 @@ export async function getCartItems(userId: string) {
         },
         data: { quantity: { decrement: cartItem.decrementAmount } },
       })
+
+      if (!isModified) isModified = true
     }
 
     const result = await client.cartItem.findMany({
@@ -650,6 +661,13 @@ export async function getCartItems(userId: string) {
         invalid: true,
         commodityOnMenu: {
           select: {
+            menu: {
+              select: {
+                name: true,
+                date: true,
+                type: true,
+              },
+            },
             commodity: {
               select: {
                 name: true,
@@ -668,7 +686,7 @@ export async function getCartItems(userId: string) {
 
     return {
       cartItems: result,
-      isModified: invalidCartItems.length > 0 || decrementCartItems.length > 0,
+      isModified,
     }
   })
 }

@@ -51,7 +51,7 @@ export default function COMDialog(props: {
           leave='transition duration-150 ease-out'
           leaveFrom='transform max-sm:translate-y-0 sm:scale-100 sm:opacity-100'
           leaveTo='transform max-sm:translate-y-full sm:scale-50 sm:opacity-0'
-          className='col-start-1 row-start-1 flex transform-gpu flex-col justify-center md:p-4 lg:p-8'
+          className='col-start-1 row-start-1 flex transform-gpu flex-col justify-center md:p-8'
         >
           {props.com && (
             <Swiper onClose={props.onClose} breakingPoint={640}>

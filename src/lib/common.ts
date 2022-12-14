@@ -1,4 +1,4 @@
-import { TransactionType, UserRole } from '@prisma/client'
+import { TransactionType, UserRole, Menu } from '@prisma/client'
 
 /* Types */
 export enum SERVER_NOTIFY {
@@ -102,4 +102,30 @@ export function twData(parms: Record<string, boolean | undefined>) {
   return Object.entries(parms)
     .map(([key, value]) => (value ? key : `not-${key}`))
     .join(' ')
+}
+
+export function getMenuName(menu: Pick<Menu, 'date' | 'name' | 'type'>) {
+  if (menu.type === 'MAIN') return '即時點餐'
+  if (menu.date === null) return '錯誤菜單'
+  let typeName: string
+  switch (menu.type) {
+    case 'BREAKFAST':
+      typeName = '早餐'
+      break
+    case 'LUNCH':
+      typeName = '午餐'
+      break
+    case 'DINNER':
+      typeName = '晚餐'
+      break
+    case 'TEA':
+      typeName = '下午茶'
+      break
+    default:
+      typeName = '錯誤菜單'
+  }
+  return `預訂 ${menu.date.toLocaleDateString('zh-TW', {
+    month: 'long',
+    day: 'numeric',
+  })} ${typeName}${menu.name !== '' ? ` - ${menu.name}` : ''}`
 }

@@ -46,6 +46,7 @@ module.exports = {
     require('@headlessui/tailwindcss'),
     require('@tailwindcss/container-queries'),
     skeletonPlugin,
+    require('tailwind-scrollbar')({ nocompatible: true }),
   ],
   future: {
     hoverOnlyWhenSupported: true,

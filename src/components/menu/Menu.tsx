@@ -196,7 +196,7 @@ export default function Menu(props: {
                 selected: currentCategory === mainCategory,
               })}
               key={`category-${index}`}
-              className='w-fit shrink-0 cursor-pointer rounded-2xl px-2 py-1 text-stone-500 data-selected:pointer-events-none data-selected:bg-yellow-500 data-selected:text-yellow-900 data-not-selected:hover:bg-stone-600/10 data-not-selected:active:bg-stone-600/10 group-data-loading/menu:skeleton lg:data-not-selected:hover:bg-stone-100 lg:data-not-selected:active:bg-stone-100'
+              className='w-fit shrink-0 cursor-pointer rounded-2xl px-2 py-1 text-stone-500 data-selected:pointer-events-none data-selected:bg-yellow-500 data-selected:text-yellow-900 group-data-loading/menu:skeleton data-not-selected:hover:bg-stone-600/10 data-not-selected:active:bg-stone-600/10 lg:data-not-selected:hover:bg-stone-100 lg:data-not-selected:active:bg-stone-100'
               onClick={() => handleCategoryClick(mainCategory)}
             >
               <p className='text-justify indent-[0.1em] text-sm font-bold tracking-widest group-data-loading/menu:text-transparent sm:text-base'>
@@ -209,17 +209,17 @@ export default function Menu(props: {
         <section className='relative grow'>
           <div
             ref={gridRef}
-            className='absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] sm:pt-[4rem] lg:p-8'
+            className='absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md sm:pt-[4rem] lg:p-8'
           >
             {data && data.unavailableReasons.length > 0 && (
-              <section className='mb-4 flex flex-col gap-1 rounded-md bg-stone-100 p-4 text-stone-500'>
-                <div className='flex items-center gap-2'>
-                  <ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' />
+              <section className='mb-4 flex flex-col gap-1 rounded-md bg-red-50 p-4 text-stone-500'>
+                <div className='flex items-center gap-2 text-red-400'>
+                  <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
                   目前無法訂購餐點
                 </div>
                 <ul className='flex flex-col gap-1 text-stone-400'>
                   {data.unavailableReasons.map((reason) => (
-                    <li className='ml-7 text-sm' key={reason}>
+                    <li className='ml-7 text-sm text-red-300' key={reason}>
                       {reason}
                     </li>
                   ))}

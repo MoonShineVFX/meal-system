@@ -9,16 +9,13 @@ import { useStore, NotificationType } from '@/lib/client/store'
 export default function AuthValidator() {
   const router = useRouter()
   const addNotification = useStore((state) => state.addNotification)
-  const setUser = useStore((state) => state.setUser)
   const userInfoQuery = trpc.user.get.useQuery(undefined, {
-    onSuccess(data) {
-      setUser(data)
+    onSuccess() {
       if (router.pathname === '/login') {
         router.push('/')
       }
     },
     onError() {
-      setUser(null)
       if (router.pathname !== '/login') {
         router.push('/login')
       }

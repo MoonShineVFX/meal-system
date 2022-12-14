@@ -31,6 +31,12 @@ export type CommoditiesOnMenuByCategory = Map<
   string,
   Map<string, (CommodityOnMenu | undefined)[]>
 >
+export type CartData = RouterOutput['menu']['getCart']
+export type CartItems = CartData['cartItems']
+export type CartItemsByMenu = Map<
+  number,
+  CartData['cartItems'][0]['commodityOnMenu']['menu'] & { cartItems: CartItems }
+>
 
 /* WebSocket Client */
 declare global {

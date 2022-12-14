@@ -3,7 +3,6 @@ import { useRouter } from 'next/router'
 import { twMerge } from 'tailwind-merge'
 
 import trpc from '@/lib/client/trpc'
-import { useStore } from '@/lib/client/store'
 import EventListener from '@/components/overlays/EventListener'
 import AuthValidator from '@/components/overlays/AuthValidator'
 import Notification from '@/components/overlays/Notification'
@@ -15,7 +14,6 @@ import Title from '@/components/core/Title'
 const FULLSCREEN_COMPONENT_PATHS = ['/login']
 
 const PageApp: AppType = ({ Component, pageProps }) => {
-  const user = useStore((state) => state.user)
   const router = useRouter()
   const isComponentFullscreen = FULLSCREEN_COMPONENT_PATHS.includes(
     router.pathname,
@@ -44,7 +42,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
         </main>
       </div>
       {/* Overlay */}
-      {user && <EventListener />}
+      <EventListener />
       <RouterProgress />
       <AuthValidator />
       <Notification />

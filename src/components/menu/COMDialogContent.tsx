@@ -96,7 +96,7 @@ function COMDialogContent(props: {
 
   return (
     <section
-      className='relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-3xl md:flex-row md:gap-0 md:rounded-2xl md:p-0 md:shadow-2xl'
+      className='relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-xl md:flex-row md:gap-0 md:rounded-2xl md:p-0 md:shadow-2xl'
       onClick={(event) => event.stopPropagation()}
     >
       {/* Close button */}
@@ -107,7 +107,7 @@ function COMDialogContent(props: {
         <XMarkIcon className='h-8 w-8 stroke-1 text-white md:text-stone-500' />
       </button>
       {/* Image */}
-      <section className='relative aspect-[4/3] h-min shrink-0 overflow-hidden sm:aspect-square sm:rounded-2xl sm:max-md:w-48 md:m-4 md:mr-0 md:shrink md:basis-2/5 lg:m-8 lg:mr-0'>
+      <section className='relative aspect-[4/3] h-min shrink-0 overflow-hidden sm:aspect-square sm:rounded-2xl sm:max-md:w-48 md:m-4 md:mr-0 md:shrink md:basis-2/5 lg:m-6 lg:mr-0'>
         <Image
           style={{ WebkitTouchCallout: 'none' }}
           draggable={false}
@@ -119,16 +119,16 @@ function COMDialogContent(props: {
       </section>
       {/* Form */}
       <form
-        className='group flex shrink-0 grow flex-col gap-8 p-4 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-8'
+        className='group flex shrink-0 grow flex-col gap-6 p-4 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-6'
         data-ui={twData({ available: !isUnavailable })}
         onSubmit={handleSubmit(handleCreateCartItem)}
       >
         {/* Info */}
         <header className='flex flex-col gap-2 lg:gap-4'>
-          <h1 className='indent-[0.1em] text-3xl font-bold tracking-widest text-stone-800'>
+          <h1 className='indent-[0.1em] text-2xl font-bold tracking-widest text-stone-800'>
             {com.commodity.name}
           </h1>
-          <h2 className='indent-[0.05em] text-2xl tracking-wider text-yellow-500 lg:-mt-2'>
+          <h2 className='indent-[0.05em] text-xl tracking-wider text-yellow-500 lg:-mt-2'>
             ${com.commodity.price}
           </h2>
           {com.commodity.description !== '' && (
@@ -165,7 +165,7 @@ function COMDialogContent(props: {
           ))}
         </main>
         {/* Spacer For sm */}
-        <div className='-my-4 shrink grow'></div>
+        <div className='-my-3 shrink grow'></div>
         {/* Quantity */}
         <section className='relative flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:hidden'>
           <QuantityInput
@@ -177,12 +177,12 @@ function COMDialogContent(props: {
         </section>
         {/* Unavailable message */}
         {isUnavailable && (
-          <section className='flex flex-col gap-1 rounded-md bg-stone-100 p-4 text-stone-500'>
+          <section className='flex flex-col gap-1 rounded-md bg-red-50 p-4 text-red-400'>
             <div className='flex items-center gap-2'>
-              <ExclamationTriangleIcon className='h-5 w-5 text-yellow-400' />
+              <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
               無法加入購物車
             </div>
-            <ul className='flex flex-col gap-1 text-stone-400'>
+            <ul className='flex flex-col gap-1 text-red-300'>
               {[
                 ...(menu?.unavailableReasons ?? []),
                 ...com.unavailableReasons,
@@ -195,19 +195,19 @@ function COMDialogContent(props: {
           </section>
         )}
         {/* Submit */}
-        <footer className='flex shrink-0 flex-col gap-4 @xs/detail:flex-row-reverse'>
+        <footer className='flex shrink-0 flex-col gap-4 sm:flex-row-reverse'>
           <Button
             isBusy={isBusy}
             isLoading={addCartMutation.isLoading || addCartMutation.isSuccess}
             isDisabled={isUnavailable}
-            className='h-12 grow @xs/detail:basis-3/5'
+            className='h-12 grow sm:basis-3/5'
             type='submit'
             textClassName='font-bold'
             label={isUnavailable ? '無法訂購' : '加到購物車'}
           />
           <Button
             label='返回'
-            className='h-12 grow @xs/detail:basis-2/5'
+            className='h-12 grow sm:basis-2/5'
             theme='support'
             onClick={props.onClose}
           />
@@ -246,7 +246,7 @@ function OptionSet(props: {
                 required: !optionSet.multiSelect && '請選擇一個選項',
               })}
             />
-            <div className='m-[0.0625rem] cursor-pointer rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider hover:border-stone-400 active:border-stone-400 peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500'>
+            <div className='m-[0.0625rem] cursor-pointer rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500 hover:border-stone-400 active:border-stone-400'>
               {optionName}
             </div>
           </label>
@@ -292,7 +292,7 @@ function QuantityInput(props: {
         type='button'
         onClick={() => handleQuantityButtonClick('DECREASE')}
         disabled={field.value <= 1}
-        className='rounded-full p-1 text-stone-500 hover:bg-stone-200 active:bg-stone-200 disabled:pointer-events-none disabled:text-stone-300'
+        className='rounded-full p-1 text-stone-500 disabled:pointer-events-none disabled:text-stone-300 hover:bg-stone-200 active:bg-stone-200'
       >
         <MinusIcon className='h-5 w-5' />
       </button>
@@ -303,7 +303,7 @@ function QuantityInput(props: {
         type='button'
         onClick={() => handleQuantityButtonClick('INCREASE')}
         disabled={props.isUnavailable || field.value >= props.maxQuantity}
-        className='rounded-full p-1 text-stone-500 hover:bg-stone-200 active:bg-stone-200 disabled:pointer-events-none disabled:text-stone-300'
+        className='rounded-full p-1 text-stone-500 disabled:pointer-events-none disabled:text-stone-300 hover:bg-stone-200 active:bg-stone-200'
       >
         <PlusIcon className='h-5 w-5' />
       </button>
