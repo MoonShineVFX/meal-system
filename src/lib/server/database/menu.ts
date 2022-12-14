@@ -1,6 +1,6 @@
 import { MenuType, OrderStatus, Prisma } from '@prisma/client'
 
-import type { OptionSet, OrderOptions } from '@/lib/common'
+import { OptionSet, OrderOptions } from '@/lib/common'
 import { MenuUnavailableReason, ComUnavailableReason } from '@/lib/common'
 import { prisma, log } from './define'
 
@@ -78,6 +78,7 @@ export async function getMenu(
       id: true,
       date: true,
       name: true,
+      type: true,
       description: true,
       limitPerUser: true,
       publishedDate: true,
@@ -196,9 +197,11 @@ export async function getMenu(
 
     // calculate max quantity
     const maxQuantity = Math.min(
-      com.stock !== 0 ? com.stock - orderedCount.total : 99,
-      com.limitPerUser !== 0 ? com.limitPerUser - orderedCount.user : 99,
-      menu.limitPerUser !== 0 ? menu.limitPerUser - orderedCount.total : 99,
+      com.stock !== 0 ? com.stock - orderedCount.total : Infinity,
+      com.limitPerUser !== 0 ? com.limitPerUser - orderedCount.user : Infinity,
+      menu.limitPerUser !== 0
+        ? menu.limitPerUser - orderedCount.total
+        : Infinity,
     )
 
     const { orderItems, cartItems, ...rest } = com
@@ -225,7 +228,9 @@ export async function getMenu(
     )
   }
   const maxQuantity = Math.min(
-    menu.limitPerUser !== 0 ? menu.limitPerUser - menuOrderedCount.total : 99,
+    menu.limitPerUser !== 0
+      ? menu.limitPerUser - menuOrderedCount.total
+      : Infinity,
   )
 
   return {
@@ -393,8 +398,8 @@ export async function createCartItem(
     if (com.unavailableReasons.length > 0) {
       throw new Error(`餐點無法訂購: ${com.unavailableReasons.join(', ')}`)
     }
-    if (quantity > com.maxQuantity) {
-      throw new Error(`quantity exceeds max quantity: ${com.maxQuantity}`)
+    if (quantity > Math.min(com.maxQuantity, menu.maxQuantity)) {
+      throw new Error(`超出最大訂購量: ${com.maxQuantity}`)
     }
 
     // Validate options
@@ -431,6 +436,7 @@ export async function createCartItem(
 /** Validate user cart items and return */
 export async function getCartItems(userId: string) {
   return await prisma.$transaction(async (client) => {
+    console.time('getCartItems')
     const cartItems = await client.cartItem.findMany({
       where: {
         userId,
@@ -445,8 +451,22 @@ export async function getCartItems(userId: string) {
         menuId: true,
         commodityOnMenu: {
           select: {
+            menu: {
+              select: {
+                name: true,
+                date: true,
+                type: true,
+              },
+            },
             commodity: {
               select: {
+                name: true,
+                price: true,
+                image: {
+                  select: {
+                    path: true,
+                  },
+                },
                 optionSets: true,
               },
             },
@@ -457,7 +477,7 @@ export async function getCartItems(userId: string) {
         createdAt: 'asc',
       },
     })
-
+    console.timeEnd('getCartItems')
     const invalidCartItems: typeof cartItems = []
     const validCartItems: typeof cartItems = []
     const decrementCartItems: (typeof cartItems[0] & {
@@ -523,6 +543,7 @@ export async function getCartItems(userId: string) {
       }
     }
 
+    let menuMap: Map<number, Awaited<ReturnType<typeof getMenu>>> = new Map()
     for (const [menuIdKey, menuMeta] of Object.entries(
       menuAndCommoditiesMetas,
     )) {
@@ -531,7 +552,7 @@ export async function getCartItems(userId: string) {
       const commodityIds = menuMeta.coms.map((com) => com.commodityId)
 
       let menu: Awaited<ReturnType<typeof getMenu>>
-
+      console.time('getMenu')
       try {
         menu = await getMenu(
           undefined,
@@ -550,6 +571,8 @@ export async function getCartItems(userId: string) {
         invalidCartItems.push(...menuMeta.coms.flatMap((com) => com.cartItems))
         continue
       }
+      menuMap.set(menuId, menu)
+      console.timeEnd('getMenu')
 
       // validate menu quantities
       if (menuMeta.cartQuantity > menu.maxQuantity) {
@@ -614,7 +637,9 @@ export async function getCartItems(userId: string) {
 
     // update invalid cart items
     for (const cartItem of invalidCartItems) {
-      if (cartItem.invalid) continue
+      if (cartItem.invalid) {
+        continue
+      }
 
       await client.cartItem.update({
         where: {
@@ -627,6 +652,7 @@ export async function getCartItems(userId: string) {
         },
         data: { invalid: true },
       })
+      cartItem.invalid = true
 
       if (!isModified) isModified = true
     }
@@ -644,48 +670,60 @@ export async function getCartItems(userId: string) {
         },
         data: { quantity: { decrement: cartItem.decrementAmount } },
       })
+      cartItem.quantity -= cartItem.decrementAmount
+      validCartItems.push(cartItem)
 
       if (!isModified) isModified = true
     }
 
-    const result = await client.cartItem.findMany({
-      where: {
-        userId,
+    const injectedInvalidCartIems = invalidCartItems.map((cartItem) => ({
+      menuId: cartItem.menuId,
+      commodityId: cartItem.commodityId,
+      optionsKey: cartItem.optionsKey,
+      quantity: cartItem.quantity,
+      options: cartItem.options,
+      invalid: cartItem.invalid,
+      commodityOnMenu: {
+        commodity: cartItem.commodityOnMenu.commodity,
+        menu: cartItem.commodityOnMenu.menu,
       },
-      select: {
-        menuId: true,
-        commodityId: true,
-        optionsKey: true,
-        quantity: true,
-        options: true,
-        invalid: true,
+    }))
+
+    const injectedValidCartItems = validCartItems.map((cartItem) => {
+      const thisMenu = menuMap.get(cartItem.menuId)
+      if (!thisMenu) throw new Error('整合時發生錯誤，菜單不存在')
+      const thisCommodity = thisMenu.commodities.find(
+        (com) => com.commodity.id === cartItem.commodityId,
+      )
+      if (!thisCommodity) throw new Error('整合時發生錯誤，餐點不存在')
+
+      return {
+        menuId: cartItem.menuId,
+        commodityId: cartItem.commodityId,
+        optionsKey: cartItem.optionsKey,
+        quantity: cartItem.quantity,
+        options: cartItem.options,
+        invalid: cartItem.invalid,
         commodityOnMenu: {
-          select: {
-            menu: {
-              select: {
-                name: true,
-                date: true,
-                type: true,
-              },
-            },
-            commodity: {
-              select: {
-                name: true,
-                price: true,
-                image: {
-                  select: {
-                    path: true,
-                  },
-                },
-              },
-            },
+          menu: {
+            name: thisMenu.name,
+            date: thisMenu.date,
+            type: thisMenu.type,
+            maxQuantity: thisMenu.maxQuantity,
+          },
+          commodity: {
+            name: thisCommodity.commodity.name,
+            price: thisCommodity.commodity.price,
+            image: thisCommodity.commodity.image,
+            maxQuantity: thisCommodity.maxQuantity,
           },
         },
-      },
+      }
     })
 
     return {
-      cartItems: result,
+      invalidCartItems: injectedInvalidCartIems,
+      cartItems: injectedValidCartItems,
       isModified,
     }
   })

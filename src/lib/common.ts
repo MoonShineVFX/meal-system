@@ -78,6 +78,7 @@ export const settings = {
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
   /* Menu */
   MENU_CATEGORY_NULL: '未分類',
+  MENU_MAX_ORDER_QUANTITY: 10,
   /* Misc */
   TITLE: '夢想餐飲',
 }
@@ -127,5 +128,5 @@ export function getMenuName(menu: Pick<Menu, 'date' | 'name' | 'type'>) {
   return `預訂 ${menu.date.toLocaleDateString('zh-TW', {
     month: 'long',
     day: 'numeric',
-  })} ${typeName}${menu.name !== '' ? ` - ${menu.name}` : ''}`
+  })} ${typeName}${menu.name !== '' ? ` -${menu.name}` : ''}`
 }

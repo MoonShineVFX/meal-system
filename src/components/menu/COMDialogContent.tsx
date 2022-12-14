@@ -171,7 +171,10 @@ function COMDialogContent(props: {
           <QuantityInput
             control={control}
             isUnavailable={isUnavailable}
-            maxQuantity={Math.min(com.maxQuantity, menu?.maxQuantity ?? 99)}
+            maxQuantity={Math.min(
+              com.maxQuantity,
+              menu?.maxQuantity ?? settings.MENU_MAX_ORDER_QUANTITY,
+            )}
             register={register}
           />
         </section>

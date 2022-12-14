@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 import trpc from '@/lib/client/trpc'
-import type { CartItems, CartItemsByMenu } from '@/lib/client/trpc'
+import type { CartItemsByMenu, InvalidCartItems } from '@/lib/client/trpc'
 import { getMenuName } from '@/lib/common'
 import Button from '@/components/core/Button'
 import CartCard from './CartCard'
@@ -20,7 +20,7 @@ export default function Cart() {
     isError: userIsError,
     error: userError,
   } = trpc.user.get.useQuery(undefined)
-  const [invalidCartItems, setInvalidCartItems] = useState<CartItems>([])
+  const [invalidCartItems, setInvalidCartItems] = useState<InvalidCartItems>([])
   const [cartItemsByMenu, setCartItemsByMenu] = useState<CartItemsByMenu>(
     new Map(),
   )
@@ -31,14 +31,8 @@ export default function Cart() {
     if (!cartData) return
 
     // Separate cart items by menu
-    const invalidCartItems: CartItems = []
     let cartItemsByMenu: CartItemsByMenu = new Map()
     for (const cartItem of cartData.cartItems) {
-      if (cartItem.invalid) {
-        invalidCartItems.push(cartItem)
-        continue
-      }
-
       const menu = cartItem.commodityOnMenu.menu
       if (!cartItemsByMenu.has(cartItem.menuId)) {
         cartItemsByMenu.set(cartItem.menuId, { ...menu, cartItems: [cartItem] })
@@ -56,7 +50,7 @@ export default function Cart() {
     }
 
     setCartItemsByMenu(cartItemsByMenu)
-    setInvalidCartItems(invalidCartItems)
+    setInvalidCartItems(cartData.invalidCartItems)
     if (cartData.isModified) {
       setModifiedNotify(true)
     }
@@ -73,7 +67,7 @@ export default function Cart() {
 
   return (
     <div className='relative h-full w-full @container/cart'>
-      <div className='absolute inset-0 flex flex-col gap-4 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md lg:p-8'>
+      <div className='absolute inset-0 flex flex-col gap-4 overflow-y-auto p-4 overflow-x-hidden scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md lg:p-8'>
         <h1 className='text-xl font-bold'>購物車</h1>
         {/* CartItems */}
         <ul className='flex flex-col gap-4'>

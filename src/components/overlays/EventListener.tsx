@@ -62,7 +62,7 @@ export default function EventListener() {
         1,
       )
     }
-  }, [])
+  }, [hasDisconnected])
 
   /* Server Notification */
   trpc.user.onNotify.useSubscription(undefined, {
