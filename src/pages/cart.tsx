@@ -1,4 +1,4 @@
-import Cart from '@/components/menu/Cart'
+import Cart from '@/components/cart/Cart'
 
 export default function CartPage() {
   return <Cart />

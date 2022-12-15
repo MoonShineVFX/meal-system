@@ -2,13 +2,7 @@ import z from 'zod'
 import { MenuType } from '@prisma/client'
 
 import { userProcedure, router } from '../trpc'
-import {
-  getMenuWithComs,
-  createCartItem,
-  getCartItems,
-} from '@/lib/server/database'
-import { ServerEventName, eventEmitter } from '@/lib/server/event'
-import { SERVER_NOTIFY, settings } from '@/lib/common'
+import { getMenuWithComs } from '@/lib/server/database'
 
 export const MenuRouter = router({
   get: userProcedure
@@ -19,39 +13,11 @@ export const MenuRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const menu = await getMenuWithComs(
+      return await getMenuWithComs(
         input.type,
         input.date,
         undefined,
         ctx.userLite.id,
       )
-
-      return menu
     }),
-  addComToCart: userProcedure
-    .input(
-      z.object({
-        menuId: z.number(),
-        quantity: z.number().min(1).max(settings.MENU_MAX_QUANTITY_PER_ORDER),
-        commodityId: z.number(),
-        options: z.record(z.union([z.string(), z.array(z.string())])),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      await createCartItem(
-        ctx.userLite.id,
-        input.menuId,
-        input.commodityId,
-        input.quantity,
-        input.options,
-      )
-
-      eventEmitter.emit(
-        ServerEventName.USER_NOTIFY(ctx.userLite.id),
-        SERVER_NOTIFY.ADD_CART,
-      )
-    }),
-  getCart: userProcedure.query(async ({ ctx }) => {
-    return await getCartItems(ctx.userLite.id)
-  }),
 })

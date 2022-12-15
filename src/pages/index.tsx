@@ -2,7 +2,7 @@ import { MenuType } from '@prisma/client'
 
 import Title from '@/components/core/Title'
 import Menu from '@/components/menu/Menu'
-import Cart from '@/components/menu/Cart'
+import Cart from '@/components/cart/Cart'
 
 export default function PageIndex() {
   return (

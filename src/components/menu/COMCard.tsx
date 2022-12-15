@@ -36,15 +36,17 @@ export default function COMCard(props: {
     <LinkWrapper com={com}>
       <div className='group flex flex-col overflow-hidden border-stone-100 bg-white'>
         {/* Image */}
-        <section className='relative aspect-square overflow-hidden rounded-md group-data-loading/menu:skeleton'>
-          <Image
-            className='object-cover transition-transform group-hover:opacity-75 group-active:opacity-75 group-data-loading/menu:hidden'
-            src={
-              com?.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
-            }
-            sizes='(max-width: 375px) 50vw, (max-width: 750px) 33vw, 180px'
-            alt={com?.commodity.name ?? '餐點圖片'}
-          />
+        <section className='p-4 pb-2'>
+          <div className='relative aspect-square overflow-hidden rounded-2xl group-data-loading/menu:skeleton'>
+            <Image
+              className='object-cover transition-transform group-hover:opacity-75 group-active:opacity-75 group-data-loading/menu:hidden'
+              src={
+                com?.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
+              }
+              sizes='(max-width: 375px) 50vw, (max-width: 750px) 33vw, 180px'
+              alt={com?.commodity.name ?? '餐點圖片'}
+            />
+          </div>
         </section>
         {/* Description */}
         <section className='flex w-full flex-col items-center gap-1 p-2'>

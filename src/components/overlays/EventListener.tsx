@@ -73,9 +73,11 @@ export default function EventListener() {
       })
 
       switch (message) {
-        case SERVER_NOTIFY.ADD_CART:
+        case SERVER_NOTIFY.CART_ADD:
+        case SERVER_NOTIFY.CART_DELETE:
+        case SERVER_NOTIFY.CART_UPDATE:
           trpcContext.menu.get.invalidate()
-          trpcContext.menu.getCart.invalidate()
+          trpcContext.cart.get.invalidate()
           break
       }
     },

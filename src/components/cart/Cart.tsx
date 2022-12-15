@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
+import { twMerge } from 'tailwind-merge'
+import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 
 import trpc from '@/lib/client/trpc'
-import type { CartItemsByMenu, InvalidCartItems } from '@/lib/client/trpc'
+import type { CartItemsByMenu } from '@/lib/client/trpc'
 import { getMenuName } from '@/lib/common'
 import Button from '@/components/core/Button'
 import CartCard from './CartCard'
 import Dialog from '@/components/core/Dialog'
+import { useStore, NotificationType } from '@/lib/client/store'
 
 export default function Cart() {
   const {
@@ -14,14 +17,15 @@ export default function Cart() {
     isLoading: cartIsLoading,
     isError: cartIsError,
     error: cartError,
-  } = trpc.menu.getCart.useQuery()
+  } = trpc.cart.get.useQuery()
   const {
     data: userData,
     isLoading: userIsLoading,
     isError: userIsError,
     error: userError,
   } = trpc.user.get.useQuery(undefined)
-  const [invalidCartItems, setInvalidCartItems] = useState<InvalidCartItems>([])
+  const deleteCartMutation = trpc.cart.delete.useMutation()
+  const addNotification = useStore((state) => state.addNotification)
   const [cartItemsByMenu, setCartItemsByMenu] = useState<CartItemsByMenu>(
     new Map(),
   )
@@ -51,11 +55,25 @@ export default function Cart() {
     }
 
     setCartItemsByMenu(cartItemsByMenu)
-    setInvalidCartItems(cartData.invalidCartItems)
     if (cartData.isModified) {
       setModifiedNotify(true)
     }
   }, [cartData])
+
+  const handleDeleteInvalidCartItems = () => {
+    if (!cartData?.invalidCartItems.length) return
+    deleteCartMutation.mutateAsync(
+      { invalidOnly: true },
+      {
+        onError: async (error) => {
+          addNotification({
+            type: NotificationType.ERROR,
+            message: error.message,
+          })
+        },
+      },
+    )
+  }
 
   if (cartIsLoading || userIsLoading) return <div>Loading...</div>
   if (cartIsError || userIsError)
@@ -63,6 +81,20 @@ export default function Cart() {
       <div className='text-red-400'>
         {cartError?.message}
         {userError?.message}
+      </div>
+    )
+  if (cartData.cartItems.length + cartData.invalidCartItems.length === 0)
+    return (
+      <div className='flex h-full w-full flex-col items-center justify-center'>
+        <div className='flex flex-col items-center justify-center gap-4'>
+          <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
+            <ShoppingCartIcon className='h-12 w-12 text-stone-400' />
+          </div>
+          <h1 className='text-lg font-bold'>購物車是空的</h1>
+          <p className='text-center text-sm text-stone-400'>
+            購物車是空的，快去挑選餐點吧！
+          </p>
+        </div>
       </div>
     )
 
@@ -80,29 +112,36 @@ export default function Cart() {
           {/* CartItems */}
           <section className='flex flex-col gap-4 lg:pr-4'>
             {/* Invalid */}
-            <div className='rounded-2xl bg-red-50 p-4 @2xl/cart:mx-0 @2xl/cart:p-6'>
-              <h3 className='flex items-center gap-1 text-sm text-red-400'>
-                <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
-                以下餐點已失效
-              </h3>
-              <div>
-                {invalidCartItems.length > 0 &&
-                  invalidCartItems.map((cartItem) => (
-                    <CartCard
-                      key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
-                      cartItem={cartItem}
-                    />
-                  ))}
+            {cartData.invalidCartItems.length > 0 && (
+              <div className='rounded-2xl bg-red-50 p-4 @2xl/cart:mx-0 @2xl/cart:p-6'>
+                <h3 className='flex items-center gap-1 text-sm text-red-400'>
+                  <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
+                  以下餐點已失效
+                </h3>
+                <div>
+                  {cartData.invalidCartItems.length > 0 &&
+                    cartData.invalidCartItems.map((cartItem) => (
+                      <CartCard
+                        key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
+                        cartItem={cartItem}
+                      />
+                    ))}
+                </div>
+                <Button
+                  isLoading={deleteCartMutation.isLoading}
+                  isBusy={
+                    deleteCartMutation.isLoading || deleteCartMutation.isSuccess
+                  }
+                  isSuccess={deleteCartMutation.isSuccess}
+                  labelOnSuccess='清除成功'
+                  theme='support'
+                  className='mx-auto h-10 w-full max-w-[18ch] border border-red-200 px-4 text-red-400 data-busy:bg-red-100 hover:bg-red-100 data-busy:hover:bg-red-100 active:bg-red-100'
+                  textClassName='font-bold text-sm'
+                  label='清除失效餐點'
+                  onClick={handleDeleteInvalidCartItems}
+                />
               </div>
-              <Button
-                isLoading={true}
-                isBusy={true}
-                theme='support'
-                className='mx-auto h-10 w-full max-w-[18ch] border border-red-200 px-4 text-red-400 data-busy:bg-red-100 hover:bg-red-100 data-busy:hover:bg-red-100 active:bg-red-100'
-                textClassName='font-bold text-sm'
-                label='清除失效餐點'
-              />
-            </div>
+            )}
             {/* Valid */}
             {[...cartItemsByMenu].map(([menuId, menu]) => (
               <div key={menuId} className='flex flex-col'>
@@ -118,7 +157,12 @@ export default function Cart() {
           </section>
           {/* Checkout */}
           <section>
-            <div className='sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6 @2xl/cart:max-w-xs'>
+            <div
+              className={twMerge(
+                'sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6 @2xl/cart:max-w-xs',
+                cartData.cartItems.length === 0 && 'hidden',
+              )}
+            >
               <h2 className='text-xl font-bold'>結帳</h2>
               <section className='flex flex-col text-stone-500'>
                 {/* Total */}
@@ -143,7 +187,7 @@ export default function Cart() {
                   </div>
                 )}
                 {/* Credit balance */}
-                <div className='flex justify-between border-b border-stone-200 py-2 text-sm'>
+                <div className='flex justify-between  border-stone-200 py-2 text-sm'>
                   <p>夢想幣</p>
                   <p>${userData.creditBalance}</p>
                 </div>

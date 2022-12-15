@@ -1,19 +1,74 @@
 import { Listbox } from '@headlessui/react'
 import { twMerge } from 'tailwind-merge'
+import { useState, useEffect } from 'react'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
 import { OrderOptions, settings, twData } from '@/lib/common'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useStore, NotificationType } from '@/lib/client/store'
+import trpc from '@/lib/client/trpc'
+import Spinner from '@/components/core/Spinner'
 
 export default function CartCard(props: {
   cartItem: CartItems[0] | InvalidCartItems[0]
-  disabled?: boolean
 }) {
   const { cartItem } = props
+  const deleteCartMutation = trpc.cart.delete.useMutation()
+  const updateCartMutation = trpc.cart.update.useMutation()
+  const addNotification = useStore((state) => state.addNotification)
+  const [selectedQauntity, setSelectedQuantity] = useState(cartItem.quantity)
+
+  useEffect(() => {
+    setSelectedQuantity(cartItem.quantity)
+  }, [cartItem.quantity])
+
+  const updateCartItem = (quantity?: number, options?: OrderOptions) => {
+    updateCartMutation.mutateAsync(
+      {
+        commodityId: cartItem.commodityId,
+        menuId: cartItem.menuId,
+        quantity: quantity ?? selectedQauntity,
+        options: options ?? (cartItem.options as OrderOptions),
+      },
+      {
+        onError: async (error) => {
+          addNotification({
+            type: NotificationType.ERROR,
+            message: error.message,
+          })
+        },
+      },
+    )
+  }
 
   const handleQuantityChange = (quantity: number) => {
-    console.log(quantity)
+    setSelectedQuantity(quantity)
+    if (quantity === 0) {
+      // Delete cart item
+      deleteCartMutation.mutateAsync(
+        {
+          ids: [
+            {
+              commodityId: cartItem.commodityId,
+              menuId: cartItem.menuId,
+              optionsKey: cartItem.optionsKey,
+            },
+          ],
+        },
+        {
+          onError: async (error) => {
+            addNotification({
+              type: NotificationType.ERROR,
+              message: error.message,
+            })
+          },
+        },
+      )
+    } else {
+      // Update cart item
+      updateCartItem(quantity)
+    }
   }
 
   const quantities = cartItem.invalid
@@ -25,23 +80,28 @@ export default function CartCard(props: {
         ).keys(),
       ]
 
+  const isChangingQuantity = selectedQauntity !== cartItem.quantity
+  const isLoading = isChangingQuantity || updateCartMutation.isLoading
+
   return (
     <div
-      data-ui={twData({ available: !cartItem.invalid })}
+      data-ui={twData({ available: !cartItem.invalid && !isLoading })}
       className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6 @2xl/cart:py-8'
     >
       {/* Image */}
-      <section className='relative aspect-square h-min w-full max-w-[5rem] shrink-0 cursor-pointer overflow-hidden rounded-md @2xl/cart:max-w-[8rem] hover:opacity-75 active:opacity-75'>
-        <Image
-          style={{ WebkitTouchCallout: 'none' }}
-          className='object-cover'
-          src={
-            cartItem.commodityOnMenu.commodity.image?.path ??
-            settings.RESOURCE_FOOD_PLACEHOLDER
-          }
-          sizes='(max-width: 375px) 100vw, (max-width: 750px) 75vw, 640px'
-          alt={cartItem.commodityOnMenu.commodity.name ?? 'food placeholder'}
-        />
+      <section className='h-min w-full max-w-[5rem] shrink-0 cursor-pointer p-1 @2xl/cart:max-w-[8rem] @2xl/cart:p-2 hover:opacity-75 active:opacity-75'>
+        <div className='relative aspect-square overflow-hidden rounded-2xl'>
+          <Image
+            style={{ WebkitTouchCallout: 'none' }}
+            className='object-cover'
+            src={
+              cartItem.commodityOnMenu.commodity.image?.path ??
+              settings.RESOURCE_FOOD_PLACEHOLDER
+            }
+            sizes='(max-width: 375px) 100vw, (max-width: 750px) 75vw, 640px'
+            alt={cartItem.commodityOnMenu.commodity.name ?? 'food placeholder'}
+          />
+        </div>
       </section>
       <div className='grid grow grid-cols-2'>
         {/* Content */}
@@ -71,14 +131,24 @@ export default function CartCard(props: {
         {/* Quantity and Price*/}
         <section className='flex justify-between'>
           <Listbox
-            value={cartItem.quantity}
+            value={selectedQauntity}
             onChange={handleQuantityChange}
-            disabled={cartItem.invalid}
+            disabled={cartItem.invalid || isChangingQuantity}
             as='div'
           >
-            <Listbox.Button className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 hover:bg-stone-100'>
-              <p className='ml-3'>{cartItem.quantity}</p>
-              <ChevronDownIcon className='absolute right-1 h-4 w-4 text-stone-400 transition-transform ui-open:rotate-180' />
+            <Listbox.Button className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 hover:bg-stone-100 disabled:hover:bg-transparent'>
+              <p className='ml-3'>
+                {selectedQauntity === 0 ? (
+                  <span className='text-red-400'>0</span>
+                ) : (
+                  selectedQauntity
+                )}
+              </p>
+              {isChangingQuantity ? (
+                <Spinner className='absolute right-1 h-4 w-4' />
+              ) : (
+                <ChevronDownIcon className='absolute right-1 h-4 w-4 text-stone-400 transition-transform ui-open:rotate-180' />
+              )}
             </Listbox.Button>
             <div className='relative z-10'>
               <Listbox.Options className='absolute right-0 top-2 flex max-h-[30vh] w-[125%] flex-col gap-2 overflow-y-auto rounded-2xl border border-stone-200 bg-white px-1 py-2 shadow-md scrollbar-none focus:outline-none'>

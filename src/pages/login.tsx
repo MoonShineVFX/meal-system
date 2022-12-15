@@ -37,7 +37,7 @@ export default function PageLogin() {
   }, [])
 
   const handleLogin: SubmitHandler<FormInputs> = async (formData) => {
-    loginMutation.mutate(
+    loginMutation.mutateAsync(
       {
         username: formData.username,
         password: formData.password,

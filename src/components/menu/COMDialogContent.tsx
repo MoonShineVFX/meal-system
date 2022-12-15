@@ -30,7 +30,7 @@ function COMDialogContent(props: {
   onClose: () => void
   com: CommodityOnMenu
 }) {
-  const addCartMutation = trpc.menu.addComToCart.useMutation()
+  const addCartMutation = trpc.cart.add.useMutation()
   const addNotification = useStore((state) => state.addNotification)
   const { com } = props
   const [isLimited, setIsLimited] = useState(false)
@@ -66,7 +66,7 @@ function COMDialogContent(props: {
 
   const handleCreateCartItem: SubmitHandler<FormInputs> = useCallback(
     async (formData) => {
-      addCartMutation.mutate(
+      addCartMutation.mutateAsync(
         {
           commodityId: com.commodity.id,
           menuId: menu!.id,
@@ -101,21 +101,25 @@ function COMDialogContent(props: {
     >
       {/* Close button */}
       <button
-        className='absolute right-3 top-3 z-30 rounded-full bg-black/10 p-1 hover:bg-black/20 active:bg-black/20 active:bg-stone-100 sm:right-5 sm:top-5 md:bg-transparent md:hover:bg-stone-100'
+        className='absolute right-4 top-4 z-30 rounded-full bg-black/10 p-1 hover:bg-black/20 active:bg-black/20 active:bg-stone-100 sm:right-5 sm:top-5 md:bg-transparent md:hover:bg-stone-100'
         onClick={props.onClose}
       >
         <XMarkIcon className='h-8 w-8 stroke-1 text-white md:text-stone-500' />
       </button>
       {/* Image */}
-      <section className='relative aspect-[4/3] h-min shrink-0 overflow-hidden sm:aspect-square sm:rounded-2xl sm:max-md:w-48 md:m-4 md:mr-0 md:shrink md:basis-2/5 lg:m-6 lg:mr-0'>
-        <Image
-          style={{ WebkitTouchCallout: 'none' }}
-          draggable={false}
-          className='object-cover'
-          src={com.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER}
-          sizes='(max-width: 375px) 100vw, (max-width: 750px) 75vw, 640px'
-          alt={com.commodity.name ?? 'food placeholder'}
-        />
+      <section className='mx-auto h-min w-full p-4 pb-0 sm:p-0 md:m-4 md:mr-0 md:shrink md:basis-2/5 md:p-4 lg:m-6 lg:mr-0 lg:p-6'>
+        <div className='relative aspect-[4/3] overflow-hidden rounded-xl md:aspect-square md:rounded-2xl'>
+          <Image
+            style={{ WebkitTouchCallout: 'none' }}
+            draggable={false}
+            className='object-cover'
+            src={
+              com.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
+            }
+            sizes='(max-width: 375px) 100vw, (max-width: 750px) 75vw, 640px'
+            alt={com.commodity.name ?? 'food placeholder'}
+          />
+        </div>
       </section>
       {/* Form */}
       <form

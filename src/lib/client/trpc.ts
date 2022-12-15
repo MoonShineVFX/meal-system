@@ -31,7 +31,7 @@ export type CommoditiesOnMenuByCategory = Map<
   string,
   Map<string, (CommodityOnMenu | undefined)[]>
 >
-export type CartData = RouterOutput['menu']['getCart']
+export type CartData = RouterOutput['cart']['get']
 export type InvalidCartItems = CartData['invalidCartItems']
 export type CartItems = CartData['cartItems']
 export type CartItemsByMenu = Map<
