@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
 import trpc from '@/lib/client/trpc'
 import type { CartItemsByMenu, InvalidCartItems } from '@/lib/client/trpc'
@@ -67,83 +68,98 @@ export default function Cart() {
 
   return (
     <div className='relative h-full w-full @container/cart'>
-      <div className='absolute inset-0 flex flex-col gap-4 overflow-y-auto p-4 overflow-x-hidden scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md lg:p-8'>
-        <h1 className='text-xl font-bold'>購物車</h1>
-        {/* CartItems */}
-        <ul className='flex flex-col gap-4'>
-          {/* Invalid */}
-          <div className='-mx-16 bg-red-50 px-16 py-4'>
-            <h3 className='text-sm text-red-400'>以下餐點已失效</h3>
-            <div>
-              {invalidCartItems.length > 0 &&
-                invalidCartItems.map((cartItem) => (
+      <div className='absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md lg:p-8'>
+        <div className='grid h-min max-w-5xl grow gap-4 @2xl/cart:grid-cols-[3fr_2fr]'>
+          {/* Header */}
+          <h1 className='text-xl font-bold @2xl/cart:col-span-full'>
+            購物車
+            <span className='ml-1 text-lg font-normal text-stone-400'>
+              {cartData.cartItems.length}
+            </span>
+          </h1>
+          {/* CartItems */}
+          <section className='flex flex-col gap-4 lg:pr-4'>
+            {/* Invalid */}
+            <div className='rounded-2xl bg-red-50 p-4 @2xl/cart:mx-0 @2xl/cart:p-6'>
+              <h3 className='flex items-center gap-1 text-sm text-red-400'>
+                <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
+                以下餐點已失效
+              </h3>
+              <div>
+                {invalidCartItems.length > 0 &&
+                  invalidCartItems.map((cartItem) => (
+                    <CartCard
+                      key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
+                      cartItem={cartItem}
+                    />
+                  ))}
+              </div>
+              <Button
+                isLoading={true}
+                isBusy={true}
+                theme='support'
+                className='mx-auto h-10 w-full max-w-[18ch] border border-red-200 px-4 text-red-400 data-busy:bg-red-100 hover:bg-red-100 data-busy:hover:bg-red-100 active:bg-red-100'
+                textClassName='font-bold text-sm'
+                label='清除失效餐點'
+              />
+            </div>
+            {/* Valid */}
+            {[...cartItemsByMenu].map(([menuId, menu]) => (
+              <div key={menuId} className='flex flex-col'>
+                <h3 className='text-sm text-stone-400'>{getMenuName(menu)}</h3>
+                {menu.cartItems.map((cartItem) => (
                   <CartCard
                     key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
                     cartItem={cartItem}
                   />
                 ))}
-            </div>
-            <Button
-              theme='support'
-              className='ml-auto h-8 w-fit px-4 data-busy:bg-red-100 hover:bg-red-100 data-busy:hover:bg-red-100 active:bg-red-100'
-              textClassName='text-red-400 font-bold text-sm'
-              label='清除失效餐點'
-            />
-          </div>
-          {/* Valid */}
-          {[...cartItemsByMenu].map(([menuId, menu]) => (
-            <li key={menuId} className='flex flex-col'>
-              <h3 className='text-sm text-stone-400'>{getMenuName(menu)}</h3>
-              {menu.cartItems.map((cartItem) => (
-                <CartCard
-                  key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
-                  cartItem={cartItem}
-                />
-              ))}
-            </li>
-          ))}
-        </ul>
-        {/* Checkout */}
-        <summary className='flex flex-col gap-4 rounded-2xl bg-stone-100 p-6'>
-          <h2 className='text-xl font-bold'>結帳</h2>
-          <section>
-            {/* Total */}
-            <div className='flex justify-between'>
-              <p>總計</p>
-              <p>
-                $
-                {cartData.cartItems.reduce(
-                  (acc: number, cartItem) =>
-                    (acc +=
-                      cartItem.commodityOnMenu.commodity.price *
-                      cartItem.quantity),
-                  0,
-                )}
-              </p>
-            </div>
-            {/* Point balance */}
-            {userData.pointBalance > 0 && (
-              <div className='flex justify-between'>
-                <p>點數</p>
-                <p>{userData.pointBalance}</p>
               </div>
-            )}
-            {/* Credit balance */}
-            <div className='flex justify-between'>
-              <p>夢想幣</p>
-              <p>${userData.creditBalance}</p>
+            ))}
+          </section>
+          {/* Checkout */}
+          <section>
+            <div className='sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6 @2xl/cart:max-w-xs'>
+              <h2 className='text-xl font-bold'>結帳</h2>
+              <section className='flex flex-col text-stone-500'>
+                {/* Total */}
+                <div className='flex justify-between border-b border-stone-200 py-2 text-sm'>
+                  <p>總計</p>
+                  <p>
+                    $
+                    {cartData.cartItems.reduce(
+                      (acc: number, cartItem) =>
+                        (acc +=
+                          cartItem.commodityOnMenu.commodity.price *
+                          cartItem.quantity),
+                      0,
+                    )}
+                  </p>
+                </div>
+                {/* Point balance */}
+                {userData.pointBalance > 0 && (
+                  <div className='flex justify-between border-b border-stone-200 py-2 text-sm'>
+                    <p>點數</p>
+                    <p>{userData.pointBalance}</p>
+                  </div>
+                )}
+                {/* Credit balance */}
+                <div className='flex justify-between border-b border-stone-200 py-2 text-sm'>
+                  <p>夢想幣</p>
+                  <p>${userData.creditBalance}</p>
+                </div>
+              </section>
+              {/* Checkout button */}
+              <Button label='確認付款' className='h-12 text-lg font-bold' />
             </div>
           </section>
-          {/* Checkout button */}
-          <Button label='結帳' className='h-12 text-lg font-bold' />
-        </summary>
+        </div>
+        <Dialog
+          open={modifiedNotify}
+          onClose={() => setModifiedNotify(false)}
+          title='購物車有所更動'
+          content='餐點內容在這段期間有所調整，因此購物車內的餐點數量產生異動或失效。'
+        />
       </div>
-      <Dialog
-        open={modifiedNotify}
-        onClose={() => setModifiedNotify(false)}
-        title='購物車有所更動'
-        content='餐點內容在這段期間有所調整，因此購物車內的餐點數量產生異動或失效。'
-      />
     </div>
   )
 }

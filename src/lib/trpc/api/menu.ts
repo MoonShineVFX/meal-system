@@ -2,7 +2,11 @@ import z from 'zod'
 import { MenuType } from '@prisma/client'
 
 import { userProcedure, router } from '../trpc'
-import { getMenu, createCartItem, getCartItems } from '@/lib/server/database'
+import {
+  getMenuWithComs,
+  createCartItem,
+  getCartItems,
+} from '@/lib/server/database'
 import { ServerEventName, eventEmitter } from '@/lib/server/event'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 
@@ -15,7 +19,7 @@ export const MenuRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const menu = await getMenu(
+      const menu = await getMenuWithComs(
         input.type,
         input.date,
         undefined,

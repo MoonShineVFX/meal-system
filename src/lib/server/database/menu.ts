@@ -23,12 +23,10 @@ export async function createMenu(
   }
 
   // Check menu existence
-  let isFound = false
-  try {
-    await getMenu(type, date, undefined, undefined)
-    isFound = true
-  } catch (error) {}
-  if (isFound) {
+  const collisionCount = await prisma.menu.count({
+    where: { type, date, isDeleted: false },
+  })
+  if (collisionCount > 0) {
     throw new Error('menu already exists')
   }
 
@@ -46,7 +44,7 @@ export async function createMenu(
 }
 
 /** Get menu and return with unavailableReasons from validation */
-export async function getMenu(
+export async function getMenuWithComs(
   type?: MenuType,
   date?: Date,
   menuId?: number,
@@ -394,7 +392,7 @@ export async function createCartItem(
 
   return await prisma.$transaction(async (client) => {
     // Validate availability
-    const menu = await getMenu(
+    const menu = await getMenuWithComs(
       undefined,
       undefined,
       menuId,
@@ -403,9 +401,6 @@ export async function createCartItem(
       false,
       client,
     )
-    if (!menu) {
-      throw new Error('找不到指定菜單')
-    }
 
     const com = menu.commodities.find((com) => com.commodity.id === commodityId)
     if (!com) {
@@ -562,7 +557,10 @@ export async function getCartItems(userId: string) {
       }
     }
 
-    let menuMap: Map<number, Awaited<ReturnType<typeof getMenu>>> = new Map()
+    let menuMap: Map<
+      number,
+      Awaited<ReturnType<typeof getMenuWithComs>>
+    > = new Map()
     for (const [menuIdKey, menuMeta] of Object.entries(
       menuAndCommoditiesMetas,
     )) {
@@ -570,10 +568,9 @@ export async function getCartItems(userId: string) {
       const menuId = Number(menuIdKey)
       const commodityIds = menuMeta.coms.map((com) => com.commodityId)
 
-      let menu: Awaited<ReturnType<typeof getMenu>>
-
+      let menu: Awaited<ReturnType<typeof getMenuWithComs>>
       try {
-        menu = await getMenu(
+        menu = await getMenuWithComs(
           undefined,
           undefined,
           menuId,
@@ -590,6 +587,7 @@ export async function getCartItems(userId: string) {
         invalidCartItems.push(...menuMeta.coms.flatMap((com) => com.cartItems))
         continue
       }
+
       menuMap.set(menuId, menu)
 
       // validate menu quantities
@@ -742,31 +740,33 @@ export async function getCartItems(userId: string) {
 
 async function validateCartOptions(
   options: OrderOptions,
-  targetOptionSets: OptionSet[],
+  truthOptionSets: OptionSet[],
 ) {
   // Validate options
   for (const [optionName, optionValue] of Object.entries(options)) {
-    const matchOptionSet = targetOptionSets.find(
+    const matchedTruthOptionSet = truthOptionSets.find(
       (optionSet) => optionSet.name === optionName,
     )
-    if (!matchOptionSet) {
+    if (!matchedTruthOptionSet) {
       throw new Error(`找不到選項: ${optionName}`)
     }
 
     if (Array.isArray(optionValue)) {
-      if (!matchOptionSet.multiSelect) {
+      if (!matchedTruthOptionSet.multiSelect) {
         throw new Error(`選項不是多選: ${optionName}`)
       }
       if (
-        !optionValue.every((value) => matchOptionSet.options.includes(value))
+        !optionValue.every((value) =>
+          matchedTruthOptionSet.options.includes(value),
+        )
       ) {
         throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
       }
     } else {
-      if (matchOptionSet.multiSelect) {
+      if (matchedTruthOptionSet.multiSelect) {
         throw new Error(`選項不是單選: ${optionName}`)
       }
-      if (!matchOptionSet.options.includes(optionValue)) {
+      if (!matchedTruthOptionSet.options.includes(optionValue)) {
         throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
       }
     }

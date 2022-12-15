@@ -224,7 +224,7 @@ function CartBadge() {
   if (data.cartItems.length === 0) return null
 
   return (
-    <div className='flex h-4 w-4 justify-center rounded-full bg-yellow-500 -indent-[0.2em] text-xs tracking-tighter text-white group-data-selected:bg-stone-300 group-data-selected:text-stone-500 sm:h-5 sm:w-5 sm:rounded-md sm:text-sm'>
+    <div className='flex h-4 w-4 justify-center rounded-full bg-yellow-500 -indent-[0.05em] font-mono text-xs tracking-tighter text-white group-data-selected:bg-stone-300 group-data-selected:text-stone-500 sm:h-5 sm:w-5 sm:rounded-md sm:text-sm'>
       {data.cartItems.length}
     </div>
   )
