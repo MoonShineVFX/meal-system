@@ -32,6 +32,7 @@ export default function Cart() {
     new Map(),
   )
   const [modifiedNotify, setModifiedNotify] = useState(false)
+  const [cartItemUpdateCount, setCartItemUpdateCount] = useState(0)
   const [cartItemInOptionsDialog, setCartItemInOptionsDialog] =
     useState<CartItems[0]>()
 
@@ -59,6 +60,8 @@ export default function Cart() {
     }
 
     setCartItemsByMenu(cartItemsByMenu)
+    setCartItemUpdateCount((prev) => prev + 1)
+
     if (cartData.isModified) {
       setModifiedNotify(true)
     }
@@ -109,6 +112,8 @@ export default function Cart() {
       deleteCartType = 'ALL'
     }
   }
+
+  console.log(cartItemUpdateCount)
 
   return (
     <div className='relative h-full w-full @container/cart'>
@@ -176,6 +181,7 @@ export default function Cart() {
                     cartItem={cartItem}
                     disabled={deleteCartType === 'ALL'}
                     onOptionsClick={setCartItemInOptionsDialog}
+                    enableUpdateEffect={cartItemUpdateCount > 1}
                   />
                 ))}
               </div>

@@ -145,7 +145,7 @@ export async function getCartItems(userId: string) {
         },
       },
       orderBy: {
-        createdAt: 'asc',
+        optionsKey: 'asc',
       },
     })
 

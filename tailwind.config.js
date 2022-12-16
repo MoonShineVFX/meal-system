@@ -1,5 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-const { fontFamily } = require('tailwindcss/defaultTheme')
 const plugin = require('tailwindcss/plugin')
 
 const skeletonPlugin = plugin(({ addComponents, theme }) => {
@@ -41,6 +40,12 @@ module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     data: dataPrefixes,
+    extend: {
+      transitionDuration: {
+        0: '0ms',
+        2000: '2000ms',
+      },
+    },
   },
   plugins: [
     require('@headlessui/tailwindcss'),
