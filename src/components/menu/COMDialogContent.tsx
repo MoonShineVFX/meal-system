@@ -5,7 +5,9 @@ import {
   UseFormRegister,
   Control,
   useController,
-  FieldErrorsImpl,
+  FieldErrors,
+  FieldValues,
+  FieldError,
 } from 'react-hook-form'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { PlusIcon } from '@heroicons/react/24/outline'
@@ -85,8 +87,6 @@ function COMDialogContent(props: {
   const isUnavailable =
     (menu?.unavailableReasons.length ?? 0) + com.unavailableReasons.length > 0
 
-  const isBusy = addCartMutation.isLoading || addCartMutation.isSuccess
-
   return (
     <section
       className='relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-xl md:flex-row md:gap-0 md:rounded-2xl md:p-0 md:shadow-2xl'
@@ -122,10 +122,10 @@ function COMDialogContent(props: {
       >
         {/* Info */}
         <header className='flex flex-col gap-2 lg:gap-4'>
-          <h1 className='indent-[0.1em] text-2xl font-bold tracking-widest text-stone-800'>
+          <h1 className='text-2xl font-bold tracking-widest text-stone-800'>
             {com.commodity.name}
           </h1>
-          <h2 className='indent-[0.05em] text-xl tracking-wider text-yellow-500 lg:-mt-2'>
+          <h2 className='text-xl tracking-wider text-yellow-500 lg:-mt-2'>
             ${com.commodity.price}
           </h2>
           {com.commodity.description !== '' && (
@@ -138,13 +138,13 @@ function COMDialogContent(props: {
             {com.stock > 0 && (
               <div className='flex items-center gap-2'>
                 <Square3Stack3DIcon className='h-4 w-4 text-stone-300' />
-                <p className='indent-[0.05em] tracking-wider text-stone-500'>{`限量 ${com.stock} 份`}</p>
+                <p className='tracking-wider text-stone-500'>{`限量 ${com.stock} 份`}</p>
               </div>
             )}
             {com.limitPerUser > 0 && (
               <div className='flex items-center gap-2'>
                 <UserPlusIcon className='h-4 w-4 text-stone-300' />
-                <p className='indent-[0.05em] tracking-wider text-stone-500'>{`每人限點 ${com.limitPerUser} 份`}</p>
+                <p className='tracking-wider text-stone-500'>{`每人限點 ${com.limitPerUser} 份`}</p>
               </div>
             )}
           </div>
@@ -153,7 +153,7 @@ function COMDialogContent(props: {
         {/* Option Sets */}
         <main className='flex flex-col gap-4 group-data-not-available:pointer-events-none group-data-not-available:opacity-60'>
           {(com.commodity.optionSets as OptionSet[]).map((optionSet) => (
-            <OptionSet
+            <OptionSetForm
               key={optionSet.name}
               optionSet={optionSet}
               register={register}
@@ -197,7 +197,7 @@ function COMDialogContent(props: {
         {/* Submit */}
         <footer className='flex shrink-0 flex-col gap-4 sm:flex-row-reverse'>
           <Button
-            isBusy={isBusy}
+            isBusy={addCartMutation.isLoading || addCartMutation.isSuccess}
             isLoading={addCartMutation.isLoading || addCartMutation.isSuccess}
             isDisabled={isUnavailable}
             className='h-12 grow sm:basis-3/5'
@@ -219,13 +219,23 @@ function COMDialogContent(props: {
 
 export default memo(COMDialogContent)
 
-function OptionSet(props: {
+export function OptionSetForm<
+  T extends FieldValues & { options: OrderOptions },
+>(props: {
   optionSet: OptionSet
-  register: UseFormRegister<FormInputs>
-  errors: FieldErrorsImpl<FormInputs>
+  register: UseFormRegister<T>
+  errors: FieldErrors<T>
 }) {
+  // react-hook-form typed bug hotfix
+  const typedOptions = props.errors.options as
+    | Record<string, FieldError>
+    | undefined
+  const typedRegister = props.register as unknown as UseFormRegister<{
+    options: OrderOptions
+  }>
+
   const { optionSet } = props
-  const error = props.errors.options?.[optionSet.name]
+  const error = typedOptions?.[optionSet.name]
 
   return (
     <section className='flex flex-col gap-2'>
@@ -242,7 +252,7 @@ function OptionSet(props: {
               className='peer hidden'
               type={optionSet.multiSelect ? 'checkbox' : 'radio'}
               value={optionName}
-              {...props.register(`options.${optionSet.name}`, {
+              {...typedRegister(`options.${optionSet.name}`, {
                 required: !optionSet.multiSelect && '請選擇一個選項',
               })}
             />

@@ -44,11 +44,12 @@ export default function Button(props: {
     label
   )
   const themeColor = themes[props.theme ?? 'main']
+  const isBusy = props.isBusy ?? props.isLoading ?? false
 
   return (
     <button
-      disabled={props.isDisabled ?? props.isBusy ?? props.isLoading ?? false}
-      data-ui={twData({ busy: props.isBusy })}
+      disabled={props.isDisabled ?? isBusy ?? false}
+      data-ui={twData({ busy: isBusy })}
       className={twMerge(
         `flex items-center justify-center rounded-2xl indent-[0.1em] tracking-widest focus:outline-none disabled:pointer-events-none`,
         themeColor,

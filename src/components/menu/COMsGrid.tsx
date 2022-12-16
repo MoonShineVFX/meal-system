@@ -21,7 +21,7 @@ function COMsGrid(props: { comsByCategory?: CommoditiesOnMenuByCategory }) {
           <h1
             id={mainCategory}
             className={twMerge(
-              'col-span-full scroll-mt-16 indent-[0.05em] text-xl font-bold tracking-wider lg:-mb-4 lg:scroll-mt-8',
+              'col-span-full scroll-mt-16 text-xl font-bold tracking-wider lg:-mb-4 lg:scroll-mt-8',
               index !== 0 && 'mt-4',
             )}
           >

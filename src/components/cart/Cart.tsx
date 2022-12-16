@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { twMerge } from 'tailwind-merge'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
@@ -7,8 +7,12 @@ import trpc from '@/lib/client/trpc'
 import type { CartItemsByMenu } from '@/lib/client/trpc'
 import { getMenuName } from '@/lib/common'
 import Button from '@/components/core/Button'
-import CartCard from './CartCard'
+import CartItemCard from './CartItemCard'
 import Dialog from '@/components/core/Dialog'
+import CartItemOptionsDialog from './CartItemOptionsDialog'
+import type { CartItems } from '@/lib/client/trpc'
+
+type CartDeleteType = 'ALL' | 'INVALID'
 
 export default function Cart() {
   const {
@@ -23,11 +27,13 @@ export default function Cart() {
     isError: userIsError,
     error: userError,
   } = trpc.user.get.useQuery(undefined)
-  const deleteCartMutation = trpc.cart.delete.useMutation({})
+  const deleteCartMutation = trpc.cart.delete.useMutation()
   const [cartItemsByMenu, setCartItemsByMenu] = useState<CartItemsByMenu>(
     new Map(),
   )
   const [modifiedNotify, setModifiedNotify] = useState(false)
+  const [cartItemInOptionsDialog, setCartItemInOptionsDialog] =
+    useState<CartItems[0]>()
 
   useEffect(() => {
     setModifiedNotify(false)
@@ -58,10 +64,15 @@ export default function Cart() {
     }
   }, [cartData])
 
-  const handleDeleteInvalidCartItems = () => {
+  const handleDeleteInvalidCartItems = useCallback(() => {
     if (!cartData?.invalidCartItems.length) return
     deleteCartMutation.mutate({ invalidOnly: true })
-  }
+  }, [cartData?.invalidCartItems.length, deleteCartMutation])
+
+  const handleDeleteAllCartItems = useCallback(() => {
+    if (!cartData?.cartItems.length) return
+    deleteCartMutation.mutate({})
+  }, [cartData?.cartItems.length, deleteCartMutation])
 
   if (cartIsLoading || userIsLoading) return <div>Loading...</div>
   if (cartIsError || userIsError)
@@ -86,21 +97,37 @@ export default function Cart() {
       </div>
     )
 
+  // Detect type of delete
+  let deleteCartType: CartDeleteType | undefined = undefined
+  if (deleteCartMutation.isLoading) {
+    if (
+      deleteCartMutation.variables &&
+      deleteCartMutation.variables.invalidOnly
+    )
+      deleteCartType = 'INVALID'
+    else {
+      deleteCartType = 'ALL'
+    }
+  }
+
   return (
     <div className='relative h-full w-full @container/cart'>
       <div className='absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md lg:p-8'>
-        <div className='grid h-min max-w-5xl grow gap-4 @2xl/cart:grid-cols-[3fr_2fr]'>
+        <div className='grid h-min max-w-3xl grow gap-4 @2xl/cart:grid-cols-[3fr_2fr]'>
           {/* Clear Button */}
           <div className='col-start-1 row-start-1 flex justify-end'>
-            <Button
-              isBusy={true}
-              isLoading={true}
-              label='清空購物車'
-              theme='support'
-              className='h-7 w-[11ch] self-end border border-stone-100'
-              textClassName='text-sm text-stone-400'
-              spinnerClassName='h-5 w-5'
-            />
+            {cartData.cartItems.length > 0 && (
+              <Button
+                isBusy={deleteCartMutation.isLoading}
+                isLoading={deleteCartMutation.isLoading}
+                label='清空購物車'
+                theme='support'
+                className='h-7 w-[11ch] self-end border border-stone-100'
+                textClassName='text-sm text-stone-400'
+                spinnerClassName='h-5 w-5'
+                onClick={handleDeleteAllCartItems}
+              />
+            )}
           </div>
           {/* Header */}
           <div className='pointer-events-none col-start-1 row-start-1 justify-between @2xl/cart:col-span-full'>
@@ -118,14 +145,14 @@ export default function Cart() {
                 <div>
                   {cartData.invalidCartItems.length > 0 &&
                     cartData.invalidCartItems.map((cartItem) => (
-                      <CartCard
+                      <CartItemCard
                         key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
                         cartItem={cartItem}
                       />
                     ))}
                 </div>
                 <Button
-                  isLoading={deleteCartMutation.isLoading}
+                  isLoading={deleteCartType === 'INVALID'}
                   isBusy={
                     deleteCartMutation.isLoading || deleteCartMutation.isSuccess
                   }
@@ -144,9 +171,11 @@ export default function Cart() {
               <div key={menuId} className='flex flex-col'>
                 <h3 className='text-sm text-stone-400'>{getMenuName(menu)}</h3>
                 {menu.cartItems.map((cartItem) => (
-                  <CartCard
+                  <CartItemCard
                     key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
                     cartItem={cartItem}
+                    disabled={deleteCartType === 'ALL'}
+                    onOptionsClick={setCartItemInOptionsDialog}
                   />
                 ))}
               </div>
@@ -156,7 +185,7 @@ export default function Cart() {
           <section>
             <div
               className={twMerge(
-                'sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6 @2xl/cart:max-w-xs',
+                'sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6',
                 cartData.cartItems.length === 0 && 'hidden',
               )}
             >
@@ -201,6 +230,11 @@ export default function Cart() {
           content='餐點內容在這段期間有所調整，因此購物車內的餐點數量產生異動或失效。'
         />
       </div>
+      <CartItemOptionsDialog
+        open={!!cartItemInOptionsDialog}
+        onClose={() => setCartItemInOptionsDialog(undefined)}
+        cartItem={cartItemInOptionsDialog}
+      />
     </div>
   )
 }

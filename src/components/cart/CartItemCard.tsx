@@ -1,6 +1,6 @@
 import { Listbox, Transition } from '@headlessui/react'
 import { twMerge } from 'tailwind-merge'
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, Fragment, memo } from 'react'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
@@ -9,8 +9,10 @@ import { OrderOptions, settings, twData } from '@/lib/common'
 import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
 
-export default function CartCard(props: {
+function CartItemCard(props: {
   cartItem: CartItems[0] | InvalidCartItems[0]
+  disabled?: boolean
+  onOptionsClick?: (cartItem: CartItems[0]) => void
 }) {
   const { cartItem } = props
   const deleteCartMutation = trpc.cart.delete.useMutation()
@@ -21,12 +23,13 @@ export default function CartCard(props: {
     setSelectedQuantity(cartItem.quantity)
   }, [cartItem.quantity])
 
-  const updateCartItem = (quantity?: number, options?: OrderOptions) => {
+  const updateCartItem = (quantity: number) => {
     updateCartMutation.mutate({
       commodityId: cartItem.commodityId,
       menuId: cartItem.menuId,
       quantity: quantity ?? selectedQauntity,
-      options: options ?? (cartItem.options as OrderOptions),
+      options: cartItem.options as OrderOptions,
+      optionsKey: cartItem.optionsKey,
     })
   }
 
@@ -56,6 +59,12 @@ export default function CartCard(props: {
     }
   }
 
+  const handleOptionsClick = () => {
+    if (props.onOptionsClick) {
+      props.onOptionsClick(cartItem as CartItems[0])
+    }
+  }
+
   const quantities = cartItem.invalid
     ? [cartItem.quantity - 1]
     : [
@@ -70,11 +79,13 @@ export default function CartCard(props: {
 
   return (
     <div
-      data-ui={twData({ available: !cartItem.invalid && !isLoading })}
+      data-ui={twData({
+        available: !cartItem.invalid && !isLoading && !props.disabled,
+      })}
       className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6 @2xl/cart:py-6'
     >
       {/* Image */}
-      <section className='h-min w-full max-w-[5rem] shrink-0 cursor-pointer p-1 @2xl/cart:max-w-[8rem] @2xl/cart:p-2 hover:opacity-75 active:opacity-75'>
+      <section className='h-min w-full max-w-[5rem] shrink-0 p-1 @2xl/cart:max-w-[7rem] @2xl/cart:p-2'>
         <div className='relative aspect-square overflow-hidden rounded-full'>
           <Image
             style={{ WebkitTouchCallout: 'none' }}
@@ -90,14 +101,17 @@ export default function CartCard(props: {
       </section>
       <div className='grid grow grid-cols-2'>
         {/* Content */}
-        <section className='relative flex cursor-pointer flex-col gap-2 rounded-md hover:bg-stone-100 active:bg-stone-100'>
+        <section className='relative flex flex-col gap-2 rounded-md'>
           {/* Name */}
           <h2 className='font-bold tracking-wider'>
             {cartItem.commodityOnMenu.commodity.name}
           </h2>
           {/* Options */}
           {Object.keys(cartItem.options as OrderOptions).length > 0 && (
-            <div className='flex flex-col gap-0.5 @2xl/cart:gap-1'>
+            <div
+              onClick={handleOptionsClick}
+              className='-m-1 flex w-fit cursor-pointer flex-col gap-0.5 rounded-md p-1 @2xl/cart:gap-1 hover:bg-stone-100 active:bg-stone-100'
+            >
               {Object.values(cartItem.options as OrderOptions)
                 .flatMap((optionValue) =>
                   Array.isArray(optionValue) ? optionValue : [optionValue],
@@ -174,3 +188,5 @@ export default function CartCard(props: {
     </div>
   )
 }
+
+export default memo(CartItemCard)

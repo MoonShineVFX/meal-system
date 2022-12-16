@@ -43,6 +43,7 @@ export const CartRouter = router({
         quantity: z.number().min(1).max(settings.MENU_MAX_QUANTITY_PER_ORDER),
         commodityId: z.number(),
         options: z.record(z.union([z.string(), z.array(z.string())])),
+        optionsKey: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -52,7 +53,7 @@ export const CartRouter = router({
         input.commodityId,
         input.quantity,
         input.options,
-        true,
+        input.optionsKey,
       )
 
       eventEmitter.emit(

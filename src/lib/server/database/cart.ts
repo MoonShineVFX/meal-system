@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client'
 
 import { getMenuWithComs } from './menu'
-import { OptionSet, OrderOptions } from '@/lib/common'
+import { OptionSet, OrderOptions, generateOptionsKey } from '@/lib/common'
 import { prisma } from './define'
 
 export async function createOrUpdateCartItem(
@@ -10,26 +10,20 @@ export async function createOrUpdateCartItem(
   commodityId: number,
   quantity: number,
   options: OrderOptions,
-  isUpdate?: boolean, // if update, will delete the old one
+  isUpdate?: string, // if update, will use this as optionsKey and delete the old one
 ) {
   // Generate optionsKey
-  const optionsKey = Object.entries(options)
-    .sort()
-    .reduce((acc, cur) => {
-      const prefix = acc === '' ? '' : '_'
-      const value = Array.isArray(cur[1]) ? cur[1].sort().join(',') : cur[1]
-      return `${acc}${prefix}${cur[0]}:${value}`
-    }, '')
+  const optionsKey = generateOptionsKey(options)
 
   return await prisma.$transaction(async (client) => {
-    if (isUpdate) {
+    if (!!isUpdate) {
       await client.cartItem.delete({
         where: {
           userId_menuId_commodityId_optionsKey: {
             userId,
             commodityId,
             menuId,
-            optionsKey,
+            optionsKey: isUpdate,
           },
         },
       })
@@ -388,6 +382,7 @@ export async function getCartItems(userId: string) {
             name: thisCOM.commodity.name,
             price: thisCOM.commodity.price,
             image: thisCOM.commodity.image,
+            optionSets: thisCOM.commodity.optionSets,
           },
         },
       }

@@ -94,7 +94,7 @@ function ProfileButton(props: { className?: string }) {
         {/* User Info */}
         <div className='hidden grow items-center pl-2 sm:flex'>
           <div className='flex grow flex-col text-left'>
-            <span className='indent-[0.1em] tracking-widest'>{user?.name}</span>
+            <span className='tracking-widest'>{user?.name}</span>
             <span className='text-sm text-stone-400'>@{user?.id}</span>
           </div>
           <ChevronDownIcon className='h-6 w-6 text-stone-400 transition-transform ui-open:rotate-180' />
@@ -108,7 +108,7 @@ function ProfileButton(props: { className?: string }) {
         leaveFrom='transform scale-100 opacity-100'
         leaveTo='transform scale-50 opacity-0'
       >
-        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[0.0625rem] border-stone-200 bg-white py-3 px-2 indent-[0.05em] tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
+        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[0.0625rem] border-stone-200 bg-white py-3 px-2 tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
           <Popover.Button
             as={Link}
             href='/transaction'
@@ -175,7 +175,7 @@ function NavButton(props: {
           cartBadge={isCart}
         />
         {/* Desktop label */}
-        <div className='hidden grow items-center rounded-2xl py-2 px-3 indent-[0.1em] font-bold tracking-widest text-stone-500 group-data-selected:bg-stone-600 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
+        <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:bg-stone-600 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
           <NormalIcon className='h-5 w-5' />
           <span className='ml-4'>{props.label}</span>
           {isCart && (

@@ -92,6 +92,16 @@ export function generateCookie(token: string | undefined) {
   return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict`
 }
 
+export function generateOptionsKey(options: OrderOptions) {
+  return Object.entries(options)
+    .sort()
+    .reduce((acc, cur) => {
+      const prefix = acc === '' ? '' : '_'
+      const value = Array.isArray(cur[1]) ? cur[1].sort().join(',') : cur[1]
+      return `${acc}${prefix}${cur[0]}:${value}`
+    }, '')
+}
+
 export function validateRole(sourceRole: UserRole, targetRole: UserRole) {
   const roleWeight = {
     [UserRole.ADMIN]: 100,

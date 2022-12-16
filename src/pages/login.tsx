@@ -58,7 +58,7 @@ export default function PageLogin() {
           data-ui={twData({ loading: isBusy })}
         >
           <Logo className='w-40 text-yellow-500' />
-          <h3 className='indent-[0.05em] text-xl font-bold tracking-wider'>
+          <h3 className='text-xl font-bold tracking-wider'>
             請登入夢想 AD 帳號
           </h3>
           <InputField
