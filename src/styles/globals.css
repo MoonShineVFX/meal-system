@@ -5,7 +5,7 @@
 html,
 body,
 #__next {
-  @apply h-full w-full text-stone-600;
+  @apply h-full w-full text-stone-600 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -16,4 +16,8 @@ body,
 }
 #nprogress .peg {
   display: none;
+}
+
+.ms-scroll {
+  @apply scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md;
 }

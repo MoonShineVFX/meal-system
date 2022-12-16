@@ -89,7 +89,7 @@ function COMDialogContent(props: {
 
   return (
     <section
-      className='relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-xl md:flex-row md:gap-0 md:rounded-2xl md:p-0 md:shadow-2xl'
+      className='ms-scroll relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-xl md:flex-row md:gap-0 md:rounded-2xl md:p-0 md:shadow-2xl'
       onClick={(event) => event.stopPropagation()}
     >
       {/* Close button */}
@@ -116,7 +116,7 @@ function COMDialogContent(props: {
       </section>
       {/* Form */}
       <form
-        className='group flex shrink-0 grow flex-col gap-6 p-4 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-6'
+        className='ms-scroll group flex shrink-0 grow flex-col gap-6 p-4 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-6'
         data-ui={twData({ available: !isUnavailable })}
         onSubmit={handleSubmit(handleCreateCartItem)}
       >

@@ -112,7 +112,7 @@ export default function Cart() {
 
   return (
     <div className='relative h-full w-full @container/cart'>
-      <div className='absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md lg:p-8'>
+      <div className='ms-scroll absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden lg:p-8'>
         <div className='grid h-min max-w-3xl grow gap-4 @2xl/cart:grid-cols-[3fr_2fr]'>
           {/* Clear Button */}
           <div className='col-start-1 row-start-1 flex justify-end'>
@@ -134,7 +134,7 @@ export default function Cart() {
             <h1 className='inline text-xl font-bold'>購物車</h1>
           </div>
           {/* CartItems */}
-          <section className='flex flex-col gap-4 lg:pr-4'>
+          <section className='flex flex-col gap-4 @2xl/cart:pr-4'>
             {/* Invalid */}
             {cartData.invalidCartItems.length > 0 && (
               <div className='rounded-2xl bg-red-50 p-4 @2xl/cart:mx-0 @2xl/cart:p-6'>

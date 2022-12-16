@@ -61,7 +61,7 @@ export default function CartItemOptionsDialog(props: {
   const CurrentOptionsKey = generateOptionsKey(watch().options ?? {})
 
   return (
-    <Transition show={props.open} className='absolute inset-0 z-20'>
+    <Transition show={props.open} className='absolute inset-0 z-0'>
       {/* Backdrop */}
       <Transition.Child
         as={Fragment}
@@ -76,11 +76,11 @@ export default function CartItemOptionsDialog(props: {
       </Transition.Child>
       {/* Dialog */}
       <div
-        className='absolute inset-0 flex flex-col items-center justify-center overflow-y-auto'
+        className='ms-scroll absolute inset-0 flex flex-col items-center justify-center overflow-y-auto'
         onClick={props.onClose}
       >
         <Transition.Child
-          className='absolute inset-x-0 top-0 flex min-h-full items-center justify-center overflow-y-auto p-4 lg:p-6'
+          className='absolute inset-x-0 top-0 flex min-h-full items-center justify-center p-4 lg:p-6'
           enter='ease-out duration-300'
           enterFrom='opacity-0 scale-95'
           enterTo='opacity-100 scale-100'
@@ -89,7 +89,7 @@ export default function CartItemOptionsDialog(props: {
           leaveTo='opacity-0 scale-95'
         >
           <form
-            className='relative flex max-w-md shrink flex-col gap-4 rounded-2xl bg-white p-4 lg:gap-6 lg:p-6'
+            className='relative flex max-w-md shrink flex-col gap-4 rounded-2xl bg-white p-4 shadow-2xl lg:gap-6 lg:p-6'
             onSubmit={handleSubmit(handleUpdateCartItemOptions)}
             onClick={(e) => e.stopPropagation()}
           >

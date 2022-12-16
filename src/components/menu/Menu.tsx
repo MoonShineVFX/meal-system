@@ -209,7 +209,7 @@ export default function Menu(props: {
         <section className='relative grow'>
           <div
             ref={gridRef}
-            className='absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md sm:pt-[4rem] lg:p-8'
+            className='ms-scroll absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] sm:pt-[4rem] lg:p-8'
           >
             {data && data.unavailableReasons.length > 0 && (
               <section className='mb-4 flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-stone-500'>

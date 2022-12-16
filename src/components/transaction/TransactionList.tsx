@@ -21,6 +21,7 @@ export default function TransactionList(props: {
         <div>搜尋</div>
       </div>
       <GroupedVirtuoso
+        className='ms-scroll'
         customScrollParent={scrollParent}
         groupCounts={[100, 100, 100]}
         groupContent={(index) => <div className='py-4'>日期 {index}</div>}
