@@ -15,6 +15,7 @@ export enum CurrencyType {
 export type OptionSet = {
   name: string
   multiSelect: boolean
+  order: number
   options: string[]
 }
 

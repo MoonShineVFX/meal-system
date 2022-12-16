@@ -152,14 +152,16 @@ function COMDialogContent(props: {
         <div className='border-b border-stone-200'></div>
         {/* Option Sets */}
         <main className='flex flex-col gap-4 group-data-not-available:pointer-events-none group-data-not-available:opacity-60'>
-          {(com.commodity.optionSets as OptionSet[]).map((optionSet) => (
-            <OptionSetForm
-              key={optionSet.name}
-              optionSet={optionSet}
-              register={register}
-              errors={errors}
-            />
-          ))}
+          {(com.commodity.optionSets as OptionSet[])
+            .sort((a, b) => a.order - b.order)
+            .map((optionSet) => (
+              <OptionSetForm
+                key={optionSet.name}
+                optionSet={optionSet}
+                register={register}
+                errors={errors}
+              />
+            ))}
         </main>
         {/* Spacer For sm */}
         <div className='-my-3 shrink grow'></div>

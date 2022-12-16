@@ -113,6 +113,8 @@ export async function getMenuWithComs(
                     select: {
                       mainName: true,
                       subName: true,
+                      mainOrder: true,
+                      subOrder: true,
                     },
                   },
                 },
@@ -358,7 +360,12 @@ export async function addCommodityToMenu(
   })
 }
 
-export async function createCategory(mainName: string, subName: string) {
+export async function createCategory(
+  mainName: string,
+  subName: string,
+  mainOrder: number,
+  subOrder: number,
+) {
   return await prisma.commodityCategory.upsert({
     where: {
       mainName_subName: {
@@ -366,10 +373,15 @@ export async function createCategory(mainName: string, subName: string) {
         subName,
       },
     },
-    update: {},
+    update: {
+      mainOrder,
+      subOrder,
+    },
     create: {
       mainName,
       subName,
+      mainOrder,
+      subOrder,
     },
   })
 }

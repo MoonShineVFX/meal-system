@@ -5,7 +5,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
-import { OrderOptions, settings, twData } from '@/lib/common'
+import { OrderOptions, settings, twData, OptionSet } from '@/lib/common'
 import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
 
@@ -112,9 +112,22 @@ function CartItemCard(props: {
               onClick={handleOptionsClick}
               className='-m-1 flex w-fit cursor-pointer flex-col gap-0.5 rounded-md p-1 @2xl/cart:gap-1 hover:bg-stone-100 active:bg-stone-100'
             >
-              {Object.values(cartItem.options as OrderOptions)
-                .flatMap((optionValue) =>
-                  Array.isArray(optionValue) ? optionValue : [optionValue],
+              {Object.entries(cartItem.options as OrderOptions)
+                .map(([optionName, optionValue]) => ({
+                  optionName,
+                  optionValue,
+                  order:
+                    (
+                      cartItem.commodityOnMenu.commodity
+                        .optionSets as OptionSet[]
+                    )?.find((option) => option.name === optionName)?.order ??
+                    Infinity,
+                }))
+                .sort((a, b) => a.order - b.order)
+                .flatMap((option) =>
+                  Array.isArray(option.optionValue)
+                    ? option.optionValue
+                    : [option.optionValue],
                 )
                 .map((optionValue) => (
                   <span

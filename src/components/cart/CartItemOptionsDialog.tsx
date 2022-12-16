@@ -106,17 +106,19 @@ export default function CartItemOptionsDialog(props: {
               {com?.commodity.name}
             </h1>
             <main className='flex flex-col gap-4'>
-              {(com?.commodity.optionSets as OptionSet[]).map((optionSet) => (
-                <OptionSetForm
-                  key={optionSet.name}
-                  optionSet={optionSet}
-                  register={register}
-                  errors={errors}
-                />
-              ))}
+              {(com?.commodity.optionSets as OptionSet[])
+                .sort((a, b) => a.order - b.order)
+                .map((optionSet) => (
+                  <OptionSetForm
+                    key={optionSet.name}
+                    optionSet={optionSet}
+                    register={register}
+                    errors={errors}
+                  />
+                ))}
             </main>
             {/* Submit */}
-            <footer className='flex shrink-0 flex-col gap-4 @2xl/cart:flex-row-reverse'>
+            <footer className='mt-4 flex shrink-0 flex-col gap-4 @2xl/cart:flex-row-reverse'>
               <Button
                 isDisabled={CurrentOptionsKey === props.cartItem?.optionsKey}
                 isBusy={
@@ -132,7 +134,7 @@ export default function CartItemOptionsDialog(props: {
               />
               <Button
                 label='返回'
-                className='h-12 grow @2xl/cart:basis-2/5'
+                className='h-10 grow @2xl/cart:basis-2/5'
                 theme='support'
                 onClick={props.onClose}
               />

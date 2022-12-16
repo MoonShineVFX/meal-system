@@ -30,7 +30,13 @@ export type CommoditiesOnMenu = Menu['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]
 export type CommoditiesOnMenuByCategory = Map<
   string,
-  Map<string, (CommodityOnMenu | undefined)[]>
+  {
+    order: number
+    subCategories: Map<
+      string,
+      { order: number; coms: (CommodityOnMenu | undefined)[] }
+    >
+  }
 >
 export type CartData = RouterOutput['cart']['get']
 export type InvalidCartItems = CartData['invalidCartItems']

@@ -110,38 +110,59 @@ export default function Menu(props: {
       if (categories.length > 0) {
         for (const category of categories) {
           if (!comsByCategory.has(category.mainName)) {
-            comsByCategory.set(category.mainName, new Map())
+            comsByCategory.set(category.mainName, {
+              subCategories: new Map(),
+              order: category.mainOrder,
+            })
           }
-          if (!comsByCategory.get(category.mainName)!.has(category.subName)) {
-            comsByCategory.get(category.mainName)!.set(category.subName, [])
+          if (
+            !comsByCategory
+              .get(category.mainName)!
+              .subCategories.has(category.subName)
+          ) {
+            comsByCategory
+              .get(category.mainName)!
+              .subCategories.set(category.subName, {
+                coms: [],
+                order: category.subOrder,
+              })
           }
           comsByCategory
             .get(category.mainName)!
-            .get(category.subName)!
-            .push(com)
+            .subCategories.get(category.subName)!
+            .coms.push(com)
         }
       } else {
         if (!comsByCategory.has(settings.MENU_CATEGORY_NULL)) {
-          comsByCategory.set(
-            settings.MENU_CATEGORY_NULL,
-            new Map([[settings.MENU_CATEGORY_NULL, []]]),
-          )
+          comsByCategory.set(settings.MENU_CATEGORY_NULL, {
+            subCategories: new Map([
+              [settings.MENU_CATEGORY_NULL, { coms: [], order: Infinity }],
+            ]),
+            order: Infinity,
+          })
         }
         comsByCategory
           .get(settings.MENU_CATEGORY_NULL)!
-          .get(settings.MENU_CATEGORY_NULL)!
-          .push(com)
+          .subCategories.get(settings.MENU_CATEGORY_NULL)!
+          .coms.push(com)
       }
     }
 
+    // Sort categories
     const result = new Map(
-      [...comsByCategory].sort((a, b) =>
-        b[0] === settings.MENU_CATEGORY_NULL
-          ? -1
-          : a[0] === settings.MENU_CATEGORY_NULL
-          ? 1
-          : 0,
-      ),
+      [...comsByCategory]
+        .sort((a, b) => a[1].order - b[1].order)
+        .map(([mainCategory, mainCategoryData]) => [
+          mainCategory,
+          {
+            order: mainCategoryData.order,
+            subCategories: new Map(
+              [...mainCategoryData.subCategories].sort(
+                (a, b) => a[1].order - b[1].order,
+              ),
+            ),
+          },
+        ]),
     )
 
     setComsByCategory(result)

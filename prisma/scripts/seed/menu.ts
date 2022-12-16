@@ -13,10 +13,11 @@ export default async function seedMenu() {
   // Create main menu
   console.log('>> Seed menu')
   const menu = await createMenu(MenuType.MAIN)
-
+  let mainOrder = 0
   for (const [mainCategoryName, mainCategoryData] of Object.entries(
     menuMockData,
   )) {
+    let subOrder = 0
     for (const [subCategoryName, subCategoryData] of Object.entries(
       mainCategoryData.subCategories,
     )) {
@@ -24,6 +25,8 @@ export default async function seedMenu() {
       const subCategory = await createCategory(
         mainCategoryName,
         subCategoryName,
+        mainOrder,
+        subOrder,
       )
       for (const commodityData of subCategoryData) {
         console.log('>> Seed commodity:', commodityData.name)
@@ -46,7 +49,9 @@ export default async function seedMenu() {
         // Add to menu
         await addCommodityToMenu(commodity.id, menu.id)
       }
+      subOrder++
     }
+    mainOrder++
   }
 
   // For empty test

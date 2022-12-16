@@ -5,7 +5,15 @@ import type { CommoditiesOnMenuByCategory } from '@/lib/client/trpc'
 import COMCard from './COMCard'
 
 const comsByCategoryPlaceHolder: CommoditiesOnMenuByCategory = new Map([
-  ['main', new Map([['sub', Array(10).fill(undefined)]])],
+  [
+    'main',
+    {
+      order: 0,
+      subCategories: new Map([
+        ['sub', { order: 0, coms: Array(10).fill(undefined) }],
+      ]),
+    },
+  ],
 ])
 
 const TOTAL_FILLER_COUNT = 10
@@ -16,7 +24,7 @@ function COMsGrid(props: { comsByCategory?: CommoditiesOnMenuByCategory }) {
 
   return (
     <section className='grid w-full grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-4 lg:gap-8'>
-      {[...comsByCategory].map(([mainCategory, subCategories], index) => (
+      {[...comsByCategory].map(([mainCategory, mainCategoryData], index) => (
         <Fragment key={mainCategory}>
           <h1
             id={mainCategory}
@@ -31,17 +39,19 @@ function COMsGrid(props: { comsByCategory?: CommoditiesOnMenuByCategory }) {
               <span className='skeleton rounded-md text-transparent'>分類</span>
             )}
           </h1>
-          {[...subCategories].map(([subCategory, coms]) => (
-            <Fragment key={subCategory}>
-              {coms.map((com, index) => (
-                <COMCard
-                  key={com?.commodity.id ?? index}
-                  com={com}
-                  category={subCategory}
-                />
-              ))}
-            </Fragment>
-          ))}
+          {[...mainCategoryData.subCategories].map(
+            ([subCategory, subCategoryData]) => (
+              <Fragment key={subCategory}>
+                {subCategoryData.coms.map((com, index) => (
+                  <COMCard
+                    key={com?.commodity.id ?? index}
+                    com={com}
+                    category={subCategory}
+                  />
+                ))}
+              </Fragment>
+            ),
+          )}
         </Fragment>
       ))}
       {[...Array(fillerCount).keys()].map((index) => (
