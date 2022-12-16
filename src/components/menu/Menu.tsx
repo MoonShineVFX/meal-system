@@ -52,7 +52,7 @@ export default function Menu(props: {
 
       // Detect bottom
       if (
-        gridRef.current.scrollHeight - gridRef.current.scrollTop ===
+        gridRef.current.scrollHeight - gridRef.current.scrollTop <=
         gridRef.current.clientHeight
       ) {
         topCategory = categories[categories.length - 1]

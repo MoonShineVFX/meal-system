@@ -7,16 +7,19 @@ export const menuMockData = {
       {
         name: '冰量',
         multiSelect: false,
+        order: 0,
         options: ['熱飲', '正常冰', '少冰', '微冰', '去冰'],
       },
       {
         name: '糖度',
         multiSelect: false,
+        order: 1,
         options: ['正常糖', '少糖', '微糖', '無糖'],
       },
       {
         name: '加料',
         multiSelect: true,
+        order: 2,
         options: ['珍珠', '椰果'],
       },
     ],
@@ -88,11 +91,13 @@ export const menuMockData = {
       {
         name: '辣度',
         multiSelect: false,
+        order: 0,
         options: ['微辣', '小辣', '中辣', '大辣'],
       },
       {
         name: '備註',
         multiSelect: true,
+        order: 1,
         options: ['不加香菜', '純素', '不要蔥'],
       },
     ],
@@ -174,6 +179,7 @@ export const menuMockData = {
       {
         name: '調味',
         multiSelect: false,
+        order: 0,
         options: ['胡椒鹽', '番茄醬', '無調味'],
       },
     ],

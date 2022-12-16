@@ -113,7 +113,7 @@ export default function Cart() {
   return (
     <div className='relative h-full w-full @container/cart'>
       <div className='ms-scroll absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden lg:p-8'>
-        <div className='grid h-min max-w-3xl grow gap-4 @2xl/cart:grid-cols-[3fr_2fr]'>
+        <div className='grid h-min min-h-full max-w-3xl grow grid-rows-[min-content_auto_min-content] gap-4 @2xl/cart:grid-cols-[3fr_2fr] @2xl/cart:grid-rows-[min-content_auto]'>
           {/* Clear Button */}
           <div className='col-start-1 row-start-1 flex justify-end'>
             {cartData.cartItems.length > 0 && (

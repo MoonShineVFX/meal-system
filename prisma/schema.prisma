@@ -182,8 +182,10 @@ model CommodityCategory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  mainName String
-  subName  String
+  mainName  String
+  subName   String
+  mainOrder Int
+  subOrder  Int
 
   commodities Commodity[]
 
@@ -209,7 +211,7 @@ model Commodity {
   description String @default("")
   price       Int
 
-  optionSets Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[] }[]
+  optionSets Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[], "order": number }[]
   isDeleted  Boolean @default(false)
 
   categories CommodityCategory[]
@@ -274,4 +276,33 @@ model Image {
   Commodity Commodity[]
   OrderItem OrderItem[]
   User      User?
+}
+
+// Setting
+enum SettingType {
+  STRING
+  INT
+  BOOLEAN
+  JSON
+}
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  key   String
+  value String
+  type  String
+
+  @@unique([key])
+}
+
+// Server Refill
+model ServerRefill {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  date   DateTime @db.Date
+  amount Int
 }
