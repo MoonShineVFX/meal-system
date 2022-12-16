@@ -15,6 +15,7 @@ import type { AppRouter } from '@/lib/trpc'
 
 export const onSocketOpenCallbacks: (() => void)[] = []
 export const onSocketCloseCallbacks: (() => void)[] = []
+export const onQueryMutationErrorCallbacks: ((error: Error) => void)[] = []
 
 /* Types */
 type RouterOutput = inferRouterOutputs<AppRouter>
@@ -88,8 +89,8 @@ const authLink: TRPCLink<AppRouter> = () => {
   return ({ next, op }) => {
     return observable((observer) => {
       const unsubscribe = next(op).subscribe({
-        // Detect login mutation, redirect to index if success
         next(value) {
+          // Detect login mutation, redirect to index if success
           if (
             op.type === 'mutation' &&
             op.path === 'user.login' &&
@@ -104,6 +105,7 @@ const authLink: TRPCLink<AppRouter> = () => {
           observer.next(value)
         },
         error(err) {
+          onQueryMutationErrorCallbacks.forEach((cb) => cb(err))
           observer.error(err)
         },
         complete() {

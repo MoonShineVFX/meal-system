@@ -11,7 +11,6 @@ import Image from '@/components/core/Image'
 import Title from '@/components/core/Title'
 import trpc from '@/lib/client/trpc'
 import { generateCookie, settings, twData } from '@/lib/common'
-import { useStore, NotificationType } from '@/lib/client/store'
 import Logo from '@/components/core/Logo'
 import Button from '@/components/core/Button'
 
@@ -23,7 +22,6 @@ type FormInputs = {
 export default function PageLogin() {
   const loginMutation = trpc.user.login.useMutation()
   const trpcContext = trpc.useContext()
-  const addNotification = useStore((state) => state.addNotification)
   const {
     register,
     handleSubmit,
@@ -37,25 +35,13 @@ export default function PageLogin() {
   }, [])
 
   const handleLogin: SubmitHandler<FormInputs> = async (formData) => {
-    loginMutation.mutateAsync(
+    loginMutation.mutate(
       {
         username: formData.username,
         password: formData.password,
       },
       {
-        // If the login is successful, reload to the home page
-        onSuccess: async () => {
-          addNotification({
-            type: NotificationType.SUCCESS,
-            message: '登入成功',
-          })
-        },
-        onError: async (error) => {
-          addNotification({
-            type: NotificationType.ERROR,
-            message: error.message,
-          })
-        },
+        // If the login is successful, reload to the home page at @/lib/client/trpc.ts [authLink]
       },
     )
   }

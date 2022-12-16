@@ -9,7 +9,6 @@ import { getMenuName } from '@/lib/common'
 import Button from '@/components/core/Button'
 import CartCard from './CartCard'
 import Dialog from '@/components/core/Dialog'
-import { useStore, NotificationType } from '@/lib/client/store'
 
 export default function Cart() {
   const {
@@ -24,8 +23,7 @@ export default function Cart() {
     isError: userIsError,
     error: userError,
   } = trpc.user.get.useQuery(undefined)
-  const deleteCartMutation = trpc.cart.delete.useMutation()
-  const addNotification = useStore((state) => state.addNotification)
+  const deleteCartMutation = trpc.cart.delete.useMutation({})
   const [cartItemsByMenu, setCartItemsByMenu] = useState<CartItemsByMenu>(
     new Map(),
   )
@@ -62,17 +60,7 @@ export default function Cart() {
 
   const handleDeleteInvalidCartItems = () => {
     if (!cartData?.invalidCartItems.length) return
-    deleteCartMutation.mutateAsync(
-      { invalidOnly: true },
-      {
-        onError: async (error) => {
-          addNotification({
-            type: NotificationType.ERROR,
-            message: error.message,
-          })
-        },
-      },
-    )
+    deleteCartMutation.mutate({ invalidOnly: true })
   }
 
   if (cartIsLoading || userIsLoading) return <div>Loading...</div>
@@ -102,13 +90,22 @@ export default function Cart() {
     <div className='relative h-full w-full @container/cart'>
       <div className='absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md lg:p-8'>
         <div className='grid h-min max-w-5xl grow gap-4 @2xl/cart:grid-cols-[3fr_2fr]'>
+          {/* Clear Button */}
+          <div className='col-start-1 row-start-1 flex justify-end'>
+            <Button
+              isBusy={true}
+              isLoading={true}
+              label='清空購物車'
+              theme='support'
+              className='h-7 w-[11ch] self-end border border-stone-100'
+              textClassName='text-sm text-stone-400'
+              spinnerClassName='h-5 w-5'
+            />
+          </div>
           {/* Header */}
-          <h1 className='text-xl font-bold @2xl/cart:col-span-full'>
-            購物車
-            <span className='ml-1 text-lg font-normal text-stone-400'>
-              {cartData.cartItems.length}
-            </span>
-          </h1>
+          <div className='pointer-events-none col-start-1 row-start-1 justify-between @2xl/cart:col-span-full'>
+            <h1 className='inline text-xl font-bold'>購物車</h1>
+          </div>
           {/* CartItems */}
           <section className='flex flex-col gap-4 lg:pr-4'>
             {/* Invalid */}

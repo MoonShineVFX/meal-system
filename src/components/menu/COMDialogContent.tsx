@@ -18,7 +18,7 @@ import { settings, OptionSet, twData, OrderOptions } from '@/lib/common'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
-import { useStore, NotificationType } from '@/lib/client/store'
+import { useStore } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
 
 type FormInputs = {
@@ -31,7 +31,6 @@ function COMDialogContent(props: {
   com: CommodityOnMenu
 }) {
   const addCartMutation = trpc.cart.add.useMutation()
-  const addNotification = useStore((state) => state.addNotification)
   const { com } = props
   const [isLimited, setIsLimited] = useState(false)
   const menu = useStore((state) => state.currentMenu)
@@ -66,7 +65,7 @@ function COMDialogContent(props: {
 
   const handleCreateCartItem: SubmitHandler<FormInputs> = useCallback(
     async (formData) => {
-      addCartMutation.mutateAsync(
+      addCartMutation.mutate(
         {
           commodityId: com.commodity.id,
           menuId: menu!.id,
@@ -76,12 +75,6 @@ function COMDialogContent(props: {
         {
           onSuccess: async () => {
             props.onClose()
-          },
-          onError: async (error) => {
-            addNotification({
-              type: NotificationType.ERROR,
-              message: error.message,
-            })
           },
         },
       )

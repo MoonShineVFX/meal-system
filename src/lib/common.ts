@@ -2,9 +2,9 @@ import { TransactionType, UserRole, Menu } from '@prisma/client'
 
 /* Types */
 export enum SERVER_NOTIFY {
-  CART_ADD = '加入購物車成功',
-  CART_DELETE = '移除購物車餐點成功',
-  CART_UPDATE = '修改購物車餐點成功',
+  CART_ADD = '加入餐點至購物車',
+  CART_DELETE = '移除購物車餐點',
+  CART_UPDATE = '修改購物車餐點',
 }
 
 export enum CurrencyType {

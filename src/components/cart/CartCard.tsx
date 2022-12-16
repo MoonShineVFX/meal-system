@@ -1,12 +1,11 @@
-import { Listbox } from '@headlessui/react'
+import { Listbox, Transition } from '@headlessui/react'
 import { twMerge } from 'tailwind-merge'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
+import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
 import { OrderOptions, settings, twData } from '@/lib/common'
-import { ChevronDownIcon } from '@heroicons/react/24/outline'
-import { useStore, NotificationType } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
 
@@ -16,7 +15,6 @@ export default function CartCard(props: {
   const { cartItem } = props
   const deleteCartMutation = trpc.cart.delete.useMutation()
   const updateCartMutation = trpc.cart.update.useMutation()
-  const addNotification = useStore((state) => state.addNotification)
   const [selectedQauntity, setSelectedQuantity] = useState(cartItem.quantity)
 
   useEffect(() => {
@@ -24,29 +22,19 @@ export default function CartCard(props: {
   }, [cartItem.quantity])
 
   const updateCartItem = (quantity?: number, options?: OrderOptions) => {
-    updateCartMutation.mutateAsync(
-      {
-        commodityId: cartItem.commodityId,
-        menuId: cartItem.menuId,
-        quantity: quantity ?? selectedQauntity,
-        options: options ?? (cartItem.options as OrderOptions),
-      },
-      {
-        onError: async (error) => {
-          addNotification({
-            type: NotificationType.ERROR,
-            message: error.message,
-          })
-        },
-      },
-    )
+    updateCartMutation.mutate({
+      commodityId: cartItem.commodityId,
+      menuId: cartItem.menuId,
+      quantity: quantity ?? selectedQauntity,
+      options: options ?? (cartItem.options as OrderOptions),
+    })
   }
 
   const handleQuantityChange = (quantity: number) => {
     setSelectedQuantity(quantity)
     if (quantity === 0) {
       // Delete cart item
-      deleteCartMutation.mutateAsync(
+      deleteCartMutation.mutate(
         {
           ids: [
             {
@@ -57,11 +45,8 @@ export default function CartCard(props: {
           ],
         },
         {
-          onError: async (error) => {
-            addNotification({
-              type: NotificationType.ERROR,
-              message: error.message,
-            })
+          onError: async () => {
+            setSelectedQuantity(cartItem.quantity)
           },
         },
       )
@@ -86,11 +71,11 @@ export default function CartCard(props: {
   return (
     <div
       data-ui={twData({ available: !cartItem.invalid && !isLoading })}
-      className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6 @2xl/cart:py-8'
+      className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6 @2xl/cart:py-6'
     >
       {/* Image */}
       <section className='h-min w-full max-w-[5rem] shrink-0 cursor-pointer p-1 @2xl/cart:max-w-[8rem] @2xl/cart:p-2 hover:opacity-75 active:opacity-75'>
-        <div className='relative aspect-square overflow-hidden rounded-2xl'>
+        <div className='relative aspect-square overflow-hidden rounded-full'>
           <Image
             style={{ WebkitTouchCallout: 'none' }}
             className='object-cover'
@@ -150,25 +135,35 @@ export default function CartCard(props: {
                 <ChevronDownIcon className='absolute right-1 h-4 w-4 text-stone-400 transition-transform ui-open:rotate-180' />
               )}
             </Listbox.Button>
-            <div className='relative z-10'>
-              <Listbox.Options className='absolute right-0 top-2 flex max-h-[30vh] w-[125%] flex-col gap-2 overflow-y-auto rounded-2xl border border-stone-200 bg-white px-1 py-2 shadow-md scrollbar-none focus:outline-none'>
-                {[-1, ...quantities].map((quantity) => (
-                  <Listbox.Option
-                    value={quantity + 1}
-                    key={quantity}
-                    data-ui={twData({
-                      selected: quantity + 1 === cartItem.quantity,
-                    })}
-                    className={twMerge(
-                      'cursor-pointer rounded-xl px-1 py-1 text-center data-selected:bg-stone-100 hover:bg-stone-100 active:bg-stone-100',
-                      quantity === -1 && 'text-sm text-red-400',
-                    )}
-                  >
-                    {quantity === -1 ? '刪除' : quantity + 1}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </div>
+            <Transition
+              enter='transition duration-100 ease-out'
+              enterFrom='transform scale-y-0 opacity-0'
+              enterTo='transform scale-y-100 opacity-100'
+              leave='transition duration-75 ease-out'
+              leaveFrom='transform scale-y-100 opacity-100'
+              leaveTo='transform scale-y-0 opacity-0'
+              as={Fragment}
+            >
+              <div className='relative z-10'>
+                <Listbox.Options className='absolute right-0 top-2 flex max-h-[30vh] w-[125%] flex-col gap-2 overflow-y-auto rounded-2xl border border-stone-200 bg-white px-1 py-2 shadow-md scrollbar-none focus:outline-none'>
+                  {[-1, ...quantities].map((quantity) => (
+                    <Listbox.Option
+                      value={quantity + 1}
+                      key={quantity}
+                      data-ui={twData({
+                        selected: quantity + 1 === cartItem.quantity,
+                      })}
+                      className={twMerge(
+                        'cursor-pointer rounded-xl px-1 py-1 text-center data-selected:bg-stone-100 hover:bg-stone-100 active:bg-stone-100',
+                        quantity === -1 && 'text-sm text-red-400',
+                      )}
+                    >
+                      {quantity === -1 ? '刪除' : quantity + 1}
+                    </Listbox.Option>
+                  ))}
+                </Listbox.Options>
+              </div>
+            </Transition>
           </Listbox>
           {/* Price */}
           <h3 className='whitespace-nowrap text-end font-bold'>

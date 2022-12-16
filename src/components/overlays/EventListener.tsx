@@ -1,9 +1,10 @@
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
   onSocketOpenCallbacks,
   onSocketCloseCallbacks,
+  onQueryMutationErrorCallbacks,
 } from '@/lib/client/trpc'
 import { SERVER_NOTIFY } from '@/lib/common'
 
@@ -13,24 +14,22 @@ export default function EventListener() {
   const [hasDisconnected, setHasDisconnected] = useState(false)
   const userInfoQuery = trpc.user.get.useQuery(undefined)
 
-  const handleError = useCallback(async (error: Omit<Error, 'name'>) => {
-    // Catch socket closed error
-    if (error.message === 'WebSocket closed prematurely') {
-      return
-    }
-    // Catch error when not login
-    if (!userInfoQuery.isSuccess) {
-      return
-    }
-
-    addNotification({
-      type: NotificationType.ERROR,
-      message: error.message,
-    })
-  }, [])
-
   /* Socket management */
   useEffect(() => {
+    const handleError = async (error: Omit<Error, 'name'>) => {
+      // Catch socket closed error
+      if (error.message === 'WebSocket closed prematurely') {
+        return
+      }
+      // Ignore error when not login
+      if (!userInfoQuery.isSuccess) {
+        return
+      }
+      addNotification({
+        type: NotificationType.ERROR,
+        message: error.message,
+      })
+    }
     const handleSocketOpen = async () => {
       if (!hasDisconnected) return
       console.warn('TRPC Socket reopened')
@@ -51,6 +50,8 @@ export default function EventListener() {
     }
     onSocketCloseCallbacks.push(handleSocketClose)
     onSocketOpenCallbacks.push(handleSocketOpen)
+    onQueryMutationErrorCallbacks.push(handleError)
+    console.log('add', onQueryMutationErrorCallbacks)
 
     return () => {
       onSocketCloseCallbacks.splice(
@@ -61,8 +62,12 @@ export default function EventListener() {
         onSocketOpenCallbacks.indexOf(handleSocketOpen),
         1,
       )
+      onQueryMutationErrorCallbacks.splice(
+        onQueryMutationErrorCallbacks.indexOf(handleError),
+        1,
+      )
     }
-  }, [hasDisconnected])
+  }, [hasDisconnected, userInfoQuery.isSuccess, addNotification])
 
   /* Server Notification */
   trpc.user.onNotify.useSubscription(undefined, {
@@ -81,7 +86,6 @@ export default function EventListener() {
           break
       }
     },
-    onError: handleError,
   })
 
   return null
