@@ -142,7 +142,7 @@ const trpc = createTRPCNext<AppRouter>({
         defaultOptions: {
           queries: {
             retry: false,
-            refetchOnMount: false,
+            // refetchOnMount: false,
             refetchOnWindowFocus: false,
           },
           mutations: {

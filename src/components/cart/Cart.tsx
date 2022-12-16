@@ -113,8 +113,6 @@ export default function Cart() {
     }
   }
 
-  console.log(cartItemUpdateCount)
-
   return (
     <div className='relative h-full w-full @container/cart'>
       <div className='ms-scroll absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden lg:p-8'>
