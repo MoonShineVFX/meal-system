@@ -9,11 +9,12 @@ export default function Swiper(props: {
   onClose: () => void
   breakingPoint?: number
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const parentRef = useRef<HTMLDivElement>(null)
   const coreRef = useRef<HTMLDivElement>(null)
-  const [isCloseable, setIsCloseable] = useState(true)
+  const handlerRef = useRef<HTMLDivElement>(null)
+  const [isScrollInCore, setIsScrollInCore] = useState(true)
   const [isClosing, setIsClosing] = useState(false)
-  const [isDisabled, setIsDisabled] = useState(true)
+  const [isDisabled, setIsDisabled] = useState(false)
 
   // Detect media query
   useEffect(() => {
@@ -39,59 +40,100 @@ export default function Swiper(props: {
 
   // Scroll to core when open
   useEffect(() => {
-    if (!scrollRef.current || !coreRef.current) return
+    if (!parentRef.current || !coreRef.current) return
 
     if (!isClosing) {
-      scrollRef.current.scrollTo({
+      parentRef.current.scrollTo({
         top: window.innerHeight,
       })
     }
-  }, [scrollRef.current, coreRef.current, isClosing, isDisabled])
+  }, [parentRef.current, coreRef.current, isClosing])
 
-  // Scroll behavior
+  // Detect scroll to topmost and close
   useEffect(() => {
-    if (!scrollRef.current || !coreRef || isClosing) return
-    const handleScroll = () => {
-      if (!scrollRef.current || !coreRef.current) return
-
-      const scrollY = coreRef.current.getBoundingClientRect().top
+    if (!parentRef.current || isClosing) return
+    const handleParentScroll = () => {
+      if (!parentRef.current) return
 
       if (
-        scrollRef.current.scrollTop <=
+        parentRef.current.scrollTop <=
         window.innerHeight * CLOSE_TRIGGER_THRESHOLD_RATIO
       ) {
         setIsClosing(true)
         props.onClose()
         return
       }
+    }
 
-      if (scrollY >= 0 && !isCloseable) {
-        setIsCloseable(true)
-      } else if (scrollY < 0 && isCloseable) {
-        setIsCloseable(false)
+    parentRef.current.addEventListener('scroll', handleParentScroll)
+    return () => {
+      parentRef.current?.removeEventListener('scroll', handleParentScroll)
+    }
+  }, [parentRef.current, isClosing])
+
+  // Detect core scroll to bottom and put white bg behind for overscrolling
+  useEffect(() => {
+    if (!coreRef.current || !handlerRef.current) return
+    const handleCoreScroll = () => {
+      if (!coreRef.current || !handlerRef.current) return
+
+      const scrollY = coreRef.current.scrollTop
+
+      if (scrollY >= 0) {
+        if (!isScrollInCore) setIsScrollInCore(true)
+        if (handlerRef.current.style.display === 'block')
+          handlerRef.current.style.display = 'none'
+      } else if (scrollY < 0) {
+        if (isScrollInCore) setIsScrollInCore(false)
+        if (handlerRef.current.style.display === 'none')
+          handlerRef.current.style.display = 'block'
       }
     }
 
-    scrollRef.current.addEventListener('scroll', handleScroll)
+    coreRef.current.addEventListener('scroll', handleCoreScroll)
     return () => {
-      if (!scrollRef.current || !coreRef) return
-      scrollRef.current.removeEventListener('scroll', handleScroll)
+      coreRef.current?.removeEventListener('scroll', handleCoreScroll)
     }
-  }, [scrollRef.current, coreRef.current, isCloseable, isDisabled, isClosing])
+  }, [coreRef.current, isScrollInCore, handlerRef.current])
+
+  // Initial HandlerRef
+  useEffect(() => {
+    if (!handlerRef.current) return
+    handlerRef.current.style.display = 'none'
+  }, [handlerRef.current])
 
   if (isDisabled) return <>{props.children}</>
 
   return (
     <div
-      ref={scrollRef}
+      ref={parentRef}
       className={twMerge(
-        'h-full w-full snap-y snap-mandatory overflow-y-auto overscroll-y-none',
+        'relative h-full w-full snap-y snap-mandatory overflow-y-auto',
       )}
     >
-      <div className={twMerge('h-screen', isCloseable && 'snap-start')}></div>
-      <div ref={coreRef} className={'snap-start pt-4'}>
+      {/* Spacer */}
+      <div className='absolute h-full w-full snap-start'></div>
+      {/* BG for over scroll */}
+      <div
+        className={twMerge(
+          'absolute top-[150%] h-1/2 w-full bg-white',
+          !isScrollInCore && 'hidden',
+        )}
+      ></div>
+      {/* Core */}
+      <div
+        ref={coreRef}
+        className={
+          'absolute top-full h-full w-full snap-start overflow-y-auto pt-4'
+        }
+      >
         {props.children}
       </div>
+      {/* Parent scroll handler */}
+      <div
+        ref={handlerRef}
+        className='absolute top-full z-10 aspect-square w-full'
+      ></div>
     </div>
   )
 }

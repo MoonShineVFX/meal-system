@@ -209,7 +209,7 @@ function COMDialogContent(props: {
           />
           <Button
             label='返回'
-            className='h-12 grow sm:basis-2/5'
+            className='h-10 grow sm:basis-2/5'
             theme='support'
             onClick={props.onClose}
           />
