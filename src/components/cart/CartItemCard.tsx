@@ -99,7 +99,7 @@ function CartItemCard(props: {
       })}
       className={twMerge(
         'group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 transition-colors duration-2000 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6 @2xl/cart:py-6',
-        isUpdated && props.enableUpdateEffect && 'bg-green-100 duration-0',
+        isUpdated && props.enableUpdateEffect && 'bg-yellow-500/10 duration-0',
       )}
     >
       {/* Image */}
