@@ -116,7 +116,7 @@ function COMDialogContent(props: {
       </section>
       {/* Form */}
       <form
-        className='ms-scroll group flex shrink-0 grow flex-col gap-6 p-4 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-6'
+        className='ms-scroll group flex shrink-0 grow flex-col gap-6 p-4 pb-0 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-6'
         data-ui={twData({ available: !isUnavailable })}
         onSubmit={handleSubmit(handleCreateCartItem)}
       >
@@ -209,7 +209,7 @@ function COMDialogContent(props: {
           />
           <Button
             label='返回'
-            className='h-10 grow sm:basis-2/5'
+            className='h-12 grow sm:basis-2/5'
             theme='support'
             onClick={props.onClose}
           />
