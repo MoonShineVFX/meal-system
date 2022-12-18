@@ -108,7 +108,7 @@ function ProfileButton(props: { className?: string }) {
         leaveFrom='transform scale-100 opacity-100'
         leaveTo='transform scale-50 opacity-0'
       >
-        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border-[0.0625rem] border-stone-200 bg-white py-3 px-2 tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
+        <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border border-stone-200 bg-white py-3 px-2 tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
           <Popover.Button
             as={Link}
             href='/transaction'

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { twMerge } from 'tailwind-merge'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
+import { AnimatePresence } from 'framer-motion'
 
 import trpc from '@/lib/client/trpc'
 import type { CartItemsByMenu } from '@/lib/client/trpc'
@@ -32,7 +33,6 @@ export default function Cart() {
     new Map(),
   )
   const [modifiedNotify, setModifiedNotify] = useState(false)
-  const [cartItemUpdateCount, setCartItemUpdateCount] = useState(0)
   const [cartItemInOptionsDialog, setCartItemInOptionsDialog] =
     useState<CartItems[0]>()
 
@@ -60,7 +60,6 @@ export default function Cart() {
     }
 
     setCartItemsByMenu(cartItemsByMenu)
-    setCartItemUpdateCount((prev) => prev + 1)
 
     if (cartData.isModified) {
       setModifiedNotify(true)
@@ -173,15 +172,16 @@ export default function Cart() {
             {[...cartItemsByMenu].map(([menuId, menu]) => (
               <div key={menuId} className='flex flex-col'>
                 <h3 className='text-sm text-stone-400'>{getMenuName(menu)}</h3>
-                {menu.cartItems.map((cartItem) => (
-                  <CartItemCard
-                    key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
-                    cartItem={cartItem}
-                    disabled={deleteCartType === 'ALL'}
-                    onOptionsClick={setCartItemInOptionsDialog}
-                    enableUpdateEffect={cartItemUpdateCount > 1}
-                  />
-                ))}
+                <AnimatePresence initial={false}>
+                  {menu.cartItems.map((cartItem) => (
+                    <CartItemCard
+                      key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
+                      cartItem={cartItem}
+                      disabled={deleteCartType === 'ALL'}
+                      onOptionsClick={setCartItemInOptionsDialog}
+                    />
+                  ))}
+                </AnimatePresence>
               </div>
             ))}
           </section>

@@ -32,7 +32,7 @@ export default function EventListener() {
     }
     const handleSocketOpen = async () => {
       if (!hasDisconnected) return
-      console.warn('TRPC Socket reopened')
+      console.warn('TRPC Socket Reopened')
       // Revalidate due to tanstack query not support websocket refetchOnReconnect
       trpcContext.invalidate()
       addNotification({
@@ -41,7 +41,7 @@ export default function EventListener() {
       })
     }
     const handleSocketClose = async () => {
-      console.warn('TRPC Socket closed')
+      console.warn('TRPC Socket Closed')
       setHasDisconnected(true)
       addNotification({
         type: NotificationType.ERROR,
@@ -51,7 +51,6 @@ export default function EventListener() {
     onSocketCloseCallbacks.push(handleSocketClose)
     onSocketOpenCallbacks.push(handleSocketOpen)
     onQueryMutationErrorCallbacks.push(handleError)
-    console.log('add', onQueryMutationErrorCallbacks)
 
     return () => {
       onSocketCloseCallbacks.splice(
