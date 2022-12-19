@@ -6,6 +6,7 @@ import {
   Path,
   FieldErrorsImpl,
 } from 'react-hook-form'
+import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
 import Image from '@/components/core/Image'
 import Title from '@/components/core/Title'
@@ -92,8 +93,9 @@ export default function PageLogin() {
             labelOnSuccess='登入成功'
           />
           {loginMutation.isError && (
-            <div className='absolute bottom-0 text-sm font-normal text-red-400'>
-              ⚠️{loginMutation.error.message}
+            <div className='absolute bottom-0 flex items-center gap-2 text-sm font-normal text-red-400'>
+              <ExclamationTriangleIcon className='h-5 w-5' />
+              {loginMutation.error.message}
             </div>
           )}
         </form>
