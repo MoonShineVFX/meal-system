@@ -29,6 +29,7 @@ export default function AuthValidator() {
         type: NotificationType.SUCCESS,
         message: '登入成功',
       })
+
       const { login, ...query } = router.query
       router.replace(
         {

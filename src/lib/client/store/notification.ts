@@ -38,7 +38,7 @@ export const createNotificationSlice: StateCreator<
         settings.NOTIFICATION_DURATION_MS,
       )
       return {
-        notifications: [...state.notifications, { ...payload, id }],
+        notifications: [{ ...payload, id }, ...state.notifications],
         notificationIdCounter: state.notificationIdCounter + 1,
       }
     })
