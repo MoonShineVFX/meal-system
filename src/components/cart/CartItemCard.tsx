@@ -13,6 +13,7 @@ import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
 import { ScrollFader } from '@/components/cart/ScrollFader'
 import SwipeToDelete from './SwipeToDelete'
+import Button from '@/components/core/Button'
 
 const COLOR_HIGHLIGHT = colors.yellow[500] + (25).toString(16)
 const COLOR_TRANSPARENT = 'rgba(255, 255, 255, 0)'
@@ -233,68 +234,80 @@ function CartItemCard(props: {
               </section>
               {/* Quantity and Price*/}
               <section className='flex justify-between'>
-                <Listbox
-                  value={selectedQauntity}
-                  onChange={handleQuantityChange}
-                  disabled={cartItem.invalid || isChangingQuantity}
-                  as='div'
-                >
-                  <Listbox.Button
-                    id={`reference-${cartItemId}`}
-                    className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 hover:bg-stone-100 disabled:hover:bg-transparent'
+                <div className='flex flex-col gap-2'>
+                  <Listbox
+                    value={selectedQauntity}
+                    onChange={handleQuantityChange}
+                    disabled={cartItem.invalid || isChangingQuantity}
+                    as='div'
                   >
-                    <p className='ml-3'>
-                      {selectedQauntity === 0 ? (
-                        <span className='text-red-400'>0</span>
+                    <Listbox.Button
+                      id={`reference-${cartItemId}`}
+                      className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 hover:bg-stone-100 disabled:hover:bg-transparent'
+                    >
+                      <p className='ml-3'>
+                        {selectedQauntity === 0 ? (
+                          <span className='text-red-400'>0</span>
+                        ) : (
+                          selectedQauntity
+                        )}
+                      </p>
+                      {isChangingQuantity ? (
+                        <Spinner className='absolute right-1 h-4 w-4' />
                       ) : (
-                        selectedQauntity
+                        <ChevronDownIcon className='absolute right-1 h-4 w-4 text-stone-400 transition-transform ui-open:rotate-180' />
                       )}
-                    </p>
-                    {isChangingQuantity ? (
-                      <Spinner className='absolute right-1 h-4 w-4' />
-                    ) : (
-                      <ChevronDownIcon className='absolute right-1 h-4 w-4 text-stone-400 transition-transform ui-open:rotate-180' />
-                    )}
-                  </Listbox.Button>
-                  {portalElement &&
-                    ReactDOM.createPortal(
-                      <Transition
-                        enter='transition duration-100 ease-out'
-                        enterFrom='transform scale-y-0 opacity-0'
-                        enterTo='transform scale-y-100 opacity-100'
-                        leave='transition duration-75 ease-out'
-                        leaveFrom='transform scale-y-100 opacity-100'
-                        leaveTo='transform scale-y-0 opacity-0'
-                        as={Fragment}
-                      >
-                        <div className='relative z-10'>
-                          <Listbox.Options className='absolute right-0 top-2 z-[0] w-[125%] overflow-hidden rounded-2xl border border-stone-200 bg-white px-1 py-2 shadow-md focus:outline-none'>
-                            <ScrollFader>
-                              <div className='flex h-full max-h-[30vh] flex-col gap-2 overflow-y-auto scrollbar-none'>
-                                {[-1, ...quantities].map((quantity) => (
-                                  <Listbox.Option
-                                    value={quantity + 1}
-                                    key={quantity}
-                                    data-ui={twData({
-                                      selected:
-                                        quantity + 1 === cartItem.quantity,
-                                    })}
-                                    className={twMerge(
-                                      'cursor-pointer rounded-xl px-1 py-1 text-center data-selected:bg-stone-100 hover:bg-stone-100 active:bg-stone-100',
-                                      quantity === -1 && 'text-sm text-red-400',
-                                    )}
-                                  >
-                                    {quantity === -1 ? '刪除' : quantity + 1}
-                                  </Listbox.Option>
-                                ))}
-                              </div>
-                            </ScrollFader>
-                          </Listbox.Options>
-                        </div>
-                      </Transition>,
-                      portalElement,
-                    )}
-                </Listbox>
+                    </Listbox.Button>
+                    {portalElement &&
+                      ReactDOM.createPortal(
+                        <Transition
+                          enter='transition duration-100 ease-out'
+                          enterFrom='transform scale-y-0 opacity-0'
+                          enterTo='transform scale-y-100 opacity-100'
+                          leave='transition duration-75 ease-out'
+                          leaveFrom='transform scale-y-100 opacity-100'
+                          leaveTo='transform scale-y-0 opacity-0'
+                          as={Fragment}
+                        >
+                          <div className='relative z-10'>
+                            <Listbox.Options className='absolute right-0 top-2 z-[0] w-[125%] overflow-hidden rounded-2xl border border-stone-200 bg-white px-1 py-2 shadow-md focus:outline-none'>
+                              <ScrollFader>
+                                <div className='flex h-full max-h-[30vh] flex-col gap-2 overflow-y-auto scrollbar-none'>
+                                  {[-1, ...quantities].map((quantity) => (
+                                    <Listbox.Option
+                                      value={quantity + 1}
+                                      key={quantity}
+                                      data-ui={twData({
+                                        selected:
+                                          quantity + 1 === cartItem.quantity,
+                                      })}
+                                      className={twMerge(
+                                        'cursor-pointer rounded-xl px-1 py-1 text-center data-selected:bg-stone-100 hover:bg-stone-100 active:bg-stone-100',
+                                        quantity === -1 &&
+                                          'text-sm text-red-400',
+                                      )}
+                                    >
+                                      {quantity + 1}
+                                    </Listbox.Option>
+                                  ))}
+                                </div>
+                              </ScrollFader>
+                            </Listbox.Options>
+                          </div>
+                        </Transition>,
+                        portalElement,
+                      )}
+                  </Listbox>
+                  <Button
+                    isLoading={isLoading}
+                    className='hidden h-6 data-busy:hidden sm:flex'
+                    textClassName='text-sm text-stone-400'
+                    spinnerClassName='h-4 w-4'
+                    label='刪除'
+                    theme='support'
+                    onClick={() => handleQuantityChange(0)}
+                  />
+                </div>
                 {/* Price */}
                 <h3 className='whitespace-nowrap text-end font-bold'>
                   ${cartItem.commodityOnMenu.commodity.price}
