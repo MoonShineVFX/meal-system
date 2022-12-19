@@ -41,7 +41,6 @@ export const settings = {
   COOKIE_EXPIRE_DAYS: 14,
   /* Events */
   NOTIFICATION_DURATION_MS: 3500,
-  NOTIFICATION_DELAY_MS: 500,
   /* Database */
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',

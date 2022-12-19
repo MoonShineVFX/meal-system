@@ -40,7 +40,7 @@ function NotificationPod(props: { notification: NotificationPayload }) {
       initial={{ opacity: 0, y: -64, scale: 0.3 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.3 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4, type: 'spring' }}
       className='flex items-center gap-1 rounded-2xl border border-stone-300 bg-white py-3 px-4 shadow-lg lg:p-4'
     >
       <Icon className={`h-5 w-5 ${iconStyle}`} />
