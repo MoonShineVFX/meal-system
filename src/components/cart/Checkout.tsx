@@ -5,11 +5,7 @@ import { animate } from 'framer-motion'
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
 
-export function Checkout(props: {
-  className?: string
-  totalPrice: number
-  onCheckout: () => void
-}) {
+export function Checkout(props: { className?: string; totalPrice: number }) {
   const {
     data: userData,
     isLoading: userIsLoading,
@@ -71,11 +67,12 @@ export function Checkout(props: {
       {/* Checkout button */}
       <div className='grid grid-rows-2 gap-4 @xs/checkout:grid-cols-2 @xs/checkout:grid-rows-none'>
         <Button
-          isLoading={createOrderMutation.isLoading}
+          isLoading={
+            createOrderMutation.isLoading || createOrderMutation.isSuccess
+          }
           isBusy={
             createOrderMutation.isLoading || createOrderMutation.isSuccess
           }
-          labelOnSuccess='結帳成功'
           isDisabled={isNotEnough}
           label={isNotEnough ? '餘額不足' : '確認付款'}
           className=' h-12 grow text-lg font-bold @xs/checkout:order-1'
