@@ -16,7 +16,7 @@ export async function createOrUpdateCartItem(
   const optionsKey = generateOptionsKey(options)
 
   return await prisma.$transaction(async (client) => {
-    if (!!isUpdate) {
+    if (isUpdate || isUpdate === '') {
       await client.cartItem.delete({
         where: {
           userId_menuId_commodityId_optionsKey: {

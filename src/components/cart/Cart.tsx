@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
-import { twMerge } from 'tailwind-merge'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { AnimatePresence } from 'framer-motion'
+import { Checkout } from './Checkout'
 
 import trpc from '@/lib/client/trpc'
 import type { CartItemsByMenu } from '@/lib/client/trpc'
@@ -22,12 +22,6 @@ export default function Cart() {
     isError: cartIsError,
     error: cartError,
   } = trpc.cart.get.useQuery()
-  const {
-    data: userData,
-    isLoading: userIsLoading,
-    isError: userIsError,
-    error: userError,
-  } = trpc.user.get.useQuery(undefined)
   const deleteCartMutation = trpc.cart.delete.useMutation()
   const [cartItemsByMenu, setCartItemsByMenu] = useState<CartItemsByMenu>(
     new Map(),
@@ -76,14 +70,9 @@ export default function Cart() {
     deleteCartMutation.mutate({})
   }, [cartData?.cartItems.length, deleteCartMutation])
 
-  if (cartIsLoading || userIsLoading) return <div>Loading...</div>
-  if (cartIsError || userIsError)
-    return (
-      <div className='text-red-400'>
-        {cartError?.message}
-        {userError?.message}
-      </div>
-    )
+  if (cartIsLoading) return <div>Loading...</div>
+  if (cartIsError)
+    return <div className='text-red-400'>{cartError?.message}</div>
   if (cartData.cartItems.length + cartData.invalidCartItems.length === 0)
     return (
       <div className='flex h-full w-full flex-col items-center justify-center'>
@@ -133,7 +122,7 @@ export default function Cart() {
           </div>
           {/* Header */}
           <div className='pointer-events-none col-start-1 row-start-1 justify-between @2xl/cart:col-span-full'>
-            <h1 className='inline text-xl font-bold'>購物車</h1>
+            <h1 className='inline text-xl font-bold tracking-wider'>購物車</h1>
           </div>
           {/* CartItems */}
           <section className='flex flex-col gap-4'>
@@ -187,53 +176,27 @@ export default function Cart() {
           </section>
           {/* Checkout */}
           <section>
-            <div
-              className={twMerge(
-                'sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6',
-                cartData.cartItems.length === 0 && 'hidden',
+            <Checkout
+              className={cartData.cartItems.length === 0 ? 'hidden' : undefined}
+              totalPrice={cartData.cartItems.reduce(
+                (acc: number, cartItem) =>
+                  (acc +=
+                    cartItem.commodityOnMenu.commodity.price *
+                    cartItem.quantity),
+                0,
               )}
-            >
-              <h2 className='text-xl font-bold'>結帳</h2>
-              <section className='flex flex-col text-stone-500'>
-                {/* Total */}
-                <div className='flex justify-between border-b border-stone-200 py-2 text-sm'>
-                  <p>總計</p>
-                  <p>
-                    $
-                    {cartData.cartItems.reduce(
-                      (acc: number, cartItem) =>
-                        (acc +=
-                          cartItem.commodityOnMenu.commodity.price *
-                          cartItem.quantity),
-                      0,
-                    )}
-                  </p>
-                </div>
-                {/* Point balance */}
-                {userData.pointBalance > 0 && (
-                  <div className='flex justify-between border-b border-stone-200 py-2 text-sm'>
-                    <p>點數</p>
-                    <p>{userData.pointBalance}</p>
-                  </div>
-                )}
-                {/* Credit balance */}
-                <div className='flex justify-between  border-stone-200 py-2 text-sm'>
-                  <p>夢想幣</p>
-                  <p>${userData.creditBalance}</p>
-                </div>
-              </section>
-              {/* Checkout button */}
-              <Button label='確認付款' className='h-12 text-lg font-bold' />
-            </div>
+            />
           </section>
         </div>
-        <Dialog
-          open={modifiedNotify}
-          onClose={() => setModifiedNotify(false)}
-          title='購物車有所更動'
-          content='餐點內容在這段期間有所調整，因此購物車內的餐點數量產生異動或失效。'
-        />
       </div>
+      {/* Dialog warning */}
+      <Dialog
+        open={modifiedNotify}
+        onClose={() => setModifiedNotify(false)}
+        title='購物車有所更動'
+        content='餐點內容在這段期間有所調整，因此購物車內的餐點數量產生異動或失效。'
+      />
+      {/* Cartitem options */}
       <CartItemOptionsDialog
         open={!!cartItemInOptionsDialog}
         onClose={() => setCartItemInOptionsDialog(undefined)}

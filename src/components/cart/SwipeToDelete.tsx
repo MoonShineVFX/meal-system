@@ -7,7 +7,8 @@ export default function SwipeToDelete(props: {
   onDelete: () => void
   coreRef: React.RefObject<HTMLElement>
   referenceElement?: HTMLElement
-  disabled?: boolean
+  isDisabled?: boolean
+  isInvalid?: boolean
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -29,7 +30,7 @@ export default function SwipeToDelete(props: {
   // blur when disabled
   useEffect(() => {
     handleBlur()
-  }, [props.disabled])
+  }, [props.isDisabled])
 
   // focus when scrolling
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function SwipeToDelete(props: {
   }
 
   const handleDelete = () => {
-    if (props.disabled) return
+    if (props.isDisabled) return
     props.onDelete()
   }
 
@@ -84,22 +85,29 @@ export default function SwipeToDelete(props: {
       onBlur={handleBlur}
       tabIndex={0}
     >
+      {/* Padding */}
       <div className='absolute inset-y-0 right-0 w-1/2 bg-red-400'></div>
+      {/* Main */}
       <div
         ref={scrollRef}
         className='absolute inset-0 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-none'
       >
         <div className='relative flex h-full w-full'>
           <div className='w-full shrink-0 snap-end'>
-            <div className='absolute flex w-full bg-white'>
+            <div
+              className={twMerge(
+                'absolute flex w-full bg-white',
+                props.isInvalid && 'bg-red-50',
+              )}
+            >
               {props.children}
             </div>
           </div>
           <div className='w-4 shrink-0 bg-white'></div>
           <div
             className={twMerge(
-              'flex w-1/5 shrink-0 cursor-pointer snap-end items-center justify-center bg-red-400 hover:bg-red-500 active:bg-red-500',
-              props.disabled && 'bg-gray-400',
+              'flex w-1/5 shrink-0 cursor-pointer snap-end items-center justify-center bg-red-400 hover:bg-red-300 active:bg-red-300',
+              props.isDisabled && 'bg-gray-400',
             )}
             onClick={handleDelete}
           >
@@ -107,11 +115,13 @@ export default function SwipeToDelete(props: {
           </div>
         </div>
       </div>
+      {/* Portal */}
       <div
         id={props.portalId}
         className='absolute inset-0 w-0'
         ref={portalRef}
       ></div>
+      {/* Dissolve Left */}
       <div
         className={twMerge(
           'absolute inset-y-0 left-0 hidden w-0 bg-gradient-to-r from-white/50 to-transparent',

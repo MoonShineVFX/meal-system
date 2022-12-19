@@ -84,13 +84,20 @@ function CartItemCard(props: {
   }, [cartItem.optionsKey, cartItem.quantity])
 
   const updateCartItem = (quantity: number) => {
-    updateCartMutation.mutate({
-      commodityId: cartItem.commodityId,
-      menuId: cartItem.menuId,
-      quantity: quantity ?? selectedQauntity,
-      options: cartItem.options as OrderOptions,
-      optionsKey: cartItem.optionsKey,
-    })
+    updateCartMutation.mutate(
+      {
+        commodityId: cartItem.commodityId,
+        menuId: cartItem.menuId,
+        quantity: quantity ?? selectedQauntity,
+        options: cartItem.options as OrderOptions,
+        optionsKey: cartItem.optionsKey,
+      },
+      {
+        onError: async () => {
+          setSelectedQuantity(cartItem.quantity)
+        },
+      },
+    )
   }
 
   const handleQuantityChange = (quantity: number) => {
@@ -142,7 +149,8 @@ function CartItemCard(props: {
       onDelete={() => handleQuantityChange(0)}
       coreRef={coreRef}
       referenceElement={referenceElement}
-      disabled={isLoading}
+      isDisabled={isLoading}
+      isInvalid={cartItem.invalid}
     >
       <motion.div
         className='w-full'
