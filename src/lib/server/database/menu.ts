@@ -1,4 +1,4 @@
-import { MenuType, OrderStatus, Prisma } from '@prisma/client'
+import { MenuType, OrderStatus, Prisma, PrismaClient } from '@prisma/client'
 
 import { OptionSet } from '@/lib/common'
 import {
@@ -11,7 +11,7 @@ import { prisma, log } from './define'
 /* Create Menu */
 type MainCreateMenuArgs = {
   type: Extract<MenuType, 'MAIN'>
-  date?: undefined
+  date?: never
 }
 type CommonCreateMenuArgs = {
   type: Exclude<MenuType, 'MAIN'>
@@ -61,10 +61,10 @@ export async function createMenu({
 }
 
 /* Get Menu and COMs */
-type GetMenuFromType = { menuId?: undefined } & (
+type GetMenuFromType = { menuId?: never } & (
   | {
       type: Extract<MenuType, 'MAIN'>
-      date?: undefined
+      date?: never
     }
   | {
       type: Exclude<MenuType, 'MAIN'>
@@ -73,15 +73,15 @@ type GetMenuFromType = { menuId?: undefined } & (
 )
 type GetMenuFromId = {
   menuId: number
-  type?: undefined
-  date?: undefined
+  type?: never
+  date?: never
 }
 type GetMenuWithComsArgs = {
   menu: GetMenuFromId | GetMenuFromType
   userId: string
   limitCommodityIds?: number[]
   excludeCartItems?: boolean
-  transactionClient?: Prisma.TransactionClient
+  client?: Prisma.TransactionClient | PrismaClient
 }
 /** Get menu and return with unavailableReasons from validation */
 export async function getMenuWithComs({
@@ -89,14 +89,14 @@ export async function getMenuWithComs({
   userId,
   limitCommodityIds,
   excludeCartItems,
-  transactionClient,
+  client,
 }: GetMenuWithComsArgs) {
   if (!type && !menuId) {
     throw new Error('type or menuId is required')
   }
 
   const isGetById = !!menuId
-  const thisPrisma = transactionClient ?? prisma
+  const thisPrisma = client ?? prisma
 
   // Validate date and type
   if (!isGetById && !date && type !== MenuType.MAIN) {

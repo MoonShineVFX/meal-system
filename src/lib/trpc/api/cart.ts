@@ -2,7 +2,8 @@ import z from 'zod'
 
 import { userProcedure, router } from '../trpc'
 import {
-  createOrUpdateCartItem,
+  createCartItem,
+  updateCartItem,
   getCartItems,
   deleteCartItems,
 } from '@/lib/server/database'
@@ -20,13 +21,13 @@ export const CartRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await createOrUpdateCartItem(
-        ctx.userLite.id,
-        input.menuId,
-        input.commodityId,
-        input.quantity,
-        input.options,
-      )
+      await createCartItem({
+        userId: ctx.userLite.id,
+        menuId: input.menuId,
+        commodityId: input.commodityId,
+        quantity: input.quantity,
+        options: input.options,
+      })
 
       eventEmitter.emit(
         ServerEventName.USER_NOTIFY(ctx.userLite.id),
@@ -47,14 +48,14 @@ export const CartRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await createOrUpdateCartItem(
-        ctx.userLite.id,
-        input.menuId,
-        input.commodityId,
-        input.quantity,
-        input.options,
-        input.optionsKey,
-      )
+      await updateCartItem({
+        userId: ctx.userLite.id,
+        menuId: input.menuId,
+        commodityId: input.commodityId,
+        quantity: input.quantity,
+        options: input.options,
+        previousOptionsKey: input.optionsKey,
+      })
 
       eventEmitter.emit(
         ServerEventName.USER_NOTIFY(ctx.userLite.id),
@@ -77,7 +78,11 @@ export const CartRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await deleteCartItems(ctx.userLite.id, input.ids, input.invalidOnly)
+      const deleteArgs =
+        input.ids && input.ids.length > 0
+          ? { ids: input.ids }
+          : { invalidOnly: input.invalidOnly }
+      await deleteCartItems({ userId: ctx.userLite.id, ...deleteArgs })
       eventEmitter.emit(
         ServerEventName.USER_NOTIFY(ctx.userLite.id),
         SERVER_NOTIFY.CART_DELETE,
