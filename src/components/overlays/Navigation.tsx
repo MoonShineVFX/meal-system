@@ -180,7 +180,6 @@ function NavButton(props: {
           {isSelected && (
             <motion.div
               layoutId='nav-selected'
-              animate={{ width: '100%' }}
               transition={{ type: 'spring', duration: 0.4 }}
               className='absolute inset-0 -z-10 rounded-2xl bg-stone-600'
             ></motion.div>
