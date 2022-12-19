@@ -84,7 +84,7 @@ export default function SwipeToDelete(props: {
       onBlur={handleBlur}
       tabIndex={0}
     >
-      <div className='absolute inset-y-0 right-0 w-1/2 rounded-r-2xl bg-red-400'></div>
+      <div className='absolute inset-y-0 right-0 w-1/2 bg-red-400'></div>
       <div
         ref={scrollRef}
         className='absolute inset-0 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-none'
@@ -98,7 +98,7 @@ export default function SwipeToDelete(props: {
           <div className='w-4 shrink-0 bg-white'></div>
           <div
             className={twMerge(
-              'flex w-1/5 shrink-0 cursor-pointer snap-end items-center justify-center rounded-r-2xl bg-red-400 hover:bg-red-500 active:bg-red-500',
+              'flex w-1/5 shrink-0 cursor-pointer snap-end items-center justify-center bg-red-400 hover:bg-red-500 active:bg-red-500',
               props.disabled && 'bg-gray-400',
             )}
             onClick={handleDelete}

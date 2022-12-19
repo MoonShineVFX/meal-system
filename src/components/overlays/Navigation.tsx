@@ -14,6 +14,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { ShoppingCartIcon as ShoppingCartIconSolid } from '@heroicons/react/24/solid'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
+import { motion } from 'framer-motion'
 
 import Image from '@/components/core/Image'
 import { generateCookie } from '@/lib/common'
@@ -175,7 +176,16 @@ function NavButton(props: {
           cartBadge={isCart}
         />
         {/* Desktop label */}
-        <div className='hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:bg-stone-600 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
+        <div className='relative hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
+          {isSelected && (
+            <motion.div
+              layoutId='nav-selected'
+              animate={{ width: '100%' }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              className='absolute inset-0 -z-10 rounded-2xl bg-stone-600'
+            ></motion.div>
+          )}
+
           <NormalIcon className='h-5 w-5' />
           <span className='ml-4'>{props.label}</span>
           {isCart && (
