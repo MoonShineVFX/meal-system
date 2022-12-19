@@ -133,6 +133,7 @@ export async function getCartItems(userId: string) {
               select: {
                 name: true,
                 price: true,
+                imageId: true,
                 image: {
                   select: {
                     path: true,
@@ -382,6 +383,7 @@ export async function getCartItems(userId: string) {
             name: thisCOM.commodity.name,
             price: thisCOM.commodity.price,
             image: thisCOM.commodity.image,
+            imageId: cartItem.commodityOnMenu.commodity.imageId,
             optionSets: thisCOM.commodity.optionSets,
           },
         },

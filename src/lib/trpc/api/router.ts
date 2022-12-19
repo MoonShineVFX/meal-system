@@ -4,6 +4,7 @@ import { TransactionRouter } from './transaction'
 import { TwmpRouter } from './twmp'
 import { MenuRouter } from './menu'
 import { CartRouter } from './cart'
+import { OrderRouter } from './order'
 
 export const appRouter = router({
   user: UserRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   twmp: TwmpRouter,
   menu: MenuRouter,
   cart: CartRouter,
+  order: OrderRouter,
 })
 
 export type AppRouter = typeof appRouter

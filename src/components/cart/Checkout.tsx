@@ -5,13 +5,22 @@ import { animate } from 'framer-motion'
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
 
-export function Checkout(props: { className?: string; totalPrice: number }) {
+export function Checkout(props: {
+  className?: string
+  totalPrice: number
+  onCheckout: () => void
+}) {
   const {
     data: userData,
     isLoading: userIsLoading,
     isError: userIsError,
     error: userError,
   } = trpc.user.get.useQuery(undefined)
+  const createOrderMutation = trpc.order.add.useMutation()
+
+  const handleCheckout = () => {
+    createOrderMutation.mutate()
+  }
 
   if (userIsLoading) return <div>Loading...</div>
   if (userIsError)
@@ -30,7 +39,7 @@ export function Checkout(props: { className?: string; totalPrice: number }) {
     >
       <header className='flex justify-between'>
         <h2 className='text-lg font-bold tracking-widest'>結帳</h2>
-        <Price price={props.totalPrice} />
+        <Price className='text-lg' price={props.totalPrice} />
       </header>
       <section className='flex flex-col text-stone-500'>
         {/* Point balance */}
@@ -62,8 +71,15 @@ export function Checkout(props: { className?: string; totalPrice: number }) {
       {/* Checkout button */}
       <div className='grid grid-rows-2 gap-4 @xs/checkout:grid-cols-2 @xs/checkout:grid-rows-none'>
         <Button
-          label='確認付款'
+          isLoading={createOrderMutation.isLoading}
+          isBusy={
+            createOrderMutation.isLoading || createOrderMutation.isSuccess
+          }
+          labelOnSuccess='結帳成功'
+          isDisabled={isNotEnough}
+          label={isNotEnough ? '餘額不足' : '確認付款'}
           className=' h-12 grow text-lg font-bold @xs/checkout:order-1'
+          onClick={handleCheckout}
         />
         <Button
           label='儲值'
@@ -77,6 +93,7 @@ export function Checkout(props: { className?: string; totalPrice: number }) {
 
 function Price(props: {
   price: number
+  className?: string
   isPayment?: boolean
   isNotEnough?: boolean
   isCurrency?: boolean
@@ -105,6 +122,7 @@ function Price(props: {
       <p
         className={twMerge(
           'font-bold',
+          props.className,
           props.isCurrency && 'text-yellow-500',
           props.isNotEnough && 'text-red-400',
         )}
@@ -113,11 +131,6 @@ function Price(props: {
         {!props.isCurrency && !props.isPayment && '$'}
         <span ref={priceRef}>0</span>
       </p>
-      {props.isNotEnough && (
-        <p className='lefts-0 absolute top-full whitespace-nowrap text-sm text-red-400'>
-          餘額不足
-        </p>
-      )}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { UserRole, TransactionType, Prisma } from '@prisma/client'
+import { UserRole, TransactionType, Prisma, Order } from '@prisma/client'
 
 import { prisma } from './define'
 import { settings, CurrencyType } from '@/lib/common'
@@ -89,69 +89,91 @@ export async function refundUserBalance(
   }
 }
 
+/** If orderQuery provided, create order */
 export async function chargeUserBalance(
   userId: string,
   amount: number,
-  isUsingPoint: boolean,
+  orderQuery?: Prisma.OrderItemCreateManyOrderInput[],
 ) {
   // Charge user and create charge record
-  const [user, transaction] = await prisma.$transaction(async (client) => {
-    /* Validate */
-    // Check user has enough balance
-    const user = await client.user.findUnique({
-      where: { id: userId },
-    })
-    if (!user) throw new Error('User not found')
+  const [user, transaction, order] = await prisma.$transaction(
+    async (client) => {
+      /* Validate */
+      // Check user has enough balance
+      const user = await client.user.findUnique({
+        where: { id: userId },
+      })
+      if (!user) throw new Error('User not found')
 
-    // Calculate charge amount
-    let pointAmountToPay = 0
-    let creditAmountToPay = 0
+      // Calculate charge amount
+      let pointAmountToPay = 0
+      let creditAmountToPay = 0
 
-    if (isUsingPoint) {
       pointAmountToPay = Math.min(amount, user.pointBalance)
       creditAmountToPay = amount - pointAmountToPay
-    } else {
-      creditAmountToPay = amount
-    }
 
-    if (creditAmountToPay > user.creditBalance)
-      throw new Error('Not enough credits')
+      if (creditAmountToPay > user.creditBalance)
+        throw new Error('Not enough credits')
 
-    /* Operation */
-    // Charge user
-    const updatedUser = await client.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        creditBalance: { decrement: creditAmountToPay },
-        pointBalance: { decrement: pointAmountToPay },
-      },
-    })
+      /* Operation */
+      // Charge user
+      const updatedUser = await client.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          creditBalance: { decrement: creditAmountToPay },
+          pointBalance: { decrement: pointAmountToPay },
+        },
+      })
 
-    const transaction = await client.transaction.create({
-      data: {
-        sourceUserId: userId,
-        targetUserId: settings.SERVER_USER_ID,
-        pointAmount: pointAmountToPay,
-        type: TransactionType.PAYMENT,
-      },
-      include: {
-        sourceUser: {
-          select: {
-            name: true,
+      const transaction = await client.transaction.create({
+        data: {
+          sourceUserId: userId,
+          targetUserId: settings.SERVER_USER_ID,
+          pointAmount: pointAmountToPay,
+          creditAmount: creditAmountToPay,
+          type: TransactionType.PAYMENT,
+        },
+        include: {
+          sourceUser: {
+            select: {
+              name: true,
+            },
+          },
+          targetUser: {
+            select: {
+              name: true,
+            },
           },
         },
-        targetUser: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    })
+      })
 
-    return [updatedUser, transaction]
-  })
+      // Create order
+      let order: Order | undefined = undefined
+      if (orderQuery) {
+        order = await client.order.create({
+          data: {
+            userId: userId,
+            transactions: {
+              connect: { id: transaction.id },
+            },
+            items: {
+              createMany: {
+                data: orderQuery,
+              },
+            },
+          },
+        })
+
+        await client.cartItem.deleteMany({
+          where: { userId: userId },
+        })
+      }
+
+      return [updatedUser, transaction, order]
+    },
+  )
 
   // Update blockchain
   updateBlockchainByTransfer(transaction.id)
@@ -159,6 +181,7 @@ export async function chargeUserBalance(
   return {
     user,
     transaction,
+    order,
   }
 }
 

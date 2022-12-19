@@ -83,6 +83,11 @@ export default function EventListener() {
           trpcContext.menu.get.invalidate()
           trpcContext.cart.get.invalidate()
           break
+        case SERVER_NOTIFY.ORDER_ADD:
+          trpcContext.menu.get.invalidate()
+          trpcContext.cart.get.invalidate()
+          trpcContext.user.get.invalidate()
+          break
       }
     },
   })

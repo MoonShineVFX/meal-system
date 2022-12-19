@@ -5,6 +5,7 @@ export enum SERVER_NOTIFY {
   CART_ADD = '加入餐點至購物車',
   CART_DELETE = '移除購物車餐點',
   CART_UPDATE = '修改購物車餐點',
+  ORDER_ADD = '結帳完成',
 }
 
 export enum CurrencyType {
