@@ -8,15 +8,32 @@ import {
 } from '@/lib/common'
 import { prisma, log } from './define'
 
-export async function createMenu(
-  type: MenuType,
-  name?: string,
-  description?: string,
-  date?: Date,
-  publishedDate?: Date,
-  closedDate?: Date,
-  limitPerUser?: number,
-) {
+/* Create Menu */
+type MainCreateMenuArgs = {
+  type: Extract<MenuType, 'MAIN'>
+  date?: undefined
+}
+type CommonCreateMenuArgs = {
+  type: Exclude<MenuType, 'MAIN'>
+  date: Date
+}
+type CreateMenuArgs = {
+  name?: string
+  description?: string
+  publishedDate?: Date
+  closedDate?: Date
+  limitPerUser?: number
+} & (MainCreateMenuArgs | CommonCreateMenuArgs)
+/** Create menu, if type is not main, date required */
+export async function createMenu({
+  type,
+  name,
+  description,
+  date,
+  publishedDate,
+  closedDate,
+  limitPerUser,
+}: CreateMenuArgs) {
   // Validate date and type
   if (!date && type !== MenuType.MAIN) {
     throw new Error('date is required for non-main menu')
@@ -43,16 +60,37 @@ export async function createMenu(
   })
 }
 
+/* Get Menu and COMs */
+type GetMenuFromType = { menuId?: undefined } & (
+  | {
+      type: Extract<MenuType, 'MAIN'>
+      date?: undefined
+    }
+  | {
+      type: Exclude<MenuType, 'MAIN'>
+      date: Date
+    }
+)
+type GetMenuFromId = {
+  menuId: number
+  type?: undefined
+  date?: undefined
+}
+type GetMenuWithComsArgs = {
+  menu: GetMenuFromId | GetMenuFromType
+  userId: string
+  limitCommodityIds?: number[]
+  excludeCartItems?: boolean
+  transactionClient?: Prisma.TransactionClient
+}
 /** Get menu and return with unavailableReasons from validation */
-export async function getMenuWithComs(
-  type?: MenuType,
-  date?: Date,
-  menuId?: number,
-  userId?: string,
-  commodityIds?: number[],
-  excludeCartItems?: boolean,
-  transactionClient?: Prisma.TransactionClient,
-) {
+export async function getMenuWithComs({
+  menu: { type, date, menuId },
+  userId,
+  limitCommodityIds,
+  excludeCartItems,
+  transactionClient,
+}: GetMenuWithComsArgs) {
   if (!type && !menuId) {
     throw new Error('type or menuId is required')
   }
@@ -88,7 +126,9 @@ export async function getMenuWithComs(
       commodities: userId
         ? {
             where: {
-              commodityId: commodityIds ? { in: commodityIds } : undefined,
+              commodityId: limitCommodityIds
+                ? { in: limitCommodityIds }
+                : undefined,
               isDeleted: false,
               commodity: {
                 isDeleted: false,
@@ -261,7 +301,8 @@ export async function getMenuWithComs(
   }
 }
 
-export async function deleteMenu(menuId: number) {
+export async function deleteMenu(args: { menuId: number }) {
+  const { menuId } = args
   return await prisma.$transaction(async (client) => {
     // Check menu has been ordered
     const orderCount = await client.orderItem.count({
@@ -305,14 +346,23 @@ export async function deleteMenu(menuId: number) {
   })
 }
 
-export async function createCommodity(
-  name: string,
-  price: number,
-  description?: string,
-  optionSets?: OptionSet[],
-  categoryIds?: number[],
-  imageId?: string,
-) {
+/* Create Commodity */
+type CreateCommodityArgs = {
+  name: string
+  price: number
+  description?: string
+  optionSets?: OptionSet[]
+  categoryIds?: number[]
+  imageId?: string
+}
+export async function createCommodity({
+  name,
+  price,
+  description,
+  optionSets,
+  categoryIds,
+  imageId,
+}: CreateCommodityArgs) {
   const commodity = await prisma.commodity.create({
     data: {
       name,
@@ -329,18 +379,23 @@ export async function createCommodity(
   return commodity
 }
 
-export async function addCommodityToMenu(
-  commodityId: number,
-  menuId: number,
-  overridePrice?: number,
-  limitPerUser?: number,
-  SKU?: number,
-) {
+/* Add COM */
+type AddCommodityToMenuArgs = {
+  commodityId: number
+  menuId: number
+  limitPerUser?: number
+  stock?: number
+}
+export async function addCommodityToMenu({
+  commodityId,
+  menuId,
+  limitPerUser,
+  stock,
+}: AddCommodityToMenuArgs) {
   const updateData = {
-    overridePrice,
     limitPerUser,
-    SKU,
-  }
+    stock,
+  } satisfies Prisma.CommodityOnMenuUpdateInput
   return await prisma.commodityOnMenu.upsert({
     where: {
       menuId_commodityId: {
@@ -353,19 +408,26 @@ export async function addCommodityToMenu(
       isDeleted: false,
     },
     create: {
+      ...updateData,
       menuId,
       commodityId,
-      ...updateData,
     },
   })
 }
 
-export async function createCategory(
-  mainName: string,
-  subName: string,
-  mainOrder: number,
-  subOrder: number,
-) {
+/* Create Category */
+type CreateCategoryArgs = {
+  mainName: string
+  subName: string
+  mainOrder: number
+  subOrder: number
+}
+export async function createCategory({
+  mainName,
+  subName,
+  mainOrder,
+  subOrder,
+}: CreateCategoryArgs) {
   return await prisma.commodityCategory.upsert({
     where: {
       mainName_subName: {

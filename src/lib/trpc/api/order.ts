@@ -5,7 +5,7 @@ import { ServerEventName, eventEmitter } from '@/lib/server/event'
 
 export const OrderRouter = router({
   add: userProcedure.mutation(async ({ ctx }) => {
-    await createOrder(ctx.userLite.id)
+    await createOrder({ userId: ctx.userLite.id })
 
     eventEmitter.emit(
       ServerEventName.USER_NOTIFY(ctx.userLite.id),

@@ -2,11 +2,7 @@ import { UserRole } from '@prisma/client'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
-import {
-  rechargeUserBalance,
-  chargeUserBalance,
-  getTransactions,
-} from '@/lib/server/database'
+import { rechargeUserBalance, getTransactions } from '@/lib/server/database'
 import { settings, validateRole, CurrencyType } from '@/lib/common'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
@@ -26,17 +22,6 @@ export const TransactionRouter = router({
         input.amount,
         CurrencyType.CREDIT,
       )
-    }),
-  charge: userProcedure
-    .input(
-      z.object({
-        amount: z.number().int().positive(),
-        isUsingPoint: z.boolean(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Charge user
-      await chargeUserBalance(ctx.userLite.id, input.amount, input.isUsingPoint)
     }),
   // Get transaction records, use until arg to update new records
   getList: userProcedure

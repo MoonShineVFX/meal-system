@@ -1,5 +1,3 @@
-import { MenuType } from '@prisma/client'
-
 import {
   createMenu,
   createCommodity,
@@ -12,7 +10,7 @@ import { menuMockData } from './mock'
 export default async function seedMenu() {
   // Create main menu
   console.log('>> Seed menu')
-  const menu = await createMenu(MenuType.MAIN)
+  const menu = await createMenu({ type: 'MAIN' })
   let mainOrder = 0
   for (const [mainCategoryName, mainCategoryData] of Object.entries(
     menuMockData,
@@ -22,32 +20,31 @@ export default async function seedMenu() {
       mainCategoryData.subCategories,
     )) {
       console.log('>> Seed subCategory:', mainCategoryName, subCategoryName)
-      const subCategory = await createCategory(
-        mainCategoryName,
-        subCategoryName,
+      const subCategory = await createCategory({
+        mainName: mainCategoryName,
+        subName: subCategoryName,
         mainOrder,
         subOrder,
-      )
+      })
       for (const commodityData of subCategoryData) {
         console.log('>> Seed commodity:', commodityData.name)
         // Create image
-        const image = await createImage(
-          640,
-          640,
-          undefined,
-          commodityData.imageUrl,
-        )
+        const image = await createImage({
+          width: 640,
+          height: 640,
+          path: commodityData.imageUrl,
+        })
         // Create commodity
-        const commodity = await createCommodity(
-          commodityData.name,
-          commodityData.price,
-          commodityData.description,
-          mainCategoryData.optionSets,
-          [subCategory.id],
-          image.id,
-        )
+        const commodity = await createCommodity({
+          name: commodityData.name,
+          price: commodityData.price,
+          description: commodityData.description,
+          optionSets: mainCategoryData.optionSets,
+          categoryIds: [subCategory.id],
+          imageId: image.id,
+        })
         // Add to menu
-        await addCommodityToMenu(commodity.id, menu.id)
+        await addCommodityToMenu({ commodityId: commodity.id, menuId: menu.id })
       }
       subOrder++
     }
@@ -55,12 +52,10 @@ export default async function seedMenu() {
   }
 
   // For empty test
-  const commodity = await createCommodity(
-    '家齊之吻',
-    999,
-    '重量級服務，讓您的家人感受到您的溫暖',
-    [],
-    [],
-  )
-  await addCommodityToMenu(commodity.id, menu.id)
+  const commodity = await createCommodity({
+    name: '家齊之吻',
+    price: 999,
+    description: '重量級服務，讓您的家人感受到您的溫暖',
+  })
+  await addCommodityToMenu({ commodityId: commodity.id, menuId: menu.id })
 }

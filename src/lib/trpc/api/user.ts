@@ -62,7 +62,7 @@ export const UserRouter = router({
         process.env.NODE_ENV !== 'production' &&
         input.username.startsWith('_')
       ) {
-        await ensureUser(input.username)
+        await ensureUser({ userId: input.username })
       } else {
         // Check user existence
         const result = await validateUserPassword(
@@ -109,7 +109,11 @@ export const UserRouter = router({
           const userAdData = (await userAdDataResponse.json()) as UserAdData
 
           // Generate token and set cookie
-          await ensureUser(input.username, userAdData.truename, input.password)
+          await ensureUser({
+            userId: input.username,
+            name: userAdData.truename,
+            password: input.password,
+          })
         }
       }
 

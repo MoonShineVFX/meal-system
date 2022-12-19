@@ -7,10 +7,10 @@ import { NodeHTTPCreateContextFnOptions } from '@trpc/server/adapters/node-http'
 import ws from 'ws'
 import { NextApiRequest, NextApiResponse } from 'next'
 
-import { getUserLiteByToken } from '@/lib/server/database'
+import { getUserLite } from '@/lib/server/database'
 import { settings, validateRole } from '@/lib/common'
 
-type UserLite = Awaited<ReturnType<typeof getUserLiteByToken>>
+type UserLite = Awaited<ReturnType<typeof getUserLite>>
 
 /* Context */
 function parseCookies(request: IncomingMessage) {
@@ -46,7 +46,9 @@ export async function createContext(
   }
 
   if (settings.COOKIE_TOKEN_NAME in cookies) {
-    userLite = await getUserLiteByToken(cookies[settings.COOKIE_TOKEN_NAME]!)
+    userLite = await getUserLite({
+      token: cookies[settings.COOKIE_TOKEN_NAME]!,
+    })
   }
 
   return {

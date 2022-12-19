@@ -30,15 +30,12 @@ export async function createOrUpdateCartItem(
     }
 
     // Validate availability
-    const menu = await getMenuWithComs(
-      undefined,
-      undefined,
-      menuId,
+    const menu = await getMenuWithComs({
+      menu: { menuId: menuId },
       userId,
-      [commodityId],
-      false,
-      client,
-    )
+      limitCommodityIds: [commodityId],
+      transactionClient: client,
+    })
 
     const com = menu.commodities.find((com) => com.commodity.id === commodityId)
     if (!com) {
@@ -228,15 +225,12 @@ export async function getCartItems(userId: string) {
 
       let menu: Awaited<ReturnType<typeof getMenuWithComs>>
       try {
-        menu = await getMenuWithComs(
-          undefined,
-          undefined,
-          menuId,
+        menu = await getMenuWithComs({
+          menu: { menuId },
           userId,
-          commodityIds,
-          true,
-          client,
-        )
+          limitCommodityIds: commodityIds,
+          transactionClient: client,
+        })
         // validate menu availability
         if (menu.unavailableReasons.length > 0) {
           throw new Error(`菜單驗證失敗: ${menu.unavailableReasons.join(', ')}`)

@@ -1,11 +1,17 @@
 import { prisma } from './define'
 
-export async function createImage(
-  width: number,
-  height: number,
-  prefix?: string,
-  path?: string,
-) {
+type CreateImageArgs = {
+  width: number
+  height: number
+  prefix?: string
+  path?: string
+}
+export async function createImage({
+  width,
+  height,
+  prefix,
+  path,
+}: CreateImageArgs) {
   if (!path && !prefix) {
     throw new Error('Either path or prefix must be provided')
   }

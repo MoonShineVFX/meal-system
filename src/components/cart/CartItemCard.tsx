@@ -72,6 +72,7 @@ function CartItemCard(props: {
 
   // Animate background color when updated
   useEffect(() => {
+    if (cartItem.invalid) return
     if (!isInitialRender && cartItem) {
       setIsInitialRender(true)
       return
@@ -158,9 +159,13 @@ function CartItemCard(props: {
         transition={{ duration: 0.5 }}
       >
         <motion.div
-          initial={{
-            backgroundColor: COLOR_HIGHLIGHT,
-          }}
+          initial={
+            cartItem.invalid
+              ? undefined
+              : {
+                  backgroundColor: COLOR_HIGHLIGHT,
+                }
+          }
           animate={{ backgroundColor: COLOR_TRANSPARENT }}
           exit={{
             opacity: 0,

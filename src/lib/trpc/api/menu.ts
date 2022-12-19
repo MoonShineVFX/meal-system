@@ -13,11 +13,23 @@ export const MenuRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return await getMenuWithComs(
-        input.type,
-        input.date,
-        undefined,
-        ctx.userLite.id,
-      )
+      if (input.type === 'MAIN' && input.date) {
+        throw new Error('MAIN menu does not have a date')
+      } else if (input.type !== 'MAIN' && !input.date) {
+        throw new Error('Date is required for non MAIN menu')
+      }
+
+      return await getMenuWithComs({
+        menu:
+          input.type === 'MAIN'
+            ? {
+                type: input.type,
+              }
+            : {
+                type: input.type,
+                date: input.date!,
+              },
+        userId: ctx.userLite.id,
+      })
     }),
 })

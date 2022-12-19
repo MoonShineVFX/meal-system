@@ -6,14 +6,22 @@ import { settings } from '@/lib/common'
 import { blockchainManager } from '@/lib/server/blockchain'
 import { forceSyncBlockchainWallet } from './blockchain'
 
-export async function ensureUser(
-  userId: string,
-  name?: string,
-  password?: string,
-  role?: UserRole,
-  pointBalance?: number,
-  creditBalance?: number,
-) {
+type EnsureUserArgs = {
+  userId: string
+  name?: string
+  password?: string
+  role?: UserRole
+  pointBalance?: number
+  creditBalance?: number
+}
+export async function ensureUser({
+  userId,
+  name,
+  password,
+  role,
+  pointBalance,
+  creditBalance,
+}: EnsureUserArgs) {
   const updateData = {
     name: name,
     role: role,
@@ -106,7 +114,7 @@ export async function validateUserPassword(userId: string, password: string) {
   return false
 }
 
-export async function getUserLiteByToken(token: string) {
+export async function getUserLite({ token }: { token: string }) {
   const userToken = await prisma.userToken.findUnique({
     where: { id: token },
     include: { user: { select: { id: true, name: true, role: true } } },

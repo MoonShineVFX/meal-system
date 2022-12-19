@@ -2,7 +2,7 @@ import { OrderOptions } from '@/lib/common'
 import { getCartItems } from './cart'
 import { chargeUserBalance } from './transaction'
 
-export async function createOrder(userId: string) {
+export async function createOrder({ userId }: { userId: string }) {
   // Get valid cart items
   const getCartItemsResult = await getCartItems(userId)
   const totalPrice = getCartItemsResult.cartItems.reduce(
