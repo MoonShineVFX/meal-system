@@ -4,6 +4,7 @@ import { animate } from 'framer-motion'
 
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
+import { twData } from '@/lib/common'
 
 export function Checkout(props: {
   className?: string
@@ -22,33 +23,6 @@ export function Checkout(props: {
     createOrderMutation.mutate()
   }
 
-  if (userIsLoading || props.isLoading)
-    return (
-      <div className='sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6'>
-        <header className='flex h-8 justify-between'>
-          <h2 className='skeleton w-12 rounded-md'></h2>
-          <div className='skeleton w-12 rounded-md'></div>
-        </header>
-        <section className='flex flex-col gap-4 text-stone-500'>
-          <div className='skeleton h-6 rounded-md'></div>
-          <div className='skeleton h-6 rounded-md'></div>
-        </section>
-        {/* Checkout button */}
-        <div className='grid grid-rows-2 gap-4 @xs/checkout:grid-cols-2 @xs/checkout:grid-rows-none'>
-          <Button
-            label=''
-            isDisabled={true}
-            className='skeleton h-12 grow text-lg @xs/checkout:order-1'
-          />
-          <Button
-            label=''
-            isDisabled={true}
-            className='skeleton h-12 grow bg-stone-200 text-lg'
-            theme='secondary'
-          />
-        </div>
-      </div>
-    )
   if (userIsError)
     return (
       <div className='flex rounded-2xl bg-stone-100 p-6 text-red-400'>
@@ -56,19 +30,25 @@ export function Checkout(props: {
       </div>
     )
 
-  const pointBalnceToPay = Math.min(userData.pointBalance, props.totalPrice)
+  const pointBalance = userData?.pointBalance ?? 0
+  const creditBalance = userData?.creditBalance ?? 0
+
+  const pointBalnceToPay = Math.min(pointBalance, props.totalPrice)
   const creditBalanceToPay = props.totalPrice - pointBalnceToPay
-  const isNotEnough = creditBalanceToPay > userData.creditBalance
+  const isNotEnough = creditBalanceToPay > creditBalance
 
   return (
     <div
+      {...twData({ loading: props.isLoading || userIsLoading })}
       className={twMerge(
-        'sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6 @container/checkout',
+        'group sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6 @container/checkout',
         props.className,
       )}
     >
       <header className='flex justify-between'>
-        <h2 className='text-lg font-bold tracking-widest'>結帳</h2>
+        <h2 className='rounded-xl text-lg font-bold tracking-widest group-data-loading:skeleton'>
+          結帳
+        </h2>
         <Price className='text-lg' price={props.totalPrice} />
       </header>
       <section className='flex flex-col text-stone-500'>
@@ -76,11 +56,10 @@ export function Checkout(props: {
         {
           <div className='flex justify-between border-b border-stone-200 py-2'>
             <div className='flex items-center gap-1'>
-              <p className='text-sm tracking-wider'>點數</p>
-              <Price
-                price={userData.pointBalance - pointBalnceToPay}
-                isCurrency
-              />
+              <p className='rounded-xl text-sm tracking-wider group-data-loading:skeleton'>
+                點數
+              </p>
+              <Price price={pointBalance - pointBalnceToPay} isCurrency />
             </div>
             <Price price={pointBalnceToPay} isPayment />
           </div>
@@ -88,9 +67,11 @@ export function Checkout(props: {
         {/* Credit balance */}
         <div className='flex justify-between border-stone-200 py-2'>
           <div className='flex items-center gap-1'>
-            <p className='text-sm tracking-wider'>夢想幣</p>
+            <p className='rounded-xl text-sm tracking-wider group-data-loading:skeleton'>
+              夢想幣
+            </p>
             <Price
-              price={userData.creditBalance - creditBalanceToPay}
+              price={creditBalance - creditBalanceToPay}
               isNotEnough={isNotEnough}
               isCurrency
             />
@@ -109,12 +90,12 @@ export function Checkout(props: {
           }
           isDisabled={isNotEnough || props.totalPrice === 0}
           label={isNotEnough ? '餘額不足' : '確認付款'}
-          className=' h-12 grow text-lg font-bold @xs/checkout:order-1'
+          className=' h-12 grow text-lg font-bold group-data-loading:skeleton @xs/checkout:order-1'
           onClick={handleCheckout}
         />
         <Button
           label='儲值'
-          className='h-12 grow text-lg font-bold'
+          className='h-12 grow text-lg font-bold group-data-loading:skeleton'
           theme='secondary'
         />
       </div>
@@ -149,19 +130,17 @@ function Price(props: {
   const prefix = props.isPayment ? (props.price > 0 ? '-' : '') : ''
 
   return (
-    <div className='relative'>
-      <p
-        className={twMerge(
-          'font-bold',
-          props.className,
-          props.isCurrency && 'text-yellow-500',
-          props.isNotEnough && 'text-red-400',
-        )}
-      >
-        {prefix}
-        {!props.isCurrency && !props.isPayment && '$'}
-        <span ref={priceRef}>0</span>
-      </p>
-    </div>
+    <p
+      className={twMerge(
+        'rounded-xl font-bold group-data-loading:skeleton group-data-loading:min-w-[2em]',
+        props.className,
+        props.isCurrency && 'text-yellow-500',
+        props.isNotEnough && 'text-red-400',
+      )}
+    >
+      {prefix}
+      {!props.isCurrency && !props.isPayment && '$'}
+      <span ref={priceRef}>0</span>
+    </p>
   )
 }

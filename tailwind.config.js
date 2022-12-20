@@ -7,6 +7,7 @@ const skeletonPlugin = plugin(({ addComponents, theme }) => {
       position: 'relative',
       overflow: 'hidden',
       backgroundColor: theme('colors.stone.200'),
+      color: theme('colors.transparent'),
     },
     '.skeleton::after': {
       content: '""',
@@ -27,19 +28,17 @@ const skeletonPlugin = plugin(({ addComponents, theme }) => {
   })
 })
 
-const dataPrefixes = ['selected', 'loading', 'busy', 'available'].reduce(
-  (acc, prefix) => {
-    acc[prefix] = `ui~="${prefix}"`
-    acc[`not-${prefix}`] = `ui~="not-${prefix}"`
-    return acc
-  },
-  {},
-)
+const dataPrefixes = ['selected', 'loading', 'busy', 'available']
+const dataPrefixesConfig = dataPrefixes.reduce((acc, prefix) => {
+  acc[prefix] = `ui~="${prefix}"`
+  acc[`not-${prefix}`] = `ui~="not-${prefix}"`
+  return acc
+}, {})
 
 module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    data: dataPrefixes,
+    data: dataPrefixesConfig,
     extend: {
       transitionDuration: {
         0: '0ms',

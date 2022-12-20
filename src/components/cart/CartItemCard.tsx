@@ -21,7 +21,7 @@ const COLOR_DELETE = colors.red[400] + (25).toString(16)
 
 function CartItemCard(props: {
   cartItem: CartItems[0] | InvalidCartItems[0]
-  disabled?: boolean
+  isDisabled?: boolean
   onOptionsClick?: (cartItem: CartItems[0]) => void
   isLoading?: boolean
 }) {
@@ -153,7 +153,7 @@ function CartItemCard(props: {
       onDelete={() => handleQuantityChange(0)}
       coreRef={coreRef}
       referenceElement={referenceElement}
-      isDisabled={isLoading}
+      isDisabled={isLoading || props.isDisabled}
       isInvalid={cartItem.invalid}
     >
       <motion.div
@@ -163,7 +163,7 @@ function CartItemCard(props: {
       >
         <motion.div
           initial={
-            cartItem.invalid
+            cartItem.invalid || cartItem.optionsKey === '__skeleton'
               ? undefined
               : {
                   backgroundColor: COLOR_HIGHLIGHT,
@@ -190,18 +190,18 @@ function CartItemCard(props: {
         >
           <div
             ref={coreRef}
-            data-ui={twData({
-              available: !cartItem.invalid && !isLoading && !props.disabled,
+            {...twData({
+              available: !cartItem.invalid && !isLoading && !props.isDisabled,
               loading: isSkeleton,
             })}
             className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6'
           >
             {/* Image */}
             <section className='h-min w-full max-w-[5rem] shrink-0 p-1 @2xl/cart:max-w-[7rem] @2xl/cart:p-2'>
-              <div className='relative aspect-square overflow-hidden rounded-full bg-stone-400 group-data-loading/card:skeleton'>
+              <div className='relative aspect-square overflow-hidden rounded-full bg-stone-400 group-data-loading:skeleton'>
                 <Image
                   style={{ WebkitTouchCallout: 'none' }}
-                  className='object-cover'
+                  className='object-cover group-data-loading:hidden'
                   src={
                     cartItem.commodityOnMenu.commodity.image?.path ??
                     settings.RESOURCE_FOOD_PLACEHOLDER
@@ -216,9 +216,9 @@ function CartItemCard(props: {
             </section>
             <div className='grid grow grid-cols-2'>
               {/* Content */}
-              <section className='flex flex-col gap-2 rounded-md'>
+              <section className='flex flex-col gap-2'>
                 {/* Name */}
-                <h2 className='font-bold tracking-wider'>
+                <h2 className='w-fit rounded-xl font-bold tracking-wider group-data-loading:skeleton'>
                   {cartItem.commodityOnMenu.commodity.name}
                 </h2>
                 {/* Options */}
@@ -245,7 +245,7 @@ function CartItemCard(props: {
                       .map((optionValue) => (
                         <span
                           key={optionValue}
-                          className='whitespace-nowrap text-xs text-stone-400 @2xl/cart:text-sm'
+                          className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-data-loading:skeleton @2xl/cart:text-sm'
                         >
                           {optionValue}
                         </span>
@@ -264,7 +264,7 @@ function CartItemCard(props: {
                   >
                     <Listbox.Button
                       id={`reference-${cartItemId}`}
-                      className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 hover:bg-stone-100 disabled:hover:bg-transparent'
+                      className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 group-data-loading:skeleton hover:bg-stone-100 disabled:hover:bg-transparent'
                     >
                       <p className='ml-3'>
                         {selectedQauntity === 0 ? (
@@ -298,7 +298,7 @@ function CartItemCard(props: {
                                     <Listbox.Option
                                       value={quantity + 1}
                                       key={quantity}
-                                      data-ui={twData({
+                                      {...twData({
                                         selected:
                                           quantity + 1 === cartItem.quantity,
                                       })}
@@ -321,8 +321,8 @@ function CartItemCard(props: {
                   </Listbox>
                   <Button
                     isLoading={isLoading}
-                    className='hidden h-6 data-busy:hidden sm:flex'
-                    textClassName='text-sm text-stone-400'
+                    className='hidden h-6 data-busy:hidden group-data-loading:skeleton sm:flex'
+                    textClassName='text-sm text-stone-400 group-data-loading:skeleton'
                     spinnerClassName='h-4 w-4'
                     label='刪除'
                     theme='support'
@@ -330,7 +330,7 @@ function CartItemCard(props: {
                   />
                 </div>
                 {/* Price */}
-                <h3 className='whitespace-nowrap text-end font-bold'>
+                <h3 className='h-fit whitespace-nowrap rounded-xl text-end font-bold group-data-loading:skeleton'>
                   ${cartItem.commodityOnMenu.commodity.price}
                 </h3>
               </section>

@@ -30,7 +30,7 @@ export default function PageTransaction(props: { transactionId?: string }) {
       <Title prefix='錢包' />
       <div
         className='group grid h-full grid-cols-1 bg-gray-200 @2xl/main:grid-cols-2'
-        data-ui={twData({ selected: isDetailOpened })}
+        {...twData({ selected: isDetailOpened })}
       >
         {/* Transaction List */}
         <section className='@container group-data-selected:hidden @2xl/main:group-data-selected:grid'>

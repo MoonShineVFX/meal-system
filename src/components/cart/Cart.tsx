@@ -7,7 +7,7 @@ import { MenuType } from '@prisma/client'
 
 import trpc from '@/lib/client/trpc'
 import type { CartItemsByMenu, CartItemsAndMenus } from '@/lib/client/trpc'
-import { getMenuName } from '@/lib/common'
+import { getMenuName, twData } from '@/lib/common'
 import Button from '@/components/core/Button'
 import CartItemCard from './CartItemCard'
 import Dialog from '@/components/core/Dialog'
@@ -16,12 +16,12 @@ import type { CartItems } from '@/lib/client/trpc'
 
 type CartDeleteType = 'ALL' | 'INVALID'
 
-const SkeletonCartItem = {
+const CARTITEM_SKELETON = {
   menuId: 0,
   commodityId: 0,
-  optionsKey: '_loading',
+  optionsKey: '__skeleton',
   quantity: 1,
-  options: { aaa: 'bbbb', cccc: 'dddd' },
+  options: { 0: '000', 1: '0000' },
   invalid: false,
   commodityOnMenu: {
     maxQuantity: 0,
@@ -33,7 +33,7 @@ const SkeletonCartItem = {
     },
     commodity: {
       image: null,
-      name: '餐點',
+      name: '00000',
       price: 100,
       imageId: null,
       optionSets: [],
@@ -42,7 +42,7 @@ const SkeletonCartItem = {
 }
 
 export default function Cart() {
-  let {
+  const {
     data: cartData,
     isLoading: cartIsLoading,
     isError: cartIsError,
@@ -119,10 +119,12 @@ export default function Cart() {
     }
   }
 
-  cartIsLoading = true
-
   return (
-    <div className='relative h-full w-full @container/cart' tabIndex={0}>
+    <div
+      className='group relative h-full w-full @container/cart'
+      tabIndex={0}
+      {...twData({ loading: cartIsLoading })}
+    >
       <div className='ms-scroll absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden lg:p-8'>
         <div className='grid h-min min-h-full max-w-3xl grow grid-rows-[min-content_auto_min-content] gap-4 @2xl/cart:grid-cols-[3fr_2fr] @2xl/cart:grid-rows-[min-content_auto] @2xl/cart:gap-x-8'>
           {/* Clear Button */}
@@ -142,24 +144,19 @@ export default function Cart() {
           </div>
           {/* Header */}
           <div className='pointer-events-none col-start-1 row-start-1 justify-between @2xl/cart:col-span-full'>
-            <h1 className='inline text-xl font-bold tracking-wider'>
-              {cartIsLoading ? (
-                <span className='skeleton rounded-md text-transparent'>
-                  購物車
-                </span>
-              ) : (
-                '購物車'
-              )}
+            <h1 className='inline rounded-xl text-xl font-bold tracking-wider group-data-loading:skeleton'>
+              購物車
             </h1>
           </div>
           {/* CartItems */}
           {cartIsLoading || !cartData ? (
+            // Skeleton
             <section className='flex flex-col'>
               {[...Array(3).keys()].map((i) => (
                 <CartItemCard
                   key={`${i}`}
-                  cartItem={SkeletonCartItem}
-                  disabled={true}
+                  cartItem={CARTITEM_SKELETON}
+                  isDisabled={true}
                 />
               ))}
             </section>
@@ -207,7 +204,7 @@ export default function Cart() {
                         <CartItemCard
                           key={`${menuOrCartItem.menuId}${menuOrCartItem.commodityId}${menuOrCartItem.optionsKey}`}
                           cartItem={menuOrCartItem}
-                          disabled={deleteCartType === 'ALL'}
+                          isDisabled={deleteCartType === 'ALL'}
                           onOptionsClick={setCartItemInOptionsDialog}
                         />
                       )

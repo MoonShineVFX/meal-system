@@ -123,10 +123,15 @@ export function validateRole(sourceRole: UserRole, targetRole: UserRole) {
   return roleWeight[sourceRole] >= roleWeight[targetRole]
 }
 
-export function twData(parms: Record<string, boolean | undefined>) {
-  return Object.entries(parms)
-    .map(([key, value]) => (value ? key : `not-${key}`))
-    .join(' ')
+type TwDataKeys = 'selected' | 'loading' | 'busy' | 'available'
+export function twData(
+  parms: Partial<Record<TwDataKeys, boolean | undefined>>,
+) {
+  return {
+    'data-ui': Object.entries(parms)
+      .map(([key, value]) => (value ? key : `not-${key}`))
+      .join(' '),
+  }
 }
 
 export function getMenuName(menu: Pick<Menu, 'date' | 'name' | 'type'>) {

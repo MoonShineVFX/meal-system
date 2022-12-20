@@ -56,7 +56,7 @@ export default function PageLogin() {
         <form
           className='group relative mx-auto flex w-full max-w-sm flex-col gap-8 py-8 px-10'
           onSubmit={handleSubmit(handleLogin)}
-          data-ui={twData({ loading: isBusy })}
+          {...twData({ loading: isBusy })}
         >
           <Logo className='w-40 text-yellow-500' />
           <h3 className='text-xl font-bold tracking-wider'>

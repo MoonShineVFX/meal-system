@@ -158,7 +158,7 @@ function NavButton(props: {
   return (
     <ul className={twMerge('sm:w-full', props.className)}>
       <Link
-        data-ui={twData({ selected: isSelected })}
+        {...twData({ selected: isSelected })}
         className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
         href={{
           pathname: isShallow ? router.pathname : props.path,
@@ -210,7 +210,7 @@ function NavIcon(props: {
   const Icon = props.isSelected ? props.icons[1] : props.icons[0]
   return (
     <div
-      data-ui={twData({ selected: props.isSelected })}
+      {...twData({ selected: props.isSelected })}
       className={`group flex items-center rounded-full p-3 hover:bg-stone-200 active:bg-stone-200 ${props.className} relative`}
     >
       <div className='absolute top-1 right-1'>

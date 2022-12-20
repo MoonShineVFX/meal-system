@@ -54,23 +54,21 @@ export default function COMCard(props: {
             {com ? (
               props.category
             ) : (
-              <span className='skeleton rounded-md text-transparent'>分類</span>
+              <span className='skeleton rounded-xl'>分類</span>
             )}
           </p>
           <h2 className='text indent-[0.1em] font-bold tracking-widest'>
             {com ? (
               com?.commodity.name
             ) : (
-              <span className='skeleton rounded-md text-transparent'>
-                餐點名稱
-              </span>
+              <span className='skeleton rounded-xl'>餐點名稱</span>
             )}
           </h2>
           <h3 className='text-yellow-500'>
             {com ? (
               `$${com.commodity.price}`
             ) : (
-              <span className='skeleton rounded-md text-transparent'>$100</span>
+              <span className='skeleton rounded-xl'>$100</span>
             )}
           </h3>
         </section>

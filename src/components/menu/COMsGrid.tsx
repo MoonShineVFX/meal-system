@@ -36,7 +36,7 @@ function COMsGrid(props: { comsByCategory?: CommoditiesOnMenuByCategory }) {
             {props.comsByCategory ? (
               mainCategory
             ) : (
-              <span className='skeleton rounded-md text-transparent'>分類</span>
+              <span className='skeleton rounded-xl'>分類</span>
             )}
           </h1>
           {[...mainCategoryData.subCategories].map(

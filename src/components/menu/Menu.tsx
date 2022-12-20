@@ -207,14 +207,14 @@ export default function Menu(props: {
         'group/menu relative h-full bg-white',
         props.className,
       )}
-      data-ui={twData({ loading: isLoading })}
+      {...twData({ loading: isLoading })}
     >
       <div className='absolute inset-0 flex flex-col lg:flex-row'>
         {/* Categories */}
         <ul className='absolute z-10 flex w-full gap-4 overflow-x-auto bg-white/80 p-4 py-2 shadow backdrop-blur lg:static lg:w-max lg:flex-col lg:p-8 lg:pr-0 lg:shadow-none lg:backdrop-blur-none'>
           {categories.map((mainCategory, index) => (
             <li
-              data-ui={twData({
+              {...twData({
                 selected: currentCategory === mainCategory,
               })}
               key={`category-${index}`}
@@ -228,7 +228,7 @@ export default function Menu(props: {
                   layoutId='cat-selected'
                 ></motion.div>
               )}
-              <p className='text-justify indent-[0.1em] text-sm font-bold tracking-widest group-data-loading/menu:text-transparent sm:text-base'>
+              <p className='text-justify indent-[0.1em] text-sm font-bold tracking-widest sm:text-base'>
                 {mainCategory}
               </p>
             </li>

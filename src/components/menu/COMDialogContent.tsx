@@ -117,7 +117,7 @@ function COMDialogContent(props: {
       {/* Form */}
       <form
         className='ms-scroll group flex shrink-0 grow flex-col gap-6 p-4 pb-0 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-6'
-        data-ui={twData({ available: !isUnavailable })}
+        {...twData({ available: !isUnavailable })}
         onSubmit={handleSubmit(handleCreateCartItem)}
       >
         {/* Info */}

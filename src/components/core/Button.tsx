@@ -49,7 +49,7 @@ export default function Button(props: {
   return (
     <button
       disabled={props.isDisabled ?? isBusy ?? false}
-      data-ui={twData({ busy: isBusy })}
+      {...twData({ busy: isBusy })}
       className={twMerge(
         `flex items-center justify-center rounded-2xl indent-[0.1em] tracking-widest focus:outline-none disabled:pointer-events-none`,
         themeColor,
