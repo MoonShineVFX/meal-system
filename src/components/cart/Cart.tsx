@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -49,23 +49,21 @@ export default function Cart() {
     error: cartError,
   } = trpc.cart.get.useQuery()
   const deleteCartMutation = trpc.cart.delete.useMutation()
-  const [cartItemsAndMenus, setCartItemsAndMenus] = useState<CartItemsAndMenus>(
-    [],
-  )
   const [modifiedNotify, setModifiedNotify] = useState(false)
   const [cartItemInOptionsDialog, setCartItemInOptionsDialog] =
     useState<CartItems[0]>()
-
-  useEffect(() => {
-    setModifiedNotify(false)
-    if (!cartData) return
+  const cartItemsAndMenus = useMemo(() => {
+    if (!cartData) return []
 
     // Separate cart items by menu
     let cartItemsByMenu: CartItemsByMenu = new Map()
     for (const cartItem of cartData.cartItems) {
       const menu = cartItem.commodityOnMenu.menu
       if (!cartItemsByMenu.has(cartItem.menuId)) {
-        cartItemsByMenu.set(cartItem.menuId, { ...menu, cartItems: [cartItem] })
+        cartItemsByMenu.set(cartItem.menuId, {
+          ...menu,
+          cartItems: [cartItem],
+        })
       } else {
         cartItemsByMenu.get(cartItem.menuId)!.cartItems.push(cartItem)
       }
@@ -82,9 +80,13 @@ export default function Cart() {
       )
     }
 
-    setCartItemsAndMenus(cartItemsAndMenus)
+    return cartItemsAndMenus
+  }, [cartData])
 
-    if (cartData.isModified) {
+  useEffect(() => {
+    setModifiedNotify(false)
+
+    if (cartData && cartData.isModified) {
       setModifiedNotify(true)
     }
   }, [cartData])
@@ -198,7 +200,7 @@ export default function Cart() {
               {/* Valid */}
               <div className='flex flex-col'>
                 <AnimatePresence initial={false}>
-                  {cartItemsAndMenus.map((menuOrCartItem) => {
+                  {cartItemsAndMenus.map((menuOrCartItem, i) => {
                     if ('menuId' in menuOrCartItem) {
                       return (
                         <CartItemCard
