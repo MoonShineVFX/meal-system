@@ -5,7 +5,11 @@ import { animate } from 'framer-motion'
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
 
-export function Checkout(props: { className?: string; totalPrice: number }) {
+export function Checkout(props: {
+  className?: string
+  totalPrice: number
+  isLoading: boolean
+}) {
   const {
     data: userData,
     isLoading: userIsLoading,
@@ -18,9 +22,39 @@ export function Checkout(props: { className?: string; totalPrice: number }) {
     createOrderMutation.mutate()
   }
 
-  if (userIsLoading) return <div>Loading...</div>
+  if (userIsLoading || props.isLoading)
+    return (
+      <div className='sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6'>
+        <header className='flex h-8 justify-between'>
+          <h2 className='skeleton w-12 rounded-md'></h2>
+          <div className='skeleton w-12 rounded-md'></div>
+        </header>
+        <section className='flex flex-col gap-4 text-stone-500'>
+          <div className='skeleton h-6 rounded-md'></div>
+          <div className='skeleton h-6 rounded-md'></div>
+        </section>
+        {/* Checkout button */}
+        <div className='grid grid-rows-2 gap-4 @xs/checkout:grid-cols-2 @xs/checkout:grid-rows-none'>
+          <Button
+            label=''
+            isDisabled={true}
+            className='skeleton h-12 grow text-lg @xs/checkout:order-1'
+          />
+          <Button
+            label=''
+            isDisabled={true}
+            className='skeleton h-12 grow bg-stone-200 text-lg'
+            theme='secondary'
+          />
+        </div>
+      </div>
+    )
   if (userIsError)
-    return <div className='text-red-400'>{userError?.message}</div>
+    return (
+      <div className='flex rounded-2xl bg-stone-100 p-6 text-red-400'>
+        {userError?.message ?? '錯誤'}
+      </div>
+    )
 
   const pointBalnceToPay = Math.min(userData.pointBalance, props.totalPrice)
   const creditBalanceToPay = props.totalPrice - pointBalnceToPay

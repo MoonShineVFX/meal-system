@@ -23,6 +23,7 @@ function CartItemCard(props: {
   cartItem: CartItems[0] | InvalidCartItems[0]
   disabled?: boolean
   onOptionsClick?: (cartItem: CartItems[0]) => void
+  isLoading?: boolean
 }) {
   const { cartItem } = props
   const deleteCartMutation = trpc.cart.delete.useMutation()
@@ -43,6 +44,8 @@ function CartItemCard(props: {
   useEffect(() => {
     setSelectedQuantity(cartItem.quantity)
   }, [cartItem.quantity])
+
+  const isSkeleton = !!props.isLoading
 
   // Track portal element until valid
   useEffect(() => {
@@ -189,12 +192,13 @@ function CartItemCard(props: {
             ref={coreRef}
             data-ui={twData({
               available: !cartItem.invalid && !isLoading && !props.disabled,
+              loading: isSkeleton,
             })}
             className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6'
           >
             {/* Image */}
             <section className='h-min w-full max-w-[5rem] shrink-0 p-1 @2xl/cart:max-w-[7rem] @2xl/cart:p-2'>
-              <div className='relative aspect-square overflow-hidden rounded-full'>
+              <div className='relative aspect-square overflow-hidden rounded-full bg-stone-400 group-data-loading/card:skeleton'>
                 <Image
                   style={{ WebkitTouchCallout: 'none' }}
                   className='object-cover'
