@@ -101,6 +101,7 @@ export async function updateCartItem(
   const currentOptionsKey = generateOptionsKey(options)
 
   return await prisma.$transaction(async (client) => {
+    // Delete previous cart item
     await client.cartItem.delete({
       where: {
         userId_menuId_commodityId_optionsKey: {
@@ -292,6 +293,7 @@ export async function getCartItemsBase({
         userId,
         limitCommodityIds: commodityIds,
         client: thisPrisma,
+        excludeCartItems: true,
       })
       // validate menu availability
       if (menu.unavailableReasons.length > 0) {
