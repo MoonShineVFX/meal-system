@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { motion } from 'framer-motion'
 
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
@@ -34,7 +35,17 @@ export default function COMCard(props: {
 
   return (
     <LinkWrapper com={com}>
-      <div className='group flex flex-col overflow-hidden border-stone-100 bg-white'>
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        transition={{
+          type: 'spring',
+          stiffness: 600,
+          damping: 10,
+          duration: 0.2,
+        }}
+        className='group flex flex-col overflow-hidden border-stone-100 bg-white'
+      >
         {/* Image */}
         <section className='px-4 py-2'>
           <div className='relative aspect-square overflow-hidden rounded-2xl group-data-loading/menu:skeleton'>
@@ -72,7 +83,7 @@ export default function COMCard(props: {
             )}
           </h3>
         </section>
-      </div>
+      </motion.div>
     </LinkWrapper>
   )
 }

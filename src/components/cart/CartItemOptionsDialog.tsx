@@ -65,10 +65,10 @@ export default function CartItemOptionsDialog(props: {
       {/* Backdrop */}
       <Transition.Child
         as={Fragment}
-        enter='ease-out duration-300'
+        enter='ease-out duration-200'
         enterFrom='opacity-0'
         enterTo='opacity-100'
-        leave='ease-in duration-200'
+        leave='ease-in duration-100'
         leaveFrom='opacity-100'
         leaveTo='opacity-0'
       >
@@ -81,12 +81,12 @@ export default function CartItemOptionsDialog(props: {
       >
         <Transition.Child
           className='absolute inset-x-0 top-0 flex min-h-full items-center justify-center p-4 lg:p-6'
-          enter='ease-out duration-300'
-          enterFrom='opacity-0 scale-95'
+          enter='ease-out duration-200'
+          enterFrom='opacity-0 scale-75'
           enterTo='opacity-100 scale-100'
-          leave='ease-in duration-200'
+          leave='ease-in duration-100'
           leaveFrom='opacity-100 scale-100'
-          leaveTo='opacity-0 scale-95'
+          leaveTo='opacity-0 scale-75'
         >
           <form
             className='relative flex max-w-md shrink flex-col gap-4 rounded-2xl bg-white p-4 shadow-2xl lg:gap-6 lg:p-6'

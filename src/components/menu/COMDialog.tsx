@@ -37,7 +37,7 @@ export default function COMDialog(props: {
           enter='ease-out duration-200'
           enterFrom='opacity-0'
           enterTo='opacity-100'
-          leave='ease-in duration-150'
+          leave='ease-in duration-100'
           leaveFrom='opacity-100'
           leaveTo='opacity-0'
         >
@@ -48,7 +48,7 @@ export default function COMDialog(props: {
           enter='transition duration-200 ease-out'
           enterFrom='transform max-sm:translate-y-full sm:scale-50 sm:opacity-0'
           enterTo='transform max-sm:translate-y-0 sm:scale-100 sm:opacity-100'
-          leave='transition duration-150 ease-out'
+          leave='transition duration-100 ease-out'
           leaveFrom='transform max-sm:translate-y-0 sm:scale-100 sm:opacity-100'
           leaveTo='transform max-sm:translate-y-full sm:scale-50 sm:opacity-0'
           className='col-start-1 row-start-1 flex transform-gpu flex-col justify-center md:p-8'

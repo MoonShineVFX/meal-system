@@ -17,10 +17,10 @@ export default function DialogCore(props: {
         {/* Backdrop */}
         <Transition.Child
           as={Fragment}
-          enter='ease-out duration-300'
+          enter='ease-out duration-200'
           enterFrom='opacity-0'
           enterTo='opacity-100'
-          leave='ease-in duration-200'
+          leave='ease-in duration-100'
           leaveFrom='opacity-100'
           leaveTo='opacity-0'
         >
@@ -30,12 +30,12 @@ export default function DialogCore(props: {
         <div className='fixed inset-0 flex items-center justify-center p-4 sm:p-8'>
           <Transition.Child
             as={Fragment}
-            enter='ease-out duration-300'
-            enterFrom='opacity-0 scale-95'
+            enter='ease-out duration-200'
+            enterFrom='opacity-0 scale-75'
             enterTo='opacity-100 scale-100'
-            leave='ease-in duration-200'
+            leave='ease-in duration-100'
             leaveFrom='opacity-100 scale-100'
-            leaveTo='opacity-0 scale-95'
+            leaveTo='opacity-0 scale-75'
           >
             <Dialog.Panel className='mx-auto flex max-w-md flex-col gap-4 rounded-2xl bg-white p-4 shadow-lg sm:p-6'>
               <section className='sm:flex sm:gap-4'>
