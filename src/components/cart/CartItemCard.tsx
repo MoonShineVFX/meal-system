@@ -8,7 +8,7 @@ import colors from 'tailwindcss/colors'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
-import { OrderOptions, settings, twData, OptionSet } from '@/lib/common'
+import { settings, twData } from '@/lib/common'
 import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
 import { ScrollFader } from '@/components/cart/ScrollFader'
@@ -90,7 +90,7 @@ function CartItemCard(props: {
         commodityId: cartItem.commodityId,
         menuId: cartItem.menuId,
         quantity: quantity ?? selectedQauntity,
-        options: cartItem.options as OrderOptions,
+        options: cartItem.options,
         optionsKey: cartItem.optionsKey,
       },
       {
@@ -164,19 +164,25 @@ function CartItemCard(props: {
               ? undefined
               : {
                   backgroundColor: COLOR_HIGHLIGHT,
+                  scale: 0.5,
                 }
           }
-          animate={{ backgroundColor: COLOR_TRANSPARENT }}
+          animate={{ backgroundColor: COLOR_TRANSPARENT, scale: 1.0 }}
           exit={{
             opacity: 0,
+            scale: 0.5,
             backgroundColor: COLOR_DELETE,
             transition: {
-              default: { duration: 0.3 },
-              backgroundColor: { duration: 0.0 },
+              opacity: { duration: 0.2 },
+              backgroundColor: { duration: 0 },
             },
           }}
           transition={{
-            duration: 1.5,
+            default: {
+              duration: 0.3,
+              type: 'spring',
+            },
+            backgroundColor: { duration: 1.0 },
           }}
         >
           <div
@@ -212,21 +218,19 @@ function CartItemCard(props: {
                   {cartItem.commodityOnMenu.commodity.name}
                 </h2>
                 {/* Options */}
-                {Object.keys(cartItem.options as OrderOptions).length > 0 && (
+                {Object.keys(cartItem.options).length > 0 && (
                   <div
                     onClick={handleOptionsClick}
                     className='-m-1 flex w-fit cursor-pointer flex-col gap-0.5 rounded-md p-1 @2xl/cart:gap-1 hover:bg-stone-100 active:bg-stone-100'
                   >
-                    {Object.entries(cartItem.options as OrderOptions)
+                    {Object.entries(cartItem.options)
                       .map(([optionName, optionValue]) => ({
                         optionName,
                         optionValue,
                         order:
-                          (
-                            cartItem.commodityOnMenu.commodity
-                              .optionSets as OptionSet[]
-                          )?.find((option) => option.name === optionName)
-                            ?.order ?? Infinity,
+                          cartItem.commodityOnMenu.commodity.optionSets?.find(
+                            (option) => option.name === optionName,
+                          )?.order ?? Infinity,
                       }))
                       .sort((a, b) => a.order - b.order)
                       .flatMap((option) =>

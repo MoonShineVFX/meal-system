@@ -1,6 +1,16 @@
 import { TransactionType, UserRole, Menu } from '@prisma/client'
 
 /* Types */
+export type ConvertPrismaJson<T extends object> = {
+  [key in keyof T]: key extends 'optionSets'
+    ? OptionSet[]
+    : key extends 'options'
+    ? OrderOptions
+    : T[key] extends object
+    ? ConvertPrismaJson<T[key]>
+    : T[key]
+}
+
 export enum SERVER_NOTIFY {
   CART_ADD = '加入餐點至購物車',
   CART_DELETE = '移除購物車餐點',

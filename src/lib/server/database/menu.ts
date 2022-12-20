@@ -1,6 +1,6 @@
 import { MenuType, OrderStatus, Prisma, PrismaClient } from '@prisma/client'
 
-import { OptionSet } from '@/lib/common'
+import { OptionSet, ConvertPrismaJson } from '@/lib/common'
 import {
   MenuUnavailableReason,
   ComUnavailableReason,
@@ -104,7 +104,7 @@ export async function getMenuWithComs({
   }
 
   // Get menu
-  const menu = await thisPrisma.menu.findFirst({
+  const rawMenu = await thisPrisma.menu.findFirst({
     where: {
       type: !isGetById ? type : undefined,
       date,
@@ -193,9 +193,10 @@ export async function getMenuWithComs({
     },
   })
 
-  if (!menu) {
+  if (!rawMenu) {
     throw new Error('menu not found')
   }
+  const menu = rawMenu as ConvertPrismaJson<typeof rawMenu>
 
   // Validate menu and coms status
   let menuOrderedCount = {

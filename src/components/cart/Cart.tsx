@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
-import { AnimatePresence, motion, LayoutGroup } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Checkout } from './Checkout'
 
 import trpc from '@/lib/client/trpc'
@@ -185,13 +185,13 @@ export default function Cart() {
                 <motion.div
                   layout
                   key='empty'
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.3, type: 'spring' }}
                   className='absolute inset-0 flex flex-col items-center justify-center @2xl/cart:top-16 @2xl/cart:justify-start'
                 >
-                  <div className='flex flex-col items-center justify-center gap-4'>
+                  <div className='flex flex-col items-center justify-center gap-2 sm:gap-4'>
                     <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
                       <ShoppingCartIcon className='h-12 w-12 text-stone-400' />
                     </div>
@@ -207,6 +207,7 @@ export default function Cart() {
           {/* Checkout */}
           <section>
             <Checkout
+              className={cartData.cartItems.length === 0 ? 'max-sm:hidden' : ''}
               totalPrice={cartData.cartItems.reduce(
                 (acc: number, cartItem) =>
                   (acc +=

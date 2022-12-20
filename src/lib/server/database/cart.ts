@@ -1,7 +1,12 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 
 import { getMenuWithComs } from './menu'
-import { OptionSet, OrderOptions, generateOptionsKey } from '@/lib/common'
+import {
+  OptionSet,
+  OrderOptions,
+  generateOptionsKey,
+  ConvertPrismaJson,
+} from '@/lib/common'
 import { prisma } from './define'
 
 /** Check CartItem is creatable */
@@ -41,7 +46,7 @@ export async function validateCartItemCreatable({
   }
 
   // Validate options
-  const comOptionSets = com.commodity.optionSets as OptionSet[]
+  const comOptionSets = com.commodity.optionSets
   await validateCartOptions({ options, truthOptionSets: comOptionSets })
 }
 
@@ -164,7 +169,7 @@ export async function getCartItemsBase({
   client?: Prisma.TransactionClient | PrismaClient
 }) {
   const thisPrisma = client ?? prisma
-  const cartItems = await thisPrisma.cartItem.findMany({
+  const rawCartItems = await thisPrisma.cartItem.findMany({
     where: {
       userId,
     },
@@ -205,6 +210,7 @@ export async function getCartItemsBase({
       optionsKey: 'asc',
     },
   })
+  const cartItems = rawCartItems as ConvertPrismaJson<typeof rawCartItems>
 
   const invalidCartItems: typeof cartItems = []
   const validCartItems: typeof cartItems = []
@@ -230,11 +236,10 @@ export async function getCartItemsBase({
     }
 
     // validate options
-    const comOptionSets = cartItem.commodityOnMenu.commodity
-      .optionSets as OptionSet[]
+    const comOptionSets = cartItem.commodityOnMenu.commodity.optionSets
     try {
       await validateCartOptions({
-        options: cartItem.options as OrderOptions,
+        options: cartItem.options,
         truthOptionSets: comOptionSets,
       })
     } catch (e) {

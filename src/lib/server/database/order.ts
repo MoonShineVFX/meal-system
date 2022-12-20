@@ -1,6 +1,5 @@
 import { Prisma, Order } from '@prisma/client'
 
-import { OrderOptions } from '@/lib/common'
 import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase } from './transaction'
 
@@ -30,7 +29,7 @@ export async function createOrder({ userId }: { userId: string }) {
           name: cartItem.commodityOnMenu.commodity.name,
           price: cartItem.commodityOnMenu.commodity.price,
           quantity: cartItem.quantity,
-          options: cartItem.options as OrderOptions,
+          options: cartItem.options,
           menuId: cartItem.menuId,
           commodityId: cartItem.commodityId,
           imageId: cartItem.commodityOnMenu.commodity.imageId,

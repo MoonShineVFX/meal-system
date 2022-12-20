@@ -4,7 +4,7 @@ import { useForm, SubmitHandler } from 'react-hook-form'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
 import { OptionSetForm } from '@/components/menu/COMDialogContent'
-import { OptionSet, OrderOptions, generateOptionsKey } from '@/lib/common'
+import { OrderOptions, generateOptionsKey } from '@/lib/common'
 import type { CartItems } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
@@ -32,7 +32,7 @@ export default function CartItemOptionsDialog(props: {
   useEffect(() => {
     if (props.cartItem) {
       setCartItem(props.cartItem)
-      setValue('options', props.cartItem.options as OrderOptions)
+      setValue('options', props.cartItem.options)
       updateCartMutation.reset()
     }
   }, [props.cartItem])
@@ -106,7 +106,7 @@ export default function CartItemOptionsDialog(props: {
               {com?.commodity.name}
             </h1>
             <main className='flex flex-col gap-4'>
-              {(com?.commodity.optionSets as OptionSet[])
+              {com?.commodity.optionSets
                 .sort((a, b) => a.order - b.order)
                 .map((optionSet) => (
                   <OptionSetForm

@@ -45,7 +45,7 @@ function COMDialogContent(props: {
   } = useForm<FormInputs>({
     defaultValues: {
       quantity: 1,
-      options: (com.commodity.optionSets as OptionSet[])
+      options: com.commodity.optionSets
         ?.filter((optionSet) => optionSet.multiSelect)
         .reduce(
           (acc: OrderOptions, optionSet) => ({
@@ -152,7 +152,7 @@ function COMDialogContent(props: {
         <div className='border-b border-stone-200'></div>
         {/* Option Sets */}
         <main className='flex flex-col gap-4 group-data-not-available:pointer-events-none group-data-not-available:opacity-60'>
-          {(com.commodity.optionSets as OptionSet[])
+          {com.commodity.optionSets
             .sort((a, b) => a.order - b.order)
             .map((optionSet) => (
               <OptionSetForm
