@@ -1,3 +1,5 @@
+import { Prisma, Order } from '@prisma/client'
+
 import { OrderOptions } from '@/lib/common'
 import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase } from './transaction'
@@ -18,36 +20,50 @@ export async function createOrder({ userId }: { userId: string }) {
       client,
     })
 
-    // create order items
-    const orderItemCreates = getCartItemsResult.cartItems.map((cartItem) => ({
-      name: cartItem.commodityOnMenu.commodity.name,
-      price: cartItem.commodityOnMenu.commodity.price,
-      quantity: cartItem.quantity,
-      options: cartItem.options as OrderOptions,
-      menuId: cartItem.menuId,
-      commodityId: cartItem.commodityId,
-      imageId: cartItem.commodityOnMenu.commodity.imageId,
-    }))
-
-    // Create order
-    const order = await client.order.create({
-      data: {
-        userId: userId,
-        transactions: {
-          connect: { id: transaction.id },
-        },
-        items: {
-          createMany: {
-            data: orderItemCreates,
-          },
-        },
+    // create order items and group by menu
+    const orderItemCreates = getCartItemsResult.cartItems.reduce(
+      (acc: Map<number, Prisma.OrderItemCreateManyOrderInput[]>, cartItem) => {
+        if (!acc.has(cartItem.menuId)) {
+          acc.set(cartItem.menuId, [])
+        }
+        acc.get(cartItem.menuId)?.push({
+          name: cartItem.commodityOnMenu.commodity.name,
+          price: cartItem.commodityOnMenu.commodity.price,
+          quantity: cartItem.quantity,
+          options: cartItem.options as OrderOptions,
+          menuId: cartItem.menuId,
+          commodityId: cartItem.commodityId,
+          imageId: cartItem.commodityOnMenu.commodity.imageId,
+        })
+        return acc
       },
-    })
+      new Map(),
+    )
+
+    // Create orders
+    let orders: Order[] = []
+    for (const [menuId, orderItems] of orderItemCreates) {
+      const order = await client.order.create({
+        data: {
+          userId: userId,
+          transactions: {
+            connect: { id: transaction.id },
+          },
+          items: {
+            createMany: {
+              data: orderItems,
+            },
+          },
+          menuId: menuId,
+        },
+      })
+      orders.push(order)
+    }
 
     await client.cartItem.deleteMany({
       where: { userId: userId },
     })
 
-    return order
+    return orders
   })
 }

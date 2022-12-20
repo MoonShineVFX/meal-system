@@ -70,11 +70,12 @@ model Transaction {
   sourceUserId String
   targetUser   User        @relation("target", fields: [targetUserId], references: [id])
   targetUserId String
-  order        Order?      @relation(fields: [orderId], references: [id])
-  orderId      Int?
+  orders       Order[]
   twmpResult   TwmpResult? @relation(fields: [twmpResultId], references: [txnUID])
   twmpResultId String?
   ethHashes    String[]
+
+  @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
 }
 
 // TWMP
@@ -136,8 +137,12 @@ model Order {
 
   user         User          @relation(fields: [userId], references: [id])
   userId       String
+  menu         Menu          @relation(fields: [menuId], references: [id])
+  menuId       Int
   items        OrderItem[]
   transactions Transaction[]
+
+  @@index([userId, menuId, status])
 }
 
 model OrderItem {
@@ -156,6 +161,8 @@ model OrderItem {
   commodityId     Int
   image           Image?          @relation(fields: [imageId], references: [id])
   imageId         String?
+
+  @@index([orderId, menuId, commodityId])
 }
 
 model CartItem {
@@ -174,6 +181,7 @@ model CartItem {
   commodityId     Int
 
   @@id([userId, menuId, commodityId, optionsKey])
+  @@index([userId, menuId, commodityId, invalid])
 }
 
 // Menu
@@ -218,6 +226,8 @@ model Commodity {
   image      Image?              @relation(fields: [imageId], references: [id])
   imageId    String?
   onMenus    CommodityOnMenu[]
+
+  @@index([id, isDeleted])
 }
 
 // Menu
@@ -237,6 +247,7 @@ model CommodityOnMenu {
   orderItems  OrderItem[]
 
   @@id([menuId, commodityId])
+  @@index([menuId, commodityId, isDeleted])
 }
 
 enum MenuType {
@@ -262,6 +273,10 @@ model Menu {
   isDeleted     Boolean   @default(false)
 
   commodities CommodityOnMenu[]
+  orders      Order[]
+
+  @@index([date, type, isDeleted, createdAt(sort: Desc)])
+  @@index([id, isDeleted, createdAt(sort: Desc)])
 }
 
 // Resource

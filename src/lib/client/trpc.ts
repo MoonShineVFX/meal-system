@@ -45,6 +45,10 @@ export type CartItemsByMenu = Map<
   number,
   CartData['cartItems'][0]['commodityOnMenu']['menu'] & { cartItems: CartItems }
 >
+export type CartItemsAndMenus = (
+  | CartItems[0]
+  | (CartData['cartItems'][0]['commodityOnMenu']['menu'] & { id: number })
+)[]
 
 /* WebSocket Client */
 declare global {

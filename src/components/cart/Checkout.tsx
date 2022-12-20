@@ -39,7 +39,7 @@ export function Checkout(props: { className?: string; totalPrice: number }) {
       </header>
       <section className='flex flex-col text-stone-500'>
         {/* Point balance */}
-        {userData.pointBalance > 0 && (
+        {
           <div className='flex justify-between border-b border-stone-200 py-2'>
             <div className='flex items-center gap-1'>
               <p className='text-sm tracking-wider'>點數</p>
@@ -50,7 +50,7 @@ export function Checkout(props: { className?: string; totalPrice: number }) {
             </div>
             <Price price={pointBalnceToPay} isPayment />
           </div>
-        )}
+        }
         {/* Credit balance */}
         <div className='flex justify-between border-stone-200 py-2'>
           <div className='flex items-center gap-1'>
@@ -73,7 +73,7 @@ export function Checkout(props: { className?: string; totalPrice: number }) {
           isBusy={
             createOrderMutation.isLoading || createOrderMutation.isSuccess
           }
-          isDisabled={isNotEnough}
+          isDisabled={isNotEnough || props.totalPrice === 0}
           label={isNotEnough ? '餘額不足' : '確認付款'}
           className=' h-12 grow text-lg font-bold @xs/checkout:order-1'
           onClick={handleCheckout}
