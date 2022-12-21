@@ -42,7 +42,6 @@ export default function COMCard(props: {
           type: 'spring',
           stiffness: 600,
           damping: 10,
-          duration: 0.2,
         }}
         className='group flex flex-col overflow-hidden border-stone-100 bg-white'
       >

@@ -54,7 +54,6 @@ export default function Button(props: {
         type: 'spring',
         stiffness: 600,
         damping: 10,
-        duration: 0.2,
       }}
       disabled={props.isDisabled ?? isBusy ?? false}
       {...twData({ busy: isBusy })}

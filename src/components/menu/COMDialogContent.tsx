@@ -15,6 +15,7 @@ import { MinusIcon } from '@heroicons/react/24/outline'
 import { UserPlusIcon } from '@heroicons/react/20/solid'
 import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
+import { motion, AnimatePresence } from 'framer-motion'
 
 import { settings, OptionSet, twData, OrderOptions } from '@/lib/common'
 import Image from '@/components/core/Image'
@@ -241,10 +242,19 @@ export function OptionSetForm<
 
   return (
     <section className='flex flex-col gap-2'>
-      <h3 className='text font-bold'>
+      <h3 className='text flex items-baseline font-bold'>
         {optionSet.name}
-        <span className='ml-2 text-sm font-normal text-red-400'>
-          {error && error.message}
+        <span className=''>
+          {error && (
+            <motion.div
+              className='ml-2 text-sm font-normal text-red-400'
+              initial={{ scale: 0.0 }}
+              animate={{ scale: 1.0 }}
+              transition={{ type: 'spring', duration: 0.3, bounce: 0.65 }}
+            >
+              {error.message}
+            </motion.div>
+          )}
         </span>
       </h3>
       <div className='flex flex-wrap gap-2'>
