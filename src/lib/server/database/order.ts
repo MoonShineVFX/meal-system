@@ -1,5 +1,6 @@
 import { Prisma, Order } from '@prisma/client'
 
+import { ConvertPrismaJson } from '@/lib/common'
 import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
@@ -69,7 +70,7 @@ export async function createOrder({ userId }: { userId: string }) {
 }
 
 export async function getOrders({ userId }: { userId: string }) {
-  return await prisma.order.findMany({
+  const rawOrders = await prisma.order.findMany({
     where: { userId: userId },
     include: {
       menu: {
@@ -81,6 +82,7 @@ export async function getOrders({ userId }: { userId: string }) {
       },
       items: {
         select: {
+          id: true,
           name: true,
           price: true,
           quantity: true,
@@ -95,14 +97,17 @@ export async function getOrders({ userId }: { userId: string }) {
       },
       transactions: {
         select: {
+          type: true,
           pointAmount: true,
           creditAmount: true,
+          ethHashes: true,
         },
       },
     },
     orderBy: {
       createdAt: 'desc',
     },
-    take: 10,
   })
+
+  return rawOrders as ConvertPrismaJson<typeof rawOrders>
 }

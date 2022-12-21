@@ -1,12 +1,12 @@
 import { StateCreator } from 'zustand'
 
 import type { StoreState } from './define'
-import type { Menu } from '@/lib/client/trpc'
+import type { MenuData } from '@/lib/client/trpc'
 
 export interface MenuSlice {
-  currentMenu: Menu | null
+  currentMenu: MenuData | null
   currentCategory: string | null
-  setCurrentMenu: (menu: Menu | null) => void
+  setCurrentMenu: (menu: MenuData | null) => void
   setCurrentCategory: (category: string | null) => void
 }
 

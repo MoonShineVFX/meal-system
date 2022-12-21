@@ -218,7 +218,7 @@ function CartItemCard(props: {
             </section>
             <div className='grid grow grid-cols-2'>
               {/* Content */}
-              <section className='flex flex-col gap-2'>
+              <section className='flex flex-col gap-2 @2xl/cart:pt-1'>
                 {/* Name */}
                 <h2 className='w-fit rounded-xl font-bold tracking-wider group-data-loading:skeleton'>
                   {cartItem.commodityOnMenu.commodity.name}
@@ -336,7 +336,7 @@ function CartItemCard(props: {
                   />
                 </div>
                 {/* Price */}
-                <div className='flex flex-col'>
+                <div className='flex flex-col @2xl/cart:pt-1'>
                   <h3 className='h-fit whitespace-nowrap rounded-xl text-end font-bold group-data-loading:skeleton'>
                     ${cartItem.commodityOnMenu.commodity.price}
                   </h3>

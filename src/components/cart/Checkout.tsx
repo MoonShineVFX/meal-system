@@ -5,6 +5,7 @@ import { animate } from 'framer-motion'
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
 import { twData } from '@/lib/common'
+import Error from '@/components/core/Error'
 
 export function Checkout(props: {
   className?: string
@@ -23,12 +24,7 @@ export function Checkout(props: {
     createOrderMutation.mutate()
   }
 
-  if (userIsError)
-    return (
-      <div className='flex rounded-2xl bg-stone-100 p-6 text-red-400'>
-        {userError?.message ?? '錯誤'}
-      </div>
-    )
+  if (userIsError) return <Error description={userError.message} />
 
   const pointBalance = userData?.pointBalance ?? 0
   const creditBalance = userData?.creditBalance ?? 0

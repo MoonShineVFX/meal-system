@@ -4,12 +4,13 @@ import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
+import Error from '@/components/core/Error'
 
 export default function Wallet() {
-  const userInfoQuery = trpc.user.get.useQuery(undefined)
+  const { data, isError, error, isLoading } = trpc.user.get.useQuery()
 
-  if (userInfoQuery.isLoading) return <Spinner className='h-6 w-6' />
-  if (userInfoQuery.isError) return <div>{userInfoQuery.error.message}</div>
+  if (isLoading) return <Spinner className='h-6 w-6' />
+  if (isError) return <Error description={error.message} />
 
   return (
     <div className='grid grid-cols-[repeat(auto-fit,minmax(13.75rem,1fr))] grid-rows-none place-content-start gap-4 bg-white p-4'>
@@ -20,7 +21,7 @@ export default function Wallet() {
           <div className='flex flex-col whitespace-nowrap'>
             <h3 className='text-sm font-bold text-stone-500'>福利點數</h3>
             <h1 className='text-2xl font-bold text-stone-700'>
-              {userInfoQuery.data.pointBalance}
+              {data.pointBalance}
             </h1>
           </div>
         </div>
@@ -29,7 +30,7 @@ export default function Wallet() {
           <div className='flex flex-col whitespace-nowrap'>
             <h3 className='text-sm font-bold text-stone-500'>夢想幣</h3>
             <h1 className='text-2xl font-bold text-stone-700'>
-              ${userInfoQuery.data.creditBalance}
+              ${data.creditBalance}
             </h1>
           </div>
         </div>

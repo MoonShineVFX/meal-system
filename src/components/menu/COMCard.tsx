@@ -49,7 +49,7 @@ export default function COMCard(props: {
         <section className='px-4 py-2'>
           <div className='relative aspect-square overflow-hidden rounded-2xl group-data-loading/menu:skeleton'>
             <Image
-              className='object-cover transition-transform group-hover:opacity-75 group-active:opacity-75 group-data-loading/menu:hidden'
+              className='object-cover group-hover:opacity-75 group-active:opacity-75 group-data-loading/menu:hidden'
               src={
                 com?.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
               }

@@ -18,6 +18,8 @@ body,
   display: none;
 }
 
-.ms-scroll {
-  @apply scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md;
+@layer components {
+  .ms-scroll {
+    @apply scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md;
+  }
 }

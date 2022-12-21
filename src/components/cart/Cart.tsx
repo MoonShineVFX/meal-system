@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Checkout } from './Checkout'
 import { MenuType } from '@prisma/client'
 
+import { Checkout } from './Checkout'
 import trpc from '@/lib/client/trpc'
 import type { CartItemsByMenu, CartItemsAndMenus } from '@/lib/client/trpc'
 import { getMenuName, twData } from '@/lib/common'
@@ -13,6 +13,7 @@ import CartItemCard from './CartItemCard'
 import Dialog from '@/components/core/Dialog'
 import CartItemOptionsDialog from './CartItemOptionsDialog'
 import type { CartItems } from '@/lib/client/trpc'
+import Error from '@/components/core/Error'
 
 type CartDeleteType = 'ALL' | 'INVALID'
 
@@ -101,12 +102,7 @@ export default function Cart() {
     deleteCartMutation.mutate({})
   }, [cartData?.cartItems.length, deleteCartMutation])
 
-  if (cartIsError)
-    return (
-      <div className='flex h-full w-full items-center justify-center text-red-400'>
-        {cartError?.message ?? '測試'}
-      </div>
-    )
+  if (cartIsError) return <Error description={cartError.message} />
 
   // Detect type of delete
   let deleteCartType: CartDeleteType | undefined = undefined

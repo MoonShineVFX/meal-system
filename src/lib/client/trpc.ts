@@ -25,8 +25,8 @@ export type UserInfo = RouterOutput['user']['get']
 export type TransactionWithNames =
   RouterOutput['transaction']['getList']['transactions'][0]
 
-export type Menu = RouterOutput['menu']['get']
-export type CommoditiesOnMenu = Menu['commodities']
+export type MenuData = RouterOutput['menu']['get']
+export type CommoditiesOnMenu = MenuData['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]
 export type CommoditiesOnMenuByCategory = Map<
   string,
@@ -49,6 +49,8 @@ export type CartItemsAndMenus = (
   | CartItems[0]
   | (CartData['cartItems'][0]['commodityOnMenu']['menu'] & { id: number })
 )[]
+export type OrderDatas = RouterOutput['order']['get']
+export type OrderItems = OrderDatas[0]['items']
 
 /* WebSocket Client */
 declare global {

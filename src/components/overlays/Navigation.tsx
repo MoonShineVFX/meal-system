@@ -16,6 +16,7 @@ import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
 import { motion, useAnimationControls } from 'framer-motion'
 
+import Error from '@/components/core/Error'
 import Image from '@/components/core/Image'
 import { generateCookie } from '@/lib/common'
 import { settings, twData } from '@/lib/common'
@@ -43,13 +44,13 @@ function Navigation() {
         icons={[ShoppingCartIcon, ShoppingCartIconSolid]}
       />
       <NavButton
-        label='訂單紀錄'
-        path='/orders'
+        label='訂單'
+        path='/order'
         icons={[DocumentTextIcon, DocumentTextIconSolid]}
       />
       <NavButton
         className='hidden sm:block'
-        label='錢包'
+        label='交易紀錄'
         path='/transaction'
         icons={[WalletIcon, WalletIconSolid]}
       />
@@ -73,7 +74,7 @@ function ProfileButton(props: { className?: string }) {
   }
 
   if (isLoading) return <Spinner className='h-8 w-8' />
-  if (isError) return <div>{error.message}</div>
+  if (isError) return <Error description={error.message} />
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`} as='ul'>
