@@ -54,9 +54,9 @@ export function Checkout(props: {
       <section className='flex flex-col text-stone-500'>
         {/* Point balance */}
         {
-          <div className='flex justify-between border-b border-stone-200 py-2'>
+          <div className='flex justify-between border-b border-stone-200 py-2 sm:py-4'>
             <div className='flex items-center gap-1'>
-              <p className='rounded-xl text-sm tracking-wider group-data-loading:skeleton'>
+              <p className='rounded-xl tracking-widest group-data-loading:skeleton'>
                 點數
               </p>
               <Price price={pointBalance - pointBalnceToPay} isCurrency />
@@ -65,9 +65,9 @@ export function Checkout(props: {
           </div>
         }
         {/* Credit balance */}
-        <div className='flex justify-between border-stone-200 py-2'>
+        <div className='flex justify-between border-stone-200 py-2 sm:py-4'>
           <div className='flex items-center gap-1'>
-            <p className='rounded-xl text-sm tracking-wider group-data-loading:skeleton'>
+            <p className='rounded-xl tracking-widest group-data-loading:skeleton'>
               夢想幣
             </p>
             <Price

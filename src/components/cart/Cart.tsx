@@ -128,7 +128,7 @@ export default function Cart() {
       {...twData({ loading: cartIsLoading })}
     >
       <div className='ms-scroll absolute inset-0 flex justify-center overflow-y-auto p-4 overflow-x-hidden lg:p-8'>
-        <div className='grid h-min min-h-full max-w-3xl grow grid-rows-[min-content_auto_min-content] gap-4 @2xl/cart:grid-cols-[3fr_2fr] @2xl/cart:grid-rows-[min-content_auto] @2xl/cart:gap-x-8'>
+        <div className='grid h-min min-h-full max-w-4xl grow grid-rows-[min-content_auto_min-content] gap-4 @2xl/cart:grid-cols-[3fr_2fr] @2xl/cart:grid-rows-[min-content_auto] @2xl/cart:gap-x-8'>
           {/* Clear Button */}
           <div className='col-start-1 row-start-1 flex justify-end'>
             {cartData && cartData.cartItems.length > 0 && (

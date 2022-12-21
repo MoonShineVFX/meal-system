@@ -1,6 +1,7 @@
 import Spinner from './Spinner'
 import { twMerge } from 'tailwind-merge'
 import { twData } from '@/lib/common'
+import { motion } from 'framer-motion'
 
 const themes = {
   main: 'bg-yellow-500 hover:bg-yellow-400 active:bg-yellow-400 data-busy:bg-yellow-600 data-busy:hover:bg-yellow-600 text-yellow-900 shadow data-busy:text-black disabled:opacity-50',
@@ -47,7 +48,14 @@ export default function Button(props: {
   const isBusy = props.isBusy ?? props.isLoading ?? false
 
   return (
-    <button
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      transition={{
+        type: 'spring',
+        stiffness: 600,
+        damping: 10,
+        duration: 0.2,
+      }}
       disabled={props.isDisabled ?? isBusy ?? false}
       {...twData({ busy: isBusy })}
       className={twMerge(
@@ -59,6 +67,6 @@ export default function Button(props: {
       onClick={props.onClick}
     >
       {content}
-    </button>
+    </motion.button>
   )
 }
