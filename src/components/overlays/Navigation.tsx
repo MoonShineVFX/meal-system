@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { memo } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { Popover, Transition } from '@headlessui/react'
 import { HomeIcon as HomeIconSolid } from '@heroicons/react/24/solid'
@@ -14,7 +14,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { ShoppingCartIcon as ShoppingCartIconSolid } from '@heroicons/react/24/solid'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
-import { motion } from 'framer-motion'
+import { motion, useAnimationControls } from 'framer-motion'
 
 import Image from '@/components/core/Image'
 import { generateCookie } from '@/lib/common'
@@ -223,18 +223,40 @@ function NavIcon(props: {
 
 function CartBadge() {
   const { data, isLoading, isError } = trpc.cart.get.useQuery()
+  const controls = useAnimationControls()
+  const [isFirstData, setIsFirstData] = useState(false)
+
+  useEffect(() => {
+    if (!data) return
+    if (!isFirstData) {
+      setIsFirstData(true)
+      return
+    }
+
+    controls.start({
+      scale: [0, 1],
+      transition: { type: 'spring', bounce: 0.5, duration: 0.4 },
+    })
+  }, [data])
 
   if (isLoading)
     return <Spinner className='h-4 w-4 text-stone-500 sm:h-5 sm:w-5' />
+
   if (isError)
     return (
       <ExclamationCircleIcon className='h-4 w-4 text-red-400 sm:h-5 sm:w-5' />
     )
+
   if (data.cartItems.length === 0) return null
 
+  const quantity = data.cartItems.reduce((acc, item) => acc + item.quantity, 0)
+
   return (
-    <div className='flex h-4 w-4 justify-center rounded-full bg-yellow-500 -indent-[0.05em] font-mono text-xs tracking-tighter text-yellow-900 group-data-selected:bg-stone-300 group-data-selected:text-stone-600 sm:h-5 sm:w-5 sm:rounded-md sm:text-sm'>
-      {data.cartItems.length}
-    </div>
+    <motion.div
+      animate={controls}
+      className='flex h-4 w-4 justify-center rounded-full bg-yellow-500 -indent-[0.05em] font-mono text-xs tracking-tighter text-yellow-900 group-data-selected:bg-stone-300 group-data-selected:text-stone-600 sm:h-5 sm:w-5 sm:rounded-md sm:text-sm'
+    >
+      {quantity}
+    </motion.div>
   )
 }

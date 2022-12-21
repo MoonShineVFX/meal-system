@@ -1,13 +1,14 @@
 import { ReactNode } from 'react'
 import { useRef, useState, useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
+import { useMediaQuery } from 'usehooks-ts'
 
 const CLOSE_TRIGGER_THRESHOLD_RATIO = 0.5
 
 export default function Swiper(props: {
   children: ReactNode
   onClose: () => void
-  breakingPoint?: number
+  breakingPoint: number
 }) {
   const parentRef = useRef<HTMLDivElement>(null)
   const coreRef = useRef<HTMLDivElement>(null)
@@ -15,28 +16,16 @@ export default function Swiper(props: {
   const [isScrollInCore, setIsScrollInCore] = useState(true)
   const [isClosing, setIsClosing] = useState(false)
   const [isDisabled, setIsDisabled] = useState(false)
+  const matches = useMediaQuery(`(min-width: ${props.breakingPoint}px)`)
 
   // Detect media query
   useEffect(() => {
-    if (!props.breakingPoint) return
-    const matchMedia = window.matchMedia(
-      `(min-width: ${props.breakingPoint}px)`,
-    )
-    const handleMediaQueryChange = () => {
-      if (matchMedia.matches && !isDisabled) {
-        setIsDisabled(true)
-      } else if (!matchMedia.matches && isDisabled) {
-        setIsDisabled(false)
-      }
+    if (matches && !isDisabled) {
+      setIsDisabled(true)
+    } else if (!matches && isDisabled) {
+      setIsDisabled(false)
     }
-    handleMediaQueryChange()
-
-    matchMedia.addEventListener('change', handleMediaQueryChange)
-    return () => {
-      if (!props.breakingPoint) return
-      matchMedia.removeEventListener('change', handleMediaQueryChange)
-    }
-  }, [props.breakingPoint])
+  }, [matches])
 
   // Scroll to core when open
   useEffect(() => {

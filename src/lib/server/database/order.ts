@@ -67,3 +67,42 @@ export async function createOrder({ userId }: { userId: string }) {
     return orders
   })
 }
+
+export async function getOrders({ userId }: { userId: string }) {
+  return await prisma.order.findMany({
+    where: { userId: userId },
+    include: {
+      menu: {
+        select: {
+          date: true,
+          type: true,
+          name: true,
+        },
+      },
+      items: {
+        select: {
+          name: true,
+          price: true,
+          quantity: true,
+          options: true,
+          image: {
+            select: {
+              id: true,
+              path: true,
+            },
+          },
+        },
+      },
+      transactions: {
+        select: {
+          pointAmount: true,
+          creditAmount: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: 10,
+  })
+}

@@ -5,7 +5,7 @@ import { twMerge } from 'tailwind-merge'
 import Title from '@/components/core/Title'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import COMDialogContent from './COMDialogContent'
-import Swiper from '../core/Swiper'
+import Swiper from './Swiper'
 
 export default function COMDialog(props: {
   isOpen: boolean

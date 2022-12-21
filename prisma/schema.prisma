@@ -142,7 +142,7 @@ model Order {
   items        OrderItem[]
   transactions Transaction[]
 
-  @@index([userId, menuId, status])
+  @@index([userId, menuId, status, createdAt(sort: Desc)])
 }
 
 model OrderItem {
