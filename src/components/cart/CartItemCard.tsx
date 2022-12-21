@@ -6,6 +6,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { motion, useAnimationControls } from 'framer-motion'
 import colors from 'tailwindcss/colors'
 import { TrashIcon } from '@heroicons/react/24/outline'
+import { PencilSquareIcon } from '@heroicons/react/24/outline'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
@@ -195,7 +196,7 @@ function CartItemCard(props: {
               available: !cartItem.invalid && !isLoading && !props.isDisabled,
               loading: isSkeleton,
             })}
-            className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6'
+            className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6 hover:bg-stone-50'
           >
             {/* Image */}
             <section className='h-min w-full max-w-[5rem] shrink-0 p-1 @2xl/cart:max-w-[7rem] @2xl/cart:p-2'>
@@ -225,38 +226,42 @@ function CartItemCard(props: {
                 {/* Options */}
                 {Object.keys(cartItem.options).length > 0 && (
                   <div
+                    className='group/options -m-1 flex w-fit cursor-pointer items-center gap-2 rounded-md p-1'
                     onClick={handleOptionsClick}
-                    className='-m-1 flex w-fit cursor-pointer flex-col gap-0.5 rounded-md p-1 @2xl/cart:gap-1 hover:bg-stone-100 active:bg-stone-100'
                   >
-                    {Object.entries(cartItem.options)
-                      .map(([optionName, optionValue]) => ({
-                        optionName,
-                        optionValue,
-                        order:
-                          cartItem.commodityOnMenu.commodity.optionSets?.find(
-                            (option) => option.name === optionName,
-                          )?.order ?? Infinity,
-                      }))
-                      .sort((a, b) => a.order - b.order)
-                      .flatMap((option) =>
-                        Array.isArray(option.optionValue)
-                          ? option.optionValue
-                          : [option.optionValue],
-                      )
-                      .map((optionValue) => (
-                        <span
-                          key={optionValue}
-                          className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-data-loading:skeleton @2xl/cart:text-sm'
-                        >
-                          {optionValue}
-                        </span>
-                      ))}
+                    <div className='flex flex-col gap-0.5 @2xl/cart:gap-1'>
+                      {Object.entries(cartItem.options)
+                        .map(([optionName, optionValue]) => ({
+                          optionName,
+                          optionValue,
+                          order:
+                            cartItem.commodityOnMenu.commodity.optionSets?.find(
+                              (option) => option.name === optionName,
+                            )?.order ?? Infinity,
+                        }))
+                        .sort((a, b) => a.order - b.order)
+                        .flatMap((option) =>
+                          Array.isArray(option.optionValue)
+                            ? option.optionValue
+                            : [option.optionValue],
+                        )
+                        .map((optionValue) => (
+                          <span
+                            key={optionValue}
+                            className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-hover/options:underline group-data-loading:skeleton @2xl/cart:text-sm'
+                          >
+                            {optionValue}
+                          </span>
+                        ))}
+                    </div>
+
+                    <PencilSquareIcon className='h-4 w-4 stroke-1 text-stone-400' />
                   </div>
                 )}
               </section>
               {/* Quantity and Price*/}
               <section className='flex justify-between'>
-                <div className='flex flex-col gap-2'>
+                <div className='flex h-fit items-center gap-1'>
                   <Listbox
                     value={selectedQauntity}
                     onChange={handleQuantityChange}
@@ -322,7 +327,7 @@ function CartItemCard(props: {
                   </Listbox>
                   <Button
                     isLoading={isLoading}
-                    className='hidden h-6 data-busy:hidden group-data-loading:skeleton sm:flex'
+                    className='hidden h-6 w-6 data-busy:hidden group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200 sm:flex'
                     textClassName='group-data-loading:skeleton'
                     spinnerClassName='h-4 w-4'
                     label={<TrashIcon className='h-4 w-4 text-stone-400' />}
