@@ -2,9 +2,10 @@ import { Prisma, Order } from '@prisma/client'
 
 import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase } from './transaction'
+import { prisma } from './define'
 
 export async function createOrder({ userId }: { userId: string }) {
-  await prisma?.$transaction(async (client) => {
+  await prisma.$transaction(async (client) => {
     // Get valid cart items
     const getCartItemsResult = await getCartItemsBase({ userId, client })
     const totalPrice = getCartItemsResult.cartItems.reduce(

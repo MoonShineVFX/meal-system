@@ -15,7 +15,7 @@ import { MinusIcon } from '@heroicons/react/24/outline'
 import { UserPlusIcon } from '@heroicons/react/20/solid'
 import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 import { settings, OptionSet, twData, OrderOptions } from '@/lib/common'
 import Image from '@/components/core/Image'
