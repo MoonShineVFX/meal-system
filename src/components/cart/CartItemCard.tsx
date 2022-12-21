@@ -5,6 +5,7 @@ import * as ReactDOM from 'react-dom'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { motion, useAnimationControls } from 'framer-motion'
 import colors from 'tailwindcss/colors'
+import { TrashIcon } from '@heroicons/react/24/outline'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
@@ -322,17 +323,19 @@ function CartItemCard(props: {
                   <Button
                     isLoading={isLoading}
                     className='hidden h-6 data-busy:hidden group-data-loading:skeleton sm:flex'
-                    textClassName='text-sm text-stone-400 group-data-loading:skeleton'
+                    textClassName='group-data-loading:skeleton'
                     spinnerClassName='h-4 w-4'
-                    label='刪除'
+                    label={<TrashIcon className='h-4 w-4 text-stone-400' />}
                     theme='support'
                     onClick={() => handleQuantityChange(0)}
                   />
                 </div>
                 {/* Price */}
-                <h3 className='h-fit whitespace-nowrap rounded-xl text-end font-bold group-data-loading:skeleton'>
-                  ${cartItem.commodityOnMenu.commodity.price}
-                </h3>
+                <div className='flex flex-col'>
+                  <h3 className='h-fit whitespace-nowrap rounded-xl text-end font-bold group-data-loading:skeleton'>
+                    ${cartItem.commodityOnMenu.commodity.price}
+                  </h3>
+                </div>
               </section>
             </div>
           </div>

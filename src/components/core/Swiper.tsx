@@ -108,7 +108,7 @@ export default function Swiper(props: {
     <div
       ref={parentRef}
       className={twMerge(
-        'relative h-full w-full snap-y snap-mandatory overflow-y-auto',
+        'relative h-full w-full snap-y snap-mandatory overflow-y-auto scrollbar-none',
       )}
     >
       {/* Spacer */}
@@ -124,7 +124,7 @@ export default function Swiper(props: {
       <div
         ref={coreRef}
         className={
-          'absolute top-full h-full w-full snap-start overflow-y-auto pt-4'
+          'absolute top-full h-full w-full snap-start overflow-y-auto pt-4 scrollbar-none'
         }
       >
         {props.children}

@@ -121,13 +121,6 @@ export default function SwipeToDelete(props: {
         className='absolute inset-0 w-0'
         ref={portalRef}
       ></div>
-      {/* Dissolve Left */}
-      <div
-        className={twMerge(
-          'absolute inset-y-0 left-0 hidden w-0 bg-gradient-to-r from-white/50 to-transparent',
-          isSwipped && 'block w-1/5',
-        )}
-      ></div>
     </div>
   )
 }
