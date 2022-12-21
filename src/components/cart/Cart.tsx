@@ -231,7 +231,9 @@ export default function Cart() {
               </div>
               {/* Empty */}
               <AnimatePresence initial={false}>
-                {cartData.cartItems.length === 0 && (
+                {cartData.cartItems.length +
+                  cartData.invalidCartItems.length ===
+                  0 && (
                   <motion.div
                     layout
                     key='empty'

@@ -37,7 +37,7 @@ export default function DialogCore(props: {
             leaveFrom='opacity-100 scale-100'
             leaveTo='opacity-0 scale-75'
           >
-            <Dialog.Panel className='mx-auto flex max-w-md flex-col gap-4 rounded-2xl bg-white p-4 shadow-lg sm:p-6'>
+            <Dialog.Panel className='mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-lg'>
               <section className='sm:flex sm:gap-4'>
                 <div className='mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100'>
                   <ExclamationTriangleIcon className='h-6 w-6 text-red-600' />

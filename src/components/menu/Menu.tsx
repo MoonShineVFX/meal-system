@@ -5,6 +5,7 @@ import { twMerge } from 'tailwind-merge'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { motion } from 'framer-motion'
 
+import Dialog from '@/components/core/Dialog'
 import { twData, settings } from '@/lib/common'
 import trpc from '@/lib/client/trpc'
 import type {
@@ -17,6 +18,8 @@ import { useStore } from '@/lib/client/store'
 
 const categoriesPlaceholder = Array(5).fill('分類')
 const CATEGORY_SCROLL_TOP_TRIGGER = 64
+const UNAVAILABLE_CONFIRM_NAME = (menuId: number) =>
+  `menuconfirm-unavailable-${menuId}`
 
 export default function Menu(props: {
   type: MenuType
@@ -38,6 +41,7 @@ export default function Menu(props: {
   const currentCategory = useStore((state) => state.currentCategory)
   const setCurrentCategory = useStore((state) => state.setCurrentCategory)
   const gridRef = useRef<HTMLDivElement>(null)
+  const [unavailableNotify, setUnavailableNotify] = useState(false)
 
   const categories = isLoading
     ? categoriesPlaceholder
@@ -169,6 +173,11 @@ export default function Menu(props: {
     setComsByCategory(result)
     setCurrentMenu(data)
     setCurrentCategory(comsByCategory.keys().next().value)
+
+    // if session storage not have confirmed, show notify
+    if (!sessionStorage.getItem(UNAVAILABLE_CONFIRM_NAME(data.id))) {
+      setUnavailableNotify(data.unavailableReasons.length > 0)
+    }
   }, [data])
 
   const handleDialogClose = useCallback(() => {
@@ -264,6 +273,25 @@ export default function Menu(props: {
         isOpen={isDialogOpen}
         com={selectedCom ?? undefined}
         onClose={handleDialogClose}
+      />
+      {/* Warning for unavailables */}
+      <Dialog
+        open={unavailableNotify}
+        onClose={() => {
+          sessionStorage.setItem(
+            UNAVAILABLE_CONFIRM_NAME(data?.id ?? 0),
+            'true',
+          )
+          setUnavailableNotify(false)
+        }}
+        title='目前無法訂購餐點'
+        content={
+          <ul className='flex flex-col gap-1'>
+            {data?.unavailableReasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        }
       />
     </div>
   )

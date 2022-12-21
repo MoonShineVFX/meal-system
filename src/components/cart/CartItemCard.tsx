@@ -270,7 +270,7 @@ function CartItemCard(props: {
                   >
                     <Listbox.Button
                       id={`reference-${cartItemId}`}
-                      className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 group-data-loading:skeleton hover:bg-stone-100 disabled:hover:bg-transparent'
+                      className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 group-data-loading:skeleton hover:bg-stone-200 disabled:hover:bg-transparent active:bg-stone-200'
                     >
                       <p className='ml-3'>
                         {selectedQauntity === 0 ? (
