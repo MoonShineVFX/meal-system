@@ -56,7 +56,6 @@ export default function Button(props: {
         damping: 10,
       }}
       disabled={props.isDisabled ?? isBusy ?? false}
-      {...twData({ busy: isBusy })}
       className={twMerge(
         `flex items-center justify-center rounded-2xl indent-[0.1em] tracking-widest focus:outline-none disabled:pointer-events-none`,
         themeColor,
@@ -64,6 +63,7 @@ export default function Button(props: {
       )}
       type={props.type ?? 'button'}
       onClick={props.onClick}
+      {...twData({ busy: isBusy })}
     >
       {content}
     </motion.button>

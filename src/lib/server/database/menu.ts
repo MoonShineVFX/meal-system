@@ -1,4 +1,4 @@
-import { MenuType, OrderStatus, Prisma, PrismaClient } from '@prisma/client'
+import { MenuType, Prisma, PrismaClient } from '@prisma/client'
 
 import { OptionSet, ConvertPrismaJson } from '@/lib/common'
 import {
@@ -173,9 +173,7 @@ export async function getMenuWithComs({
               orderItems: {
                 where: {
                   order: {
-                    status: {
-                      not: OrderStatus.CANCELED,
-                    },
+                    timeCanceled: null,
                   },
                 },
                 select: {

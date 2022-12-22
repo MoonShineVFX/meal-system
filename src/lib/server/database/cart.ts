@@ -47,7 +47,10 @@ export async function validateCartItemCreatable({
 
   // Validate options
   const comOptionSets = com.commodity.optionSets
-  await validateCartOptions({ options, truthOptionSets: comOptionSets })
+  return await validateAndSortCartOptions({
+    options,
+    truthOptionSets: comOptionSets,
+  })
 }
 
 /* Create CartItem */
@@ -63,7 +66,7 @@ export async function createCartItem(args: CreateCartItemArgs) {
   const optionsKey = generateOptionsKey(options)
 
   return await prisma.$transaction(async (client) => {
-    await validateCartItemCreatable({ ...args, client })
+    const sortedOptions = await validateCartItemCreatable({ ...args, client })
 
     return await client.cartItem.upsert({
       where: {
@@ -83,7 +86,7 @@ export async function createCartItem(args: CreateCartItemArgs) {
         menuId,
         commodityId,
         optionsKey,
-        options,
+        options: sortedOptions,
         quantity,
       },
     })
@@ -113,7 +116,7 @@ export async function updateCartItem(
       },
     })
 
-    await validateCartItemCreatable({ ...args, client })
+    const sortedOptions = await validateCartItemCreatable({ ...args, client })
 
     // Check cart item exists and valid, for quantity increment or replacement
     const cartItem = await client.cartItem.findUnique({
@@ -154,8 +157,8 @@ export async function updateCartItem(
         menuId,
         commodityId,
         optionsKey: currentOptionsKey,
-        quantity: quantity,
-        options,
+        quantity,
+        options: sortedOptions,
       },
     })
   })
@@ -239,7 +242,7 @@ export async function getCartItemsBase({
     // validate options
     const comOptionSets = cartItem.commodityOnMenu.commodity.optionSets
     try {
-      await validateCartOptions({
+      await validateAndSortCartOptions({
         options: cartItem.options,
         truthOptionSets: comOptionSets,
       })
@@ -501,13 +504,25 @@ export async function deleteCartItems({
 }
 
 /* Valid Cart Options */
-async function validateCartOptions({
+async function validateAndSortCartOptions({
   options,
   truthOptionSets,
 }: {
   options: OrderOptions
   truthOptionSets: OptionSet[]
 }) {
+  // Check same keys
+  const optionsKeys = Object.keys(options)
+  const truthOptionSetsKeys = truthOptionSets.map((optionSet) => optionSet.name)
+  const uniqueKeys = new Set([...optionsKeys, ...truthOptionSetsKeys])
+  const hasSameKeys = uniqueKeys.size === optionsKeys.length
+
+  if (!hasSameKeys) {
+    throw new Error(
+      `選項不同: options: ${optionsKeys}, truth: ${truthOptionSetsKeys}`,
+    )
+  }
+
   // Validate options
   for (const [optionName, optionValue] of Object.entries(options)) {
     const matchedTruthOptionSet = truthOptionSets.find(
@@ -537,4 +552,44 @@ async function validateCartOptions({
       }
     }
   }
+
+  // Sort and valid options
+  const sortedOptions: OrderOptions = {}
+  const sortedTruthOptionSets = truthOptionSets.sort(
+    (a, b) => a.order - b.order,
+  )
+
+  for (const truthOptionSet of sortedTruthOptionSets) {
+    const optionValue = options[truthOptionSet.name]
+
+    // Multi select
+    if (truthOptionSet.multiSelect) {
+      if (!Array.isArray(optionValue)) {
+        throw new Error(`選項不是多選: ${truthOptionSet.name}`)
+      }
+      if (
+        !optionValue.every((value) => truthOptionSet.options.includes(value))
+      ) {
+        throw new Error(`找不到選項: ${truthOptionSet.name} - ${optionValue}`)
+      }
+
+      const sortedOptionValue = optionValue.sort(
+        (a, b) =>
+          truthOptionSet.options.indexOf(a) - truthOptionSet.options.indexOf(b),
+      )
+      sortedOptions[truthOptionSet.name] = sortedOptionValue
+      // Single select
+    } else {
+      if (Array.isArray(optionValue)) {
+        throw new Error(`選項不是單選: ${truthOptionSet.name}`)
+      }
+      if (!truthOptionSet.options.includes(optionValue)) {
+        throw new Error(`找不到選項: ${truthOptionSet.name} - ${optionValue}`)
+      }
+
+      sortedOptions[truthOptionSet.name] = optionValue
+    }
+  }
+
+  return sortedOptions
 }

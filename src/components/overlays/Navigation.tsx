@@ -78,7 +78,7 @@ function ProfileButton(props: { className?: string }) {
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`} as='ul'>
-      <Popover.Button className='flex w-full items-center focus:outline-none sm:rounded-2xl sm:p-2 sm:ui-open:bg-stone-200 sm:hover:bg-stone-200 sm:active:bg-stone-200'>
+      <Popover.Button className='flex w-full items-center focus:outline-none active:scale-90 sm:rounded-2xl sm:p-2 sm:ui-open:bg-stone-200 sm:hover:bg-stone-200 sm:active:scale-95 sm:active:bg-stone-200'>
         {/* Profile Image */}
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
           <div className='relative h-8 w-8 overflow-hidden rounded-full border border-stone-300 ring-0 ring-yellow-500 ui-open:ring-2 hover:ring-2 active:ring-2 sm:h-12 sm:w-12 sm:ui-open:ring-0 sm:hover:ring-0 sm:active:ring-0'>
@@ -159,7 +159,6 @@ function NavButton(props: {
   return (
     <ul className={twMerge('sm:w-full', props.className)}>
       <Link
-        {...twData({ selected: isSelected })}
         className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
         href={{
           pathname: isShallow ? router.pathname : props.path,
@@ -168,6 +167,7 @@ function NavButton(props: {
             : undefined,
         }}
         shallow={props.path.includes('?')}
+        {...twData({ selected: isSelected })}
       >
         {/* Mobile icon */}
         <NavIcon
@@ -177,7 +177,7 @@ function NavButton(props: {
           cartBadge={isCart}
         />
         {/* Desktop label */}
-        <div className='relative hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:bg-stone-200 sm:flex'>
+        <div className='group-data-not-selected:active: relative hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:scale-95 sm:flex'>
           {isSelected && (
             <motion.div
               layoutId='nav-selected'
@@ -211,8 +211,8 @@ function NavIcon(props: {
   const Icon = props.isSelected ? props.icons[1] : props.icons[0]
   return (
     <div
+      className={`group flex items-center rounded-full p-3 hover:bg-stone-200 active:bg-stone-200 ${props.className} relative active:scale-90`}
       {...twData({ selected: props.isSelected })}
-      className={`group flex items-center rounded-full p-3 hover:bg-stone-200 active:bg-stone-200 ${props.className} relative`}
     >
       <div className='absolute top-1 right-1'>
         {props.cartBadge && <CartBadge />}

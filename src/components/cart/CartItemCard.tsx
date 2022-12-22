@@ -192,14 +192,14 @@ function CartItemCard(props: {
         >
           <div
             ref={coreRef}
+            className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6 @2xl/cart:py-6 hover:bg-stone-50'
             {...twData({
               available: !cartItem.invalid && !isLoading && !props.isDisabled,
               loading: isSkeleton,
             })}
-            className='group/card dividy-y flex w-full gap-4 border-b border-stone-200 py-4 last:border-none data-not-available:pointer-events-none data-not-available:opacity-75 @2xl/cart:gap-6 hover:bg-stone-50'
           >
             {/* Image */}
-            <section className='h-min w-full max-w-[5rem] shrink-0 p-1 @2xl/cart:max-w-[7rem] @2xl/cart:p-2'>
+            <section className='h-min w-full max-w-[4rem] shrink-0 @2xl/cart:max-w-[6rem]'>
               <div className='relative aspect-square overflow-hidden rounded-full bg-stone-400 group-data-loading:skeleton'>
                 <Image
                   style={{ WebkitTouchCallout: 'none' }}
@@ -208,7 +208,7 @@ function CartItemCard(props: {
                     cartItem.commodityOnMenu.commodity.image?.path ??
                     settings.RESOURCE_FOOD_PLACEHOLDER
                   }
-                  sizes='(max-width: 375px) 100vw, (max-width: 750px) 75vw, 640px'
+                  sizes='(max-width: 1024px) 640px, 1280px'
                   alt={
                     cartItem.commodityOnMenu.commodity.name ??
                     'food placeholder'
@@ -226,7 +226,7 @@ function CartItemCard(props: {
                 {/* Options */}
                 {Object.keys(cartItem.options).length > 0 && (
                   <div
-                    className='group/options -m-1 flex w-fit cursor-pointer items-center gap-2 rounded-md p-1'
+                    className='group/options -m-1 flex w-fit cursor-pointer items-center gap-2 rounded-md p-1 active:scale-95'
                     onClick={handleOptionsClick}
                   >
                     <div className='flex flex-col gap-0.5 @2xl/cart:gap-1'>
@@ -239,7 +239,6 @@ function CartItemCard(props: {
                               (option) => option.name === optionName,
                             )?.order ?? Infinity,
                         }))
-                        .sort((a, b) => a.order - b.order)
                         .flatMap((option) =>
                           Array.isArray(option.optionValue)
                             ? option.optionValue
@@ -270,7 +269,7 @@ function CartItemCard(props: {
                   >
                     <Listbox.Button
                       id={`reference-${cartItemId}`}
-                      className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 group-data-loading:skeleton hover:bg-stone-200 disabled:hover:bg-transparent active:bg-stone-200'
+                      className='relative flex w-[5.5ch] items-center justify-start rounded-2xl border border-stone-200 py-1 group-data-loading:skeleton hover:bg-stone-200 disabled:hover:bg-transparent active:scale-95 active:bg-stone-200'
                     >
                       <p className='ml-3'>
                         {selectedQauntity === 0 ? (
@@ -304,15 +303,15 @@ function CartItemCard(props: {
                                     <Listbox.Option
                                       value={quantity + 1}
                                       key={quantity}
-                                      {...twData({
-                                        selected:
-                                          quantity + 1 === cartItem.quantity,
-                                      })}
                                       className={twMerge(
                                         'cursor-pointer rounded-xl px-1 py-1 text-center data-selected:bg-stone-100 hover:bg-stone-100 active:bg-stone-100',
                                         quantity === -1 &&
                                           'text-sm text-red-400',
                                       )}
+                                      {...twData({
+                                        selected:
+                                          quantity + 1 === cartItem.quantity,
+                                      })}
                                     >
                                       {quantity + 1}
                                     </Listbox.Option>

@@ -6,6 +6,7 @@ import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
 import { twData } from '@/lib/common'
 import Error from '@/components/core/Error'
+import { useRouter } from 'next/router'
 
 export function Checkout(props: {
   className?: string
@@ -18,10 +19,19 @@ export function Checkout(props: {
     isError: userIsError,
     error: userError,
   } = trpc.user.get.useQuery(undefined)
+  const router = useRouter()
   const createOrderMutation = trpc.order.add.useMutation()
 
   const handleCheckout = () => {
-    createOrderMutation.mutate()
+    createOrderMutation.mutate(undefined, {
+      onSuccess: (orders) => {
+        let query = ''
+        if (orders.length > 0) {
+          query = `?orderId=${orders[0].id}`
+        }
+        router.push('/order' + query)
+      },
+    })
   }
 
   if (userIsError) return <Error description={userError.message} />
@@ -35,11 +45,11 @@ export function Checkout(props: {
 
   return (
     <div
-      {...twData({ loading: props.isLoading || userIsLoading })}
       className={twMerge(
         'group sticky top-0 flex h-min flex-col gap-4 rounded-2xl bg-stone-100 p-6 @container/checkout',
         props.className,
       )}
+      {...twData({ loading: props.isLoading || userIsLoading })}
     >
       <header className='flex justify-between'>
         <h2 className='rounded-xl text-lg font-bold tracking-widest group-data-loading:skeleton'>

@@ -122,18 +122,14 @@ model EthWallet {
 }
 
 // Order
-enum OrderStatus {
-  PENDING
-  COMPLETED
-  CANCELED
-}
-
 model Order {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  status OrderStatus @default(PENDING)
+  timePreparing DateTime?
+  timeCompleted DateTime?
+  timeClosed    DateTime?
+  timeCanceled  DateTime?
 
   user         User          @relation(fields: [userId], references: [id])
   userId       String
@@ -142,7 +138,7 @@ model Order {
   items        OrderItem[]
   transactions Transaction[]
 
-  @@index([userId, menuId, status, createdAt(sort: Desc)])
+  @@index([userId, menuId, timePreparing(sort: Desc), createdAt(sort: Desc)])
 }
 
 model OrderItem {

@@ -6,6 +6,8 @@ export type ConvertPrismaJson<T extends object> = {
     ? OptionSet[]
     : key extends 'options'
     ? OrderOptions
+    : T[key] extends Date
+    ? Date
     : T[key] extends object
     ? ConvertPrismaJson<T[key]>
     : T[key]
