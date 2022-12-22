@@ -523,36 +523,6 @@ async function validateAndSortCartOptions({
     )
   }
 
-  // Validate options
-  for (const [optionName, optionValue] of Object.entries(options)) {
-    const matchedTruthOptionSet = truthOptionSets.find(
-      (optionSet) => optionSet.name === optionName,
-    )
-    if (!matchedTruthOptionSet) {
-      throw new Error(`找不到選項: ${optionName}`)
-    }
-
-    if (Array.isArray(optionValue)) {
-      if (!matchedTruthOptionSet.multiSelect) {
-        throw new Error(`選項不是多選: ${optionName}`)
-      }
-      if (
-        !optionValue.every((value) =>
-          matchedTruthOptionSet.options.includes(value),
-        )
-      ) {
-        throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
-      }
-    } else {
-      if (matchedTruthOptionSet.multiSelect) {
-        throw new Error(`選項不是單選: ${optionName}`)
-      }
-      if (!matchedTruthOptionSet.options.includes(optionValue)) {
-        throw new Error(`找不到選項: ${optionName} - ${optionValue}`)
-      }
-    }
-  }
-
   // Sort and valid options
   const sortedOptions: OrderOptions = {}
   const sortedTruthOptionSets = truthOptionSets.sort(
