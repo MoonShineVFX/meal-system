@@ -139,6 +139,7 @@ model Order {
   transactions Transaction[]
 
   @@index([userId, menuId, timePreparing(sort: Desc), createdAt(sort: Desc)])
+  @@index([menuId, timeClosed, timeCanceled, createdAt(sort: Desc)])
 }
 
 model OrderItem {

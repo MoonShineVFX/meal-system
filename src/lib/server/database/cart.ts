@@ -89,6 +89,17 @@ export async function createCartItem(args: CreateCartItemArgs) {
         options: sortedOptions,
         quantity,
       },
+      select: {
+        commodityOnMenu: {
+          select: {
+            commodity: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     })
   })
 }
@@ -159,6 +170,17 @@ export async function updateCartItem(
         optionsKey: currentOptionsKey,
         quantity,
         options: sortedOptions,
+      },
+      select: {
+        commodityOnMenu: {
+          select: {
+            commodity: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
       },
     })
   })

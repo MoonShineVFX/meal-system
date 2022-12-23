@@ -26,7 +26,7 @@ export default function PageIndex() {
         {/* Menu */}
         <Menu className='grow basis-1/2' type={MenuType.MAIN} />
         {/* Cart */}
-        <section className='hidden max-w-2xl grow basis-1/5 border-l border-stone-100 xl:block'>
+        <section className='relative z-[1] hidden max-w-2xl grow basis-1/5 border-l border-stone-100 shadow-lg xl:block'>
           {matches && firstRendered && <DynamicCart />}
         </section>
       </div>

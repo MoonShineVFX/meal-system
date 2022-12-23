@@ -5,7 +5,9 @@ export default function CartPage() {
   return (
     <>
       <Title prefix='購物車' />
-      <Cart />
+      <div className='h-full w-full bg-stone-50'>
+        <Cart />
+      </div>
     </>
   )
 }

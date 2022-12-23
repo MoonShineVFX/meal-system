@@ -8,8 +8,8 @@ import {
   getUserInfo,
   validateUserPassword,
 } from '@/lib/server/database'
-import { settings, generateCookie, SERVER_NOTIFY } from '@/lib/common'
-import { ServerEventName, eventEmitter } from '@/lib/server/event'
+import { settings, generateCookie, ServerNotifyPayload } from '@/lib/common'
+import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 import { userProcedure, publicProcedure, router } from '../trpc'
 
@@ -37,15 +37,24 @@ export const UserRouter = router({
     return user
   }),
   onNotify: userProcedure.subscription(async ({ ctx }) => {
-    return observable<SERVER_NOTIFY>((observer) => {
-      const listener = (eventMessage: SERVER_NOTIFY) => {
-        observer.next(eventMessage)
+    return observable<ServerNotifyPayload>((observer) => {
+      const listener = (notifyPayload: ServerNotifyPayload) => {
+        observer.next(notifyPayload)
       }
 
-      const eventName = ServerEventName.USER_NOTIFY(ctx.userLite.id)
-      eventEmitter.on(eventName, listener)
+      const channelNames: string[] = []
+      channelNames.push(ServerChannelName.USER_NOTIFY(ctx.userLite.id))
+      if (ctx.userLite.role === 'STAFF' || ctx.userLite.role === 'ADMIN') {
+        channelNames.push(ServerChannelName.STAFF_NOTIFY)
+      }
+
+      for (const channelName of channelNames) {
+        eventEmitter.on(channelName, listener)
+      }
       return () => {
-        eventEmitter.off(eventName, listener)
+        for (const channelName of channelNames) {
+          eventEmitter.off(channelName, listener)
+        }
       }
     })
   }),

@@ -70,13 +70,13 @@ export default function EventListener() {
 
   /* Server Notification */
   trpc.user.onNotify.useSubscription(undefined, {
-    onData: async (message) => {
+    onData: async (notifyPayload) => {
       addNotification({
         type: NotificationType.SUCCESS,
-        message: message,
+        message: notifyPayload.message ?? notifyPayload.type,
       })
 
-      switch (message) {
+      switch (notifyPayload.type) {
         case SERVER_NOTIFY.CART_ADD:
         case SERVER_NOTIFY.CART_DELETE:
         case SERVER_NOTIFY.CART_UPDATE:
@@ -87,6 +87,13 @@ export default function EventListener() {
           trpcContext.menu.get.invalidate()
           trpcContext.cart.get.invalidate()
           trpcContext.user.get.invalidate()
+          break
+        case SERVER_NOTIFY.ORDER_UPDATE:
+          trpcContext.order.get.invalidate()
+          trpcContext.pos.get.invalidate()
+          break
+        case SERVER_NOTIFY.POS_ADD:
+          trpcContext.pos.get.invalidate()
           break
       }
     },

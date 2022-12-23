@@ -7,7 +7,7 @@ import {
   getCartItems,
   deleteCartItems,
 } from '@/lib/server/database'
-import { ServerEventName, eventEmitter } from '@/lib/server/event'
+import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 
 export const CartRouter = router({
@@ -21,7 +21,7 @@ export const CartRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await createCartItem({
+      const cartItem = await createCartItem({
         userId: ctx.userLite.id,
         menuId: input.menuId,
         commodityId: input.commodityId,
@@ -29,10 +29,10 @@ export const CartRouter = router({
         options: input.options,
       })
 
-      eventEmitter.emit(
-        ServerEventName.USER_NOTIFY(ctx.userLite.id),
-        SERVER_NOTIFY.CART_ADD,
-      )
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.CART_ADD,
+        message: `新增 ${cartItem.commodityOnMenu.commodity.name} 至購物車`,
+      })
     }),
   get: userProcedure.query(async ({ ctx }) => {
     return await getCartItems(ctx.userLite.id)
@@ -48,7 +48,7 @@ export const CartRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await updateCartItem({
+      const cartItem = await updateCartItem({
         userId: ctx.userLite.id,
         menuId: input.menuId,
         commodityId: input.commodityId,
@@ -57,10 +57,10 @@ export const CartRouter = router({
         previousOptionsKey: input.optionsKey,
       })
 
-      eventEmitter.emit(
-        ServerEventName.USER_NOTIFY(ctx.userLite.id),
-        SERVER_NOTIFY.CART_UPDATE,
-      )
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.CART_UPDATE,
+        message: `購物車的 ${cartItem.commodityOnMenu.commodity.name} 已經更新`,
+      })
     }),
   delete: userProcedure
     .input(
@@ -83,9 +83,8 @@ export const CartRouter = router({
           ? { ids: input.ids }
           : { invalidOnly: input.invalidOnly }
       await deleteCartItems({ userId: ctx.userLite.id, ...deleteArgs })
-      eventEmitter.emit(
-        ServerEventName.USER_NOTIFY(ctx.userLite.id),
-        SERVER_NOTIFY.CART_DELETE,
-      )
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.CART_DELETE,
+      })
     }),
 })

@@ -170,7 +170,7 @@ export default function OrderCard(props: { order: OrderDatas[0] }) {
         </div>
       </section>
       {isCancel && (
-        <div className='pointer-events-none absolute inset-0 bg-white/25 backdrop-grayscale'></div>
+        <div className='pointer-events-none absolute inset-0 bg-white/40 backdrop-grayscale'></div>
       )}
     </div>
   )

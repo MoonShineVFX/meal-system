@@ -22,8 +22,6 @@ export default function Tooltip(props: {
 
   if (props.disabled) return props.children
 
-  console.log(styles.popper)
-
   return (
     <>
       {React.cloneElement(props.children, {

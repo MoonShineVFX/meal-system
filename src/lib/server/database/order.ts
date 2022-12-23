@@ -1,4 +1,4 @@
-import { Prisma, Order } from '@prisma/client'
+import { Prisma, Order, MenuType } from '@prisma/client'
 
 import { ConvertPrismaJson } from '@/lib/common'
 import { getCartItemsBase } from './cart'
@@ -42,7 +42,14 @@ export async function createOrder({ userId }: { userId: string }) {
     )
 
     // Create orders
-    let orders: Order[] = []
+    let orders: {
+      user: {
+        name: string
+      }
+      menu: {
+        type: MenuType
+      }
+    }[] = []
     for (const [menuId, orderItems] of orderItemCreates) {
       const order = await client.order.create({
         data: {
@@ -56,6 +63,18 @@ export async function createOrder({ userId }: { userId: string }) {
             },
           },
           menuId: menuId,
+        },
+        select: {
+          menu: {
+            select: {
+              type: true,
+            },
+          },
+          user: {
+            select: {
+              name: true,
+            },
+          },
         },
       })
       orders.push(order)
@@ -111,4 +130,65 @@ export async function getOrders({ userId }: { userId: string }) {
   })
 
   return rawOrders as ConvertPrismaJson<typeof rawOrders>
+}
+
+export async function getOrdersForPOS() {
+  const rawPOSOrders = await prisma.order.findMany({
+    where: {
+      menu: {
+        type: 'MAIN',
+      },
+      timeCanceled: null,
+      timeClosed: null,
+    },
+    include: {
+      items: {
+        include: {
+          image: {
+            select: {
+              id: true,
+              path: true,
+            },
+          },
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          profileImage: {
+            select: {
+              id: true,
+              path: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  })
+
+  return rawPOSOrders as ConvertPrismaJson<typeof rawPOSOrders>
+}
+
+export async function updateOrderStatus({
+  orderId,
+  status,
+}: {
+  orderId: number
+  status: Extract<
+    keyof Order,
+    'timePreparing' | 'timeCanceled' | 'timeClosed' | 'timeCompleted'
+  >
+}) {
+  return await prisma.order.update({
+    where: {
+      id: orderId,
+    },
+    data: {
+      [status]: new Date(),
+    },
+  })
 }

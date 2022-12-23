@@ -13,11 +13,18 @@ export type ConvertPrismaJson<T extends object> = {
     : T[key]
 }
 
+export type ServerNotifyPayload = {
+  type: SERVER_NOTIFY
+  message?: string
+}
+
 export enum SERVER_NOTIFY {
   CART_ADD = '加入餐點至購物車',
   CART_DELETE = '移除購物車餐點',
   CART_UPDATE = '修改購物車餐點',
   ORDER_ADD = '結帳完成',
+  ORDER_UPDATE = '訂單狀態更新',
+  POS_ADD = '',
 }
 
 export enum CurrencyType {

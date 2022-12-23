@@ -13,6 +13,8 @@ import { WalletIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { ShoppingCartIcon as ShoppingCartIconSolid } from '@heroicons/react/24/solid'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
+import { SquaresPlusIcon as SquaresPlusIconSolid } from '@heroicons/react/24/solid'
+import { SquaresPlusIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
 import { motion, useAnimationControls } from 'framer-motion'
 
@@ -26,12 +28,21 @@ import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
 
 function Navigation() {
+  const { data } = trpc.user.get.useQuery(undefined)
   return (
     <ul className='relative z-40 flex h-full items-center justify-evenly bg-white shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
       {/* LOGO */}
       <li className='-order-2 hidden pl-2 sm:block'>
         <Logo className='h-8 w-auto text-yellow-500' />
       </li>
+      {data && ['ADMIN', 'STAFF'].includes(data.role) && (
+        <NavButton
+          className='hidden sm:block'
+          path='/pos'
+          label='處理訂單'
+          icons={[SquaresPlusIcon, SquaresPlusIconSolid]}
+        />
+      )}
       <NavButton path='/' label='點餐' icons={[HomeIcon, HomeIconSolid]} />
       <NavButton
         label='預訂 / 下午茶'
@@ -81,7 +92,7 @@ function ProfileButton(props: { className?: string }) {
       <Popover.Button className='flex w-full items-center focus:outline-none active:scale-90 sm:rounded-2xl sm:p-2 sm:ui-open:bg-stone-200 sm:hover:bg-stone-200 sm:active:scale-95 sm:active:bg-stone-200'>
         {/* Profile Image */}
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
-          <div className='relative h-8 w-8 overflow-hidden rounded-full border border-stone-300 ring-0 ring-yellow-500 ui-open:ring-2 hover:ring-2 active:ring-2 sm:h-12 sm:w-12 sm:ui-open:ring-0 sm:hover:ring-0 sm:active:ring-0'>
+          <div className='relative h-8 w-8 overflow-hidden rounded-full ring-0 ring-yellow-500 ui-open:ring-2 hover:ring-2 active:ring-2 sm:h-12 sm:w-12 sm:ui-open:ring-0 sm:hover:ring-0 sm:active:ring-0'>
             <Image
               alt='profile'
               src={
@@ -111,6 +122,15 @@ function ProfileButton(props: { className?: string }) {
         leaveTo='transform scale-50 opacity-0'
       >
         <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border border-stone-200 bg-white py-3 px-2 tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
+          {user && ['ADMIN', 'STAFF'].includes(user.role) && (
+            <Popover.Button
+              as={Link}
+              href='/pos'
+              className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+            >
+              處理訂單
+            </Popover.Button>
+          )}
           <Popover.Button
             as={Link}
             href='/transaction'

@@ -1,15 +1,23 @@
 import { EventEmitter } from 'events'
 
-export const ServerEventName = {
+import { ServerNotifyPayload } from '@/lib/common'
+
+type ServerEventEmitter = Omit<EventEmitter, 'emit'> & {
+  emit: (event: string, payload: ServerNotifyPayload) => boolean
+}
+
+export const ServerChannelName = {
   USER_NOTIFY: (userId: string) => `user-message-${userId}`,
+  STAFF_NOTIFY: 'staff-message',
 }
 
 /* Global */
 declare global {
-  var eventEmitter: EventEmitter | undefined
+  var eventEmitter: ServerEventEmitter | undefined
 }
 
-export const eventEmitter = global.eventEmitter ?? new EventEmitter()
+export const eventEmitter: ServerEventEmitter =
+  global.eventEmitter ?? new EventEmitter()
 
 if (process.env.NODE_ENV !== 'production') {
   global.eventEmitter = eventEmitter
