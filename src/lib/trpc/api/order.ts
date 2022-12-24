@@ -16,7 +16,7 @@ export const OrderRouter = router({
       if (order.menu.type === 'MAIN') {
         eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
           type: SERVER_NOTIFY.POS_ADD,
-          message: `${order.user.name} 新增了訂單`,
+          message: `${order.user.name} 新增了一筆訂單`,
         })
       }
     }

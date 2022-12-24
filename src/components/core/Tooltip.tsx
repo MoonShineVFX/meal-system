@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useFloating, offset, flip, shift, arrow } from '@floating-ui/react-dom'
 import { twMerge } from 'tailwind-merge'
+import { motion } from 'framer-motion'
 
 export default function Tooltip(props: {
   className?: string
@@ -50,7 +51,10 @@ export default function Tooltip(props: {
         ),
       })}
       {isHover && (
-        <div
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.2, type: 'spring' }}
           className={twMerge(
             'pointer-events-none z-10 rounded-2xl border border-stone-200 bg-white p-4 drop-shadow-lg',
             props.className,
@@ -74,7 +78,7 @@ export default function Tooltip(props: {
             }}
             className='absolute h-4 w-4 bg-white'
           />
-        </div>
+        </motion.div>
       )}
     </>
   )

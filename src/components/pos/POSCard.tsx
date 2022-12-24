@@ -1,23 +1,44 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { motion, AnimatePresence } from 'framer-motion'
+import { XMarkIcon } from '@heroicons/react/24/outline'
+import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
 
 import Spinner from '@/components/core/Spinner'
 import Image from '@/components/core/Image'
 import trpc, { POSDatas } from '@/lib/client/trpc'
 import { settings } from '@/lib/common'
 
-const STATUS_NAME = ['已付款', '製作中', '已出餐', '完成']
+const STATUS_NAME_TEXT = ['已付款', '製作中', '已出餐', '完成', '取消中']
+const STATUS_BUTTON_TEXT = ['製作', '出餐', '完成', '', '取消']
+const STATUS_BACKGROUND_COLOR = [
+  '',
+  'bg-yellow-400',
+  'bg-green-400',
+  'bg-stone-100',
+  'bg-red-200',
+]
 
 export default function POSCard(props: { order: POSDatas[0] }) {
   const { order } = props
   const updateOrderMutation = trpc.pos.update.useMutation()
-  const step = useMemo(() => {
-    if (order.timeClosed !== null) return 3
-    if (order.timeCompleted !== null) return 2
-    if (order.timePreparing !== null) return 1
-    return 0
-  }, [order])
+  const [isCanceling, setIsCanceling] = useState(false)
+  const { step, date } = useMemo(() => {
+    let result: { step: number; date: Date } | undefined = undefined
+
+    if (order.timeClosed !== null) {
+      result = { step: 3, date: order.timeClosed }
+    } else if (order.timeCompleted !== null) {
+      result = { step: 2, date: order.timeCompleted }
+    } else if (order.timePreparing !== null) {
+      result = { step: 1, date: order.timePreparing }
+    } else {
+      result = { step: 0, date: order.createdAt }
+    }
+
+    if (isCanceling) result.step = 4
+    return result
+  }, [order, isCanceling])
 
   const handleStepClick = useCallback(() => {
     switch (step) {
@@ -36,6 +57,11 @@ export default function POSCard(props: { order: POSDatas[0] }) {
       case 2:
         updateOrderMutation.mutate({ orderId: order.id, status: 'timeClosed' })
         break
+      case 4:
+        updateOrderMutation.mutate({
+          orderId: order.id,
+          status: 'timeCanceled',
+        })
       default:
         break
     }
@@ -52,14 +78,28 @@ export default function POSCard(props: { order: POSDatas[0] }) {
     >
       {/* Background */}
       <AnimatePresence initial={false}>
-        {step === 1 && <POSBackground key='1' className='bg-yellow-400' />}
-        {step === 2 && <POSBackground key='2' className='bg-green-400' />}
-        {step === 3 && <POSBackground key='3' className='bg-stone-100' />}
+        {step !== 0 && (
+          <POSBackground key={step} className={STATUS_BACKGROUND_COLOR[step]} />
+        )}
       </AnimatePresence>
       {/* Header */}
-      <section className='flex flex-col'>
+      <section className='flex flex-col gap-4'>
         <div className='flex items-center justify-between'>
           <h1 className='font-bold'>#{order.id}</h1>
+          {/* Cancel Button */}
+          <button
+            className='-m-2 rounded-full p-2 hover:bg-stone-600/10 active:scale-90 active:bg-stone-600/10'
+            onClick={() => setIsCanceling((prev) => !prev)}
+          >
+            {isCanceling ? (
+              <ArrowUturnLeftIcon className='h-6 w-6 text-stone-600/60' />
+            ) : (
+              <XMarkIcon className='h-6 w-6 text-stone-600/60' />
+            )}
+          </button>
+        </div>
+        {/* Metadata */}
+        <div className='flex justify-between'>
           {/* User */}
           <div className='flex items-center gap-2'>
             <div className='relative h-6 w-6 overflow-hidden rounded-full'>
@@ -77,25 +117,25 @@ export default function POSCard(props: { order: POSDatas[0] }) {
               {order.user.name}
             </h2>
           </div>
-        </div>
-        {/* Status */}
-        <div className='flex flex-col'>
-          <AnimatePresence initial={false} mode='popLayout'>
-            <motion.p
-              initial={{ opacity: 0, y: -16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 16 }}
-              transition={{ duration: 0.3, type: 'spring', bounce: 0.75 }}
-              className='font-bold tracking-wider text-stone-600/60'
-              key={STATUS_NAME[step]}
-              layout
-            >
-              {STATUS_NAME[step]}
-            </motion.p>
-          </AnimatePresence>
-          <p className='font-mono text-xs tracking-wider text-stone-500/50'>
-            {order.createdAt.toLocaleString('zh-TW')}
-          </p>
+          {/* Status */}
+          <div className='flex flex-col'>
+            <AnimatePresence initial={false} mode='popLayout'>
+              <motion.p
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 16 }}
+                transition={{ duration: 0.3, type: 'spring', bounce: 0.75 }}
+                className='text-right text-sm font-bold tracking-wider text-stone-600/60'
+                key={STATUS_NAME_TEXT[step]}
+                layout
+              >
+                {STATUS_NAME_TEXT[step]}
+              </motion.p>
+            </AnimatePresence>
+            <p className='font-mono text-[0.6rem] tracking-wider text-stone-500/50'>
+              {date.toLocaleTimeString('zh-TW')}
+            </p>
+          </div>
         </div>
       </section>
       {/* Items */}
@@ -124,36 +164,13 @@ export default function POSCard(props: { order: POSDatas[0] }) {
       {/* Steps Button */}
       <section className='relative -z-10 flex h-16'>
         <AnimatePresence initial={false}>
-          {step === 0 && (
-            <POSButton
-              key='0'
-              label='製作'
-              step={0}
-              currentStep={step}
-              onClick={handleStepClick}
-              isLoading={updateOrderMutation.isLoading}
-            />
-          )}
-          {step === 1 && (
-            <POSButton
-              key='1'
-              label='出餐'
-              step={1}
-              currentStep={step}
-              onClick={handleStepClick}
-              isLoading={updateOrderMutation.isLoading}
-            />
-          )}
-          {step === 2 && (
-            <POSButton
-              key='2'
-              label='完成'
-              step={2}
-              currentStep={step}
-              onClick={handleStepClick}
-              isLoading={updateOrderMutation.isLoading}
-            />
-          )}
+          <POSButton
+            key={step}
+            label={STATUS_BUTTON_TEXT[step]}
+            step={step}
+            onClick={handleStepClick}
+            isLoading={updateOrderMutation.isLoading}
+          />
         </AnimatePresence>
       </section>
     </motion.div>
@@ -183,7 +200,6 @@ function POSButton(props: {
   onClick: () => void
   isLoading?: boolean
   step: number
-  currentStep: number
 }) {
   return (
     <div
@@ -212,13 +228,21 @@ function POSButton(props: {
               'bg-green-400 hover:bg-green-300 active:bg-green-300',
             props.step === 2 &&
               'bg-stone-100 hover:bg-stone-50 active:bg-stone-50',
+            props.step === 4 && 'bg-red-400 hover:bg-red-300 active:bg-red-300',
           )}
         ></div>
         {/* Label */}
         {props.isLoading ? (
           <Spinner className='h-7 w-7' />
         ) : (
-          <p className='text-lg font-bold'>{props.label}</p>
+          <p
+            className={twMerge(
+              'indent-[0.05em] text-lg font-bold tracking-wider',
+              props.step === 4 && 'text-white',
+            )}
+          >
+            {props.label}
+          </p>
         )}
       </motion.button>
     </div>

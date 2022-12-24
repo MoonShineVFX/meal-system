@@ -44,5 +44,9 @@ export const POSRouter = router({
         type: SERVER_NOTIFY.ORDER_UPDATE,
         message,
       })
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.POS_UPDATE,
+        skipNotify: true,
+      })
     }),
 })

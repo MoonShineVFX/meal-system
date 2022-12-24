@@ -16,6 +16,7 @@ export type ConvertPrismaJson<T extends object> = {
 export type ServerNotifyPayload = {
   type: SERVER_NOTIFY
   message?: string
+  skipNotify?: boolean
 }
 
 export enum SERVER_NOTIFY {
@@ -25,6 +26,7 @@ export enum SERVER_NOTIFY {
   ORDER_ADD = '結帳完成',
   ORDER_UPDATE = '訂單狀態更新',
   POS_ADD = '',
+  POS_UPDATE = '',
 }
 
 export enum CurrencyType {
