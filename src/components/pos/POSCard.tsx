@@ -51,7 +51,7 @@ export default function POSCard(props: { order: POSDatas[0] }) {
       className='relative flex h-max flex-col gap-4 overflow-hidden rounded-2xl border bg-white p-4 shadow-lg sm:min-h-[26rem] lg:p-6'
     >
       {/* Background */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {step === 1 && <POSBackground key='1' className='bg-yellow-400' />}
         {step === 2 && <POSBackground key='2' className='bg-green-400' />}
         {step === 3 && <POSBackground key='3' className='bg-stone-100' />}

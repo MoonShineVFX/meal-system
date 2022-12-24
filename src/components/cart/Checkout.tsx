@@ -25,11 +25,7 @@ export function Checkout(props: {
   const handleCheckout = () => {
     createOrderMutation.mutate(undefined, {
       onSuccess: (orders) => {
-        let query = ''
-        if (orders.length > 0) {
-          query = `?orderId=${orders[0].id}`
-        }
-        router.push('/order' + query)
+        router.push('/order')
       },
     })
   }
