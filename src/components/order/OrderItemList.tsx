@@ -128,7 +128,7 @@ export default function OrderItemList(props: { orderItems: OrderItems }) {
         )}
       >
         <ChevronLeftIcon
-          className='pointer-events-auto absolute -left-2 top-1/2 h-10 w-10 -translate-y-1/2 cursor-pointer rounded-full p-2 text-stone-400 transition-transform hover:scale-125 hover:bg-stone-200/50 active:scale-95'
+          className='pointer-events-auto absolute left-0 top-1/2 h-10 w-10 -translate-y-1/2 cursor-pointer rounded-full p-2 text-stone-400 transition-transform hover:scale-125 hover:bg-stone-200/40 active:scale-95'
           onClick={() => handleFaderClick('left')}
         />
       </div>
@@ -139,7 +139,7 @@ export default function OrderItemList(props: { orderItems: OrderItems }) {
         )}
       >
         <ChevronRightIcon
-          className='pointer-events-auto absolute -right-2 top-1/2 h-10 w-10 -translate-y-1/2 cursor-pointer rounded-full p-2 text-stone-400 transition-transform hover:scale-125 hover:bg-stone-200/50 active:scale-95'
+          className='pointer-events-auto absolute right-0 top-1/2 h-10 w-10 -translate-y-1/2 cursor-pointer rounded-full p-2 text-stone-400 transition-transform hover:scale-125 hover:bg-stone-200/40 active:scale-95'
           onClick={() => handleFaderClick('right')}
         />
       </div>
