@@ -1,6 +1,5 @@
 import { TwmpResultStatus } from '@prisma/client'
 
-import { CurrencyType } from '@/lib/common'
 import { prisma, log } from './define'
 import { createTwmp, getTwmp } from '@/lib/server/twmp'
 import { rechargeUserBalance, refundUserBalance } from './transaction'
@@ -79,12 +78,11 @@ export async function updateTwmpDeposit(
 
   if (status === TwmpResultStatus.SUCCESS) {
     // Recharge user
-    await rechargeUserBalance(
-      twmpResult.deposit.userId,
-      twmpResult.deposit.transAMT,
-      CurrencyType.CREDIT,
-      txnUID,
-    )
+    await rechargeUserBalance({
+      userId: twmpResult.deposit.userId,
+      creditAmount: twmpResult.deposit.transAMT,
+      twmpResultId: txnUID,
+    })
   } else if (status === TwmpResultStatus.CANCELED) {
     // Refund user
     await refundUserBalance(

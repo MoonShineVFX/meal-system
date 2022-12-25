@@ -2,7 +2,7 @@ import { Prisma, Order, MenuType } from '@prisma/client'
 
 import { ConvertPrismaJson } from '@/lib/common'
 import { getCartItemsBase } from './cart'
-import { chargeUserBalanceBase } from './transaction'
+import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
 
 export async function createOrder({ userId }: { userId: string }) {
@@ -54,9 +54,7 @@ export async function createOrder({ userId }: { userId: string }) {
       const order = await client.order.create({
         data: {
           userId: userId,
-          transactions: {
-            connect: { id: transaction.id },
-          },
+          paymentTransactionId: transaction.id,
           items: {
             createMany: {
               data: orderItems,
@@ -114,13 +112,10 @@ export async function getOrders({ userId }: { userId: string }) {
           },
         },
       },
-      transactions: {
+      paymentTransaction: {
         select: {
-          createdAt: true,
-          type: true,
           pointAmount: true,
           creditAmount: true,
-          ethHashes: true,
         },
       },
     },
@@ -198,12 +193,91 @@ export async function updateOrderStatus({
     'timePreparing' | 'timeCanceled' | 'timeDishedUp' | 'timeCompleted'
   >
 }) {
-  return await prisma.order.update({
-    where: {
-      id: orderId,
-    },
-    data: {
-      [status]: new Date(),
-    },
+  return await prisma.$transaction(async (client) => {
+    const order = await client.order.findUnique({
+      where: { id: orderId },
+    })
+
+    if (!order) {
+      throw new Error('Order not found')
+    }
+
+    if (order[status] !== null) {
+      throw new Error('Order status already updated')
+    }
+
+    const updatedOrder = await client.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        [status]: new Date(),
+      },
+    })
+
+    if (status !== 'timeCanceled') return updatedOrder
+
+    // Refund user balance when canceled
+    const detailedOrder = await client.order.findUnique({
+      where: { id: orderId },
+      select: {
+        items: true,
+        paymentTransaction: {
+          select: {
+            creditAmount: true,
+            pointAmount: true,
+            ordersForPayment: {
+              select: {
+                canceledTransaction: {
+                  select: {
+                    creditAmount: true,
+                    pointAmount: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!detailedOrder) {
+      throw new Error('Transaction not found for refund')
+    }
+    if (!detailedOrder.paymentTransaction) {
+      throw new Error('Payment transaction not found for refund')
+    }
+
+    // Calculate refund amount
+    let creditAmountRemain = detailedOrder.paymentTransaction.creditAmount
+    let pointAmountRemain = detailedOrder.paymentTransaction.pointAmount
+
+    for (const orderForPayment of detailedOrder.paymentTransaction
+      .ordersForPayment) {
+      if (orderForPayment.canceledTransaction) {
+        creditAmountRemain -= orderForPayment.canceledTransaction.creditAmount
+        pointAmountRemain -= orderForPayment.canceledTransaction.pointAmount
+      }
+    }
+
+    const thisOrderPrice = detailedOrder.items.reduce((acc, item) => {
+      return acc + item.price * item.quantity
+    }, 0)
+    const creditAmountToRefund = Math.min(creditAmountRemain, thisOrderPrice)
+    const pointAnountToRefund = Math.min(
+      pointAmountRemain,
+      thisOrderPrice - creditAmountToRefund,
+    )
+
+    // Create refund transaction
+    await rechargeUserBalanceBase({
+      userId: order.userId,
+      pointAmount: pointAnountToRefund,
+      creditAmount: creditAmountToRefund,
+      orderId,
+      client,
+    })
+
+    return updatedOrder
   })
 }

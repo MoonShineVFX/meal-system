@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 import { rechargeUserBalance, getTransactions } from '@/lib/server/database'
-import { settings, validateRole, CurrencyType } from '@/lib/common'
+import { settings, validateRole } from '@/lib/common'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
 
@@ -17,11 +17,10 @@ export const TransactionRouter = router({
     )
     .mutation(async ({ input }) => {
       // Recharge target user
-      await rechargeUserBalance(
-        input.targetUserId,
-        input.amount,
-        CurrencyType.CREDIT,
-      )
+      await rechargeUserBalance({
+        userId: input.targetUserId,
+        creditAmount: input.amount,
+      })
     }),
   // Get transaction records, use until arg to update new records
   getList: userProcedure

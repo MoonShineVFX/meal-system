@@ -1,48 +1,87 @@
 import { UserRole, TransactionType, Prisma, PrismaClient } from '@prisma/client'
 
 import { prisma } from './define'
-import { settings, CurrencyType } from '@/lib/common'
+import { settings } from '@/lib/common'
 import {
   updateBlockchainByMintBurn,
   updateBlockchainByTransfer,
 } from './blockchain'
 
-export async function rechargeUserBalance(
-  userId: string,
-  amount: number,
-  type: CurrencyType,
-  twmpResultId?: string, // If excute from twmp update
-) {
-  // Add target user balance and create recharge record
-  const [user, transaction] = await prisma.$transaction([
-    prisma.user.update({
-      where: { id: userId },
-      data: {
-        creditBalance: {
-          increment: type === CurrencyType.CREDIT ? amount : 0,
+type RechargeUserBalanceBaseArgs = {
+  userId: string
+  pointAmount?: number
+  creditAmount?: number
+  twmpResultId?: string
+  orderId?: number
+  client?: Prisma.TransactionClient | PrismaClient
+}
+export async function rechargeUserBalanceBase({
+  userId,
+  pointAmount,
+  creditAmount,
+  twmpResultId,
+  orderId,
+  client,
+}: RechargeUserBalanceBaseArgs) {
+  if (!pointAmount && !creditAmount) throw new Error('Amount is required')
+  if (twmpResultId && orderId)
+    throw new Error('twmpResultId and orderId are exclusive')
+
+  const thisPrisma = client ?? prisma
+  const type = twmpResultId
+    ? TransactionType.RECHARGE
+    : TransactionType.CANCELED
+
+  const user = await thisPrisma.user.update({
+    where: { id: userId },
+    data: {
+      creditBalance: {
+        increment: creditAmount,
+      },
+      pointBalance: {
+        increment: pointAmount,
+      },
+    },
+  })
+  const transaction = await thisPrisma.transaction.create({
+    data: {
+      sourceUserId: settings.SERVER_USER_ID,
+      targetUserId: userId,
+      pointAmount: pointAmount,
+      creditAmount: creditAmount,
+      type,
+      twmpResultId,
+      orderForCanceled: {
+        connect: {
+          id: orderId,
         },
-        pointBalance: {
-          increment: type === CurrencyType.POINT ? amount : 0,
-        },
       },
-    }),
-    prisma.transaction.create({
-      data: {
-        sourceUserId: settings.SERVER_USER_ID,
-        targetUserId: userId,
-        creditAmount: amount,
-        type: TransactionType.RECHARGE,
-        twmpResultId: twmpResultId,
-      },
-      include: {
-        sourceUser: { select: { name: true } },
-        targetUser: { select: { name: true } },
-      },
-    }),
-  ])
+    },
+    include: {
+      sourceUser: { select: { name: true } },
+      targetUser: { select: { name: true } },
+    },
+  })
 
   // Update blockchain
   updateBlockchainByMintBurn(transaction.id)
+
+  return {
+    user,
+    transaction,
+  }
+}
+
+export async function rechargeUserBalance(
+  args: Omit<RechargeUserBalanceBaseArgs, 'client'>,
+) {
+  // Add target user balance and create recharge record
+  const { user, transaction } = await prisma.$transaction(async (client) => {
+    return await rechargeUserBalanceBase({
+      ...args,
+      client,
+    })
+  })
 
   return {
     user,

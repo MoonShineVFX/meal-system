@@ -38,9 +38,6 @@ const SELECT_STEP_DATE = ({
 
 export default function OrderCard(props: { order: OrderDatas[0] }) {
   const { order } = props
-  const paymentTransaction = order.transactions.find(
-    (transaction) => transaction.type === 'PAYMENT',
-  )
   const isCancel = order.timeCanceled !== null
   const steps = isCancel ? CANCEL_STEPS : ORDER_STEPS
   const step = isCancel
@@ -74,20 +71,22 @@ export default function OrderCard(props: { order: OrderDatas[0] }) {
               <div className='flex w-[6rem] select-none flex-col gap-2 text-sm text-stone-400'>
                 <li className='flex justify-between'>
                   <p>福利點數</p>
-                  <p className='font-bold'>{paymentTransaction?.pointAmount}</p>
+                  <p className='font-bold'>
+                    {order.paymentTransaction?.pointAmount}
+                  </p>
                 </li>
                 <li className='flex justify-between'>
                   <p>夢想幣</p>
                   <p className='font-bold'>
-                    {paymentTransaction?.creditAmount}
+                    {order.paymentTransaction?.creditAmount}
                   </p>
                 </li>
               </div>
             }
           >
             <div className='w-fit text-lg font-bold tracking-wider'>{`$${
-              (paymentTransaction?.creditAmount ?? 0) +
-              (paymentTransaction?.pointAmount ?? 0)
+              (order.paymentTransaction?.creditAmount ?? 0) +
+              (order.paymentTransaction?.pointAmount ?? 0)
             }`}</div>
           </Tooltip>
         </span>

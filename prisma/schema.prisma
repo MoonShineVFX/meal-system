@@ -53,9 +53,10 @@ model User {
 // Transaction
 enum TransactionType {
   RECHARGE // Server modify balance
-  REFUND
   PAYMENT // User pay/order for something
+  CANCELED // Staff cancel order
   TRANSFER // User transfer balance to another user
+  REFUND // User ask for refund with twmp
 }
 
 model Transaction {
@@ -66,14 +67,16 @@ model Transaction {
   pointAmount  Int             @default(0)
   creditAmount Int             @default(0)
 
-  sourceUser   User        @relation("source", fields: [sourceUserId], references: [id])
+  sourceUser   User   @relation("source", fields: [sourceUserId], references: [id])
   sourceUserId String
-  targetUser   User        @relation("target", fields: [targetUserId], references: [id])
+  targetUser   User   @relation("target", fields: [targetUserId], references: [id])
   targetUserId String
-  orders       Order[]
-  twmpResult   TwmpResult? @relation(fields: [twmpResultId], references: [txnUID])
-  twmpResultId String?
-  ethHashes    String[]
+
+  twmpResult       TwmpResult? @relation(fields: [twmpResultId], references: [txnUID])
+  twmpResultId     String?
+  ethHashes        String[]
+  ordersForPayment Order[]     @relation("orderPayment")
+  orderForCanceled Order?      @relation("canceledPayment")
 
   @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
 }
@@ -121,7 +124,6 @@ model EthWallet {
   userId String @unique
 }
 
-// Order
 model Order {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -131,12 +133,16 @@ model Order {
   timeCompleted DateTime?
   timeCanceled  DateTime?
 
-  user         User          @relation(fields: [userId], references: [id])
-  userId       String
-  menu         Menu          @relation(fields: [menuId], references: [id])
-  menuId       Int
-  items        OrderItem[]
-  transactions Transaction[]
+  user   User        @relation(fields: [userId], references: [id])
+  userId String
+  menu   Menu        @relation(fields: [menuId], references: [id])
+  menuId Int
+  items  OrderItem[]
+
+  paymentTransaction    Transaction? @relation("orderPayment", fields: [paymentTransactionId], references: [id])
+  paymentTransactionId  Int?
+  canceledTransaction   Transaction? @relation("canceledPayment", fields: [canceledTransactionId], references: [id])
+  canceledTransactionId Int?         @unique
 
   @@index([userId, menuId, timePreparing(sort: Desc), createdAt(sort: Desc)])
   @@index([menuId, timeCompleted, timeCanceled, createdAt(sort: Desc)])

@@ -25,6 +25,7 @@ export enum SERVER_NOTIFY {
   CART_UPDATE = '修改購物車餐點',
   ORDER_ADD = '結帳完成',
   ORDER_UPDATE = '訂單狀態更新',
+  ORDER_CANCEL = '訂單取消',
   POS_ADD = '',
   POS_UPDATE = '',
 }

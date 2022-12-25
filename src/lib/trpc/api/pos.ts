@@ -43,7 +43,10 @@ export const POSRouter = router({
       }
 
       eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
-        type: SERVER_NOTIFY.ORDER_UPDATE,
+        type:
+          input.status !== 'timeCanceled'
+            ? SERVER_NOTIFY.ORDER_UPDATE
+            : SERVER_NOTIFY.ORDER_CANCEL,
         message,
       })
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {

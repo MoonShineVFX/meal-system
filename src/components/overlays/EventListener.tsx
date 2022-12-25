@@ -94,6 +94,10 @@ export default function EventListener() {
         case SERVER_NOTIFY.ORDER_UPDATE:
           trpcContext.order.get.invalidate()
           break
+        case SERVER_NOTIFY.ORDER_CANCEL:
+          trpcContext.order.get.invalidate()
+          trpcContext.user.get.invalidate()
+          break
         // Staff
         case SERVER_NOTIFY.POS_ADD:
           trpcContext.pos.get.invalidate()

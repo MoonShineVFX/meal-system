@@ -107,6 +107,7 @@ export async function updateBlockchainByMintBurn(transactionId: number) {
     },
   })
 }
+
 // Sync user balance by blockchain mint/burn
 export async function forceSyncBlockchainWallet(userId: string) {
   log('>> Updating blockchain for user', userId)
