@@ -1,25 +1,39 @@
-import { AnimatePresence } from 'framer-motion'
-import { useMemo } from 'react'
+import { AnimatePresence, MotionConfig } from 'framer-motion'
+import { useMemo, useState } from 'react'
 
 import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
 import Title from '@/components/core/Title'
 import POSCard from '@/components/pos/POSCard'
+import Tab from '@/components/core/Tab'
 
 const TOTAL_FILLER_COUNT = 6
+const TAB_NAMES = ['待處理', '已出餐', '已完成'] as const
 
 export default function PagePOS() {
-  const { data, isError, isLoading, error } = trpc.pos.get.useQuery()
-  const sortedOrders = useMemo(() => {
+  const [currentTabName, setCurrentTabName] =
+    useState<typeof TAB_NAMES[number]>('待處理')
+  const { data, isError, isLoading, error } = trpc.pos.get.useQuery({
+    checkArchived: currentTabName === '已完成',
+  })
+  const filteredOrders = useMemo(() => {
     if (!data) return []
 
-    return data.sort((a, b) => {
-      const aOrder = a.timeCompleted ? 1 : 0
-      const bOrder = b.timeCompleted ? 1 : 0
-      if (aOrder === bOrder) return 0
-      return aOrder - bOrder
-    })
-  }, [data])
+    if (currentTabName === '待處理') {
+      return data.sort((a, b) => {
+        const aOrder = a.timeDishedUp ? 1 : 0
+        const bOrder = b.timeDishedUp ? 1 : 0
+        if (aOrder === bOrder) return 0
+        return aOrder - bOrder
+      })
+    } else if (currentTabName === '已出餐') {
+      return data.filter((order) => order.timeDishedUp !== null)
+    } else if (currentTabName === '已完成') {
+      return data
+    }
+
+    return []
+  }, [data, currentTabName])
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -29,23 +43,44 @@ export default function PagePOS() {
     return <Error description={error.message} />
   }
 
-  const fillerCount = Math.max(TOTAL_FILLER_COUNT - data.length)
+  const fillerCount = Math.max(TOTAL_FILLER_COUNT - filteredOrders.length)
 
   return (
     <>
       <Title prefix='處理訂單' />
-      <div className='relative h-full w-full'>
-        <div className='ms-scroll absolute inset-0 overflow-y-auto bg-stone-50 p-4 lg:p-8'>
-          <div className='grid w-full grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 lg:gap-8'>
-            <AnimatePresence initial={false}>
-              {sortedOrders.map((order) => (
-                <POSCard key={order.id} order={order} />
-              ))}
-              {fillerCount > 0 &&
-                [...Array(fillerCount).keys()].map((index) => (
-                  <div key={`filler-${index}`} />
-                ))}
-            </AnimatePresence>
+      <div className='relative flex h-full w-full'>
+        {/* Categories */}
+        <Tab
+          tabNames={TAB_NAMES}
+          currentTabName={currentTabName}
+          onClick={setCurrentTabName}
+        />
+        {/* Pos */}
+        <div className='relative grow'>
+          <div className='ms-scroll absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] sm:pt-[4rem] lg:p-8'>
+            <div className='grid w-full grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 lg:gap-8'>
+              {currentTabName !== '已完成' ? (
+                <AnimatePresence initial={false}>
+                  {filteredOrders.map((order) => (
+                    <POSCard key={order.id} order={order} />
+                  ))}
+                  {fillerCount > 0 &&
+                    [...Array(fillerCount).keys()].map((index) => (
+                      <div key={`filler-${index}`} />
+                    ))}
+                </AnimatePresence>
+              ) : (
+                <MotionConfig reducedMotion='always'>
+                  {filteredOrders.map((order) => (
+                    <POSCard key={order.id} order={order} isArchived={true} />
+                  ))}
+                  {fillerCount > 0 &&
+                    [...Array(fillerCount).keys()].map((index) => (
+                      <div key={`filler-${index}`} />
+                    ))}
+                </MotionConfig>
+              )}
+            </div>
           </div>
         </div>
       </div>

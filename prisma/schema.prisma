@@ -127,8 +127,8 @@ model Order {
   createdAt DateTime @default(now())
 
   timePreparing DateTime?
+  timeDishedUp  DateTime?
   timeCompleted DateTime?
-  timeClosed    DateTime?
   timeCanceled  DateTime?
 
   user         User          @relation(fields: [userId], references: [id])
@@ -139,7 +139,7 @@ model Order {
   transactions Transaction[]
 
   @@index([userId, menuId, timePreparing(sort: Desc), createdAt(sort: Desc)])
-  @@index([menuId, timeClosed, timeCanceled, createdAt(sort: Desc)])
+  @@index([menuId, timeCompleted, timeCanceled, createdAt(sort: Desc)])
 }
 
 model OrderItem {

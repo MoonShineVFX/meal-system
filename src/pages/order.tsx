@@ -16,7 +16,7 @@ export default function PageOrder() {
   return (
     <>
       <Title prefix='訂單' />
-      <div className='relative h-full w-full bg-stone-50'>
+      <div className='relative h-full w-full'>
         <div className='ms-scroll absolute inset-0 flex justify-center overflow-auto'>
           <section className='flex h-max min-h-full w-full flex-col bg-white shadow-lg lg:max-w-3xl'>
             <div className='p-4 pb-0 lg:p-8 lg:pb-0'>

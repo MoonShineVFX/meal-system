@@ -9,34 +9,47 @@ import Image from '@/components/core/Image'
 import trpc, { POSDatas } from '@/lib/client/trpc'
 import { settings } from '@/lib/common'
 
-const STATUS_NAME_TEXT = ['已付款', '製作中', '已出餐', '完成', '取消中']
-const STATUS_BUTTON_TEXT = ['製作', '出餐', '完成', '', '取消']
+const STATUS_NAME_TEXT = [
+  '已付款',
+  '製作中',
+  '已出餐',
+  '完成',
+  '已取消',
+  '取消中',
+]
+const STATUS_BUTTON_TEXT = ['製作', '出餐', '完成', '', '', '取消']
 const STATUS_BACKGROUND_COLOR = [
   '',
   'bg-yellow-400',
   'bg-green-400',
   'bg-stone-100',
   'bg-red-200',
+  'bg-red-200',
 ]
 
-export default function POSCard(props: { order: POSDatas[0] }) {
+export default function POSCard(props: {
+  order: POSDatas[0]
+  isArchived?: boolean
+}) {
   const { order } = props
   const updateOrderMutation = trpc.pos.update.useMutation()
   const [isCanceling, setIsCanceling] = useState(false)
   const { step, date } = useMemo(() => {
     let result: { step: number; date: Date } | undefined = undefined
 
-    if (order.timeClosed !== null) {
-      result = { step: 3, date: order.timeClosed }
+    if (order.timeCanceled !== null) {
+      result = { step: 4, date: order.timeCanceled }
     } else if (order.timeCompleted !== null) {
-      result = { step: 2, date: order.timeCompleted }
+      result = { step: 3, date: order.timeCompleted }
+    } else if (order.timeDishedUp !== null) {
+      result = { step: 2, date: order.timeDishedUp }
     } else if (order.timePreparing !== null) {
       result = { step: 1, date: order.timePreparing }
     } else {
       result = { step: 0, date: order.createdAt }
     }
 
-    if (isCanceling) result.step = 4
+    if (isCanceling) result.step = 5
     return result
   }, [order, isCanceling])
 
@@ -51,13 +64,16 @@ export default function POSCard(props: { order: POSDatas[0] }) {
       case 1:
         updateOrderMutation.mutate({
           orderId: order.id,
-          status: 'timeCompleted',
+          status: 'timeDishedUp',
         })
         break
       case 2:
-        updateOrderMutation.mutate({ orderId: order.id, status: 'timeClosed' })
+        updateOrderMutation.mutate({
+          orderId: order.id,
+          status: 'timeCompleted',
+        })
         break
-      case 4:
+      case 5:
         updateOrderMutation.mutate({
           orderId: order.id,
           status: 'timeCanceled',
@@ -87,16 +103,18 @@ export default function POSCard(props: { order: POSDatas[0] }) {
         <div className='flex items-center justify-between'>
           <h1 className='font-bold'>#{order.id}</h1>
           {/* Cancel Button */}
-          <button
-            className='-m-2 rounded-full p-2 hover:bg-stone-600/10 active:scale-90 active:bg-stone-600/10'
-            onClick={() => setIsCanceling((prev) => !prev)}
-          >
-            {isCanceling ? (
-              <ArrowUturnLeftIcon className='h-6 w-6 text-stone-600/60' />
-            ) : (
-              <XMarkIcon className='h-6 w-6 text-stone-600/60' />
-            )}
-          </button>
+          {!props.isArchived && (
+            <button
+              className='-m-2 rounded-full p-2 hover:bg-stone-600/10 active:scale-90 active:bg-stone-600/10'
+              onClick={() => setIsCanceling((prev) => !prev)}
+            >
+              {isCanceling ? (
+                <ArrowUturnLeftIcon className='h-6 w-6 text-stone-600/60' />
+              ) : (
+                <XMarkIcon className='h-6 w-6 text-stone-600/60' />
+              )}
+            </button>
+          )}
         </div>
         {/* Metadata */}
         <div className='flex justify-between'>
@@ -162,17 +180,19 @@ export default function POSCard(props: { order: POSDatas[0] }) {
       </section>
 
       {/* Steps Button */}
-      <section className='relative -z-10 flex h-16'>
-        <AnimatePresence initial={false}>
-          <POSButton
-            key={step}
-            label={STATUS_BUTTON_TEXT[step]}
-            step={step}
-            onClick={handleStepClick}
-            isLoading={updateOrderMutation.isLoading}
-          />
-        </AnimatePresence>
-      </section>
+      {!props.isArchived && (
+        <section className='relative -z-10 flex h-16'>
+          <AnimatePresence initial={false}>
+            <POSButton
+              key={step}
+              label={STATUS_BUTTON_TEXT[step]}
+              step={step}
+              onClick={handleStepClick}
+              isLoading={updateOrderMutation.isLoading}
+            />
+          </AnimatePresence>
+        </section>
+      )}
     </motion.div>
   )
 }
@@ -228,7 +248,7 @@ function POSButton(props: {
               'bg-green-400 hover:bg-green-300 active:bg-green-300',
             props.step === 2 &&
               'bg-stone-100 hover:bg-stone-50 active:bg-stone-50',
-            props.step === 4 && 'bg-red-400 hover:bg-red-300 active:bg-red-300',
+            props.step === 5 && 'bg-red-400 hover:bg-red-300 active:bg-red-300',
           )}
         ></div>
         {/* Label */}
@@ -238,7 +258,7 @@ function POSButton(props: {
           <p
             className={twMerge(
               'indent-[0.05em] text-lg font-bold tracking-wider',
-              props.step === 4 && 'text-white',
+              props.step === 5 && 'text-white',
             )}
           >
             {props.label}

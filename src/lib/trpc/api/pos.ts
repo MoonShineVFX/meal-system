@@ -6,18 +6,20 @@ import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const POSRouter = router({
-  get: staffProcedure.query(async ({ ctx }) => {
-    return await getOrdersForPOS()
-  }),
+  get: staffProcedure
+    .input(z.object({ checkArchived: z.boolean().optional() }))
+    .query(async ({ input }) => {
+      return await getOrdersForPOS(input)
+    }),
   update: staffProcedure
     .input(
       z.object({
         orderId: z.number(),
         status: z.union([
           z.literal('timePreparing'),
-          z.literal('timeCanceled'),
-          z.literal('timeClosed'),
+          z.literal('timeDishedUp'),
           z.literal('timeCompleted'),
+          z.literal('timeCanceled'),
         ]),
       }),
     )
@@ -32,10 +34,10 @@ export const POSRouter = router({
         case 'timeCanceled':
           message = `訂單 #${order.id} 已經取消`
           break
-        case 'timeClosed':
+        case 'timeCompleted':
           message = `訂單 #${order.id} 已經完成`
           break
-        case 'timeCompleted':
+        case 'timeDishedUp':
           message = `訂單 #${order.id} 已經可以取餐`
           break
       }

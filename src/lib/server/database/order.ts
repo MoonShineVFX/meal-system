@@ -132,15 +132,30 @@ export async function getOrders({ userId }: { userId: string }) {
   return rawOrders as ConvertPrismaJson<typeof rawOrders>
 }
 
-export async function getOrdersForPOS() {
+export async function getOrdersForPOS({
+  checkArchived: checkHistory,
+}: {
+  checkArchived?: boolean
+}) {
+  const whereInput: Prisma.OrderWhereInput = checkHistory
+    ? {
+        menu: {
+          type: 'MAIN',
+        },
+        createdAt: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)), // limit to today archives
+        },
+        OR: [{ timeCanceled: { not: null } }, { timeCompleted: { not: null } }],
+      }
+    : {
+        menu: {
+          type: 'MAIN',
+        },
+        timeCanceled: null,
+        timeCompleted: null,
+      }
   const rawPOSOrders = await prisma.order.findMany({
-    where: {
-      menu: {
-        type: 'MAIN',
-      },
-      timeCanceled: null,
-      timeClosed: null,
-    },
+    where: whereInput,
     include: {
       items: {
         include: {
@@ -166,7 +181,7 @@ export async function getOrdersForPOS() {
       },
     },
     orderBy: {
-      createdAt: 'asc',
+      createdAt: checkHistory ? 'desc' : 'asc',
     },
   })
 
@@ -180,7 +195,7 @@ export async function updateOrderStatus({
   orderId: number
   status: Extract<
     keyof Order,
-    'timePreparing' | 'timeCanceled' | 'timeClosed' | 'timeCompleted'
+    'timePreparing' | 'timeCanceled' | 'timeDishedUp' | 'timeCompleted'
   >
 }) {
   return await prisma.order.update({

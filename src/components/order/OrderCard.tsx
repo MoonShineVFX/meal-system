@@ -1,5 +1,6 @@
 import { twMerge } from 'tailwind-merge'
 
+import { motion } from 'framer-motion'
 import { OrderDatas } from '@/lib/client/trpc'
 import { getMenuName } from '@/lib/common'
 import OrderItemList from './OrderItemList'
@@ -28,9 +29,9 @@ const SELECT_STEP_DATE = ({
   } else if (index === 1) {
     return order.timePreparing
   } else if (index === 2) {
-    return order.timeCompleted
+    return order.timeDishedUp
   } else if (index === 3) {
-    return order.timeClosed
+    return order.timeCompleted
   }
   return undefined
 }
@@ -44,9 +45,9 @@ export default function OrderCard(props: { order: OrderDatas[0] }) {
   const steps = isCancel ? CANCEL_STEPS : ORDER_STEPS
   const step = isCancel
     ? 1
-    : order.timeClosed
-    ? 3
     : order.timeCompleted
+    ? 3
+    : order.timeDishedUp
     ? 2
     : order.timePreparing
     ? 1
@@ -96,12 +97,14 @@ export default function OrderCard(props: { order: OrderDatas[0] }) {
       {/* Progress */}
       <section className='mt-2 mb-12 flex flex-col gap-4 px-5 lg:mb-14'>
         <div className='relative h-1 rounded-full bg-stone-200 lg:h-1.5'>
-          <div
+          <motion.div
             className={twMerge(
               'absolute inset-y-0 left-0 rounded-full bg-yellow-500',
             )}
-            style={{ width: `${progress * 100}%` }}
-          ></div>
+            initial={false}
+            animate={{ width: `${progress * 100}%` }}
+            transition={{ duration: 0.15 }}
+          ></motion.div>
           {/* Steps */}
           <section className='absolute top-1/2 flex w-full justify-between'>
             {steps.map((name, index) => {
@@ -125,9 +128,10 @@ export default function OrderCard(props: { order: OrderDatas[0] }) {
                   >
                     <div className='absolute flex -translate-x-1/2 flex-col items-center gap-2'>
                       {/* Dot */}
-                      <div
+                      <motion.div
+                        initial={false}
                         className={twMerge(
-                          'relative h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-stone-200 lg:h-3 lg:w-3',
+                          'relative h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-stone-200 transition-colors delay-300 lg:h-3 lg:w-3',
                           index <= step &&
                             (isCancel ? 'bg-stone-400' : 'bg-yellow-500'),
                         )}
@@ -137,9 +141,9 @@ export default function OrderCard(props: { order: OrderDatas[0] }) {
                           index === step &&
                           index !== 0 &&
                           index !== steps.length - 1 && (
-                            <div className='absolute inset-0 scale-125 animate-ping rounded-full bg-yellow-500'></div>
+                            <div className='absolute inset-0 animate-ping rounded-full bg-yellow-500'></div>
                           )}
-                      </div>
+                      </motion.div>
                       {/* Text */}
 
                       <div className='flex flex-col items-center gap-1'>

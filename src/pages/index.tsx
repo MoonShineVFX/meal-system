@@ -7,7 +7,7 @@ import Title from '@/components/core/Title'
 import Menu from '@/components/menu/Menu'
 
 const DynamicCart = dynamic(() => import('@/components/cart/Cart'), {
-  // ssr: false,
+  ssr: false,
 })
 
 export default function PageIndex() {
