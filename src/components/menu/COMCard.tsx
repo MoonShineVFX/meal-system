@@ -13,7 +13,7 @@ function LinkWrapper(props: {
   const router = useRouter()
   return (
     <Link
-      className='group-data-loading/menu:pointer-events-none'
+      className='group-data-loading:pointer-events-none'
       href={{
         pathname: router.pathname,
         query: {
@@ -43,13 +43,13 @@ export default function COMCard(props: {
           stiffness: 600,
           damping: 10,
         }}
-        className='group flex flex-col overflow-hidden border-stone-100 bg-white'
+        className='group/com flex flex-col overflow-hidden border-stone-100 bg-white'
       >
         {/* Image */}
         <section className='px-4 py-2'>
-          <div className='relative aspect-square overflow-hidden rounded-2xl group-data-loading/menu:skeleton'>
+          <div className='relative aspect-square overflow-hidden rounded-2xl group-data-loading:skeleton'>
             <Image
-              className='object-cover group-hover:opacity-75 group-active:opacity-75 group-data-loading/menu:hidden'
+              className='object-cover group-hover/com:opacity-75 group-active/com:opacity-75 group-data-loading:hidden'
               src={
                 com?.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
               }

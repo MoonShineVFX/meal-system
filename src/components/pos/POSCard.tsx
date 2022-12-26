@@ -28,7 +28,7 @@ const STATUS_BACKGROUND_COLOR = [
 ]
 
 export default function POSCard(props: {
-  order: POSDatas[0]
+  order?: POSDatas[0]
   isArchived?: boolean
 }) {
   const { order } = props
@@ -36,6 +36,8 @@ export default function POSCard(props: {
   const [isCanceling, setIsCanceling] = useState(false)
   const { step, date } = useMemo(() => {
     let result: { step: number; date: Date } | undefined = undefined
+
+    if (order === undefined) return { step: 0, date: new Date('2023-01-01') }
 
     if (order.timeCanceled !== null) {
       result = { step: 4, date: order.timeCanceled }
@@ -54,6 +56,8 @@ export default function POSCard(props: {
   }, [order, isCanceling])
 
   const handleStepClick = useCallback(() => {
+    if (!order) return
+
     switch (step) {
       case 0:
         updateOrderMutation.mutate({
@@ -101,11 +105,13 @@ export default function POSCard(props: {
       {/* Header */}
       <section className='flex flex-col gap-4'>
         <div className='flex items-center justify-between'>
-          <h1 className='font-bold'>#{order.id}</h1>
+          <h1 className='rounded-xl font-bold group-data-loading:skeleton'>
+            #{order?.id ?? 123}
+          </h1>
           {/* Cancel Button */}
           {!props.isArchived && (
             <button
-              className='-m-2 rounded-full p-2 hover:bg-stone-600/10 active:scale-90 active:bg-stone-600/10'
+              className='-m-2 rounded-full p-2 group-data-loading:hidden hover:bg-stone-600/10 active:scale-90 active:bg-stone-600/10'
               onClick={() => setIsCanceling((prev) => !prev)}
             >
               {isCanceling ? (
@@ -120,37 +126,38 @@ export default function POSCard(props: {
         <div className='flex justify-between'>
           {/* User */}
           <div className='flex items-center gap-2'>
-            <div className='relative h-6 w-6 overflow-hidden rounded-full'>
+            <div className='relative h-6 w-6 overflow-hidden rounded-full group-data-loading:skeleton'>
               <Image
+                className='object-cover group-data-loading:hidden'
                 alt='profile'
                 src={
-                  order.user.profileImage
+                  order?.user.profileImage
                     ? order.user.profileImage.path
                     : settings.RESOURCE_PROFILE_PLACEHOLDER
                 }
                 sizes='24px'
               />
             </div>
-            <h2 className='text-sm tracking-wider text-stone-600/60'>
-              {order.user.name}
+            <h2 className='rounded-xl text-sm tracking-wider text-stone-600/60 group-data-loading:skeleton'>
+              {order?.user.name ?? '使用者'}
             </h2>
           </div>
           {/* Status */}
-          <div className='flex flex-col'>
+          <div className='flex flex-col items-end'>
             <AnimatePresence initial={false} mode='popLayout'>
               <motion.p
                 initial={{ opacity: 0, y: -16 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 16 }}
                 transition={{ duration: 0.3, type: 'spring', bounce: 0.75 }}
-                className='text-right text-sm font-bold tracking-wider text-stone-600/60'
+                className='rounded-xl text-sm font-bold tracking-wider text-stone-600/60 group-data-loading:skeleton'
                 key={STATUS_NAME_TEXT[step]}
                 layout
               >
                 {STATUS_NAME_TEXT[step]}
               </motion.p>
             </AnimatePresence>
-            <p className='font-mono text-[0.6rem] tracking-wider text-stone-500/50'>
+            <p className='rounded-xl font-mono text-[0.6rem] tracking-wider text-stone-500/50 group-data-loading:skeleton'>
               {date.toLocaleTimeString('zh-TW')}
             </p>
           </div>
@@ -158,25 +165,37 @@ export default function POSCard(props: {
       </section>
       {/* Items */}
       <section className='flex grow flex-col gap-4'>
-        {order.items.map((item) => (
-          <div key={item.id} className='flex flex-col gap-1'>
-            {/* Name and quantity */}
-            <div className='flex justify-between text-lg font-bold tracking-wider'>
-              <p>{item.name}</p>
-              <p>{`x ${item.quantity}`}</p>
-            </div>
-            {/* Options */}
-            <div className='flex w-3/5 flex-wrap gap-3 text-stone-500'>
-              {Object.values(item.options)
-                .flatMap((optionValue) =>
-                  Array.isArray(optionValue) ? optionValue : [optionValue],
-                )
-                .map((optionValue) => (
-                  <p key={optionValue}>{optionValue}</p>
+        {(order?.items ?? ([...Array(2).fill(undefined)] as undefined[])).map(
+          (item, index) => (
+            <div key={item?.id ?? index} className='flex flex-col gap-1'>
+              {/* Name and quantity */}
+              <div className='flex justify-between text-lg font-bold tracking-wider'>
+                <p className='rounded-xl group-data-loading:skeleton'>
+                  {item?.name ?? '各種餐點'}
+                </p>
+                <p className='rounded-xl group-data-loading:skeleton'>{`x ${
+                  item?.quantity ?? 1
+                }`}</p>
+              </div>
+              {/* Options */}
+              <div className='flex w-3/5 flex-wrap gap-3 text-stone-500'>
+                {(item
+                  ? Object.values(item.options).flatMap((optionValue) =>
+                      Array.isArray(optionValue) ? optionValue : [optionValue],
+                    )
+                  : ([...Array(2).fill(undefined)] as undefined[])
+                ).map((optionValue, index) => (
+                  <p
+                    className='rounded-xl group-data-loading:skeleton'
+                    key={optionValue ?? index}
+                  >
+                    {optionValue ?? '選項'}
+                  </p>
                 ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ),
+        )}
       </section>
 
       {/* Steps Button */}
@@ -249,8 +268,11 @@ function POSButton(props: {
             props.step === 2 &&
               'bg-stone-100 hover:bg-stone-50 active:bg-stone-50',
             props.step === 5 && 'bg-red-400 hover:bg-red-300 active:bg-red-300',
+            'group-data-loading:overflow-hidden',
           )}
-        ></div>
+        >
+          <div className='hidden h-full w-full group-data-loading:skeleton group-data-loading:block'></div>
+        </div>
         {/* Label */}
         {props.isLoading ? (
           <Spinner className='h-7 w-7' />
@@ -259,6 +281,7 @@ function POSButton(props: {
             className={twMerge(
               'indent-[0.05em] text-lg font-bold tracking-wider',
               props.step === 5 && 'text-white',
+              'group-data-loading:hidden',
             )}
           >
             {props.label}

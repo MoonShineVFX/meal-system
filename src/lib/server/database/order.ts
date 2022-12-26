@@ -86,9 +86,45 @@ export async function createOrder({ userId }: { userId: string }) {
   })
 }
 
-export async function getOrders({ userId }: { userId: string }) {
+export async function getOrders({
+  userId,
+  type,
+}: {
+  userId: string
+  type: 'live' | 'reservation' | 'archived'
+}) {
+  let whereInput: Prisma.OrderWhereInput
+  switch (type) {
+    case 'live':
+      whereInput = {
+        userId: userId,
+        timeCanceled: null,
+        timeCompleted: null,
+        menu: {
+          type: 'MAIN',
+        },
+      }
+      break
+    case 'reservation':
+      whereInput = {
+        userId: userId,
+        timeCanceled: null,
+        timeCompleted: null,
+        menu: {
+          type: { not: 'MAIN' },
+        },
+      }
+      break
+    case 'archived':
+      whereInput = {
+        userId: userId,
+        OR: [{ timeCanceled: { not: null } }, { timeCompleted: { not: null } }],
+      }
+      break
+  }
+
   const rawOrders = await prisma.order.findMany({
-    where: { userId: userId },
+    where: whereInput,
     include: {
       menu: {
         select: {

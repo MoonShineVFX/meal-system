@@ -124,7 +124,7 @@ export default function Cart() {
       {...twData({ loading: cartIsLoading })}
     >
       <div className='ms-scroll absolute inset-0 flex justify-center overflow-y-auto overflow-x-hidden'>
-        <div className='grid h-min min-h-full max-w-6xl grow grid-rows-[min-content_auto_min-content] gap-4 bg-white p-4 shadow-lg @2xl/cart:grid-cols-[3fr_2fr] @2xl/cart:grid-rows-[min-content_auto] @2xl/cart:gap-x-8 @2xl/cart:gap-y-8 @6xl/cart:gap-x-32 lg:p-8'>
+        <div className='grid h-min min-h-full max-w-6xl grow grid-rows-[min-content_auto_min-content] gap-4 bg-white p-4 @2xl/cart:grid-cols-[3fr_2fr] @2xl/cart:grid-rows-[min-content_auto] @2xl/cart:gap-x-8 @2xl/cart:gap-y-8 @6xl/cart:gap-x-32 lg:p-8'>
           {/* Clear Button */}
           <div className='col-start-1 row-start-1 flex justify-end'>
             {cartData && cartData.cartItems.length > 0 && (
@@ -245,7 +245,7 @@ export default function Cart() {
                       </div>
                       <h1 className='text-lg font-bold'>購物車是空的</h1>
                       <p className='text-center text-sm text-stone-400'>
-                        購物車是空的，快去挑選餐點吧！
+                        快去挑選餐點吧！
                       </p>
                     </div>
                   </motion.div>

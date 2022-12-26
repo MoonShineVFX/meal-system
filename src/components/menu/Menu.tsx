@@ -208,10 +208,7 @@ export default function Menu(props: {
 
   return (
     <div
-      className={twMerge(
-        'group/menu relative h-full bg-white',
-        props.className,
-      )}
+      className={twMerge('group relative h-full bg-white', props.className)}
       {...twData({ loading: isLoading })}
     >
       <div className='absolute inset-0 flex flex-col lg:flex-row'>

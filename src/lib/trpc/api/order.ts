@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 import { userProcedure, router } from '../trpc'
 import { createOrder, getOrders } from '@/lib/server/database'
 import { SERVER_NOTIFY } from '@/lib/common'
@@ -23,7 +25,13 @@ export const OrderRouter = router({
 
     return orders
   }),
-  get: userProcedure.query(async ({ ctx }) => {
-    return await getOrders({ userId: ctx.userLite.id })
-  }),
+  get: userProcedure
+    .input(
+      z.object({
+        type: z.enum(['live', 'reservation', 'archived']),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await getOrders({ userId: ctx.userLite.id, type: input.type })
+    }),
 })

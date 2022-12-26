@@ -250,7 +250,7 @@ export function OptionSetForm<
               className='ml-2 text-sm font-normal text-red-400'
               initial={{ scale: 0.0 }}
               animate={{ scale: 1.0 }}
-              transition={{ type: 'spring', duration: 0.3, bounce: 0.65 }}
+              transition={{ type: 'spring', duration: 0.3, bounce: 0.55 }}
             >
               {error.message}
             </motion.div>

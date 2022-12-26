@@ -12,7 +12,7 @@ export default function Tab<T extends readonly string[]>(props: {
       {props.tabNames.map((tabName, index) => (
         <li
           key={`tab-${index}`}
-          className='relative w-fit shrink-0 cursor-pointer rounded-2xl px-2 py-1 text-stone-500 data-selected:pointer-events-none data-selected:text-yellow-900 group-data-loading/menu:skeleton data-not-selected:hover:bg-stone-600/10 data-not-selected:active:scale-95 data-not-selected:active:bg-stone-600/10 lg:data-not-selected:hover:bg-stone-100 lg:data-not-selected:active:bg-stone-100'
+          className='relative w-fit shrink-0 cursor-pointer rounded-2xl px-2 py-1 text-stone-500 data-selected:pointer-events-none data-selected:text-yellow-900 group-data-loading:skeleton data-not-selected:hover:bg-stone-600/10 data-not-selected:active:scale-95 data-not-selected:active:bg-stone-600/10 lg:data-not-selected:hover:bg-stone-100 lg:data-not-selected:active:bg-stone-100'
           onClick={() => props.onClick(tabName)}
           {...twData({
             selected: props.currentTabName === tabName,
@@ -25,7 +25,7 @@ export default function Tab<T extends readonly string[]>(props: {
               layoutId='cat-selected'
             ></motion.div>
           )}
-          <p className='text-justify indent-[0.1em] text-sm font-bold tracking-widest sm:text-base'>
+          <p className='whitespace-nowrap text-justify indent-[0.1em] text-sm font-bold tracking-widest sm:text-base'>
             {tabName}
           </p>
         </li>

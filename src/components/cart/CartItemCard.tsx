@@ -254,7 +254,7 @@ function CartItemCard(props: {
                         ))}
                     </div>
 
-                    <PencilSquareIcon className='h-4 w-4 stroke-1 text-stone-400' />
+                    <PencilSquareIcon className='h-4 w-4 stroke-1 text-stone-400  group-data-loading:hidden' />
                   </div>
                 )}
               </section>
@@ -329,7 +329,9 @@ function CartItemCard(props: {
                     className='hidden h-6 w-6 data-busy:hidden group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200 sm:flex'
                     textClassName='group-data-loading:skeleton'
                     spinnerClassName='h-4 w-4'
-                    label={<TrashIcon className='h-4 w-4 text-stone-400' />}
+                    label={
+                      <TrashIcon className='h-4 w-4 text-stone-400 group-data-loading:hidden' />
+                    }
                     theme='support'
                     onClick={() => handleQuantityChange(0)}
                   />

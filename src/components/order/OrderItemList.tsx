@@ -9,7 +9,7 @@ import { settings } from '@/lib/common'
 
 const SCROLL_WIDTH = 256
 
-export default function OrderItemList(props: { orderItems: OrderItems }) {
+export default function OrderItemList(props: { orderItems?: OrderItems }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isScrollable, setIsScrollable] = useState(false)
   const [scrollState, setScrollState] = useState<'left' | 'middle' | 'right'>(
@@ -76,44 +76,47 @@ export default function OrderItemList(props: { orderItems: OrderItems }) {
         className={twMerge('w-full overflow-x-auto scrollbar-none')}
       >
         <div className='flex w-max gap-6'>
-          {props.orderItems.map((item) => (
+          {(
+            props.orderItems ?? ([...Array(2).fill(undefined)] as undefined[])
+          ).map((item, index) => (
             // Order Item
-            <div className='group flex gap-4' key={item.id}>
+            <div className='group/item flex gap-4' key={item?.id ?? index}>
               {/* Image */}
-              <div className='relative z-0 aspect-square h-fit w-[4rem] overflow-hidden rounded-full lg:w-[6rem]'>
+              <div className='relative z-0 aspect-square h-fit w-[4rem] overflow-hidden rounded-full group-data-loading:skeleton lg:w-[6rem]'>
                 <Image
-                  className='object-cover'
-                  src={item.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER}
+                  className='object-cover group-data-loading:hidden'
+                  src={item?.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER}
                   sizes='(max-width: 1024px) 640px, 1280px'
-                  alt={item.name}
+                  alt={item?.name ?? 'food'}
                   fill
                 />
-                <div className='absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100'>
+                <div className='absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover/item:opacity-100 group-active/item:opacity-100'>
                   <p className='indent-[0.05em] font-bold tracking-wider text-white lg:text-xl'>
-                    ${item.price}
+                    ${item?.price ?? 50}
                   </p>
                 </div>
               </div>
               {/* Content */}
               <div className='flex flex-col gap-2'>
                 {/* Title */}
-                <div className='indent-[0.05em] font-bold tracking-wider'>
-                  {`${item.name} x ${item.quantity}`}
+                <div className='rounded-xl indent-[0.05em] font-bold tracking-wider group-data-loading:skeleton'>
+                  {`${item?.name ?? '各種餐點'} x ${item?.quantity ?? 1}`}
                 </div>
                 {/* Options */}
                 <div className='flex flex-col gap-0.5 lg:gap-1'>
-                  {Object.values(item.options)
-                    .flatMap((value) =>
-                      Array.isArray(value) ? value : [value],
-                    )
-                    .map((option) => (
-                      <span
-                        key={option}
-                        className='whitespace-nowrap text-xs text-stone-400 lg:text-sm'
-                      >
-                        {option}
-                      </span>
-                    ))}
+                  {(item
+                    ? Object.values(item.options).flatMap((value) =>
+                        Array.isArray(value) ? value : [value],
+                      )
+                    : ([...Array(2).fill(undefined)] as undefined[])
+                  ).map((option, index) => (
+                    <span
+                      key={option ?? index}
+                      className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-data-loading:skeleton lg:text-sm'
+                    >
+                      {option ?? '選項'}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
