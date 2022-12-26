@@ -93,7 +93,7 @@ export default function POSCard(props: {
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5 }}
-      transition={{ duration: 0.3, type: 'spring' }}
+      transition={{ duration: props.isArchived ? 0 : 0.3, type: 'spring' }}
       className='relative flex h-max flex-col gap-4 overflow-hidden rounded-2xl border bg-white p-4 shadow-lg sm:min-h-[26rem] lg:p-6'
     >
       {/* Background */}

@@ -36,7 +36,11 @@ const SELECT_STEP_DATE = ({
   return undefined
 }
 
-export default function OrderCard(props: { order?: OrderDatas[0] }) {
+export default function OrderCard(props: {
+  order?: OrderDatas[0]
+  isFirst?: boolean
+  isLast?: boolean
+}) {
   const { order } = props
   const isCancel = order?.timeCanceled !== null
   const steps = isCancel ? CANCEL_STEPS : ORDER_STEPS
@@ -53,7 +57,13 @@ export default function OrderCard(props: { order?: OrderDatas[0] }) {
   const progress = step / (steps.length - 1)
 
   return (
-    <div className='relative flex flex-col gap-4 border-b-4 border-stone-200 py-6 px-4 first:pt-0 last:border-b-0 lg:gap-6 lg:py-8 lg:px-8'>
+    <div
+      className={twMerge(
+        'relative flex flex-col gap-4 border-b-4 border-stone-200 py-6 px-4 pb-7 lg:gap-6 lg:py-8 lg:px-8 lg:pb-9',
+        props.isFirst && 'pt-[4.25rem] sm:pt-[4.5rem]',
+        props.isLast && 'border-none',
+      )}
+    >
       {/* Title */}
       <header className='flex items-center gap-2'>
         {/* Order id and menu name */}
