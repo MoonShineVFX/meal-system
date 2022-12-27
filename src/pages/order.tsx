@@ -12,17 +12,17 @@ import Title from '@/components/core/Title'
 import { twData } from '@/lib/common'
 import Tab from '@/components/core/Tab'
 
-const TAB_NAMES = ['即時', '預訂', '已完成', '搜尋'] as const
+const TAB_NAMES = ['處理中', '預訂', '已完成', '搜尋'] as const
 
 export default function PageOrder() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [currentTabName, setCurrentTabName] =
-    useState<typeof TAB_NAMES[number]>('即時')
+    useState<typeof TAB_NAMES[number]>('處理中')
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.order.get.useInfiniteQuery(
       {
         type:
-          currentTabName == '即時'
+          currentTabName == '處理中'
             ? 'live'
             : currentTabName == '預訂'
             ? 'reservation'
@@ -46,7 +46,10 @@ export default function PageOrder() {
     (event: ChangeEvent<HTMLInputElement>) => {
       const text = event.target.value
       startTransition(() => {
-        setSearchKeyword(text)
+        // avoid 注音 typing
+        if (!text.match(/[\u3105-\u3129\u02CA\u02C7\u02CB\u02D9]/)) {
+          setSearchKeyword(text)
+        }
       })
     },
     [],
