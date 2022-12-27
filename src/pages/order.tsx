@@ -153,7 +153,7 @@ export default function PageOrder() {
                           order={order}
                           key={order?.id ?? index}
                           isFirst={index === 0}
-                          isLast={index === orders.length - 1}
+                          isLast={index === orders.length}
                           isLoading={order === undefined}
                         />
                       )
