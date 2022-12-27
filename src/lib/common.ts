@@ -102,6 +102,8 @@ export const settings = {
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
+  /* Order */
+  ORDER_TAKE_PER_QUERY: 20,
   /* Menu */
   MENU_CATEGORY_NULL: '未分類',
   MENU_MAX_QUANTITY_PER_ORDER: 10,

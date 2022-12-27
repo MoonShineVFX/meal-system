@@ -7,7 +7,15 @@ import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const POSRouter = router({
   get: staffProcedure
-    .input(z.object({ checkArchived: z.boolean().optional() }))
+    .input(
+      z.object({
+        type: z.union([
+          z.literal('live'),
+          z.literal('reservation'),
+          z.literal('archived'),
+        ]),
+      }),
+    )
     .query(async ({ input }) => {
       return await getOrdersForPOS(input)
     }),

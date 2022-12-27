@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { userProcedure, router } from '../trpc'
 import { createOrder, getOrders } from '@/lib/server/database'
-import { SERVER_NOTIFY } from '@/lib/common'
+import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const OrderRouter = router({
@@ -28,10 +28,34 @@ export const OrderRouter = router({
   get: userProcedure
     .input(
       z.object({
-        type: z.enum(['live', 'reservation', 'archived']),
+        cursor: z.number().optional(),
+        type: z.enum(['live', 'reservation', 'archived', 'search']),
+        keyword: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      return await getOrders({ userId: ctx.userLite.id, type: input.type })
+      if (input.type === 'search' && !input.keyword) return { orders: [] }
+
+      const args =
+        input.type === 'search'
+          ? { keyword: input.keyword!.trim(), type: input.type }
+          : { type: input.type }
+
+      const orders = await getOrders({
+        userId: ctx.userLite.id,
+        cursor: input.cursor,
+        ...args,
+      })
+
+      let nextCursor: number | undefined = undefined
+      if (orders.length > settings.ORDER_TAKE_PER_QUERY) {
+        const lastOrder = orders.pop()
+        nextCursor = lastOrder!.id
+      }
+
+      return {
+        orders,
+        nextCursor,
+      }
     }),
 })

@@ -1,6 +1,6 @@
 import { Prisma, Order, MenuType } from '@prisma/client'
 
-import { ConvertPrismaJson } from '@/lib/common'
+import { ConvertPrismaJson, settings } from '@/lib/common'
 import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
@@ -87,12 +87,19 @@ export async function createOrder({ userId }: { userId: string }) {
 }
 
 export async function getOrders({
+  cursor,
   userId,
   type,
+  keyword,
 }: {
   userId: string
-  type: 'live' | 'reservation' | 'archived'
-}) {
+  cursor?: number
+} & (
+  | { type: 'live' | 'reservation' | 'archived'; keyword?: never }
+  | { type: 'search'; keyword: string }
+)) {
+  if (type === 'search' && !keyword) return []
+
   let whereInput: Prisma.OrderWhereInput
   switch (type) {
     case 'live':
@@ -119,6 +126,61 @@ export async function getOrders({
       whereInput = {
         userId: userId,
         OR: [{ timeCanceled: { not: null } }, { timeCompleted: { not: null } }],
+      }
+      break
+    case 'search':
+      // Check datetime or text
+      const searchDate = new Date(keyword)
+      if (!isNaN(searchDate.getTime())) {
+        const searchDateStart = new Date(searchDate.setHours(0, 0, 0, 0))
+        const searchDateEnd = new Date(searchDate.setHours(23, 59, 59, 999))
+        whereInput = {
+          userId: userId,
+          OR: [
+            {
+              menu: {
+                date: searchDateStart,
+              },
+            },
+            {
+              createdAt: {
+                gte: searchDateStart,
+                lte: searchDateEnd,
+              },
+            },
+            {
+              timeCanceled: {
+                gte: searchDateStart,
+                lte: searchDateEnd,
+              },
+            },
+            {
+              timeCompleted: {
+                gte: searchDateStart,
+                lte: searchDateEnd,
+              },
+            },
+          ],
+        }
+        break
+      }
+
+      // check if keyword is a order id
+      if (keyword.match(/^\#\d+$/)) {
+        whereInput = {
+          userId: userId,
+          id: parseInt(keyword.slice(1)),
+        }
+        break
+      }
+
+      // Default text search
+      whereInput = {
+        userId: userId,
+        OR: [
+          { menu: { name: { contains: keyword } } },
+          { items: { some: { name: { contains: keyword } } } },
+        ],
       }
       break
   }
@@ -155,6 +217,8 @@ export async function getOrders({
         },
       },
     },
+    cursor: cursor ? { id: cursor } : undefined,
+    take: settings.ORDER_TAKE_PER_QUERY + 1,
     orderBy: {
       createdAt: 'desc',
     },
@@ -164,27 +228,42 @@ export async function getOrders({
 }
 
 export async function getOrdersForPOS({
-  checkArchived: checkHistory,
+  type,
 }: {
-  checkArchived?: boolean
+  type: 'live' | 'reservation' | 'archived'
 }) {
-  const whereInput: Prisma.OrderWhereInput = checkHistory
-    ? {
-        menu: {
-          type: 'MAIN',
-        },
-        createdAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)), // limit to today archives
-        },
-        OR: [{ timeCanceled: { not: null } }, { timeCompleted: { not: null } }],
-      }
-    : {
+  let whereInput: Prisma.OrderWhereInput
+  const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
+  switch (type) {
+    case 'live':
+      whereInput = {
         menu: {
           type: 'MAIN',
         },
         timeCanceled: null,
         timeCompleted: null,
       }
+      break
+    case 'reservation':
+      whereInput = {
+        menu: {
+          type: { not: 'MAIN' },
+          date: todayDate, // limit to today reservations
+        },
+      }
+      break
+    case 'archived':
+      whereInput = {
+        menu: {
+          type: 'MAIN',
+        },
+        OR: [
+          { timeCanceled: { gte: todayDate } },
+          { timeCompleted: { gte: todayDate } },
+        ],
+      }
+  }
+
   const rawPOSOrders = await prisma.order.findMany({
     where: whereInput,
     include: {
@@ -212,7 +291,7 @@ export async function getOrdersForPOS({
       },
     },
     orderBy: {
-      createdAt: checkHistory ? 'desc' : 'asc',
+      createdAt: type === 'archived' ? 'desc' : 'asc',
     },
   })
 

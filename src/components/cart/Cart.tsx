@@ -239,12 +239,14 @@ export default function Cart() {
                     transition={{ duration: 0.3, type: 'spring' }}
                     className='absolute inset-0 flex flex-col items-center justify-center @2xl/cart:top-16 @2xl/cart:justify-start'
                   >
-                    <div className='flex flex-col items-center justify-center gap-2 sm:gap-4'>
+                    <div className='flex flex-col items-center justify-center gap-4'>
                       <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
                         <ShoppingCartIcon className='h-12 w-12 text-stone-400' />
                       </div>
-                      <h1 className='text-lg font-bold'>購物車是空的</h1>
-                      <p className='text-center text-sm text-stone-400'>
+                      <h1 className='-indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>
+                        購物車是空的
+                      </h1>
+                      <p className='-mt-2 text-center text-sm text-stone-400'>
                         快去挑選餐點吧！
                       </p>
                     </div>

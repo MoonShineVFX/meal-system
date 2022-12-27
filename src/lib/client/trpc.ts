@@ -49,7 +49,7 @@ export type CartItemsAndMenus = (
   | CartItems[0]
   | (CartData['cartItems'][0]['commodityOnMenu']['menu'] & { id: number })
 )[]
-export type OrderDatas = RouterOutput['order']['get']
+export type OrderDatas = RouterOutput['order']['get']['orders']
 export type OrderItems = OrderDatas[0]['items']
 export type POSDatas = RouterOutput['pos']['get']
 

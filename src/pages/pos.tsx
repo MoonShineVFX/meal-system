@@ -10,13 +10,18 @@ import { twData } from '@/lib/common'
 import { ArchiveBoxIcon } from '@heroicons/react/24/outline'
 
 const TOTAL_FILLER_COUNT = 6
-const TAB_NAMES = ['待處理', '已出餐', '已完成'] as const
+const TAB_NAMES = ['待處理', '已出餐', '已完成', '今日預訂'] as const
 
 export default function PagePOS() {
   const [currentTabName, setCurrentTabName] =
     useState<typeof TAB_NAMES[number]>('待處理')
   const { data, isError, isLoading, error } = trpc.pos.get.useQuery({
-    checkArchived: currentTabName === '已完成',
+    type:
+      currentTabName === '已完成'
+        ? 'archived'
+        : currentTabName === '今日預訂'
+        ? 'reservation'
+        : 'live',
   })
   const filteredOrders = useMemo(() => {
     if (!data) return []
@@ -55,16 +60,17 @@ export default function PagePOS() {
           tabNames={TAB_NAMES}
           currentTabName={currentTabName}
           onClick={setCurrentTabName}
+          disableLoading={true}
         />
         {/* Pos */}
         <div className='relative grow'>
           {/* Empty */}
           {filteredOrders.length === 0 && !isLoading && (
-            <div className='flex h-full flex-col items-center justify-center gap-2 sm:gap-4'>
+            <div className='flex h-full flex-col items-center justify-center gap-4'>
               <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
                 <ArchiveBoxIcon className='h-12 w-12 text-stone-400' />
               </div>
-              <h1 className='text-lg font-bold'>{`沒有${currentTabName}的訂單`}</h1>
+              <h1 className='indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>{`沒有${currentTabName}的訂單`}</h1>
             </div>
           )}
           {/* Cards */}

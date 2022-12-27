@@ -2,7 +2,7 @@ import { twMerge } from 'tailwind-merge'
 
 import { motion } from 'framer-motion'
 import { OrderDatas } from '@/lib/client/trpc'
-import { getMenuName } from '@/lib/common'
+import { getMenuName, twData } from '@/lib/common'
 import OrderItemList from './OrderItemList'
 import Tooltip from '../core/Tooltip'
 
@@ -40,6 +40,7 @@ export default function OrderCard(props: {
   order?: OrderDatas[0]
   isFirst?: boolean
   isLast?: boolean
+  isLoading?: boolean
 }) {
   const { order } = props
   const isCancel = order?.timeCanceled !== null
@@ -62,7 +63,9 @@ export default function OrderCard(props: {
         'relative flex flex-col gap-4 border-b-4 border-stone-200 py-6 px-4 pb-7 lg:gap-6 lg:py-8 lg:px-8 lg:pb-9',
         props.isFirst && 'pt-[4.25rem] sm:pt-[4.5rem]',
         props.isLast && 'border-none',
+        props.isLoading && 'group pointer-events-none',
       )}
+      {...twData({ loading: props.isLoading })}
     >
       {/* Title */}
       <header className='flex items-center gap-2'>
