@@ -17,7 +17,7 @@ import COMDialog from './COMDialog'
 import { useStore } from '@/lib/client/store'
 import Error from '@/components/core/Error'
 
-const categoriesPlaceholder: string[] = Array(5).fill('分類')
+const categoriesPlaceholder: string[] = Array(5).fill('主分類')
 const CATEGORY_SCROLL_TOP_TRIGGER = 64
 const UNAVAILABLE_CONFIRM_NAME = (menuId: number) =>
   `menuconfirm-unavailable-${menuId}`
