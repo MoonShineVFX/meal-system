@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'

@@ -60,6 +60,55 @@ export async function createMenu({
   })
 }
 
+/* Get Menu reservation list */
+export async function getResevationMenus({ userId }: { userId: string }) {
+  const now = new Date()
+  const menus = await prisma.menu.findMany({
+    where: {
+      type: { not: MenuType.MAIN },
+      isDeleted: false,
+      publishedDate: { lte: now },
+      closedDate: { gte: now },
+    },
+    select: {
+      id: true,
+      date: true,
+      name: true,
+      description: true,
+      closedDate: true,
+      commodities: {
+        select: {
+          commodity: {
+            select: {
+              name: true,
+              image: {
+                select: {
+                  path: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          orders: {
+            where: {
+              timeCanceled: null,
+              userId,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      date: 'asc',
+    },
+  })
+
+  return menus
+}
+
 /* Get Menu and COMs */
 type GetMenuFromType = { menuId?: never } & (
   | {
