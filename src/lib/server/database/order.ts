@@ -129,9 +129,18 @@ export async function getOrders({
       }
       break
     case 'search':
-      // Check datetime or text
+      // check if keyword is a order id
+      if (keyword.match(/^\#\d+$/)) {
+        whereInput = {
+          userId: userId,
+          id: parseInt(keyword.slice(1)),
+        }
+        break
+      }
+
+      // Check datetime format
       const searchDate = new Date(keyword)
-      if (!isNaN(searchDate.getTime())) {
+      if (!isNaN(searchDate.getTime()) && searchDate.getFullYear() > 2020) {
         const searchDateStart = new Date(searchDate.setHours(0, 0, 0, 0))
         const searchDateEnd = new Date(searchDate.setHours(23, 59, 59, 999))
         whereInput = {
@@ -161,15 +170,6 @@ export async function getOrders({
               },
             },
           ],
-        }
-        break
-      }
-
-      // check if keyword is a order id
-      if (keyword.match(/^\#\d+$/)) {
-        whereInput = {
-          userId: userId,
-          id: parseInt(keyword.slice(1)),
         }
         break
       }

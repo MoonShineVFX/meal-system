@@ -1,4 +1,12 @@
-import { useState, useCallback, startTransition, ChangeEvent } from 'react'
+import {
+  useState,
+  useCallback,
+  startTransition,
+  ChangeEvent,
+  useMemo,
+  useEffect,
+} from 'react'
+import { useRouter } from 'next/router'
 import { Virtuoso } from 'react-virtuoso'
 
 import { InboxIcon } from '@heroicons/react/24/outline'
@@ -13,28 +21,52 @@ import { twData } from '@/lib/common'
 import Tab from '@/components/core/Tab'
 
 const TAB_NAMES = ['處理中', '預訂', '已完成', '搜尋'] as const
+type TabName = typeof TAB_NAMES[number]
+const TAB_PATHS = ['live', 'reservation', 'archived', 'search'] as const
+type TabPath = typeof TAB_PATHS[number]
 
 export default function PageOrder() {
+  const router = useRouter()
+  const currentTabName = useMemo(() => {
+    let parsedPath = router.asPath.split('/')[2]
+
+    // for id specific
+    if (parsedPath === 'id') {
+      parsedPath = 'search'
+    }
+
+    if (!parsedPath || !TAB_PATHS.includes(parsedPath as TabPath))
+      return undefined
+
+    return TAB_NAMES[TAB_PATHS.indexOf(parsedPath as TabPath)]
+  }, [router.asPath])
+
   const [searchKeyword, setSearchKeyword] = useState<string>('')
-  const [currentTabName, setCurrentTabName] =
-    useState<typeof TAB_NAMES[number]>('處理中')
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.order.get.useInfiniteQuery(
       {
-        type:
-          currentTabName == '處理中'
-            ? 'live'
-            : currentTabName == '預訂'
-            ? 'reservation'
-            : currentTabName == '已完成'
-            ? 'archived'
-            : 'search',
+        type: TAB_PATHS[TAB_NAMES.indexOf(currentTabName as TabName)],
         keyword: currentTabName === '搜尋' ? searchKeyword : undefined,
       },
       {
+        enabled: currentTabName !== undefined,
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
       },
     )
+
+  // detect id keyword
+  useEffect(() => {
+    const paths = router.asPath.split('/')
+    // ['', 'order']
+    if (paths.length === 2) {
+      router.push('/order/live', undefined, { shallow: true })
+    } else if (paths.length === 4) {
+      // ['', 'order', 'id', '123']
+      if (paths[2] === 'id' && paths[3].match(/^\d+$/)) {
+        setSearchKeyword('#' + paths[3])
+      }
+    }
+  }, [router.asPath])
 
   const handleScrollEndReached = useCallback(() => {
     if (hasNextPage) {
@@ -55,6 +87,12 @@ export default function PageOrder() {
     [],
   )
 
+  const handleTabClick = useCallback((tabName: TabName) => {
+    router.push(`/order/${TAB_PATHS[TAB_NAMES.indexOf(tabName)]}`, undefined, {
+      shallow: true,
+    })
+  }, [])
+
   if (isError) {
     return <Error description={error.message} />
   }
@@ -73,8 +111,8 @@ export default function PageOrder() {
           {/* Tab */}
           <Tab
             tabNames={TAB_NAMES}
-            currentTabName={currentTabName}
-            onClick={setCurrentTabName}
+            currentTabName={currentTabName ?? TAB_NAMES[0]}
+            onClick={handleTabClick}
             disableLoading={true}
           />
           {/* Content */}

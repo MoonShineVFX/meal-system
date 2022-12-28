@@ -24,8 +24,8 @@ export function Checkout(props: {
 
   const handleCheckout = () => {
     createOrderMutation.mutate(undefined, {
-      onSuccess: (orders) => {
-        router.push('/order')
+      onSuccess: () => {
+        router.push('/order/live')
       },
     })
   }
