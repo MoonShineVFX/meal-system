@@ -325,13 +325,11 @@ function CartItemCard(props: {
                       )}
                   </Listbox>
                   <Button
-                    isLoading={isLoading}
-                    className='hidden h-6 w-6 data-busy:hidden group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200 sm:flex'
+                    isDisabled={isLoading}
+                    className='hidden h-6 w-6 group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200 sm:flex'
                     textClassName='group-data-loading:skeleton'
                     spinnerClassName='h-4 w-4'
-                    label={
-                      <TrashIcon className='h-4 w-4 text-stone-400 group-data-loading:hidden' />
-                    }
+                    label={<TrashIcon className='h-4 w-4 text-stone-400' />}
                     theme='support'
                     onClick={() => handleQuantityChange(0)}
                   />
