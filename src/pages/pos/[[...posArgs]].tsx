@@ -1,5 +1,7 @@
 import { AnimatePresence, MotionConfig } from 'framer-motion'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { ArchiveBoxIcon } from '@heroicons/react/24/outline'
+import { GetServerSideProps } from 'next'
 
 import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
@@ -7,14 +9,40 @@ import Title from '@/components/core/Title'
 import POSCard from '@/components/pos/POSCard'
 import Tab from '@/components/core/Tab'
 import { twData } from '@/lib/common'
-import { ArchiveBoxIcon } from '@heroicons/react/24/outline'
 
 const TOTAL_FILLER_COUNT = 6
 const TAB_NAMES = ['待處理', '已出餐', '已完成', '今日預訂'] as const
+type TabName = typeof TAB_NAMES[number]
+const TAB_PATHS = ['live', 'dishedUp', 'archived', 'reservation'] as const
+type TabPath = typeof TAB_PATHS[number]
+const TAB_LINKS = TAB_PATHS.map((path) => `/pos/${path}`)
 
-export default function PagePOS() {
-  const [currentTabName, setCurrentTabName] =
-    useState<typeof TAB_NAMES[number]>('待處理')
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { posArgs } = context.params as { posArgs?: string[] }
+
+  let tabName: TabName
+
+  if (!Array.isArray(posArgs) || posArgs.length === 0) {
+    // for default
+    tabName = TAB_NAMES[0]
+  } else {
+    const foundIndex = TAB_PATHS.indexOf(posArgs[0] as TabPath)
+    if (foundIndex !== -1) {
+      tabName = TAB_NAMES[foundIndex]
+    } else {
+      tabName = TAB_NAMES[0]
+    }
+  }
+
+  return {
+    props: {
+      tabName,
+    },
+  }
+}
+
+export default function PagePOS(props: { tabName: TabName }) {
+  const currentTabName = props.tabName
   const { data, isError, isLoading, error } = trpc.pos.get.useQuery({
     type:
       currentTabName === '已完成'
@@ -59,7 +87,7 @@ export default function PagePOS() {
         <Tab
           tabNames={TAB_NAMES}
           currentTabName={currentTabName}
-          onClick={setCurrentTabName}
+          tabLinks={TAB_LINKS}
           disableLoading={true}
         />
         {/* Pos */}

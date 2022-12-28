@@ -1,13 +1,6 @@
-import {
-  useState,
-  useCallback,
-  startTransition,
-  ChangeEvent,
-  useMemo,
-  useEffect,
-} from 'react'
-import { useRouter } from 'next/router'
+import { useState, useCallback, startTransition, ChangeEvent } from 'react'
 import { Virtuoso } from 'react-virtuoso'
+import { GetServerSideProps } from 'next'
 
 import { InboxIcon } from '@heroicons/react/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
@@ -24,49 +17,57 @@ const TAB_NAMES = ['處理中', '預訂', '已完成', '搜尋'] as const
 type TabName = typeof TAB_NAMES[number]
 const TAB_PATHS = ['live', 'reservation', 'archived', 'search'] as const
 type TabPath = typeof TAB_PATHS[number]
+const TAB_LINKS = TAB_PATHS.map((path) => `/order/${path}`)
 
-export default function PageOrder() {
-  const router = useRouter()
-  const currentTabName = useMemo(() => {
-    let parsedPath = router.asPath.split('/')[2]
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { orderArgs } = context.params as { orderArgs?: string[] }
 
+  let tabName: TabName
+  let keyword: string = ''
+
+  if (!Array.isArray(orderArgs) || orderArgs.length === 0) {
+    // for default
+    tabName = TAB_NAMES[0]
+  } else if (
     // for id specific
-    if (parsedPath === 'id') {
-      parsedPath = 'search'
+    orderArgs.length >= 2 &&
+    orderArgs[0] === 'id' &&
+    orderArgs[1].match(/^\d+$/)
+  ) {
+    tabName = '搜尋'
+    keyword = '#' + orderArgs[1]
+  } else {
+    const foundIndex = TAB_PATHS.indexOf(orderArgs[0] as TabPath)
+    if (foundIndex !== -1) {
+      tabName = TAB_NAMES[foundIndex]
+    } else {
+      tabName = TAB_NAMES[0]
     }
+  }
 
-    if (!parsedPath || !TAB_PATHS.includes(parsedPath as TabPath))
-      return undefined
+  return {
+    props: {
+      tabName,
+      keyword,
+    },
+  }
+}
 
-    return TAB_NAMES[TAB_PATHS.indexOf(parsedPath as TabPath)]
-  }, [router.asPath])
-
-  const [searchKeyword, setSearchKeyword] = useState<string>('')
+export default function PageOrder(props: {
+  tabName: TabName
+  keyword: string
+}) {
+  const [searchKeyword, setSearchKeyword] = useState<string>(props.keyword)
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.order.get.useInfiniteQuery(
       {
-        type: TAB_PATHS[TAB_NAMES.indexOf(currentTabName as TabName)],
-        keyword: currentTabName === '搜尋' ? searchKeyword : undefined,
+        type: TAB_PATHS[TAB_NAMES.indexOf(props.tabName)],
+        keyword: props.tabName === '搜尋' ? searchKeyword : undefined,
       },
       {
-        enabled: currentTabName !== undefined,
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
       },
     )
-
-  // detect id keyword
-  useEffect(() => {
-    const paths = router.asPath.split('/')
-    // ['', 'order']
-    if (paths.length === 2) {
-      router.push('/order/live', undefined, { shallow: true })
-    } else if (paths.length === 4) {
-      // ['', 'order', 'id', '123']
-      if (paths[2] === 'id' && paths[3].match(/^\d+$/)) {
-        setSearchKeyword('#' + paths[3])
-      }
-    }
-  }, [router.asPath])
 
   const handleScrollEndReached = useCallback(() => {
     if (hasNextPage) {
@@ -87,16 +88,10 @@ export default function PageOrder() {
     [],
   )
 
-  const handleTabClick = useCallback((tabName: TabName) => {
-    router.push(`/order/${TAB_PATHS[TAB_NAMES.indexOf(tabName)]}`, undefined, {
-      shallow: true,
-    })
-  }, [])
-
   if (isError) {
     return <Error description={error.message} />
   }
-  const isSearch = currentTabName === '搜尋'
+  const isSearch = props.tabName === '搜尋'
 
   let orders = data?.pages.flatMap((page) => page.orders) ?? []
 
@@ -111,8 +106,8 @@ export default function PageOrder() {
           {/* Tab */}
           <Tab
             tabNames={TAB_NAMES}
-            currentTabName={currentTabName ?? TAB_NAMES[0]}
-            onClick={handleTabClick}
+            currentTabName={props.tabName}
+            tabLinks={TAB_LINKS}
             disableLoading={true}
           />
           {/* Content */}
@@ -124,7 +119,7 @@ export default function PageOrder() {
                   <InboxIcon className='h-12 w-12 text-stone-400' />
                 </div>
                 <h1 className='indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>
-                  {`沒有${currentTabName}的訂單`}
+                  {`沒有${props.tabName}的訂單`}
                 </h1>
               </div>
             ) : (

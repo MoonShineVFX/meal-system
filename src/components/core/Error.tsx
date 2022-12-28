@@ -6,7 +6,7 @@ export default function Error(props: { title?: string; description: string }) {
       <div className='flex flex-col items-center gap-2'>
         <ExclamationCircleIcon className='h-16 w-16 font-bold text-red-400' />
         <p className='text-lg font-bold'>{props.title ?? 'Oops!'}</p>
-        <p className='w-[60ch] text-stone-400'>{props.description}</p>
+        <p className='max-w-[60ch] text-stone-400'>{props.description}</p>
       </div>
     </div>
   )
