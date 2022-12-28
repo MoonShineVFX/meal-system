@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { userProcedure, router } from '../trpc'
-import { createOrder, getOrders } from '@/lib/server/database'
+import { createOrder, getOrders, getOrdersCount } from '@/lib/server/database'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
@@ -58,4 +58,7 @@ export const OrderRouter = router({
         nextCursor,
       }
     }),
+  getCount: userProcedure.query(async ({ ctx }) => {
+    return await getOrdersCount({ userId: ctx.userLite.id })
+  }),
 })

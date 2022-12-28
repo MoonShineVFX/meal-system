@@ -41,6 +41,7 @@ function Navigation() {
           path='/pos'
           label='處理訂單'
           icons={[SquaresPlusIcon, SquaresPlusIconSolid]}
+          numberBadge={<POSNumberBadge />}
         />
       )}
       <NavButton path='/' label='點餐' icons={[HomeIcon, HomeIconSolid]} />
@@ -53,11 +54,13 @@ function Navigation() {
         label='購物車'
         path='/cart'
         icons={[ShoppingCartIcon, ShoppingCartIconSolid]}
+        numberBadge={<CartNumberBadge />}
       />
       <NavButton
         label='訂單'
         path='/order'
         icons={[DocumentTextIcon, DocumentTextIconSolid]}
+        numberBadge={<OrderNumberBadge />}
       />
       <NavButton
         className='hidden sm:block'
@@ -165,6 +168,7 @@ function NavButton(props: {
   ]
   path: string
   className?: string
+  numberBadge?: JSX.Element
 }) {
   const router = useRouter()
 
@@ -175,8 +179,6 @@ function NavButton(props: {
     : router.asPath.split('/')[1] === props.path.replace('/', '')
 
   const NormalIcon = props.icons[0]
-
-  const isCart = props.path === '/cart'
 
   return (
     <ul className={twMerge('sm:w-full', props.className)}>
@@ -196,7 +198,7 @@ function NavButton(props: {
           className='sm:hidden'
           isSelected={isSelected}
           icons={props.icons}
-          cartBadge={isCart}
+          numberBadge={props.numberBadge}
         />
         {/* Desktop label */}
         <div className='group-data-not-selected:active: relative hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:scale-95 sm:flex'>
@@ -210,11 +212,7 @@ function NavButton(props: {
 
           <NormalIcon className='h-5 w-5' />
           <span className='ml-4'>{props.label}</span>
-          {isCart && (
-            <div className='ml-2'>
-              <CartBadge />
-            </div>
-          )}
+          {props.numberBadge && <div className='ml-2'>{props.numberBadge}</div>}
         </div>
       </Link>
     </ul>
@@ -228,7 +226,7 @@ function NavIcon(props: {
     React.FC<React.ComponentProps<'svg'>>,
     React.FC<React.ComponentProps<'svg'>>,
   ]
-  cartBadge?: boolean
+  numberBadge?: JSX.Element
 }) {
   const Icon = props.isSelected ? props.icons[1] : props.icons[0]
   return (
@@ -236,21 +234,25 @@ function NavIcon(props: {
       className={`group flex items-center rounded-full p-3 hover:bg-stone-200 active:bg-stone-200 ${props.className} relative active:scale-90`}
       {...twData({ selected: props.isSelected })}
     >
-      <div className='absolute top-1 right-1'>
-        {props.cartBadge && <CartBadge />}
-      </div>
+      {props.numberBadge && (
+        <div className='absolute top-1 right-1'>{props.numberBadge}</div>
+      )}
       <Icon className='h-6 w-6 stroke-1 group-data-selected:text-yellow-500' />
     </div>
   )
 }
 
-function CartBadge() {
-  const { data, isLoading, isError } = trpc.cart.get.useQuery()
+function NumberBadge(props: {
+  number?: number
+  isLoading?: boolean
+  isError?: boolean
+}) {
+  const { number, isLoading, isError } = props
   const controls = useAnimationControls()
   const [isFirstData, setIsFirstData] = useState(false)
 
   useEffect(() => {
-    if (!data) return
+    if (number === undefined) return
     if (!isFirstData) {
       setIsFirstData(true)
       return
@@ -260,7 +262,7 @@ function CartBadge() {
       scale: [0, 1],
       transition: { type: 'spring', bounce: 0.5, duration: 0.4 },
     })
-  }, [data])
+  }, [number])
 
   if (isLoading)
     return <Spinner className='h-4 w-4 text-stone-500 sm:h-5 sm:w-5' />
@@ -270,16 +272,41 @@ function CartBadge() {
       <ExclamationCircleIcon className='h-4 w-4 text-red-400 sm:h-5 sm:w-5' />
     )
 
-  if (data.cartItems.length === 0) return null
-
-  const quantity = data.cartItems.reduce((acc, item) => acc + item.quantity, 0)
+  if (number === 0) return null
 
   return (
     <motion.div
       animate={controls}
       className='flex h-4 w-4 justify-center rounded-full bg-yellow-500 -indent-[0.05em] font-mono text-xs tracking-tighter text-yellow-900 group-data-selected:bg-stone-300 group-data-selected:text-stone-600 sm:h-5 sm:w-5 sm:rounded-md sm:text-sm'
     >
-      {quantity}
+      {number}
     </motion.div>
+  )
+}
+
+function CartNumberBadge() {
+  const { data, isLoading, isError } = trpc.cart.get.useQuery()
+  return (
+    <NumberBadge
+      number={data?.cartItems.reduce((acc, item) => acc + item.quantity, 0)}
+      isLoading={isLoading}
+      isError={isError}
+    />
+  )
+}
+
+function OrderNumberBadge() {
+  const { data, isLoading, isError } = trpc.order.getCount.useQuery()
+  return <NumberBadge number={data} isLoading={isLoading} isError={isError} />
+}
+
+function POSNumberBadge() {
+  const { data, isLoading, isError } = trpc.pos.get.useQuery({ type: 'live' })
+  return (
+    <NumberBadge
+      number={data?.length}
+      isLoading={isLoading}
+      isError={isError}
+    />
   )
 }

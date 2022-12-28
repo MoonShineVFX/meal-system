@@ -5,6 +5,7 @@ import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
 
+/* Validate and create orders by menu with transaction */
 export async function createOrder({ userId }: { userId: string }) {
   return await prisma.$transaction(async (client) => {
     // Get valid cart items
@@ -86,6 +87,39 @@ export async function createOrder({ userId }: { userId: string }) {
   })
 }
 
+// Get orders count for user navigation badge, today's reservation and live orders
+export async function getOrdersCount({ userId }: { userId: string }) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  return await prisma.order.count({
+    where: {
+      userId: userId,
+      timeCanceled: null,
+      timeCompleted: null,
+      OR: [
+        {
+          menu: {
+            type: 'MAIN',
+          },
+        },
+        {
+          menu: {
+            type: { not: 'MAIN' },
+            date: {
+              gte: today,
+              lt: tomorrow,
+            },
+          },
+        },
+      ],
+    },
+  })
+}
+
+// Get orders for user, including search function
 export async function getOrders({
   cursor,
   userId,
@@ -227,6 +261,7 @@ export async function getOrders({
   return rawOrders as ConvertPrismaJson<typeof rawOrders>
 }
 
+// Get orders for POS
 export async function getOrdersForPOS({
   type,
 }: {
@@ -298,6 +333,7 @@ export async function getOrdersForPOS({
   return rawPOSOrders as ConvertPrismaJson<typeof rawPOSOrders>
 }
 
+/* Update order, and process refund if canceled */
 export async function updateOrderStatus({
   orderId,
   status,
