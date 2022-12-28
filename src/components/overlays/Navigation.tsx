@@ -122,33 +122,34 @@ function ProfileButton(props: { className?: string }) {
         leaveTo='transform scale-50 opacity-0'
       >
         <Popover.Panel className='absolute bottom-12 -right-2 z-10 min-w-[8em] rounded-2xl border border-stone-200 bg-white py-3 px-2 tracking-wider drop-shadow-md sm:left-0 sm:bottom-auto sm:top-1 sm:right-0'>
-          {user && ['ADMIN', 'STAFF'].includes(user.role) && (
-            <Popover.Button
-              as={Link}
-              href='/pos'
-              className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
-            >
-              處理訂單
-            </Popover.Button>
+          {({ close }) => (
+            <div onClick={() => close()}>
+              {user && ['ADMIN', 'STAFF'].includes(user.role) && (
+                <Link
+                  href='/pos'
+                  className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+                >
+                  處理訂單
+                </Link>
+              )}
+              <Link
+                href='/transaction'
+                className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+              >
+                錢包
+              </Link>
+              <div
+                className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'
+                onClick={handleLogout}
+              >
+                登出
+              </div>
+              {/* Arrow */}
+              <div className='absolute right-[0.875rem] bottom-0 h-4 w-10 translate-y-full overflow-hidden sm:hidden'>
+                <div className='h-6 w-6 origin-top-right translate-x-4 -translate-y-1 rotate-45 border border-stone-200 bg-white'></div>
+              </div>
+            </div>
           )}
-          <Popover.Button
-            as={Link}
-            href='/transaction'
-            className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
-          >
-            錢包
-          </Popover.Button>
-          <Popover.Button
-            as={'div'}
-            className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'
-            onClick={handleLogout}
-          >
-            登出
-          </Popover.Button>
-          {/* Arrow */}
-          <div className='absolute right-[0.875rem] bottom-0 h-4 w-10 translate-y-full overflow-hidden sm:hidden'>
-            <div className='h-6 w-6 origin-top-right translate-x-4 -translate-y-1 rotate-45 border border-stone-200 bg-white'></div>
-          </div>
         </Popover.Panel>
       </Transition>
     </Popover>
@@ -168,9 +169,10 @@ function NavButton(props: {
   const router = useRouter()
 
   const isShallow = props.path.includes('?')
+
   const isSelected = isShallow
     ? router.query.logout === ''
-    : router.pathname.split('/')[1] === props.path.replace('/', '')
+    : router.asPath.split('/')[1] === props.path.replace('/', '')
 
   const NormalIcon = props.icons[0]
 
@@ -181,7 +183,7 @@ function NavButton(props: {
       <Link
         className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
         href={{
-          pathname: isShallow ? router.pathname : props.path,
+          pathname: isShallow ? router.asPath : props.path,
           query: isShallow
             ? { ...router.query, [props.path.replace('?', '')]: null }
             : undefined,

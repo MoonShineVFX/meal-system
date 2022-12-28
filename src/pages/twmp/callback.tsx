@@ -67,7 +67,7 @@ export default function PageTwmpResult(props: {
     if (!props.errorMessage && props.twmpDepositId) {
       router.push(`/twmp/${props.twmpDepositId}?callback=true`)
     } else {
-      router.replace(router.pathname, undefined, { shallow: true })
+      router.replace(router.asPath, undefined, { shallow: true })
     }
   }, [])
 

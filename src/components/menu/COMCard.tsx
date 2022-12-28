@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { useRouter } from 'next/router'
 import { motion } from 'framer-motion'
 
 import type { CommodityOnMenu } from '@/lib/client/trpc'
@@ -10,17 +9,10 @@ function LinkWrapper(props: {
   children: React.ReactNode
   com?: CommodityOnMenu
 }) {
-  const router = useRouter()
   return (
     <Link
       className='group-data-loading:pointer-events-none'
-      href={{
-        pathname: router.pathname,
-        query: {
-          ...router.query,
-          commodityId: props.com?.commodity.id,
-        },
-      }}
+      href={`./${props.com?.commodity.id ?? ''}`}
     >
       {props.children}
     </Link>

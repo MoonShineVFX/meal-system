@@ -26,6 +26,7 @@ export default function Menu(props: {
   type: MenuType
   date?: Date
   className?: string
+  comId?: number
 }) {
   const { data, isLoading, isError, error } = trpc.menu.get.useQuery({
     type: props.type,
@@ -91,19 +92,18 @@ export default function Menu(props: {
 
   // Detect commodityId from query and open
   useEffect(() => {
-    if (router.query.commodityId && data) {
-      const commodityId = Number(router.query.commodityId)
+    if (props.comId && data) {
       const com = data.commodities.find(
-        (com) => com.commodity.id === commodityId,
+        (com) => com.commodity.id === props.comId,
       )
       if (com) {
         setSelectedCom(com)
         setIsDialogOpen(true)
       }
-    } else if (!router.query.commodityId && isDialogOpen) {
+    } else if (!props.comId && isDialogOpen) {
       setIsDialogOpen(false)
     }
-  }, [router.query.commodityId, data])
+  }, [props.comId, data])
 
   // On data change
   useEffect(() => {
@@ -182,18 +182,9 @@ export default function Menu(props: {
   }, [data])
 
   const handleDialogClose = useCallback(() => {
-    if (router.query.commodityId) {
-      const { commodityId, ...query } = router.query
-      router.push(
-        {
-          pathname: router.pathname,
-          query,
-        },
-        undefined,
-        { shallow: true },
-      )
-    }
-  }, [router.query])
+    const rootPath = router.asPath.split('/').slice(0, -1).join('/')
+    router.push(rootPath)
+  }, [router.asPath])
 
   const handleCategoryClick = useCallback((category: string) => {
     document.getElementById(category)?.scrollIntoView({

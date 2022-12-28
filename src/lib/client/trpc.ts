@@ -109,11 +109,13 @@ const authLink: TRPCLink<AppRouter> = () => {
             op.path === 'user.login' &&
             value.result.type === 'data'
           ) {
+            // On login success, set cookie and notify
             const cookie = generateCookie(
               (value.result.data as { token: string }).token,
             )
+            sessionStorage.setItem('loginSuccessNotify', 'true')
             document.cookie = cookie
-            window.location.href = '/?login'
+            window.location.href = '/'
           }
           observer.next(value)
         },
