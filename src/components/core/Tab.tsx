@@ -17,7 +17,7 @@ export default function Tab<T extends readonly string[]>(props: {
     <ul className='absolute z-10 flex w-full gap-4 overflow-x-auto bg-white/80 p-4 py-2 shadow backdrop-blur lg:static lg:w-max lg:flex-col lg:bg-transparent lg:p-8 lg:pr-0 lg:shadow-none lg:backdrop-blur-none'>
       {props.tabNames.map((tabName, index) => (
         <li
-          key={`tab-${index}-${tabName}`}
+          key={`tab-${index}`}
           className={twMerge(
             'relative w-fit shrink-0 cursor-pointer rounded-2xl px-2 py-1 text-stone-500 data-selected:pointer-events-none data-selected:text-yellow-900 data-not-selected:hover:bg-stone-600/10 data-not-selected:active:scale-95 data-not-selected:active:bg-stone-600/10 lg:data-not-selected:hover:bg-stone-100 lg:data-not-selected:active:bg-stone-100',
             !props.disableLoading && 'group-data-loading:skeleton',
@@ -37,7 +37,7 @@ export default function Tab<T extends readonly string[]>(props: {
             <motion.div
               className='absolute inset-0 -z-10 rounded-2xl bg-yellow-500'
               transition={{ type: 'spring', duration: 0.4 }}
-              layoutId='cat-selected'
+              layoutId={props.tabNames.join('-')}
             ></motion.div>
           )}
           <p className='whitespace-nowrap text-justify indent-[0.1em] text-sm font-bold tracking-widest sm:text-base'>
