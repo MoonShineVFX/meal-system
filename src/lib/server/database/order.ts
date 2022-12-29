@@ -1,6 +1,6 @@
 import { Prisma, Order, MenuType } from '@prisma/client'
 
-import { ConvertPrismaJson, settings } from '@/lib/common'
+import { ConvertPrismaJson, settings, MenuTypeName } from '@/lib/common'
 import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
@@ -174,7 +174,11 @@ export async function getOrders({
 
       // Check datetime format
       const searchDate = new Date(keyword)
-      if (!isNaN(searchDate.getTime()) && searchDate.getFullYear() > 2020) {
+      if (
+        !isNaN(searchDate.getTime()) &&
+        searchDate.getFullYear() > 2020 &&
+        searchDate.getFullYear() < 2100
+      ) {
         const searchDateStart = new Date(searchDate.setHours(0, 0, 0, 0))
         const searchDateEnd = new Date(searchDate.setHours(23, 59, 59, 999))
         whereInput = {
@@ -206,6 +210,47 @@ export async function getOrders({
           ],
         }
         break
+      }
+
+      // Check if keyword is a menu type
+      if (keyword === '即時') {
+        whereInput = {
+          userId: userId,
+          menu: {
+            type: 'MAIN',
+          },
+        }
+        break
+      }
+      if (keyword === '取消') {
+        whereInput = {
+          userId: userId,
+          timeCanceled: { not: null },
+        }
+        break
+      }
+      if (['預約', '預訂'].includes(keyword)) {
+        whereInput = {
+          userId: userId,
+          menu: {
+            type: { not: 'MAIN' },
+          },
+        }
+        break
+      }
+      if (Object.values(MenuTypeName).includes(keyword)) {
+        const foundType = Object.entries(MenuTypeName).find(
+          ([, value]) => value === keyword,
+        )?.[0]
+        if (foundType) {
+          whereInput = {
+            userId: userId,
+            menu: {
+              type: foundType as MenuType,
+            },
+          }
+          break
+        }
       }
 
       // Default text search

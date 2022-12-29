@@ -56,12 +56,12 @@ export enum ComUnavailableReason {
   COM_LIMIT_PER_ORDER_EXCEEDED = '您已達此餐點的單筆訂購數量上限',
 }
 
-export const MenuTypeName = {
+export const MenuTypeName: Record<MenuType, string> = {
   [MenuType.BREAKFAST]: '早餐',
   [MenuType.LUNCH]: '午餐',
   [MenuType.DINNER]: '晚餐',
   [MenuType.TEA]: '下午茶',
-  [MenuType.MAIN]: '即時點餐',
+  [MenuType.MAIN]: '即時',
 }
 
 /* Settings */

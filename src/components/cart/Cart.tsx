@@ -215,7 +215,7 @@ export default function Cart() {
                               duration: 0.3,
                             },
                           }}
-                          className='text-sm text-stone-400'
+                          className='pt-4 text-sm text-stone-400 first:pt-0'
                           key={menuOrCartItem.id}
                         >
                           {getMenuName(menuOrCartItem)}

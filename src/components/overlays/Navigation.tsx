@@ -44,9 +44,9 @@ function Navigation() {
           numberBadge={<POSNumberBadge />}
         />
       )}
-      <NavButton path='/' label='點餐' icons={[HomeIcon, HomeIconSolid]} />
+      <NavButton path='/' label='即時點餐' icons={[HomeIcon, HomeIconSolid]} />
       <NavButton
-        label='預訂 / 下午茶'
+        label='預訂'
         path='/reserve'
         icons={[CalendarDaysIcon, CalendarDaysIconSolid]}
       />
