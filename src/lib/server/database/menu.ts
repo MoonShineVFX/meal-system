@@ -61,7 +61,7 @@ export async function createMenu({
 }
 
 /* Get Menu reservation list */
-export async function getResevationMenus({ userId }: { userId: string }) {
+export async function getReservationMenus({ userId }: { userId: string }) {
   const now = new Date()
   const menus = await prisma.menu.findMany({
     where: {
@@ -467,8 +467,8 @@ export async function addCommodityToMenu({
 type CreateCategoryArgs = {
   mainName: string
   subName: string
-  mainOrder: number
-  subOrder: number
+  mainOrder?: number
+  subOrder?: number
 }
 export async function createCategory({
   mainName,

@@ -2,7 +2,7 @@ import z from 'zod'
 import { MenuType } from '@prisma/client'
 
 import { userProcedure, router } from '../trpc'
-import { getMenuWithComs } from '@/lib/server/database'
+import { getMenuWithComs, getReservationMenus } from '@/lib/server/database'
 
 export const MenuRouter = router({
   get: userProcedure
@@ -32,4 +32,7 @@ export const MenuRouter = router({
         userId: ctx.userLite.id,
       })
     }),
+  getReservations: userProcedure.query(async ({ ctx }) => {
+    return await getReservationMenus({ userId: ctx.userLite.id })
+  }),
 })

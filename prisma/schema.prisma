@@ -195,8 +195,8 @@ model CommodityCategory {
 
   mainName  String
   subName   String
-  mainOrder Int
-  subOrder  Int
+  mainOrder Int    @default(99)
+  subOrder  Int    @default(99)
 
   commodities Commodity[]
 
