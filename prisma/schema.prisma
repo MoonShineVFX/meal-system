@@ -266,7 +266,7 @@ model Menu {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  date          DateTime? @db.Date
+  date          DateTime?
   type          MenuType
   name          String    @default("")
   description   String    @default("")
@@ -321,6 +321,6 @@ model ServerRefill {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  date   DateTime @db.Date
+  date   DateTime
   amount Int
 }

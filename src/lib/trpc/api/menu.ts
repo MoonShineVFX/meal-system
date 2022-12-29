@@ -8,27 +8,32 @@ export const MenuRouter = router({
   get: userProcedure
     .input(
       z.object({
-        type: z.nativeEnum(MenuType),
+        type: z.nativeEnum(MenuType).optional(),
         date: z.date().optional(),
+        menuId: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
+      if (!input.menuId && !input.type) {
+        throw new Error('menuId or type is required')
+      }
       if (input.type === 'MAIN' && input.date) {
         throw new Error('MAIN menu does not have a date')
-      } else if (input.type !== 'MAIN' && !input.date) {
+      } else if (input.type !== 'MAIN' && !input.menuId && !input.date) {
         throw new Error('Date is required for non MAIN menu')
       }
 
       return await getMenuWithComs({
-        menu:
-          input.type === 'MAIN'
-            ? {
-                type: input.type,
-              }
-            : {
-                type: input.type,
-                date: input.date!,
-              },
+        menu: input.menuId
+          ? { menuId: input.menuId! }
+          : input.type === 'MAIN'
+          ? {
+              type: input.type!,
+            }
+          : {
+              type: input.type!,
+              date: input.date!,
+            },
         userId: ctx.userLite.id,
       })
     }),

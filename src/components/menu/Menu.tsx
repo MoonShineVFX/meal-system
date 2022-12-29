@@ -23,14 +23,16 @@ const UNAVAILABLE_CONFIRM_NAME = (menuId: number) =>
   `menuconfirm-unavailable-${menuId}`
 
 export default function Menu(props: {
-  type: MenuType
+  type?: MenuType
   date?: Date
+  menuId?: number
   className?: string
   comId?: number
 }) {
   const { data, isLoading, isError, error } = trpc.menu.get.useQuery({
     type: props.type,
     date: props.date,
+    menuId: props.menuId,
   })
   const router = useRouter()
   const [selectedCom, setSelectedCom] = useState<CommoditiesOnMenu[0] | null>(

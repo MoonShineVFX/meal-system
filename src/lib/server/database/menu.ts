@@ -72,6 +72,7 @@ export async function getReservationMenus({ userId }: { userId: string }) {
     },
     select: {
       id: true,
+      type: true,
       date: true,
       name: true,
       description: true,
@@ -80,6 +81,7 @@ export async function getReservationMenus({ userId }: { userId: string }) {
         select: {
           commodity: {
             select: {
+              id: true,
               name: true,
               image: {
                 select: {

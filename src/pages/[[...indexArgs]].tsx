@@ -23,6 +23,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     comId = parseInt(indexArgs[0])
   }
 
+  if (comId === undefined && indexArgs !== undefined) {
+    return {
+      notFound: true,
+    }
+  }
+
   return {
     props: {
       comId,

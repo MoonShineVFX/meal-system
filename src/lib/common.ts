@@ -1,4 +1,4 @@
-import { TransactionType, UserRole, Menu } from '@prisma/client'
+import { TransactionType, UserRole, Menu, MenuType } from '@prisma/client'
 
 /* Types */
 export type ConvertPrismaJson<T extends object> = {
@@ -54,6 +54,14 @@ export enum ComUnavailableReason {
   STOCK_OUT = '餐點已售完',
   COM_LIMIT_PER_USER_EXCEEDED = '您已達此餐點的每人訂購數量上限',
   COM_LIMIT_PER_ORDER_EXCEEDED = '您已達此餐點的單筆訂購數量上限',
+}
+
+export const MenuTypeName = {
+  [MenuType.BREAKFAST]: '早餐',
+  [MenuType.LUNCH]: '午餐',
+  [MenuType.DINNER]: '晚餐',
+  [MenuType.TEA]: '下午茶',
+  [MenuType.MAIN]: '即時點餐',
 }
 
 /* Settings */
@@ -151,23 +159,8 @@ export function twData(
 export function getMenuName(menu: Pick<Menu, 'date' | 'name' | 'type'>) {
   if (menu.type === 'MAIN') return '即時點餐'
   if (menu.date === null) return '錯誤菜單'
-  let typeName: string
-  switch (menu.type) {
-    case 'BREAKFAST':
-      typeName = '早餐'
-      break
-    case 'LUNCH':
-      typeName = '午餐'
-      break
-    case 'DINNER':
-      typeName = '晚餐'
-      break
-    case 'TEA':
-      typeName = '下午茶'
-      break
-    default:
-      typeName = '錯誤菜單'
-  }
+  const typeName = MenuTypeName[menu.type]
+
   return `預訂 ${menu.date.toLocaleDateString('zh-TW', {
     month: 'long',
     day: 'numeric',

@@ -52,6 +52,7 @@ export type CartItemsAndMenus = (
 export type OrderDatas = RouterOutput['order']['get']['orders']
 export type OrderItems = OrderDatas[0]['items']
 export type POSDatas = RouterOutput['pos']['get']
+export type ReservationDatas = RouterOutput['menu']['getReservations']
 
 /* WebSocket Client */
 declare global {

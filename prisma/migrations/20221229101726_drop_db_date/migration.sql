@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Menu" ALTER COLUMN "date" SET DATA TYPE TIMESTAMP(3);
+
+-- AlterTable
+ALTER TABLE "ServerRefill" ALTER COLUMN "date" SET DATA TYPE TIMESTAMP(3);

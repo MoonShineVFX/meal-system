@@ -8,13 +8,13 @@ import TransactionDetail from '@/components/transaction/TransactionDetail'
 import Title from '@/components/core/Title'
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { transactionId } = context.params as { transactionId: string[] }
+  const { transactionArgs } = context.params as { transactionArgs: string[] }
 
   return {
     props: {
-      transactionId: transactionId
-        ? transactionId.length > 0
-          ? transactionId[0]
+      transactionId: transactionArgs
+        ? transactionArgs.length > 0
+          ? transactionArgs[0]
           : undefined
         : undefined,
     },

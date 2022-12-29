@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
@@ -8,10 +9,22 @@ function LinkWrapper(props: {
   children: React.ReactNode
   com?: CommodityOnMenu
 }) {
+  const [pathName, setPathName] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    setPathName(window?.location.pathname)
+  }, [])
+
   return (
     <Link
       className='group-data-loading:pointer-events-none'
-      href={`./${props.com?.commodity.id ?? ''}`}
+      href={
+        props.com && pathName
+          ? `${pathName === '/' ? '/' : window.location.pathname + '/'}${
+              props.com?.commodity.id
+            }`
+          : ''
+      }
     >
       {props.children}
     </Link>
