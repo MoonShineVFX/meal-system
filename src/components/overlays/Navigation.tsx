@@ -42,13 +42,20 @@ function Navigation() {
           label='處理訂單'
           icons={[SquaresPlusIcon, SquaresPlusIconSolid]}
           numberBadge={<POSNumberBadge />}
+          rememberSubpath={true}
         />
       )}
-      <NavButton path='/' label='即時點餐' icons={[HomeIcon, HomeIconSolid]} />
+      <NavButton
+        label='即時點餐'
+        path='/live'
+        icons={[HomeIcon, HomeIconSolid]}
+        rememberSubpath={true}
+      />
       <NavButton
         label='預訂'
         path='/reserve'
         icons={[CalendarDaysIcon, CalendarDaysIconSolid]}
+        rememberSubpath={true}
       />
       <NavButton
         label='購物車'
@@ -61,6 +68,7 @@ function Navigation() {
         path='/order'
         icons={[DocumentTextIcon, DocumentTextIconSolid]}
         numberBadge={<OrderNumberBadge />}
+        rememberSubpath={true}
       />
       <NavButton
         className='hidden sm:block'
@@ -167,30 +175,28 @@ function NavButton(props: {
     React.FC<React.ComponentProps<'svg'>>,
   ]
   path: string
+  rememberSubpath?: boolean
   className?: string
   numberBadge?: JSX.Element
 }) {
+  const [subpath, setSubpath] = useState<string | undefined>(undefined)
   const router = useRouter()
 
-  const isShallow = props.path.includes('?')
-
-  const isSelected = isShallow
-    ? router.query.logout === ''
-    : router.asPath.split('/')[1] === props.path.replace('/', '')
+  const isSelected = router.asPath.split('/')[1] === props.path.replace('/', '')
 
   const NormalIcon = props.icons[0]
+
+  useEffect(() => {
+    if (isSelected && props.rememberSubpath) {
+      setSubpath(router.asPath)
+    }
+  }, [router.asPath])
 
   return (
     <ul className={twMerge('sm:w-full', props.className)}>
       <Link
         className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
-        href={{
-          pathname: isShallow ? router.asPath : props.path,
-          query: isShallow
-            ? { ...router.query, [props.path.replace('?', '')]: null }
-            : undefined,
-        }}
-        shallow={props.path.includes('?')}
+        href={subpath ?? props.path}
         {...twData({ selected: isSelected })}
       >
         {/* Mobile icon */}

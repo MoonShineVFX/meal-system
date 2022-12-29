@@ -1,6 +1,7 @@
 import { useState, useCallback, startTransition, ChangeEvent } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { GetServerSideProps } from 'next'
+import z from 'zod'
 
 import { InboxIcon } from '@heroicons/react/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
@@ -19,24 +20,42 @@ const TAB_PATHS = ['live', 'reservation', 'archived', 'search'] as const
 type TabPath = typeof TAB_PATHS[number]
 const TAB_LINKS = TAB_PATHS.map((path) => `/order/${path}`)
 
+const orderArgsSchema = z.array(z.string()).min(1).max(2).optional()
+
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { orderArgs } = context.params as { orderArgs?: string[] }
+
+  const result = orderArgsSchema.safeParse(orderArgs)
+  if (!result.success) {
+    return {
+      notFound: true,
+    }
+  }
 
   let tabName: TabName
   let keyword: string = ''
 
-  if (!Array.isArray(orderArgs) || orderArgs.length === 0) {
+  if (!orderArgs) {
     // for default
     tabName = TAB_NAMES[0]
   } else if (
     // for id specific
-    orderArgs.length >= 2 &&
-    orderArgs[0] === 'id' &&
-    orderArgs[1].match(/^\d+$/)
+    orderArgs[0] === 'id'
   ) {
-    tabName = '搜尋'
-    keyword = '#' + orderArgs[1]
+    if (orderArgs.length == 2 && orderArgs[1].match(/^\d+$/)) {
+      tabName = '搜尋'
+      keyword = '#' + orderArgs[1]
+    } else {
+      return {
+        notFound: true,
+      }
+    }
   } else {
+    if (orderArgs.length > 1) {
+      return {
+        notFound: true,
+      }
+    }
     const foundIndex = TAB_PATHS.indexOf(orderArgs[0] as TabPath)
     if (foundIndex !== -1) {
       tabName = TAB_NAMES[foundIndex]

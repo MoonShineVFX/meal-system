@@ -6,7 +6,7 @@ import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
 import Tab from '@/components/core/Tab'
 import Dialog from '@/components/core/Dialog'
-import { twData, settings } from '@/lib/common'
+import { twData, settings, getMenuName } from '@/lib/common'
 import trpc from '@/lib/client/trpc'
 import type {
   CommoditiesOnMenu,
@@ -16,6 +16,7 @@ import COMsGrid from './COMsGrid'
 import COMDialog from './COMDialog'
 import { useStore } from '@/lib/client/store'
 import Error from '@/components/core/Error'
+import Title from '@/components/core/Title'
 
 const categoriesPlaceholder: string[] = Array(5).fill('主分類')
 const CATEGORY_SCROLL_TOP_TRIGGER = 64
@@ -200,67 +201,70 @@ export default function Menu(props: {
   const coms = isLoading ? undefined : comsByCategory
 
   return (
-    <div
-      className={twMerge('group relative h-full bg-white', props.className)}
-      {...twData({ loading: isLoading })}
-    >
-      <div className='absolute inset-0 flex flex-col lg:flex-row'>
-        {/* Categories */}
-        <Tab
-          tabNames={categories}
-          currentTabName={currentCategory}
-          onClick={handleCategoryClick}
+    <>
+      <Title prefix={getMenuName(data)} />
+      <div
+        className={twMerge('group relative h-full bg-white', props.className)}
+        {...twData({ loading: isLoading })}
+      >
+        <div className='absolute inset-0 flex flex-col lg:flex-row'>
+          {/* Categories */}
+          <Tab
+            tabNames={categories}
+            currentTabName={currentCategory}
+            onClick={handleCategoryClick}
+          />
+          {/* Commodities */}
+          <section className='relative grow'>
+            <div
+              ref={gridRef}
+              className='ms-scroll absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] sm:pt-[4rem] lg:p-8'
+            >
+              {data && data.unavailableReasons.length > 0 && (
+                <section className='mb-4 flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-stone-500'>
+                  <div className='flex items-center gap-2 text-red-400'>
+                    <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
+                    目前無法訂購餐點
+                  </div>
+                  <ul className='flex flex-col gap-1 text-stone-400'>
+                    {data.unavailableReasons.map((reason) => (
+                      <li className='ml-7 text-sm text-red-300' key={reason}>
+                        {reason}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              <COMsGrid comsByCategory={coms} />
+            </div>
+          </section>
+        </div>
+        {/* Commodity detail */}
+        <COMDialog
+          isOpen={isDialogOpen}
+          com={selectedCom ?? undefined}
+          onClose={handleDialogClose}
         />
-        {/* Commodities */}
-        <section className='relative grow'>
-          <div
-            ref={gridRef}
-            className='ms-scroll absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] sm:pt-[4rem] lg:p-8'
-          >
-            {data && data.unavailableReasons.length > 0 && (
-              <section className='mb-4 flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-stone-500'>
-                <div className='flex items-center gap-2 text-red-400'>
-                  <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
-                  目前無法訂購餐點
-                </div>
-                <ul className='flex flex-col gap-1 text-stone-400'>
-                  {data.unavailableReasons.map((reason) => (
-                    <li className='ml-7 text-sm text-red-300' key={reason}>
-                      {reason}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-            <COMsGrid comsByCategory={coms} />
-          </div>
-        </section>
+        {/* Warning for unavailables */}
+        <Dialog
+          open={unavailableNotify}
+          onClose={() => {
+            sessionStorage.setItem(
+              UNAVAILABLE_CONFIRM_NAME(data?.id ?? 0),
+              'true',
+            )
+            setUnavailableNotify(false)
+          }}
+          title='目前無法訂購餐點'
+          content={
+            <ul className='flex flex-col gap-1'>
+              {data?.unavailableReasons.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          }
+        />
       </div>
-      {/* Commodity detail */}
-      <COMDialog
-        isOpen={isDialogOpen}
-        com={selectedCom ?? undefined}
-        onClose={handleDialogClose}
-      />
-      {/* Warning for unavailables */}
-      <Dialog
-        open={unavailableNotify}
-        onClose={() => {
-          sessionStorage.setItem(
-            UNAVAILABLE_CONFIRM_NAME(data?.id ?? 0),
-            'true',
-          )
-          setUnavailableNotify(false)
-        }}
-        title='目前無法訂購餐點'
-        content={
-          <ul className='flex flex-col gap-1'>
-            {data?.unavailableReasons.map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
-          </ul>
-        }
-      />
-    </div>
+    </>
   )
 }

@@ -1,8 +1,9 @@
+import z from 'zod'
+
 import Menu from '@/components/menu/Menu'
 import Cart from '@/components/cart/Cart'
 import Reservations from '@/components/menu/Reservations'
 import { GetServerSideProps } from 'next'
-import z from 'zod'
 
 const reserveArgsSchema = z
   .array(z.string().regex(/^\d+$/))

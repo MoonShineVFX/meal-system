@@ -2,7 +2,6 @@ import { Transition } from '@headlessui/react'
 import { Fragment, useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 
-import Title from '@/components/core/Title'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import COMDialogContent from './COMDialogContent'
 import Swiper from './Swiper'
@@ -12,8 +11,6 @@ export default function COMDialog(props: {
   onClose: () => void
   com?: CommodityOnMenu
 }) {
-  const { com } = props
-
   // Reset state
   useEffect(() => {
     if (!props.isOpen) return
@@ -21,7 +18,6 @@ export default function COMDialog(props: {
 
   return (
     <>
-      {props.isOpen && com && <Title prefix={com.commodity.name} />}
       <Transition
         show={props.isOpen}
         className={twMerge(

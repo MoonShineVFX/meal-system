@@ -17,7 +17,14 @@ import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { motion } from 'framer-motion'
 
-import { settings, OptionSet, twData, OrderOptions } from '@/lib/common'
+import Title from '@/components/core/Title'
+import {
+  settings,
+  OptionSet,
+  twData,
+  OrderOptions,
+  getMenuName,
+} from '@/lib/common'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
@@ -93,6 +100,9 @@ function COMDialogContent(props: {
       className='ms-scroll relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-xl md:flex-row md:gap-0 md:rounded-2xl md:p-0 md:shadow-2xl'
       onClick={(event) => event.stopPropagation()}
     >
+      <Title
+        prefix={`${com.commodity.name} - ${getMenuName(menu ?? undefined)}`}
+      />
       {/* Close button */}
       <button
         className='absolute right-4 top-4 z-30 rounded-full bg-black/10 p-1 hover:bg-black/20 active:bg-black/20 active:bg-stone-100 sm:right-5 sm:top-5 md:bg-transparent md:hover:bg-stone-100'

@@ -156,7 +156,9 @@ export function twData(
   }
 }
 
-export function getMenuName(menu: Pick<Menu, 'date' | 'name' | 'type'>) {
+export function getMenuName(menu?: Pick<Menu, 'date' | 'name' | 'type'>) {
+  if (menu === undefined) return undefined
+
   if (menu.type === 'MAIN') return '即時點餐'
   if (menu.date === null) return '錯誤菜單'
   const typeName = MenuTypeName[menu.type]

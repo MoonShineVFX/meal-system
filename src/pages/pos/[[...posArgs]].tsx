@@ -2,6 +2,7 @@ import { AnimatePresence, MotionConfig } from 'framer-motion'
 import { useMemo } from 'react'
 import { ArchiveBoxIcon } from '@heroicons/react/24/outline'
 import { GetServerSideProps } from 'next'
+import z from 'zod'
 
 import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
@@ -9,6 +10,8 @@ import Title from '@/components/core/Title'
 import POSCard from '@/components/pos/POSCard'
 import Tab from '@/components/core/Tab'
 import { twData } from '@/lib/common'
+
+const posArgsSchema = z.array(z.string()).length(1).optional()
 
 const TOTAL_FILLER_COUNT = 6
 const TAB_NAMES = ['待處理', '已出餐', '已完成', '今日預訂'] as const
@@ -20,9 +23,16 @@ const TAB_LINKS = TAB_PATHS.map((path) => `/pos/${path}`)
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { posArgs } = context.params as { posArgs?: string[] }
 
+  const result = posArgsSchema.safeParse(posArgs)
+  if (!result.success) {
+    return {
+      notFound: true,
+    }
+  }
+
   let tabName: TabName
 
-  if (!Array.isArray(posArgs) || posArgs.length === 0) {
+  if (!posArgs) {
     // for default
     tabName = TAB_NAMES[0]
   } else {
