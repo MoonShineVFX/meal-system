@@ -28,6 +28,7 @@ export enum SERVER_NOTIFY {
   ORDER_CANCEL = '訂單取消',
   POS_ADD = '',
   POS_UPDATE = '',
+  DAILY_RECHARGE = '今日福利點數已發放',
 }
 
 export enum CurrencyType {
@@ -81,6 +82,9 @@ export const settings = {
     [TransactionType.REFUND]: '退款',
     [TransactionType.TRANSFER]: '轉帳',
   },
+  POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
+    ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
+    : 100,
   /* Trade */
   TRANSACTIONS_PER_PAGE: 20,
   /* TWMP */

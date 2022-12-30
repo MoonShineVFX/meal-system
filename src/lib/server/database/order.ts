@@ -389,7 +389,7 @@ export async function updateOrderStatus({
     'timePreparing' | 'timeCanceled' | 'timeDishedUp' | 'timeCompleted'
   >
 }) {
-  return await prisma.$transaction(async (client) => {
+  const { order, callback } = await prisma.$transaction(async (client) => {
     const order = await client.order.findUnique({
       where: { id: orderId },
     })
@@ -411,7 +411,7 @@ export async function updateOrderStatus({
       },
     })
 
-    if (status !== 'timeCanceled') return updatedOrder
+    if (status !== 'timeCanceled') return { order: updatedOrder }
 
     // Refund user balance when canceled
     const detailedOrder = await client.order.findUnique({
@@ -466,7 +466,7 @@ export async function updateOrderStatus({
     )
 
     // Create refund transaction
-    await rechargeUserBalanceBase({
+    const { callback } = await rechargeUserBalanceBase({
       userId: order.userId,
       pointAmount: pointAnountToRefund,
       creditAmount: creditAmountToRefund,
@@ -474,6 +474,9 @@ export async function updateOrderStatus({
       client,
     })
 
-    return updatedOrder
+    return { order: updatedOrder, callback }
   })
+
+  callback?.()
+  return order
 }

@@ -209,11 +209,13 @@ export default function Menu(props: {
       >
         <div className='absolute inset-0 flex flex-col lg:flex-row'>
           {/* Categories */}
-          <Tab
-            tabNames={categories}
-            currentTabName={currentCategory}
-            onClick={handleCategoryClick}
-          />
+          {data?.type === 'MAIN' && (
+            <Tab
+              tabNames={categories}
+              currentTabName={currentCategory}
+              onClick={handleCategoryClick}
+            />
+          )}
           {/* Commodities */}
           <section className='relative grow'>
             <div

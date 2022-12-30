@@ -1,10 +1,11 @@
-import { UserRole } from '@prisma/client'
+import { UserRole, Transaction } from '@prisma/client'
 import CryptoJS from 'crypto-js'
 
 import { prisma, log } from './define'
 import { settings } from '@/lib/common'
 import { blockchainManager } from '@/lib/server/blockchain'
 import { forceSyncBlockchainWallet } from './blockchain'
+import { rechargeUserBalanceBase } from './transaction'
 
 type EnsureUserArgs = {
   userId: string
@@ -125,20 +126,60 @@ export async function getUserLite({ token }: { token: string }) {
 }
 
 export async function getUserInfo(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      role: true,
-      pointBalance: true,
-      creditBalance: true,
-      profileImage: {
-        select: {
-          path: true,
+  const result = await prisma.$transaction(async (client) => {
+    const user = await client.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        pointBalance: true,
+        creditBalance: true,
+        lastPointRechargeTime: true,
+        profileImage: {
+          select: {
+            path: true,
+          },
         },
       },
-    },
+    })
+
+    if (!user) return null
+
+    // Check if user needs to recharge points
+    let isRecharged = false
+    let thisCallback: (() => Promise<Transaction>) | undefined = undefined
+    if (user.pointBalance < settings.POINT_DAILY_RECHARGE_AMOUNT) {
+      const now = new Date()
+      const lastRechargeTime = user.lastPointRechargeTime ?? new Date(0)
+
+      if (now.toLocaleDateString() !== lastRechargeTime.toLocaleDateString()) {
+        const { callback } = await rechargeUserBalanceBase({
+          userId: user.id,
+          pointAmount: settings.POINT_DAILY_RECHARGE_AMOUNT - user.pointBalance,
+          client,
+        })
+        thisCallback = callback
+
+        await client.user.update({
+          where: { id: user.id },
+          data: {
+            lastPointRechargeTime: now,
+          },
+        })
+        user.pointBalance = settings.POINT_DAILY_RECHARGE_AMOUNT
+        isRecharged = true
+      }
+    }
+
+    const { lastPointRechargeTime, ...resultUser } = user
+    return { user: resultUser, isRecharged, callback: thisCallback }
   })
-  return user
+
+  if (result === null) return null
+
+  const { user, isRecharged, callback } = result
+  if (callback) callback()
+
+  return { user, isRecharged }
 }

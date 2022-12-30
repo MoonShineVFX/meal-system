@@ -8,7 +8,12 @@ import {
   getUserInfo,
   validateUserPassword,
 } from '@/lib/server/database'
-import { settings, generateCookie, ServerNotifyPayload } from '@/lib/common'
+import {
+  settings,
+  generateCookie,
+  ServerNotifyPayload,
+  SERVER_NOTIFY,
+} from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 import { userProcedure, publicProcedure, router } from '../trpc'
@@ -25,16 +30,22 @@ type UserAdData = {
 
 export const UserRouter = router({
   get: userProcedure.query(async ({ ctx }) => {
-    const user = await getUserInfo(ctx.userLite.id)
+    const userInfo = await getUserInfo(ctx.userLite.id)
 
-    if (!user) {
+    if (!userInfo) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: `User not found: ${ctx.userLite.id}`,
       })
     }
 
-    return user
+    if (userInfo.isRecharged) {
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.DAILY_RECHARGE,
+      })
+    }
+
+    return userInfo.user
   }),
   onNotify: userProcedure.subscription(async ({ ctx }) => {
     return observable<ServerNotifyPayload>((observer) => {

@@ -33,11 +33,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name          String
-  role          UserRole @default(USER)
-  pointBalance  Int      @default(500)
-  creditBalance Int      @default(0)
-  password      String?
+  name                  String
+  role                  UserRole  @default(USER)
+  pointBalance          Int       @default(500)
+  creditBalance         Int       @default(0)
+  password              String?
+  lastPointRechargeTime DateTime?
 
   profileImage       Image?        @relation(fields: [profileImageId], references: [id])
   profileImageId     String?       @unique
@@ -311,7 +312,7 @@ model Setting {
 
   key   String
   value String
-  type  String
+  type  SettingType
 
   @@unique([key])
 }

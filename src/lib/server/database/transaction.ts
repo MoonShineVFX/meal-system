@@ -28,18 +28,16 @@ export async function rechargeUserBalanceBase({
     throw new Error('twmpResultId and orderId are exclusive')
 
   const thisPrisma = client ?? prisma
-  const type = twmpResultId
-    ? TransactionType.RECHARGE
-    : TransactionType.CANCELED
+  const type = orderId ? TransactionType.CANCELED : TransactionType.RECHARGE
 
   const user = await thisPrisma.user.update({
     where: { id: userId },
     data: {
       creditBalance: {
-        increment: creditAmount,
+        increment: creditAmount ?? 0,
       },
       pointBalance: {
-        increment: pointAmount,
+        increment: pointAmount ?? 0,
       },
     },
   })
@@ -51,11 +49,13 @@ export async function rechargeUserBalanceBase({
       creditAmount: creditAmount,
       type,
       twmpResultId,
-      orderForCanceled: {
-        connect: {
-          id: orderId,
-        },
-      },
+      orderForCanceled: orderId
+        ? {
+            connect: {
+              id: orderId,
+            },
+          }
+        : undefined,
     },
     include: {
       sourceUser: { select: { name: true } },
@@ -63,12 +63,12 @@ export async function rechargeUserBalanceBase({
     },
   })
 
-  // Update blockchain
-  updateBlockchainByMintBurn(transaction.id)
+  const callback = () => updateBlockchainByMintBurn(transaction.id)
 
   return {
     user,
     transaction,
+    callback,
   }
 }
 
@@ -76,12 +76,15 @@ export async function rechargeUserBalance(
   args: Omit<RechargeUserBalanceBaseArgs, 'client'>,
 ) {
   // Add target user balance and create recharge record
-  const { user, transaction } = await prisma.$transaction(async (client) => {
-    return await rechargeUserBalanceBase({
-      ...args,
-      client,
-    })
-  })
+  const { user, transaction, callback } = await prisma.$transaction(
+    async (client) => {
+      return await rechargeUserBalanceBase({
+        ...args,
+        client,
+      })
+    },
+  )
+  callback()
 
   return {
     user,
