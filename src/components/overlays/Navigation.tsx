@@ -82,7 +82,7 @@ function Navigation() {
         icons={[WalletIcon, WalletIconSolid]}
       />
 
-      <div className='grow'></div>
+      <div className='hidden grow sm:block'></div>
 
       <NavButton
         className='hidden sm:block'
