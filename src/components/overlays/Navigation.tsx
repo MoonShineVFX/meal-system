@@ -11,7 +11,6 @@ import { HomeIcon } from '@heroicons/react/24/outline'
 import { CalendarDaysIcon } from '@heroicons/react/24/outline'
 import { DocumentTextIcon } from '@heroicons/react/24/outline'
 import { WalletIcon } from '@heroicons/react/24/outline'
-import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { ShoppingCartIcon as ShoppingCartIconSolid } from '@heroicons/react/24/solid'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { SquaresPlusIcon as SquaresPlusIconSolid } from '@heroicons/react/24/solid'
@@ -19,7 +18,10 @@ import { SquaresPlusIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
 import { CircleStackIcon } from '@heroicons/react/24/outline'
 import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { ArrowRightOnRectangleIcon as ArrowRightOnRectangleIconSolid } from '@heroicons/react/24/solid'
+import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 
+import PriceNumber from '@/components/core/PriceNumber'
 import Error from '@/components/core/Error'
 import Image from '@/components/core/Image'
 import { generateCookie } from '@/lib/common'
@@ -31,6 +33,7 @@ import Spinner from '@/components/core/Spinner'
 
 function Navigation() {
   const { data } = trpc.user.get.useQuery(undefined)
+
   return (
     <ul className='relative z-40 flex h-full items-center justify-evenly bg-white shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
       {/* LOGO */}
@@ -78,6 +81,19 @@ function Navigation() {
         path='/transaction'
         icons={[WalletIcon, WalletIconSolid]}
       />
+
+      <div className='grow'></div>
+
+      <NavButton
+        className='hidden sm:block'
+        label='登出'
+        path='/login'
+        icons={[ArrowRightOnRectangleIcon, ArrowRightOnRectangleIconSolid]}
+        onClick={() => {
+          document.cookie = generateCookie(undefined)
+        }}
+      />
+
       <ProfileButton className='sm:-order-1' />
     </ul>
   )
@@ -102,7 +118,7 @@ function ProfileButton(props: { className?: string }) {
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`} as='ul'>
-      <Popover.Button className='flex w-full items-center focus:outline-none active:scale-90 sm:rounded-2xl sm:p-2 sm:ui-open:bg-stone-200 sm:hover:bg-stone-200 sm:active:scale-95 sm:active:bg-stone-200'>
+      <Popover.Button className='flex w-full items-center focus:outline-none active:scale-90 sm:pointer-events-none sm:rounded-2xl sm:p-2 sm:ui-open:bg-stone-200 sm:hover:bg-stone-200 sm:active:scale-95 sm:active:bg-stone-200'>
         {/* Profile Image */}
         <div className='grid h-12 w-12 place-content-center sm:h-auto sm:w-auto'>
           <div className='relative h-8 w-8 overflow-hidden rounded-full ring-0 ring-yellow-500 ui-open:ring-2 hover:ring-2 active:ring-2 sm:h-12 sm:w-12 sm:ui-open:ring-0 sm:hover:ring-0 sm:active:ring-0'>
@@ -121,20 +137,26 @@ function ProfileButton(props: { className?: string }) {
         <div className='hidden grow items-center pl-4 sm:flex'>
           <div className='flex grow flex-col text-left'>
             <span className='tracking-widest'>{user?.name}</span>
-            <span className='flex items-center gap-0.5'>
-              <CircleStackIcon className='h-3.5 w-3.5 stroke-1 text-yellow-500' />
-              <span className='text-sm text-stone-400'>
-                {user?.pointBalance}
+            <div className='flex gap-2'>
+              <span className='flex items-center gap-1'>
+                <CircleStackIcon className='h-3.5 w-3.5 text-yellow-500' />
+                <PriceNumber
+                  className='text-sm text-stone-400 '
+                  price={user?.pointBalance ?? 0}
+                  isCurrency
+                />
               </span>
-            </span>
-            <span className='flex items-center gap-0.5'>
-              <CurrencyDollarIcon className='h-3.5 w-3.5 stroke-1 text-yellow-500' />
-              <span className='text-sm text-stone-400'>
-                {user?.creditBalance}
+              <span className='flex items-center gap-1'>
+                <CurrencyDollarIcon className='h-3.5 w-3.5 text-yellow-500' />
+                <PriceNumber
+                  className='text-sm text-stone-400 '
+                  price={user?.creditBalance ?? 0}
+                  isCurrency
+                />
               </span>
-            </span>
+            </div>
           </div>
-          <ChevronDownIcon className='h-6 w-6 text-stone-300 transition-transform ui-open:rotate-180 ui-open:text-stone-400' />
+          {/* <ChevronDownIcon className='h-6 w-6 text-stone-300 transition-transform ui-open:rotate-180 ui-open:text-stone-400' /> */}
         </div>
       </Popover.Button>
       <Transition
@@ -191,6 +213,7 @@ function NavButton(props: {
   rememberSubpath?: boolean
   className?: string
   numberBadge?: JSX.Element
+  onClick?: () => void
 }) {
   const [subpath, setSubpath] = useState<string | undefined>(undefined)
   const router = useRouter()
@@ -206,10 +229,13 @@ function NavButton(props: {
   }, [router.asPath])
 
   return (
-    <ul className={twMerge('sm:w-full', props.className)}>
+    <ul
+      className={twMerge('sm:w-full', props.className)}
+      onClick={props.onClick}
+    >
       <Link
         className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
-        href={subpath ?? props.path}
+        href={isSelected ? props.path : subpath ?? props.path}
         {...twData({ selected: isSelected })}
       >
         {/* Mobile icon */}
@@ -250,7 +276,7 @@ function NavIcon(props: {
   const Icon = props.isSelected ? props.icons[1] : props.icons[0]
   return (
     <div
-      className={`group flex items-center rounded-full p-3 hover:bg-stone-200 active:bg-stone-200 ${props.className} relative active:scale-90`}
+      className={`group flex items-center rounded-full p-3 hover:bg-stone-100 active:bg-stone-100 ${props.className} relative active:scale-90`}
       {...twData({ selected: props.isSelected })}
     >
       {props.numberBadge && (

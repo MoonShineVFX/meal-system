@@ -199,7 +199,7 @@ function CartItemCard(props: {
             })}
           >
             {/* Image */}
-            <section className='h-min w-full max-w-[4rem] shrink-0 @2xl/cart:max-w-[6rem]'>
+            <section className='my-auto h-min w-full max-w-[4rem] shrink-0 @2xl/cart:max-w-[6rem]'>
               <div className='relative aspect-square overflow-hidden rounded-full bg-stone-400 group-data-loading:skeleton'>
                 <Image
                   style={{ WebkitTouchCallout: 'none' }}

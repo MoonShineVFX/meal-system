@@ -9,23 +9,23 @@ function LinkWrapper(props: {
   children: React.ReactNode
   com?: CommodityOnMenu
 }) {
-  const [pathName, setPathName] = useState<string | undefined>(undefined)
+  const [pathName, setPathName] = useState<string>('')
 
   useEffect(() => {
-    setPathName(window?.location.pathname)
-  }, [])
+    if (typeof window === 'undefined') return
+    if (!props.com) return
+    const pathNames = window.location.pathname.split('/')
+    const navName = pathNames[1]
+
+    if (navName === 'live') {
+      setPathName(`/live/${props.com.commodity.id}`)
+    } else if (navName === 'reserve') {
+      setPathName(`/reserve/${pathNames[2]}/${props.com.commodity.id}`)
+    }
+  }, [props.com])
 
   return (
-    <Link
-      className='group-data-loading:pointer-events-none'
-      href={
-        props.com && pathName
-          ? `${pathName === '/' ? '/' : window.location.pathname + '/'}${
-              props.com?.commodity.id
-            }`
-          : ''
-      }
-    >
+    <Link className='group-data-loading:pointer-events-none' href={pathName}>
       {props.children}
     </Link>
   )

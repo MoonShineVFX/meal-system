@@ -177,7 +177,7 @@ function COMDialogContent(props: {
         {/* Spacer For sm */}
         <div className='-my-3 shrink grow'></div>
         {/* Quantity */}
-        <section className='relative flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:hidden'>
+        <section className='relative mt-2 flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:hidden'>
           <QuantityInput
             control={control}
             isUnavailable={isUnavailable}
@@ -208,7 +208,7 @@ function COMDialogContent(props: {
           </section>
         )}
         {/* Submit */}
-        <footer className='flex shrink-0 flex-col gap-4 sm:flex-row-reverse'>
+        <footer className='mt-2 flex shrink-0 flex-col gap-4 sm:flex-row-reverse'>
           <Button
             isBusy={addCartMutation.isLoading || addCartMutation.isSuccess}
             isLoading={addCartMutation.isLoading || addCartMutation.isSuccess}

@@ -36,13 +36,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 }
 
 export default function PageLive(props: { comId?: number }) {
-  const [firstRendered, setFirstRendered] = useState(false)
+  const [isXl, setIsXl] = useState(false)
   const matches = useMediaQuery('(min-width: 1280px)')
 
   // Trigger first render once
   useEffect(() => {
-    setFirstRendered(true)
-  }, [])
+    setIsXl(matches)
+  }, [matches])
 
   return (
     <>
@@ -55,7 +55,7 @@ export default function PageLive(props: { comId?: number }) {
         />
         {/* Cart */}
         <section className='relative z-[1] hidden max-w-2xl grow basis-1/5 border-l border-stone-100 shadow-lg xl:block'>
-          {matches && firstRendered && <DynamicCart />}
+          {isXl && <DynamicCart />}
         </section>
       </div>
     </>

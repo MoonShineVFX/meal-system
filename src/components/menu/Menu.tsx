@@ -1,8 +1,10 @@
+import Link from 'next/link'
 import type { MenuType } from '@prisma/client'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { twMerge } from 'tailwind-merge'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
+import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
 
 import Tab from '@/components/core/Tab'
 import Dialog from '@/components/core/Dialog'
@@ -29,12 +31,14 @@ export default function Menu(props: {
   menuId?: number
   className?: string
   comId?: number
+  fromReserve?: boolean
 }) {
   const { data, isLoading, isError, error } = trpc.menu.get.useQuery({
     type: props.type,
     date: props.date,
     menuId: props.menuId,
   })
+
   const router = useRouter()
   const [selectedCom, setSelectedCom] = useState<CommoditiesOnMenu[0] | null>(
     null,
@@ -209,7 +213,7 @@ export default function Menu(props: {
       >
         <div className='absolute inset-0 flex flex-col lg:flex-row'>
           {/* Categories */}
-          {data?.type === 'MAIN' && (
+          {!props.fromReserve && (
             <Tab
               tabNames={categories}
               currentTabName={currentCategory}
@@ -220,8 +224,33 @@ export default function Menu(props: {
           <section className='relative grow'>
             <div
               ref={gridRef}
-              className='ms-scroll absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] sm:pt-[4rem] lg:p-8'
+              className={twMerge(
+                'ms-scroll absolute inset-0 overflow-y-auto p-4 lg:p-8',
+                !props.fromReserve && 'pt-[3.75rem] sm:pt-[4rem]', // Padding for categories
+              )}
             >
+              {/* Header for reservations */}
+              {props.fromReserve && (
+                <div className='relative mb-4 flex items-start justify-center lg:justify-start'>
+                  <div className='absolute inset-y-0 left-0 flex items-center lg:hidden'>
+                    <Link
+                      href='/reserve'
+                      className='-m-2 flex items-center rounded-full p-2 text-stone-400 hover:bg-stone-100 active:scale-90 active:bg-stone-100'
+                    >
+                      <ArrowUturnLeftIcon className='h-6 w-6' />
+                    </Link>
+                  </div>
+                  <h1
+                    className={twMerge(
+                      'text-lg font-bold tracking-wider',
+                      !data && 'skeleton rounded-xl',
+                    )}
+                  >
+                    {data ? getMenuName(data) : '預訂 X月X日 餐點'}
+                  </h1>
+                </div>
+              )}
+              {/* Warning */}
               {data && data.unavailableReasons.length > 0 && (
                 <section className='mb-4 flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-stone-500'>
                   <div className='flex items-center gap-2 text-red-400'>
@@ -237,7 +266,8 @@ export default function Menu(props: {
                   </ul>
                 </section>
               )}
-              <COMsGrid comsByCategory={coms} />
+              {/* Grid */}
+              <COMsGrid comsByCategory={coms} fromReserve={props.fromReserve} />
             </div>
           </section>
         </div>

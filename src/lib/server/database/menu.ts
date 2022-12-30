@@ -78,6 +78,10 @@ export async function getReservationMenus({ userId }: { userId: string }) {
       description: true,
       closedDate: true,
       commodities: {
+        take: 6, // take 6 commodities for reservation ui width
+        orderBy: {
+          createdAt: 'asc',
+        },
         select: {
           commodity: {
             select: {

@@ -82,7 +82,7 @@ export default function OrderItemList(props: { orderItems?: OrderItems }) {
             // Order Item
             <div className='group/item flex gap-4' key={item?.id ?? index}>
               {/* Image */}
-              <div className='relative z-0 aspect-square h-fit w-[4rem] overflow-hidden rounded-full group-data-loading:skeleton lg:w-[6rem]'>
+              <div className='relative z-0 my-auto aspect-square h-fit w-[4rem] overflow-hidden rounded-full group-data-loading:skeleton lg:w-[6rem]'>
                 <Image
                   className='object-cover group-data-loading:hidden'
                   src={item?.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER}
