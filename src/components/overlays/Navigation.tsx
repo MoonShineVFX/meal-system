@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { memo, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import { motion, useAnimationControls } from 'framer-motion'
 import { Popover, Transition } from '@headlessui/react'
 import { HomeIcon as HomeIconSolid } from '@heroicons/react/24/solid'
 import { CalendarDaysIcon as CalendarDaysIconSolid } from '@heroicons/react/24/solid'
@@ -16,7 +17,8 @@ import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { SquaresPlusIcon as SquaresPlusIconSolid } from '@heroicons/react/24/solid'
 import { SquaresPlusIcon } from '@heroicons/react/24/outline'
 import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
-import { motion, useAnimationControls } from 'framer-motion'
+import { CircleStackIcon } from '@heroicons/react/24/outline'
+import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
 
 import Error from '@/components/core/Error'
 import Image from '@/components/core/Image'
@@ -116,12 +118,23 @@ function ProfileButton(props: { className?: string }) {
           </div>
         </div>
         {/* User Info */}
-        <div className='hidden grow items-center pl-2 sm:flex'>
+        <div className='hidden grow items-center pl-4 sm:flex'>
           <div className='flex grow flex-col text-left'>
             <span className='tracking-widest'>{user?.name}</span>
-            <span className='text-sm text-stone-400'>@{user?.id}</span>
+            <span className='flex items-center gap-0.5'>
+              <CircleStackIcon className='h-3.5 w-3.5 stroke-1 text-yellow-500' />
+              <span className='text-sm text-stone-400'>
+                {user?.pointBalance}
+              </span>
+            </span>
+            <span className='flex items-center gap-0.5'>
+              <CurrencyDollarIcon className='h-3.5 w-3.5 stroke-1 text-yellow-500' />
+              <span className='text-sm text-stone-400'>
+                {user?.creditBalance}
+              </span>
+            </span>
           </div>
-          <ChevronDownIcon className='h-6 w-6 text-stone-400 transition-transform ui-open:rotate-180' />
+          <ChevronDownIcon className='h-6 w-6 text-stone-300 transition-transform ui-open:rotate-180 ui-open:text-stone-400' />
         </div>
       </Popover.Button>
       <Transition
