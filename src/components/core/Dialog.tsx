@@ -6,10 +6,11 @@ import Button from '@/components/core/Button'
 
 export default function DialogCore(props: {
   open: boolean
-  onClose: (isConfirm: boolean | undefined) => void
+  onClose: ((isConfirm: boolean) => void) | (() => void)
   title: string
   content: JSX.Element | string
   cancel?: boolean
+  cancelText?: string
 }) {
   return (
     <Transition show={props.open} as={Fragment}>
@@ -56,8 +57,8 @@ export default function DialogCore(props: {
                 {props.cancel && (
                   <Button
                     onClick={() => props.onClose(false)}
-                    className='h-12 grow font-bold sm:max-w-[50%]'
-                    label='取消'
+                    className='h-10 grow font-bold sm:max-w-[50%]'
+                    label={props.cancelText ?? '取消'}
                     theme='support'
                   ></Button>
                 )}

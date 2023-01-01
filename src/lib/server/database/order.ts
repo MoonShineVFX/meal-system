@@ -1,4 +1,4 @@
-import { Prisma, Order, MenuType } from '@prisma/client'
+import { Prisma, Order, MenuType, Menu } from '@prisma/client'
 
 import { ConvertPrismaJson, settings, MenuTypeName } from '@/lib/common'
 import { getCartItemsBase } from './cart'
@@ -102,12 +102,11 @@ export async function getOrdersCount({ userId }: { userId: string }) {
       OR: [
         {
           menu: {
-            type: 'MAIN',
+            type: 'LIVE',
           },
         },
         {
           menu: {
-            type: { not: 'MAIN' },
             date: {
               gte: today,
               lt: tomorrow,
@@ -117,6 +116,34 @@ export async function getOrdersCount({ userId }: { userId: string }) {
       ],
     },
   })
+}
+
+// Detect order is cancelable
+function isOrderCancelable({
+  order,
+}: {
+  order: Pick<
+    Order,
+    'timeCanceled' | 'timeCompleted' | 'timeDishedUp' | 'timePreparing'
+  > & { menu: Pick<Menu, 'closedDate' | 'type' | 'date'> }
+}) {
+  if (
+    order.timeCanceled ||
+    order.timeCompleted ||
+    order.timeDishedUp ||
+    order.timePreparing
+  ) {
+    return false
+  }
+
+  if (
+    order.menu.date &&
+    order.menu.closedDate &&
+    new Date() <= order.menu.closedDate
+  )
+    return true
+  if (order.menu.type === 'LIVE') return true
+  return false
 }
 
 // Get orders for user, including search function
@@ -142,7 +169,7 @@ export async function getOrders({
         timeCanceled: null,
         timeCompleted: null,
         menu: {
-          type: 'MAIN',
+          type: 'LIVE',
         },
       }
       break
@@ -152,7 +179,7 @@ export async function getOrders({
         timeCanceled: null,
         timeCompleted: null,
         menu: {
-          type: { not: 'MAIN' },
+          type: { not: 'LIVE' },
         },
       }
       break
@@ -221,7 +248,7 @@ export async function getOrders({
         whereInput = {
           userId: userId,
           menu: {
-            type: 'MAIN',
+            type: 'LIVE',
           },
         }
         break
@@ -237,7 +264,7 @@ export async function getOrders({
         whereInput = {
           userId: userId,
           menu: {
-            type: { not: 'MAIN' },
+            date: { not: null },
           },
         }
         break
@@ -276,6 +303,7 @@ export async function getOrders({
           date: true,
           type: true,
           name: true,
+          closedDate: true,
         },
       },
       items: {
@@ -307,7 +335,17 @@ export async function getOrders({
     },
   })
 
-  return rawOrders as ConvertPrismaJson<typeof rawOrders>
+  const injectedCanCancelOrders = rawOrders.map((order) => {
+    const canCancel = isOrderCancelable({ order })
+    return {
+      ...order,
+      canCancel,
+    }
+  })
+
+  return injectedCanCancelOrders as ConvertPrismaJson<
+    typeof injectedCanCancelOrders
+  >
 }
 
 // Get orders for POS
@@ -322,7 +360,7 @@ export async function getOrdersForPOS({
     case 'live':
       whereInput = {
         menu: {
-          type: 'MAIN',
+          type: 'LIVE',
         },
         timeCanceled: null,
         timeCompleted: null,
@@ -331,7 +369,6 @@ export async function getOrdersForPOS({
     case 'reservation':
       whereInput = {
         menu: {
-          type: { not: 'MAIN' },
           date: todayDate, // limit to today reservations
         },
       }
@@ -339,7 +376,7 @@ export async function getOrdersForPOS({
     case 'archived':
       whereInput = {
         menu: {
-          type: 'MAIN',
+          type: 'LIVE',
         },
         OR: [
           { timeCanceled: { gte: todayDate } },
@@ -382,16 +419,18 @@ export async function getOrdersForPOS({
   return rawPOSOrders as ConvertPrismaJson<typeof rawPOSOrders>
 }
 
-/* Update order, and process refund if canceled */
+/* Update order, and process refund if canceled, if userId provided, valid userId owned */
 export async function updateOrderStatus({
   orderId,
   status,
+  userId,
 }: {
   orderId: number
   status: Extract<
     keyof Order,
     'timePreparing' | 'timeCanceled' | 'timeDishedUp' | 'timeCompleted'
   >
+  userId?: string
 }) {
   const { order, callback } = await prisma.$transaction(async (client) => {
     const order = await client.order.findUnique({
@@ -404,6 +443,10 @@ export async function updateOrderStatus({
 
     if (order[status] !== null) {
       throw new Error('Order status already updated')
+    }
+
+    if (userId && order.userId !== userId) {
+      throw new Error('User not authorized')
     }
 
     const updatedOrder = await client.order.update({

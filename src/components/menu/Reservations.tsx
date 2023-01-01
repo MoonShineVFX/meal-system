@@ -16,7 +16,8 @@ const MENU_TYPE_ORDER = [
   MenuType.LUNCH,
   MenuType.DINNER,
   MenuType.TEA,
-  MenuType.MAIN,
+  MenuType.LIVE,
+  MenuType.RETAIL,
 ]
 
 export default function Reservations(props: { activeMenuId?: number }) {

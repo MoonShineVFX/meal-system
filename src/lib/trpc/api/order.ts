@@ -1,7 +1,12 @@
 import { z } from 'zod'
 
 import { userProcedure, router } from '../trpc'
-import { createOrder, getOrders, getOrdersCount } from '@/lib/server/database'
+import {
+  createOrder,
+  getOrders,
+  getOrdersCount,
+  updateOrderStatus,
+} from '@/lib/server/database'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
@@ -15,7 +20,7 @@ export const OrderRouter = router({
 
     for (const order of orders) {
       // notify when menu type is main
-      if (order.menu.type === 'MAIN') {
+      if (order.menu.type === 'LIVE') {
         eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
           type: SERVER_NOTIFY.POS_ADD,
           message: `${order.user.name} 新增了一筆訂單`,
@@ -57,6 +62,28 @@ export const OrderRouter = router({
         orders,
         nextCursor,
       }
+    }),
+  cancel: userProcedure
+    .input(
+      z.object({
+        orderId: z.number(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const order = await updateOrderStatus({
+        orderId: input.orderId,
+        status: 'timeCanceled',
+        userId: ctx.userLite.id,
+      })
+
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
+        type: SERVER_NOTIFY.ORDER_CANCEL,
+        message: `訂單 #${order.id} 已經取消`,
+      })
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.POS_UPDATE,
+        message: `${ctx.userLite.name} 取消訂單 #${order.id}`,
+      })
     }),
   getCount: userProcedure.query(async ({ ctx }) => {
     return await getOrdersCount({ userId: ctx.userLite.id })

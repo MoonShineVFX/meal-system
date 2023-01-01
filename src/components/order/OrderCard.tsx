@@ -1,10 +1,14 @@
 import { twMerge } from 'tailwind-merge'
-
+import { TrashIcon } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
-import { OrderDatas } from '@/lib/client/trpc'
+import { useState, useCallback } from 'react'
+
+import trpc, { OrderDatas } from '@/lib/client/trpc'
 import { getMenuName, twData } from '@/lib/common'
 import OrderItemList from './OrderItemList'
-import Tooltip from '../core/Tooltip'
+import Tooltip from '@/components/core/Tooltip'
+import Button from '@/components/core/Button'
+import Dialog from '@/components/core/Dialog'
 
 const ORDER_STEPS = ['付款', '製作中', '可取餐', '完成']
 const CANCEL_STEPS = ['付款', '已取消', '']
@@ -42,6 +46,9 @@ export default function OrderCard(props: {
   isLast?: boolean
   isLoading?: boolean
 }) {
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const cancelOrderMutation = trpc.order.cancel.useMutation()
+
   const { order } = props
   const isCancel = order?.timeCanceled !== null
   const steps = isCancel ? CANCEL_STEPS : ORDER_STEPS
@@ -56,6 +63,18 @@ export default function OrderCard(props: {
     : 0
 
   const progress = step / (steps.length - 1)
+
+  const handleCancelDialog = useCallback(
+    (isConfirm: boolean) => {
+      if (!order) return
+
+      if (isConfirm) {
+        cancelOrderMutation.mutate({ orderId: order.id })
+      }
+      setIsCancelDialogOpen(false)
+    },
+    [order],
+  )
 
   return (
     <div
@@ -76,6 +95,18 @@ export default function OrderCard(props: {
         <span className='rounded-xl tracking-wider text-stone-400 group-data-loading:skeleton'>
           {order ? getMenuName(order.menu) : '菜單類別'}
         </span>
+        {order?.canCancel && (
+          <Button
+            isDisabled={cancelOrderMutation.isLoading}
+            isLoading={cancelOrderMutation.isLoading}
+            className='flex h-6 w-6 group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200'
+            textClassName='group-data-loading:skeleton'
+            spinnerClassName='h-4 w-4'
+            label={<TrashIcon className='h-4 w-4 text-stone-400' />}
+            theme='support'
+            onClick={() => setIsCancelDialogOpen(true)}
+          />
+        )}
         {/* Price */}
         <span className='flex grow justify-end'>
           <Tooltip
@@ -191,6 +222,16 @@ export default function OrderCard(props: {
       {isCancel && (
         <div className='pointer-events-none absolute inset-0 bg-white/40 backdrop-grayscale'></div>
       )}
+      <Dialog
+        cancel
+        cancelText='返回'
+        open={isCancelDialogOpen}
+        onClose={handleCancelDialog}
+        title='確認取消訂單？'
+        content={`即將取消「編號 #${order?.id} - ${getMenuName(
+          order?.menu,
+        )}」的訂單，取消後將無法復原。`}
+      />
     </div>
   )
 }

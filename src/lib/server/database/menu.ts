@@ -9,12 +9,12 @@ import {
 import { prisma, log } from './define'
 
 /* Create Menu */
-type MainCreateMenuArgs = {
-  type: Extract<MenuType, 'MAIN'>
+type CommonCreateMenuArgs = {
+  type: Extract<MenuType, 'LIVE' | 'RETAIL'>
   date?: never
 }
-type CommonCreateMenuArgs = {
-  type: Exclude<MenuType, 'MAIN'>
+type ReserveCreateMenuArgs = {
+  type: Exclude<MenuType, 'LIVE' | 'RETAIL'>
   date: Date
 }
 type CreateMenuArgs = {
@@ -23,7 +23,7 @@ type CreateMenuArgs = {
   publishedDate?: Date
   closedDate?: Date
   limitPerUser?: number
-} & (MainCreateMenuArgs | CommonCreateMenuArgs)
+} & (CommonCreateMenuArgs | ReserveCreateMenuArgs)
 /** Create menu, if type is not main, date required */
 export async function createMenu({
   type,
@@ -35,7 +35,7 @@ export async function createMenu({
   limitPerUser,
 }: CreateMenuArgs) {
   // Validate date and type
-  if (!date && type !== MenuType.MAIN) {
+  if (!date && !['LIVE', 'RETAIL'].includes(type)) {
     throw new Error('date is required for non-main menu')
   }
 
@@ -65,7 +65,7 @@ export async function getReservationMenus({ userId }: { userId: string }) {
   const now = new Date()
   const menus = await prisma.menu.findMany({
     where: {
-      type: { not: MenuType.MAIN },
+      date: { not: null },
       isDeleted: false,
       publishedDate: { lte: now },
       closedDate: { gte: now },
@@ -118,11 +118,11 @@ export async function getReservationMenus({ userId }: { userId: string }) {
 /* Get Menu and COMs */
 type GetMenuFromType = { menuId?: never } & (
   | {
-      type: Extract<MenuType, 'MAIN'>
+      type: Extract<MenuType, 'LIVE' | 'RETAIL'>
       date?: never
     }
   | {
-      type: Exclude<MenuType, 'MAIN'>
+      type: Exclude<MenuType, 'LIVE' | 'RETAIL'>
       date: Date
     }
 )
@@ -154,7 +154,7 @@ export async function getMenuWithComs({
   const thisPrisma = client ?? prisma
 
   // Validate date and type
-  if (!isGetById && !date && type !== MenuType.MAIN) {
+  if (!isGetById && !date && type && !['LIVE', 'RETAIL'].includes(type)) {
     throw new Error('date is required for non-main menu')
   }
 

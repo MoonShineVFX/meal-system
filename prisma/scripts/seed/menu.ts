@@ -14,7 +14,7 @@ import {
 export async function seedMenu() {
   // Create main menu
   console.log('>> Seed menu')
-  const menu = await createMenu({ type: 'MAIN' })
+  const menu = await createMenu({ type: 'LIVE' })
   let mainOrder = 0
   for (const [mainCategoryName, mainCategoryData] of Object.entries(
     menuMockData,

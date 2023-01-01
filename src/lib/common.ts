@@ -62,7 +62,8 @@ export const MenuTypeName: Record<MenuType, string> = {
   [MenuType.LUNCH]: '午餐',
   [MenuType.DINNER]: '晚餐',
   [MenuType.TEA]: '下午茶',
-  [MenuType.MAIN]: '即時',
+  [MenuType.LIVE]: '即時',
+  [MenuType.RETAIL]: '自助',
 }
 
 /* Settings */
@@ -163,11 +164,12 @@ export function twData(
 export function getMenuName(menu?: Pick<Menu, 'date' | 'name' | 'type'>) {
   if (menu === undefined) return undefined
 
-  if (menu.type === 'MAIN') return '即時點餐'
+  if (menu.type === 'LIVE') return '即時點餐'
+  if (menu.type === 'RETAIL') return '自助'
   if (menu.date === null) return '錯誤菜單'
   const typeName = MenuTypeName[menu.type]
 
-  return `預訂 ${menu.date.toLocaleDateString('zh-TW', {
+  return `${menu.date.toLocaleDateString('zh-TW', {
     month: 'long',
     day: 'numeric',
   })} ${typeName}${menu.name !== '' ? ` -${menu.name}` : ''}`

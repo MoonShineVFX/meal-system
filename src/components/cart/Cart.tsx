@@ -29,7 +29,7 @@ const CARTITEM_SKELETON = {
     menu: {
       name: '',
       date: null,
-      type: MenuType.MAIN,
+      type: MenuType.LIVE,
       maxQuantity: 0,
     },
     commodity: {

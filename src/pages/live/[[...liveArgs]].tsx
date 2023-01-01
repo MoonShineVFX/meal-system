@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react'
 import { MenuType } from '@prisma/client'
 import { useMediaQuery } from 'usehooks-ts'
-import dynamic from 'next/dynamic'
 import { GetServerSideProps } from 'next'
 import z from 'zod'
 
 import Menu from '@/components/menu/Menu'
-
-const DynamicCart = dynamic(() => import('@/components/cart/Cart'), {
-  ssr: false,
-})
+import Cart from '@/components/cart/Cart'
 
 const liveArgsSchema = z.array(z.string().regex(/^\d+$/)).length(1).optional()
 
@@ -50,12 +46,12 @@ export default function PageLive(props: { comId?: number }) {
         {/* Menu */}
         <Menu
           className='grow basis-1/2'
-          type={MenuType.MAIN}
+          type={MenuType.LIVE}
           comId={props.comId}
         />
         {/* Cart */}
         <section className='relative z-[1] hidden max-w-2xl grow basis-1/5 border-l border-stone-100 shadow-lg xl:block'>
-          {isXl && <DynamicCart />}
+          {isXl && <Cart />}
         </section>
       </div>
     </>

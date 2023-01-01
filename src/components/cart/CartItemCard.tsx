@@ -6,7 +6,7 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { motion, useAnimationControls } from 'framer-motion'
 import colors from 'tailwindcss/colors'
 import { TrashIcon } from '@heroicons/react/24/outline'
-import { PencilSquareIcon } from '@heroicons/react/24/outline'
+import { PencilIcon } from '@heroicons/react/24/outline'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
@@ -254,7 +254,7 @@ function CartItemCard(props: {
                         ))}
                     </div>
 
-                    <PencilSquareIcon className='h-4 w-4 stroke-1 text-stone-400  group-data-loading:hidden' />
+                    <PencilIcon className='h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/options:rotate-45 group-data-loading:hidden' />
                   </div>
                 )}
               </section>

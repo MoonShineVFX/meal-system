@@ -259,7 +259,8 @@ enum MenuType {
   LUNCH
   DINNER
   TEA
-  MAIN
+  LIVE
+  RETAIL
 }
 
 model Menu {
