@@ -1,10 +1,17 @@
-import { useState, useCallback, startTransition, ChangeEvent } from 'react'
+import {
+  useState,
+  useCallback,
+  startTransition,
+  ChangeEvent,
+  useRef,
+} from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { GetServerSideProps } from 'next'
 import z from 'zod'
 
 import { InboxIcon } from '@heroicons/react/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 
 import Spinner from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
@@ -77,6 +84,7 @@ export default function PageOrder(props: {
   keyword: string
 }) {
   const [searchKeyword, setSearchKeyword] = useState<string>(props.keyword)
+  const searchRef = useRef<HTMLInputElement>(null)
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.order.get.useInfiniteQuery(
       {
@@ -106,6 +114,13 @@ export default function PageOrder(props: {
     },
     [],
   )
+
+  const handleSearchClear = useCallback(() => {
+    setSearchKeyword('')
+    if (!searchRef.current) return
+    searchRef.current.value = ''
+    searchRef.current.focus()
+  }, [])
 
   if (isError) {
     return <Error description={error.message} />
@@ -167,6 +182,7 @@ export default function PageOrder(props: {
                           >
                             <div className='relative'>
                               <input
+                                ref={searchRef}
                                 type='text'
                                 className='rounded-2xl border border-stone-300 bg-stone-100 py-2 px-4 focus:outline-yellow-500'
                                 placeholder='搜尋訂單'
@@ -176,6 +192,11 @@ export default function PageOrder(props: {
                               <div className='absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 stroke-2 text-stone-400'>
                                 {isLoading ? (
                                   <Spinner className='h-full w-full' />
+                                ) : searchKeyword.length > 0 ? (
+                                  <XMarkIcon
+                                    className='h-full w-full cursor-pointer rounded-full hover:scale-125 hover:bg-stone-200 active:scale-90 active:bg-stone-200'
+                                    onClick={handleSearchClear}
+                                  />
                                 ) : (
                                   <MagnifyingGlassIcon className='h-full w-full' />
                                 )}

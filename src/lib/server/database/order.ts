@@ -173,7 +173,11 @@ export async function getOrders({
       }
 
       // Check datetime format
-      const searchDate = new Date(keyword)
+      let keywordForDate = keyword
+      if (keyword.match(/^\d{1,2}[\ \/\-]\d{1,2}$/)) {
+        keywordForDate = `${new Date().getFullYear()} ${keyword}`
+      }
+      const searchDate = new Date(keywordForDate)
       if (
         !isNaN(searchDate.getTime()) &&
         searchDate.getFullYear() > 2020 &&
