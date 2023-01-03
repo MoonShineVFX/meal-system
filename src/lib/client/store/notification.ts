@@ -13,12 +13,16 @@ export type NotificationPayload = {
   type: NotificationType
   message: string
   id: number
+  removeTimeout: NodeJS.Timeout
+  link?: string
 }
 
 export interface NotificationSlice {
   notifications: NotificationPayload[]
   notificationIdCounter: number
-  addNotification: (payload: Omit<NotificationPayload, 'id'>) => void
+  addNotification: (
+    payload: Omit<NotificationPayload, 'id' | 'removeTimeout'>,
+  ) => void
   removeNotification: (id: number) => void
 }
 
@@ -33,20 +37,30 @@ export const createNotificationSlice: StateCreator<
   addNotification: async (payload) => {
     set((state) => {
       const id = state.notificationIdCounter
-      setTimeout(
+      const timeOut = setTimeout(
         () => get().removeNotification(id),
         settings.NOTIFICATION_DURATION_MS,
       )
       return {
-        notifications: [{ ...payload, id }, ...state.notifications],
+        notifications: [
+          { ...payload, id, removeTimeout: timeOut },
+          ...state.notifications,
+        ],
         notificationIdCounter: state.notificationIdCounter + 1,
       }
     })
   },
   removeNotification: (id) => {
     set((state) => {
+      const notification = state.notifications.find((n) => n.id === id)
+
+      if (!notification) return {}
+
+      if (notification.removeTimeout) {
+        clearTimeout(notification.removeTimeout)
+      }
       return {
-        notifications: state.notifications.filter((n) => n.id !== id),
+        notifications: state.notifications.filter((n) => n !== notification),
       }
     })
   },

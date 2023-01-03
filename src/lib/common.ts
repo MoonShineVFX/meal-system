@@ -17,6 +17,7 @@ export type ServerNotifyPayload = {
   type: SERVER_NOTIFY
   message?: string
   skipNotify?: boolean
+  link?: string
 }
 
 export enum SERVER_NOTIFY {

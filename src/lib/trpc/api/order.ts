@@ -16,6 +16,7 @@ export const OrderRouter = router({
 
     eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
       type: SERVER_NOTIFY.ORDER_ADD,
+      link: `/order/id/${orders[0].id}}`,
     })
 
     for (const order of orders) {
@@ -24,6 +25,7 @@ export const OrderRouter = router({
         eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
           type: SERVER_NOTIFY.POS_ADD,
           message: `${order.user.name} 新增了一筆訂單`,
+          link: `/pos/live`,
         })
       }
     }
@@ -79,6 +81,7 @@ export const OrderRouter = router({
       eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
         type: SERVER_NOTIFY.ORDER_CANCEL,
         message: `訂單 #${order.id} 已經取消`,
+        link: `/order/id/${order.id}`,
       })
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: SERVER_NOTIFY.POS_UPDATE,

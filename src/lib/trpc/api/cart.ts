@@ -32,6 +32,7 @@ export const CartRouter = router({
       eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
         type: SERVER_NOTIFY.CART_ADD,
         message: `新增 ${cartItem.commodityOnMenu.commodity.name} 至購物車`,
+        link: '/cart',
       })
     }),
   get: userProcedure.query(async ({ ctx }) => {

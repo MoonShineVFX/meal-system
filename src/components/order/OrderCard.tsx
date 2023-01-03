@@ -225,12 +225,13 @@ export default function OrderCard(props: {
       <Dialog
         cancel
         cancelText='返回'
+        confirmText='確認取消'
         open={isCancelDialogOpen}
         onClose={handleCancelDialog}
         title='確認取消訂單？'
         content={`即將取消「編號 #${order?.id} - ${getMenuName(
           order?.menu,
-        )}」的訂單，取消後將無法復原。`}
+        )}」的訂單，此動作無法復原。`}
       />
     </div>
   )

@@ -75,6 +75,7 @@ export default function EventListener() {
         addNotification({
           type: NotificationType.SUCCESS,
           message: notifyPayload.message ?? notifyPayload.type,
+          link: notifyPayload.link,
         })
       }
 
@@ -102,6 +103,7 @@ export default function EventListener() {
           trpcContext.user.get.invalidate()
           trpcContext.order.getCount.invalidate()
           break
+
         // Staff
         case SERVER_NOTIFY.POS_ADD:
           trpcContext.pos.get.invalidate()

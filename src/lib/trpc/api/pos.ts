@@ -56,6 +56,7 @@ export const POSRouter = router({
             ? SERVER_NOTIFY.ORDER_UPDATE
             : SERVER_NOTIFY.ORDER_CANCEL,
         message,
+        link: `/order/id/${order.id}`,
       })
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: SERVER_NOTIFY.POS_UPDATE,

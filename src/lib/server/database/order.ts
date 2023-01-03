@@ -44,6 +44,7 @@ export async function createOrder({ userId }: { userId: string }) {
 
     // Create orders
     let orders: {
+      id: number
       user: {
         name: string
       }
@@ -64,6 +65,7 @@ export async function createOrder({ userId }: { userId: string }) {
           menuId: menuId,
         },
         select: {
+          id: true,
           menu: {
             select: {
               type: true,

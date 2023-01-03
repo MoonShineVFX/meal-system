@@ -9,6 +9,7 @@ export default function DialogCore(props: {
   onClose: ((isConfirm: boolean) => void) | (() => void)
   title: string
   content: JSX.Element | string
+  confirmText?: string
   cancel?: boolean
   cancelText?: string
 }) {
@@ -66,7 +67,7 @@ export default function DialogCore(props: {
                   onClick={() => props.onClose(true)}
                   className='h-10 grow font-bold sm:max-w-[50%]'
                   textClassName='fond-bold'
-                  label='確認'
+                  label={props.confirmText ?? '取消'}
                   theme='main'
                 ></Button>
               </div>
