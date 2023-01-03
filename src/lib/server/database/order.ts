@@ -1,9 +1,24 @@
 import { Prisma, Order, MenuType, Menu } from '@prisma/client'
 
-import { ConvertPrismaJson, settings, MenuTypeName } from '@/lib/common'
+import {
+  ConvertPrismaJson,
+  settings,
+  MenuTypeName,
+  generateOptionsKey,
+  OrderOptions,
+} from '@/lib/common'
 import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
+
+/* Order status type */
+const ORDER_STATUS = [
+  'timeCanceled',
+  'timeCompleted',
+  'timeDishedUp',
+  'timePreparing',
+] as const
+type OrderStatus = typeof ORDER_STATUS[number]
 
 /* Validate and create orders by menu with transaction */
 export async function createOrder({ userId }: { userId: string }) {
@@ -22,21 +37,56 @@ export async function createOrder({ userId }: { userId: string }) {
       client,
     })
 
-    // create order items and group by menu
+    // create order items and group by menu, reservation menu will group by commodity
     const orderItemCreates = getCartItemsResult.cartItems.reduce(
-      (acc: Map<number, Prisma.OrderItemCreateManyOrderInput[]>, cartItem) => {
-        if (!acc.has(cartItem.menuId)) {
-          acc.set(cartItem.menuId, [])
+      (
+        acc: Map<
+          number,
+          | Prisma.OrderItemCreateManyOrderInput[]
+          | Map<number, Prisma.OrderItemCreateManyOrderInput[]>
+        >,
+        cartItem,
+      ) => {
+        // Reservation menu will separate orders by commodity
+        if (cartItem.commodityOnMenu.menu.date !== null) {
+          if (!acc.has(cartItem.menuId)) {
+            acc.set(cartItem.menuId, new Map())
+          }
+          const thisMap = acc.get(cartItem.menuId) as Map<
+            number,
+            Prisma.OrderItemCreateManyOrderInput[]
+          >
+          if (!thisMap.has(cartItem.commodityId)) {
+            thisMap.set(cartItem.commodityId, [])
+          }
+
+          thisMap.get(cartItem.commodityId)?.push({
+            name: cartItem.commodityOnMenu.commodity.name,
+            price: cartItem.commodityOnMenu.commodity.price,
+            quantity: cartItem.quantity,
+            options: cartItem.options,
+            menuId: cartItem.menuId,
+            commodityId: cartItem.commodityId,
+            imageId: cartItem.commodityOnMenu.commodity.imageId,
+          })
+        } else {
+          // Common menu
+          if (!acc.has(cartItem.menuId)) {
+            acc.set(cartItem.menuId, [])
+          }
+
+          ;(
+            acc.get(cartItem.menuId) as Prisma.OrderItemCreateManyOrderInput[]
+          ).push({
+            name: cartItem.commodityOnMenu.commodity.name,
+            price: cartItem.commodityOnMenu.commodity.price,
+            quantity: cartItem.quantity,
+            options: cartItem.options,
+            menuId: cartItem.menuId,
+            commodityId: cartItem.commodityId,
+            imageId: cartItem.commodityOnMenu.commodity.imageId,
+          })
         }
-        acc.get(cartItem.menuId)?.push({
-          name: cartItem.commodityOnMenu.commodity.name,
-          price: cartItem.commodityOnMenu.commodity.price,
-          quantity: cartItem.quantity,
-          options: cartItem.options,
-          menuId: cartItem.menuId,
-          commodityId: cartItem.commodityId,
-          imageId: cartItem.commodityOnMenu.commodity.imageId,
-        })
         return acc
       },
       new Map(),
@@ -52,33 +102,41 @@ export async function createOrder({ userId }: { userId: string }) {
         type: MenuType
       }
     }[] = []
-    for (const [menuId, orderItems] of orderItemCreates) {
-      const order = await client.order.create({
-        data: {
-          userId: userId,
-          paymentTransactionId: transaction.id,
-          items: {
-            createMany: {
-              data: orderItems,
+    for (const [menuId, value] of orderItemCreates) {
+      // Reservation menu will separate orders by commodity
+      const orderItemsGroups: Prisma.OrderItemCreateManyOrderInput[][] =
+        Array.isArray(value)
+          ? [value]
+          : [...value].map(([, orderItems]) => orderItems)
+
+      for (const orderItems of orderItemsGroups) {
+        const order = await client.order.create({
+          data: {
+            userId: userId,
+            paymentTransactionId: transaction.id,
+            items: {
+              createMany: {
+                data: orderItems,
+              },
+            },
+            menuId: menuId,
+          },
+          select: {
+            id: true,
+            menu: {
+              select: {
+                type: true,
+              },
+            },
+            user: {
+              select: {
+                name: true,
+              },
             },
           },
-          menuId: menuId,
-        },
-        select: {
-          id: true,
-          menu: {
-            select: {
-              type: true,
-            },
-          },
-          user: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      })
-      orders.push(order)
+        })
+        orders.push(order)
+      }
     }
 
     await client.cartItem.deleteMany({
@@ -124,10 +182,9 @@ export async function getOrdersCount({ userId }: { userId: string }) {
 function isOrderCancelable({
   order,
 }: {
-  order: Pick<
-    Order,
-    'timeCanceled' | 'timeCompleted' | 'timeDishedUp' | 'timePreparing'
-  > & { menu: Pick<Menu, 'closedDate' | 'type' | 'date'> }
+  order: Pick<Order, OrderStatus> & {
+    menu: Pick<Menu, 'closedDate' | 'type' | 'date'>
+  }
 }) {
   if (
     order.timeCanceled ||
@@ -351,13 +408,14 @@ export async function getOrders({
 }
 
 // Get orders for POS
-export async function getOrdersForPOS({
+export async function getLiveOrdersForPOS({
   type,
 }: {
-  type: 'live' | 'reservation' | 'archived'
+  type: 'live' | 'archived'
 }) {
-  let whereInput: Prisma.OrderWhereInput
   const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
+
+  let whereInput: Prisma.OrderWhereInput
   switch (type) {
     case 'live':
       whereInput = {
@@ -366,13 +424,6 @@ export async function getOrdersForPOS({
         },
         timeCanceled: null,
         timeCompleted: null,
-      }
-      break
-    case 'reservation':
-      whereInput = {
-        menu: {
-          date: todayDate, // limit to today reservations
-        },
       }
       break
     case 'archived':
@@ -385,8 +436,12 @@ export async function getOrdersForPOS({
           { timeCompleted: { gte: todayDate } },
         ],
       }
+      break
+    default:
+      throw new Error('Invalid type')
   }
 
+  // Live orders and archived
   const rawPOSOrders = await prisma.order.findMany({
     where: whereInput,
     include: {
@@ -421,6 +476,206 @@ export async function getOrdersForPOS({
   return rawPOSOrders as ConvertPrismaJson<typeof rawPOSOrders>
 }
 
+// Get orders for POS
+export async function getReservationOrdersForPOS() {
+  const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
+
+  const rawReservationMenus = await prisma.menu.findMany({
+    where: {
+      date: todayDate,
+      orders: {
+        some: {
+          timeCanceled: null,
+        },
+      },
+    },
+    select: {
+      type: true,
+      commodities: {
+        where: {
+          orderItems: {
+            some: {
+              order: { timeCanceled: null },
+            },
+          },
+        },
+        select: {
+          commodity: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          orderItems: {
+            where: {
+              order: { timeCanceled: null },
+            },
+            select: {
+              quantity: true,
+              options: true,
+              order: {
+                select: {
+                  id: true,
+                  createdAt: true,
+                  timeDishedUp: true,
+                  timePreparing: true,
+                  timeCanceled: true,
+                  timeCompleted: true,
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      profileImage: {
+                        select: {
+                          path: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+
+  // Summarize orders and sync status
+  const ordersSyncQueries: Prisma.OrderUpdateManyArgs[] = []
+  const reservationMenus = rawReservationMenus.map((menu) => {
+    const coms = menu.commodities.map((com) => {
+      let totalQuantity = 0
+      const orderIds: number[] = []
+      const optionsWithOrdersMap: {
+        [option: string]: {
+          option: OrderOptions
+          quantity: number
+          orders: {
+            user: typeof rawReservationMenus[0]['commodities'][0]['orderItems'][0]['order']['user']
+            quantity: number
+          }[]
+        }
+      } = {}
+      const orderTimes: Record<
+        OrderStatus,
+        { value: Date | null; isNeedSync: boolean }
+      > = {
+        timeDishedUp: {
+          value: com.orderItems[0]!.order.timeDishedUp,
+          isNeedSync: false,
+        },
+        timePreparing: {
+          value: com.orderItems[0]!.order.timePreparing,
+          isNeedSync: false,
+        },
+        timeCanceled: {
+          value: com.orderItems[0]!.order.timeCanceled,
+          isNeedSync: false,
+        },
+        timeCompleted: {
+          value: com.orderItems[0]!.order.timeCompleted,
+          isNeedSync: false,
+        },
+      }
+
+      // Per order item
+      com.orderItems.forEach((item) => {
+        // Sum quantity
+        totalQuantity += item.quantity
+        // Collect order ids
+        if (orderIds.indexOf(item.order.id) === -1) {
+          orderIds.push(item.order.id)
+        }
+        // Collect options
+        const optionsKey = generateOptionsKey(item.options as OrderOptions)
+        if (!(optionsKey in optionsWithOrdersMap)) {
+          optionsWithOrdersMap[optionsKey] = {
+            option: item.options as OrderOptions,
+            quantity: 0,
+            orders: [],
+          }
+        }
+        optionsWithOrdersMap[optionsKey].quantity += item.quantity
+        const userOrder = optionsWithOrdersMap[optionsKey].orders.find(
+          (order) => order.user.id === item.order.user.id,
+        )
+        if (userOrder) {
+          userOrder.quantity += item.quantity
+        } else {
+          optionsWithOrdersMap[optionsKey].orders.push({
+            user: item.order.user,
+            quantity: item.quantity,
+          })
+        }
+        // Sync status
+        ORDER_STATUS.forEach((statusName) => {
+          const status = item.order[statusName]
+          const referenceStatus = orderTimes[statusName]
+          // Check if need sync
+          if (
+            (status && !referenceStatus.value) ||
+            (!status && referenceStatus.value)
+          ) {
+            if (!referenceStatus.isNeedSync) {
+              referenceStatus.isNeedSync = true
+            }
+          }
+          // Update status to latest
+          if (status) {
+            if (!referenceStatus.value || status > referenceStatus.value!) {
+              referenceStatus.value = item.order[statusName]
+            }
+          }
+        })
+      })
+
+      // Push sync query when needed
+      ORDER_STATUS.forEach((statusName) => {
+        const referenceStatus = orderTimes[statusName]
+        if (referenceStatus.isNeedSync) {
+          ordersSyncQueries.push({
+            where: {
+              id: {
+                in: orderIds,
+              },
+              [statusName]: null,
+            },
+            data: {
+              [statusName]: referenceStatus.value,
+            },
+          })
+        }
+      })
+
+      return {
+        id: com.commodity.id,
+        name: com.commodity.name,
+        orderIds: com.orderItems.map((item) => item.order.id),
+        totalQuantity,
+        orderTimes,
+        optionsWithOrders: Object.keys(optionsWithOrdersMap)
+          .sort()
+          .map((key) => optionsWithOrdersMap[key]),
+      }
+    })
+
+    // Sync orders status
+    if (ordersSyncQueries.length > 0) {
+      prisma.$transaction(
+        ordersSyncQueries.map((query) => prisma.order.updateMany(query)),
+      )
+    }
+
+    return {
+      type: menu.type,
+      coms,
+    }
+  })
+
+  return reservationMenus
+}
+
 /* Update order, and process refund if canceled, if userId provided, valid userId owned */
 export async function updateOrderStatus({
   orderId,
@@ -428,10 +683,7 @@ export async function updateOrderStatus({
   userId,
 }: {
   orderId: number
-  status: Extract<
-    keyof Order,
-    'timePreparing' | 'timeCanceled' | 'timeDishedUp' | 'timeCompleted'
-  >
+  status: Extract<keyof Order, OrderStatus>
   userId?: string
 }) {
   const { order, callback } = await prisma.$transaction(async (client) => {
@@ -449,6 +701,14 @@ export async function updateOrderStatus({
 
     if (userId && order.userId !== userId) {
       throw new Error('User not authorized')
+    }
+
+    if (status === 'timeCanceled' && order.timeCompleted !== null) {
+      throw new Error('Order already completed')
+    }
+
+    if (status === 'timeCompleted' && order.timeCanceled !== null) {
+      throw new Error('Order already canceled')
     }
 
     const updatedOrder = await client.order.update({

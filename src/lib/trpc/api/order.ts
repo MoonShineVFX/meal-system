@@ -16,7 +16,7 @@ export const OrderRouter = router({
 
     eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
       type: SERVER_NOTIFY.ORDER_ADD,
-      link: `/order/id/${orders[0].id}}`,
+      link: `/order/id/${orders[0].id}`,
     })
 
     for (const order of orders) {

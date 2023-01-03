@@ -23,8 +23,14 @@ export function Checkout(props: {
 
   const handleCheckout = () => {
     createOrderMutation.mutate(undefined, {
-      onSuccess: () => {
-        router.push('/order/live')
+      onSuccess: (orders) => {
+        if (orders.length === 0) return
+        const referenceOrder = orders[0]
+        if (referenceOrder.menu.type === 'LIVE') {
+          router.push('/order/live')
+        } else {
+          router.push('/order/reservation')
+        }
       },
     })
   }

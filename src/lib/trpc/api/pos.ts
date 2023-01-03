@@ -1,24 +1,27 @@
 import z from 'zod'
 
 import { staffProcedure, router } from '../trpc'
-import { getOrdersForPOS, updateOrderStatus } from '@/lib/server/database'
+import {
+  getLiveOrdersForPOS,
+  getReservationOrdersForPOS,
+  updateOrderStatus,
+} from '@/lib/server/database'
 import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const POSRouter = router({
-  get: staffProcedure
+  getLive: staffProcedure
     .input(
       z.object({
-        type: z.union([
-          z.literal('live'),
-          z.literal('reservation'),
-          z.literal('archived'),
-        ]),
+        type: z.union([z.literal('live'), z.literal('archived')]),
       }),
     )
     .query(async ({ input }) => {
-      return await getOrdersForPOS(input)
+      return await getLiveOrdersForPOS(input)
     }),
+  getReservation: staffProcedure.query(async () => {
+    return await getReservationOrdersForPOS()
+  }),
   update: staffProcedure
     .input(
       z.object({

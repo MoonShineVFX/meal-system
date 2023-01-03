@@ -109,31 +109,14 @@ export default function OrderCard(props: {
         )}
         {/* Price */}
         <span className='flex grow justify-end'>
-          <Tooltip
-            content={
-              <div className='flex w-[6rem] select-none flex-col gap-2 text-sm text-stone-400'>
-                <li className='flex justify-between'>
-                  <p>福利點數</p>
-                  <p className='font-bold'>
-                    {order?.paymentTransaction?.pointAmount ?? 0}
-                  </p>
-                </li>
-                <li className='flex justify-between'>
-                  <p>夢想幣</p>
-                  <p className='font-bold'>
-                    {order?.paymentTransaction?.creditAmount ?? 0}
-                  </p>
-                </li>
-              </div>
-            }
-          >
-            <div className='w-fit rounded-xl text-lg font-bold tracking-wider group-data-loading:skeleton'>{`$${
-              order
-                ? (order.paymentTransaction?.creditAmount ?? 0) +
-                  (order.paymentTransaction?.pointAmount ?? 0)
-                : 100
-            }`}</div>
-          </Tooltip>
+          <div className='w-fit rounded-xl text-lg font-bold tracking-wider group-data-loading:skeleton'>{`$${
+            order
+              ? order.items.reduce(
+                  (acc, item) => acc + item.price * item.quantity,
+                  0,
+                )
+              : 100
+          }`}</div>
         </span>
       </header>
       {/* Items */}

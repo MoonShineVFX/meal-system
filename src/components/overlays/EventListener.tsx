@@ -106,10 +106,12 @@ export default function EventListener() {
 
         // Staff
         case SERVER_NOTIFY.POS_ADD:
-          trpcContext.pos.get.invalidate()
+          trpcContext.pos.getLive.invalidate()
+          trpcContext.pos.getReservation.invalidate()
           break
         case SERVER_NOTIFY.POS_UPDATE:
-          trpcContext.pos.get.invalidate()
+          trpcContext.pos.getLive.invalidate()
+          trpcContext.pos.getReservation.invalidate()
           break
       }
     },

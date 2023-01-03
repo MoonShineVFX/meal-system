@@ -27,7 +27,7 @@ const STATUS_BACKGROUND_COLOR = [
   'bg-red-200',
 ]
 
-export default function POSCard(props: {
+export default function POSLiveCard(props: {
   order?: POSDatas[0]
   isArchived?: boolean
 }) {

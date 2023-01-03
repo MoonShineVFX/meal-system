@@ -346,7 +346,9 @@ function OrderNumberBadge() {
 }
 
 function POSNumberBadge() {
-  const { data, isLoading, isError } = trpc.pos.get.useQuery({ type: 'live' })
+  const { data, isLoading, isError } = trpc.pos.getLive.useQuery({
+    type: 'live',
+  })
   return (
     <NumberBadge
       number={data?.length}
