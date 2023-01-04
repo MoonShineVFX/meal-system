@@ -33,9 +33,15 @@ export const POSRouter = router({
     .query(async ({ input }) => {
       return await getLiveOrdersForPOS(input)
     }),
-  getReservation: staffProcedure.query(async () => {
-    return await getReservationOrdersForPOS()
-  }),
+  getReservation: staffProcedure
+    .input(
+      z.object({
+        type: z.union([z.literal('today'), z.literal('future')]),
+      }),
+    )
+    .query(async ({ input }) => {
+      return await getReservationOrdersForPOS(input)
+    }),
   update: staffProcedure
     .input(
       z.object({

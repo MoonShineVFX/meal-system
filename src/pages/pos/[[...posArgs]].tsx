@@ -8,9 +8,21 @@ import POSReservationList from '@/components/pos/POSReservationList'
 
 const posArgsSchema = z.array(z.string()).length(1).optional()
 
-const TAB_NAMES = ['待處理', '已出餐', '已完成', '今日預訂'] as const
+const TAB_NAMES = [
+  '待處理',
+  '已出餐',
+  '已完成',
+  '今日預訂',
+  '未來預訂',
+] as const
 type TabName = typeof TAB_NAMES[number]
-const TAB_PATHS = ['live', 'dishedUp', 'archived', 'reservation'] as const
+const TAB_PATHS = [
+  'live',
+  'dishedUp',
+  'archived',
+  'reservation',
+  'future',
+] as const
 type TabPath = typeof TAB_PATHS[number]
 const TAB_LINKS = TAB_PATHS.map((path) => `/pos/${path}`)
 
@@ -61,10 +73,10 @@ export default function POSPage(props: { tabName: TabName }) {
         />
         {/* Pos */}
         <div className='relative grow'>
-          {currentTabName !== '今日預訂' ? (
+          {currentTabName !== '未來預訂' && currentTabName !== '今日預訂' ? (
             <POSLiveList tabName={currentTabName} />
           ) : (
-            <POSReservationList />
+            <POSReservationList tabName={currentTabName} />
           )}
         </div>
       </div>

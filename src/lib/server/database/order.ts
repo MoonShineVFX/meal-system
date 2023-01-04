@@ -473,12 +473,27 @@ export async function getLiveOrdersForPOS({
 }
 
 // Get orders for POS
-export async function getReservationOrdersForPOS() {
+export async function getReservationOrdersForPOS({
+  type,
+}: {
+  type: 'today' | 'future'
+}) {
   const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
+
+  const whereInput: Prisma.MenuWhereInput =
+    type === 'today'
+      ? {
+          date: todayDate,
+        }
+      : {
+          date: {
+            gt: todayDate,
+          },
+        }
 
   const rawReservationMenus = await prisma.menu.findMany({
     where: {
-      date: todayDate,
+      ...whereInput,
       orders: {
         some: {
           timeCanceled: null,
@@ -487,6 +502,8 @@ export async function getReservationOrdersForPOS() {
     },
     select: {
       type: true,
+      date: true,
+      name: true,
       commodities: {
         where: {
           orderItems: {
@@ -534,6 +551,9 @@ export async function getReservationOrdersForPOS() {
           },
         },
       },
+    },
+    orderBy: {
+      date: 'asc',
     },
   })
 
@@ -666,6 +686,8 @@ export async function getReservationOrdersForPOS() {
 
     return {
       type: menu.type,
+      date: menu.date,
+      name: menu.name,
       coms,
     }
   })

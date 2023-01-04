@@ -43,6 +43,7 @@ export default function POSCard(props: {
     | ((props: { step: number; date?: Date }) => JSX.Element)
   disableAnimation?: boolean
   disableInteraction?: boolean
+  disableStatusButton?: boolean
   onStatusModify: (status: OrderStatus) => void
   isLoading?: boolean
 }) {
@@ -152,7 +153,7 @@ export default function POSCard(props: {
         ? props.children({ step, date })
         : props.children}
       {/* Steps Button */}
-      {!props.disableInteraction && (
+      {!props.disableInteraction && !props.disableStatusButton && (
         <section className='relative -z-10 flex h-16'>
           <AnimatePresence initial={false}>
             <POSButton

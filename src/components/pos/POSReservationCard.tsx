@@ -7,17 +7,20 @@ import trpc, { POSReservationDatas } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
 
 export default function POSReservationCard(props: {
-  com: POSReservationDatas[number]['coms'][number]
+  com?: POSReservationDatas[number]['coms'][number]
+  isFuture?: boolean
 }) {
   const { com } = props
   const [activeOptionsWithOrders, setActiveOptionsWithOrders] = useState<
-    typeof com['optionsWithOrders'][number] | null
+    | POSReservationDatas[number]['coms'][number]['optionsWithOrders'][number]
+    | null
   >(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const updateOrdersMutation = trpc.pos.updateReservation.useMutation()
 
   const handleStatusModify = useCallback(
     (status: OrderStatus) => {
+      if (com === undefined) return
       updateOrdersMutation.mutate({
         orderIds: com.orderIds,
         status,
@@ -28,26 +31,30 @@ export default function POSReservationCard(props: {
 
   return (
     <POSCard
-      order={{
-        timeCanceled: com.orderTimes.timeCanceled.value,
-        timeCompleted: com.orderTimes.timeCompleted.value,
-        timeDishedUp: com.orderTimes.timeDishedUp.value,
-        timePreparing: com.orderTimes.timePreparing.value,
-      }}
-      header={com.name}
+      order={
+        com
+          ? {
+              timeCanceled: com.orderTimes.timeCanceled.value,
+              timeCompleted: com.orderTimes.timeCompleted.value,
+              timeDishedUp: com.orderTimes.timeDishedUp.value,
+              timePreparing: com.orderTimes.timePreparing.value,
+            }
+          : undefined
+      }
+      header={com?.name ?? '預訂餐點'}
       metadata={
-        <div className='flex items-center justify-between text-sm font-bold tracking-wider text-stone-600/50'>
-          <p>{`總共 ${com.totalQuantity} 份`}</p>
+        <div className='flex h-fit items-center justify-between rounded-xl text-sm font-bold tracking-wider text-stone-600/50 group-data-loading:skeleton'>
+          <p>{`總共 ${com?.totalQuantity} 份`}</p>
         </div>
       }
-      key={com.id}
       onStatusModify={handleStatusModify}
       isLoading={updateOrdersMutation.isLoading}
       disableAnimation={true}
+      disableStatusButton={props.isFuture}
     >
       {/* Options */}
       <div className='flex grow flex-col gap-3'>
-        {com.optionsWithOrders.map((optionWithOrders, index) => (
+        {com?.optionsWithOrders.map((optionWithOrders, index) => (
           <button
             key={index}
             className='-m-1 flex justify-between rounded-lg p-1 font-bold hover:bg-stone-600/10 active:scale-95 active:bg-stone-600/10'
