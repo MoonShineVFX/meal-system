@@ -209,12 +209,14 @@ export default function Cart() {
                     } else {
                       return (
                         <motion.h3
+                          layout
                           exit={{
                             opacity: 0,
                             transition: {
                               duration: 0.3,
                             },
                           }}
+                          transition={{ duration: 0.2 }}
                           className='pt-4 text-sm text-stone-400 first:pt-0'
                           key={menuOrCartItem.id}
                         >

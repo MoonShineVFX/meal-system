@@ -1,5 +1,6 @@
 import { twMerge } from 'tailwind-merge'
 import React, { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 
 export default function SwipeToDelete(props: {
   children: JSX.Element
@@ -78,7 +79,9 @@ export default function SwipeToDelete(props: {
   }
 
   return (
-    <div
+    <motion.div
+      layout
+      transition={{ duration: 0.2 }}
       ref={rootRef}
       className='relative w-full focus:outline-none'
       onClick={handleClick}
@@ -121,6 +124,6 @@ export default function SwipeToDelete(props: {
         className='absolute inset-0 w-0'
         ref={portalRef}
       ></div>
-    </div>
+    </motion.div>
   )
 }
