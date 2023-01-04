@@ -9,6 +9,10 @@ export function log(...args: Parameters<typeof console.log>) {
   }
 }
 
+export function logError(...args: Parameters<typeof console.error>) {
+  console.error('[Database]', ...args)
+}
+
 /* Global */
 declare global {
   var prisma: PrismaClient | undefined

@@ -4,7 +4,7 @@ import { ArchiveBoxIcon } from '@heroicons/react/24/outline'
 
 import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
-import POSCard from '@/components/pos/POSLiveCard'
+import POSLiveCard from '@/components/pos/POSLiveCard'
 import { twData } from '@/lib/common'
 
 const TOTAL_FILLER_COUNT = 6
@@ -63,13 +63,13 @@ export default function POSLiveList(props: {
           {isLoading ? (
             <>
               {[...Array(6).keys()].map((index) => (
-                <POSCard key={`loading-${index}`} />
+                <POSLiveCard key={`loading-${index}`} />
               ))}
             </>
           ) : props.tabName !== '已完成' ? (
             <AnimatePresence initial={false}>
               {filteredOrders.map((order) => (
-                <POSCard key={order.id} order={order} />
+                <POSLiveCard key={order.id} order={order} />
               ))}
               {fillerCount > 0 &&
                 [...Array(fillerCount).keys()].map((index) => (
@@ -80,7 +80,11 @@ export default function POSLiveList(props: {
             // Optimize performance for archived orders
             <>
               {filteredOrders.map((order) => (
-                <POSCard key={order.id} order={order} isArchived={true} />
+                <POSLiveCard
+                  key={`archived-${order.id}`}
+                  order={order}
+                  isArchived={true}
+                />
               ))}
               {fillerCount > 0 &&
                 [...Array(fillerCount).keys()].map((index) => (

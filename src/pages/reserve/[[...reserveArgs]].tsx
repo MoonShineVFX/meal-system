@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useMediaQuery } from 'usehooks-ts'
 import { ReceiptPercentIcon } from '@heroicons/react/24/outline'
 import { GetServerSideProps } from 'next'
-import { useEffect, useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 
 import Menu from '@/components/menu/Menu'
 import Cart from '@/components/cart/Cart'
@@ -48,10 +48,10 @@ export default function PageReserve(props: {
   reservationMenuId?: number
   comId?: number
 }) {
-  const [isLg, setIsLg] = useState(false)
+  const [isLg, setIsLg] = useState<boolean | undefined>(undefined)
   const matches = useMediaQuery('(min-width: 1024px)')
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsLg(matches)
   }, [matches])
 
@@ -100,12 +100,14 @@ export default function PageReserve(props: {
               )}
             </motion.div>
           )}
-          <div
-            className='relative z-[2] hidden w-full max-w-md shadow-lg 2xl:block'
-            key='reservation-cart'
-          >
-            <Cart />
-          </div>
+          {isLg !== undefined && (
+            <div
+              className='relative z-[2] hidden w-full max-w-md shadow-lg 2xl:block'
+              key='reservation-cart'
+            >
+              <Cart />
+            </div>
+          )}
         </AnimatePresence>
       </div>
     </>

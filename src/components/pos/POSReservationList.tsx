@@ -3,6 +3,7 @@ import { Fragment } from 'react'
 import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
 import { twData, MenuTypeName } from '@/lib/common'
+import POSReservationCard from './POSReservationCard'
 
 export default function POSReservationList() {
   const { data, isLoading, isError, error } = trpc.pos.getReservation.useQuery()
@@ -26,36 +27,12 @@ export default function POSReservationList() {
           {data.map((menu) => (
             <Fragment key={menu.type}>
               {/* Menu header */}
-              <h1 className='col-span-full text-lg font-bold'>
+              <h1 className='col-span-full mt-4 text-lg font-bold first:mt-0 lg:-mb-4'>
                 {MenuTypeName[menu.type]}
               </h1>
               {/* COMs */}
               {menu.coms.map((com) => (
-                <section
-                  key={com.id}
-                  className='relative flex h-max flex-col gap-4 overflow-hidden rounded-2xl border bg-white p-4 shadow-lg sm:min-h-[26rem] lg:p-6'
-                >
-                  {/* Name and total */}
-                  <div className='flex justify-between text-lg font-bold'>
-                    <p>{com.name}</p>
-                    <p>{`x ${com.totalQuantity}`}</p>
-                  </div>
-                  {/* Options */}
-                  <div className='flex flex-col gap-2'>
-                    {com.optionsWithOrders.map((optionWithOrders, index) => (
-                      <div key={index} className='flex justify-between'>
-                        <div className='flex flex-wrap gap-2'>
-                          {Object.values(optionWithOrders.option).map(
-                            (value, index) => (
-                              <p key={index}>{value}</p>
-                            ),
-                          )}
-                        </div>
-                        <p>{`x ${optionWithOrders.quantity}`}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+                <POSReservationCard key={com.id} com={com} />
               ))}
             </Fragment>
           ))}

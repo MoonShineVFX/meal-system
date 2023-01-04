@@ -51,7 +51,8 @@ export type CartItemsAndMenus = (
 )[]
 export type OrderDatas = RouterOutput['order']['get']['orders']
 export type OrderItems = OrderDatas[0]['items']
-export type POSDatas = RouterOutput['pos']['getLive']
+export type POSLiveDatas = RouterOutput['pos']['getLive']
+export type POSReservationDatas = RouterOutput['pos']['getReservation']
 export type ReservationDatas = RouterOutput['menu']['getReservations']
 
 /* WebSocket Client */

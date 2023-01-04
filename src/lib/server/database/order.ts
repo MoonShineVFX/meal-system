@@ -1,4 +1,5 @@
 import { Prisma, Order, MenuType, Menu } from '@prisma/client'
+import { logError } from './define'
 
 import {
   ConvertPrismaJson,
@@ -6,19 +7,12 @@ import {
   MenuTypeName,
   generateOptionsKey,
   OrderOptions,
+  OrderStatus,
+  ORDER_STATUS,
 } from '@/lib/common'
 import { getCartItemsBase } from './cart'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
-
-/* Order status type */
-const ORDER_STATUS = [
-  'timeCanceled',
-  'timeCompleted',
-  'timeDishedUp',
-  'timePreparing',
-] as const
-type OrderStatus = typeof ORDER_STATUS[number]
 
 /* Validate and create orders by menu with transaction */
 export async function createOrder({ userId }: { userId: string }) {
@@ -99,6 +93,7 @@ export async function createOrder({ userId }: { userId: string }) {
         name: string
       }
       menu: {
+        date: Date | null
         type: MenuType
       }
     }[] = []
@@ -126,6 +121,7 @@ export async function createOrder({ userId }: { userId: string }) {
             menu: {
               select: {
                 type: true,
+                date: true,
               },
             },
             user: {
@@ -640,6 +636,7 @@ export async function getReservationOrdersForPOS() {
                 in: orderIds,
               },
               [statusName]: null,
+              ...{ timeCanceled: null },
             },
             data: {
               [statusName]: referenceStatus.value,
@@ -788,4 +785,24 @@ export async function updateOrderStatus({
 
   callback?.()
   return order
+}
+
+export async function updateOrdersStatus({
+  orderIds,
+  status,
+}: {
+  orderIds: number[]
+  status: OrderStatus
+}) {
+  let orders: Order[] = []
+  for (const orderId of orderIds) {
+    try {
+      const order = await updateOrderStatus({ orderId, status })
+      orders.push(order)
+    } catch (error) {
+      logError(error)
+      continue
+    }
+  }
+  return orders
 }

@@ -27,6 +27,11 @@ export const OrderRouter = router({
           message: `${order.user.name} 新增了一筆訂單`,
           link: `/pos/live`,
         })
+      } else if (order.menu.date) {
+        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+          type: SERVER_NOTIFY.POS_ADD,
+          skipNotify: true,
+        })
       }
     }
 

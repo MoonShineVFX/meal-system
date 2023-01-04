@@ -45,6 +45,13 @@ export type OptionSet = {
 }
 
 export type OrderOptions = Record<string, string | string[]>
+export const ORDER_STATUS = [
+  'timeCanceled',
+  'timeCompleted',
+  'timeDishedUp',
+  'timePreparing',
+] as const
+export type OrderStatus = typeof ORDER_STATUS[number]
 
 export enum MenuUnavailableReason {
   NOT_PUBLISHED = '尚未到達開放訂購時間',

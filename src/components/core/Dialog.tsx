@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { twMerge } from 'tailwind-merge'
 
 import Button from '@/components/core/Button'
 
@@ -9,9 +10,11 @@ export default function DialogCore(props: {
   onClose: ((isConfirm: boolean) => void) | (() => void)
   title: string
   content: JSX.Element | string
+  contentClassName?: string
   confirmText?: string
   cancel?: boolean
   cancelText?: string
+  icon?: string | null
 }) {
   return (
     <Transition show={props.open} as={Fragment}>
@@ -41,14 +44,24 @@ export default function DialogCore(props: {
           >
             <Dialog.Panel className='mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-lg'>
               <section className='sm:flex sm:gap-4'>
-                <div className='mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100'>
+                <div
+                  className={twMerge(
+                    'mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100',
+                    props.icon === null && 'hidden',
+                  )}
+                >
                   <ExclamationTriangleIcon className='h-6 w-6 text-red-600' />
                 </div>
                 <div className='mt-2 flex flex-col items-center gap-2 sm:mt-0 sm:items-start'>
                   <Dialog.Title className='text-lg font-bold tracking-wider sm:indent-[0.05em]'>
                     {props.title}
                   </Dialog.Title>
-                  <div className='text-center text-sm text-stone-400 sm:text-start'>
+                  <div
+                    className={twMerge(
+                      'text-center text-sm text-stone-400 sm:text-start',
+                      props.contentClassName,
+                    )}
+                  >
                     {props.content}
                   </div>
                 </div>
@@ -65,9 +78,12 @@ export default function DialogCore(props: {
                 )}
                 <Button
                   onClick={() => props.onClose(true)}
-                  className='h-10 grow font-bold sm:max-w-[50%]'
+                  className={twMerge(
+                    'h-10 grow font-bold',
+                    props.cancel && 'sm:max-w-[50%]',
+                  )}
                   textClassName='fond-bold'
-                  label={props.confirmText ?? '取消'}
+                  label={props.confirmText ?? '確認'}
                   theme='main'
                 ></Button>
               </div>
