@@ -10,6 +10,7 @@ export default function Document() {
         />
         <link rel='icon' type='image/x-icon' href='/favicon.ico' />
         <link rel='manifest' href='/manifest.json' />
+        <meta name='theme-color' content='white'></meta>
         <meta name='apple-mobile-web-app-capable' content='yes' />
         <link rel='apple-touch-icon' href='/icon.png'></link>
         <link
