@@ -3,6 +3,7 @@ import { MenuType } from '@prisma/client'
 import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
 import { motion } from 'framer-motion'
+import { CalendarDaysIcon } from '@heroicons/react/24/outline'
 
 import Title from '@/components/core/Title'
 import trpc, { ReservationDatas } from '@/lib/client/trpc'
@@ -119,6 +120,16 @@ export default function Reservations(props: { activeMenuId?: number }) {
           className='ms-scroll group absolute inset-0 flex flex-col gap-8 overflow-y-auto p-4 data-loading:pointer-events-none lg:p-8'
           {...twData({ loading: isLoading })}
         >
+          {/* Empty */}
+          {!isLoading && data!.length === 0 && (
+            <div className='flex h-full flex-col items-center justify-center gap-4'>
+              <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
+                <CalendarDaysIcon className='h-12 w-12 text-stone-400' />
+              </div>
+              <h1 className='indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>{`沒有可以預訂的菜單`}</h1>
+            </div>
+          )}
+          {/* Main */}
           {Object.entries(reservationMenusByDate).map(([dateString, menus]) => (
             <section key={dateString}>
               {/* Date header */}

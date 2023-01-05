@@ -1,4 +1,5 @@
 import { Fragment } from 'react'
+import { ArchiveBoxIcon } from '@heroicons/react/24/outline'
 
 import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
@@ -27,7 +28,7 @@ export default function POSReservationList(props: {
     >
       {/* Cards */}
       <div className='ms-scroll absolute inset-0 overflow-y-auto p-4 pt-[3.75rem] sm:pt-[4rem] lg:p-8'>
-        <div className='grid w-full grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 lg:gap-8'>
+        <div className='grid min-h-full w-full grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 lg:gap-8'>
           {isLoading ? (
             <>
               <h1 className='col-span-full mt-4 w-fit rounded-xl text-lg font-bold first:mt-0 group-data-loading:skeleton lg:-mb-4'>
@@ -37,7 +38,16 @@ export default function POSReservationList(props: {
                 <POSReservationCard key={`loading-${index}`} />
               ))}
             </>
+          ) : data!.length === 0 ? (
+            // Empty
+            <div className='flex h-full flex-col items-center justify-center gap-4'>
+              <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
+                <ArchiveBoxIcon className='h-12 w-12 text-stone-400' />
+              </div>
+              <h1 className='indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>{`沒有${props.tabName}的訂單`}</h1>
+            </div>
           ) : (
+            // Cards
             data!.map((menu) => (
               <Fragment key={menu.type}>
                 {/* Menu header */}
