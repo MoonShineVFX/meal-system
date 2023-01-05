@@ -149,11 +149,11 @@ export async function getUserInfo(userId: string) {
     // Check if user needs to recharge points
     let isRecharged = false
     let thisCallback: (() => Promise<Transaction>) | undefined = undefined
-    if (user.pointBalance < settings.POINT_DAILY_RECHARGE_AMOUNT) {
-      const now = new Date()
-      const lastRechargeTime = user.lastPointRechargeTime ?? new Date(0)
-
-      if (now.toLocaleDateString() !== lastRechargeTime.toLocaleDateString()) {
+    const now = new Date()
+    const lastRechargeTime = user.lastPointRechargeTime ?? new Date(0)
+    if (now.toLocaleDateString() !== lastRechargeTime.toLocaleDateString()) {
+      // Recharge points
+      if (user.pointBalance < settings.POINT_DAILY_RECHARGE_AMOUNT) {
         const { callback } = await rechargeUserBalanceBase({
           userId: user.id,
           pointAmount: settings.POINT_DAILY_RECHARGE_AMOUNT - user.pointBalance,
@@ -161,15 +161,17 @@ export async function getUserInfo(userId: string) {
         })
         thisCallback = callback
 
-        await client.user.update({
-          where: { id: user.id },
-          data: {
-            lastPointRechargeTime: now,
-          },
-        })
         user.pointBalance = settings.POINT_DAILY_RECHARGE_AMOUNT
         isRecharged = true
       }
+
+      // Update last recharge time
+      await client.user.update({
+        where: { id: user.id },
+        data: {
+          lastPointRechargeTime: now,
+        },
+      })
     }
 
     const { lastPointRechargeTime, ...resultUser } = user
