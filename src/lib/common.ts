@@ -106,6 +106,7 @@ export const settings = {
   TWMP_FISC_KEY: process.env.TWMP_FISC_KEY!,
   /* Server */
   WEBSOCKET_DEV_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_DEV_PORT ?? '3001',
+  WEBSOCKET_PROD_HOST: process.env.NEXT_PUBLIC_WEBSOCKET_PROD_HOST,
   HTTP_PORT: process.env.PORT ?? '3000',
   /* Blockchain */
   BLOCKCHAIN_URL: process.env.BLOCKCHAIN_URL!,

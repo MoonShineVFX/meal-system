@@ -65,7 +65,7 @@ function getWSClient() {
     createWSClient({
       url:
         process.env.NODE_ENV === 'production'
-          ? `wss://${window.location.host}`
+          ? settings.WEBSOCKET_PROD_HOST ?? `wss://${window.location.host}`
           : `ws://${window.location.hostname}:${settings.WEBSOCKET_DEV_PORT}`,
       onOpen: () => {
         onSocketOpenCallbacks.forEach((cb) => cb())

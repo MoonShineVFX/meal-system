@@ -1,4 +1,5 @@
 import type { AppType } from 'next/app'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { twMerge } from 'tailwind-merge'
 
@@ -21,6 +22,12 @@ const PageApp: AppType = ({ Component, pageProps }) => {
 
   return (
     <>
+      <Head>
+        <meta
+          name='viewport'
+          content='width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover'
+        />
+      </Head>
       <Title />
       {/* Content */}
       <div className='grid h-full grid-rows-[auto_calc(4rem_+_env(safe-area-inset-bottom))] sm:grid-cols-[14rem_auto] sm:grid-rows-none lg:grid-cols-[15rem_auto]'>
