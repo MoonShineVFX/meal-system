@@ -35,7 +35,7 @@ function Navigation() {
   const { data } = trpc.user.get.useQuery(undefined)
 
   return (
-    <ul className='relative z-40 flex h-full items-center justify-evenly bg-white shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
+    <ul className='relative z-40 flex h-full items-center justify-evenly bg-white pb-[env(safe-area-inset-bottom)] shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
       {/* LOGO */}
       <li className='-order-2 hidden pl-2 sm:block'>
         <Logo className='h-8 w-auto text-yellow-500' />
