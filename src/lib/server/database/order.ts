@@ -258,6 +258,11 @@ export async function getOrders({
       let keywordForDate = keyword
       if (keyword.match(/^\d{1,2}[\ \/\-]\d{1,2}$/)) {
         keywordForDate = `${new Date().getFullYear()} ${keyword}`
+      } else if (keyword.match(/^\d{4}$/)) {
+        keywordForDate = `${new Date().getFullYear()} ${keyword.slice(
+          0,
+          2,
+        )}-${keyword.slice(2, 4)}`
       }
       const searchDate = new Date(keywordForDate)
       if (
