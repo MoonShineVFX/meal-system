@@ -65,14 +65,14 @@ model Transaction {
   pointAmount  Int             @default(0)
   creditAmount Int             @default(0)
 
-  sourceUser   User   @relation("source", fields: [sourceUserId], references: [id])
+  sourceUser   User     @relation("source", fields: [sourceUserId], references: [id])
   sourceUserId String
-  targetUser   User   @relation("target", fields: [targetUserId], references: [id])
+  targetUser   User     @relation("target", fields: [targetUserId], references: [id])
   targetUserId String
+  ethHashes    String[]
 
   twmpResult       TwmpResult? @relation(fields: [twmpResultId], references: [txnUID])
   twmpResultId     String?
-  ethHashes        String[]
   ordersForPayment Order[]     @relation("orderPayment")
   orderForCanceled Order?      @relation("canceledPayment")
 

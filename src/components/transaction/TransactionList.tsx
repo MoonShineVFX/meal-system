@@ -37,7 +37,7 @@ export default function TransactionList(props: {
   const searchRef = useRef<HTMLInputElement>(null)
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.transaction.get.useInfiniteQuery(
-      {},
+      { keyword: searchKeyword },
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
       },
@@ -145,14 +145,16 @@ export default function TransactionList(props: {
                   transition={{ type: 'spring', duration: 0.3 }}
                 ></motion.div>
               )}
-              <div className='flex flex-1 flex-col gap-2'>
+              <div className='flex flex-1 flex-col gap-2 lg:gap-4'>
                 {/* ID and Date */}
                 <div className='flex items-center gap-2'>
                   <p className='text-sm font-bold tracking-wider text-stone-500'>
                     #{transaction?.id ?? 123}
                   </p>
                   <p className='whitespace-nowrap font-mono text-xs tracking-wide text-stone-400'>
-                    {transaction?.createdAt.toLocaleString()}
+                    {transaction?.createdAt
+                      .toLocaleString()
+                      .replace('午', '午 ')}
                   </p>
                 </div>
                 {/* Content */}

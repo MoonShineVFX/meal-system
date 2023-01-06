@@ -1,6 +1,10 @@
 import { z } from 'zod'
 
-import { rechargeUserBalance, getTransactions } from '@/lib/server/database'
+import {
+  rechargeUserBalance,
+  getTransaction,
+  getTransactions,
+} from '@/lib/server/database'
 import { settings } from '@/lib/common'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
@@ -25,10 +29,15 @@ export const TransactionRouter = router({
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
+        keyword: z.string().optional(),
       }),
     )
     .query(async ({ input, ctx }) => {
-      const transactions = await getTransactions(ctx.userLite.id, input.cursor)
+      const transactions = await getTransactions({
+        userId: ctx.userLite.id,
+        cursor: input.cursor,
+        keyword: input.keyword ? input.keyword.trim() : undefined,
+      })
 
       let nextCursor: number | undefined = undefined
       if (transactions.length > settings.TRANSACTIONS_PER_QUERY) {
@@ -38,5 +47,23 @@ export const TransactionRouter = router({
         transactions,
         nextCursor,
       }
+    }),
+  getDetail: userProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const transaction = await getTransaction({ transactionId: input.id })
+
+      if (
+        transaction.sourceUserId !== ctx.userLite.id &&
+        transaction.targetUserId !== ctx.userLite.id
+      ) {
+        throw new Error('Unauthorized')
+      }
+
+      return transaction
     }),
 })

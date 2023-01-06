@@ -39,7 +39,7 @@ export default function PageTransaction(props: { transactionId?: number }) {
         {...twData({ selected: !!props.transactionId })}
       >
         {/* Transaction List */}
-        <section className='w-full @container group-data-selected:hidden @2xl/main:group-data-selected:grid'>
+        <section className='w-full @container group-data-selected:hidden @2xl/main:w-1/2 @2xl/main:group-data-selected:grid'>
           <div className='relative h-full'>
             <div className='absolute inset-0 grid grid-rows-[min-content_auto] overflow-y-auto @xl:grid-cols-[minmax(0,max-content)_minmax(0,1fr)] @xl:grid-rows-none'>
               <Wallet />
@@ -48,7 +48,7 @@ export default function PageTransaction(props: { transactionId?: number }) {
           </div>
         </section>
         {/* Transaction Detail */}
-        <section className='relative z-[1] w-full shadow-lg group-data-not-selected:hidden @2xl/main:group-data-not-selected:block'>
+        <section className='relative z-[1] w-full shadow-lg group-data-not-selected:hidden @2xl/main:w-1/2 @2xl/main:group-data-not-selected:block'>
           {props.transactionId ? (
             <TransactionDetail transactionId={props.transactionId} />
           ) : (

@@ -1,7 +1,7 @@
 import { TransactionType, Prisma, PrismaClient } from '@prisma/client'
 
 import { prisma } from './define'
-import { settings } from '@/lib/common'
+import { settings, TransactionName } from '@/lib/common'
 import {
   updateBlockchainByMintBurn,
   updateBlockchainByTransfer,
@@ -223,29 +223,144 @@ export async function chargeUserBalance({
   }
 }
 
-export async function getTransactions(
-  userId: string | undefined,
-  cursor: number | undefined,
-) {
+export async function getTransaction({
+  transactionId,
+}: {
+  transactionId: number
+}) {
+  const transaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: {
+      sourceUser: { select: { name: true } },
+      targetUser: { select: { name: true } },
+      orderForCanceled: {
+        select: {
+          id: true,
+          items: { select: { name: true, price: true, quantity: true } },
+          menu: { select: { name: true, type: true, date: true } },
+        },
+      },
+      ordersForPayment: {
+        select: {
+          id: true,
+          items: { select: { name: true, price: true, quantity: true } },
+          menu: { select: { name: true, type: true, date: true } },
+        },
+      },
+      twmpResult: {
+        select: {
+          txnUID: true,
+          createdAt: true,
+          updatedAt: true,
+          deposit: {
+            select: {
+              orderNo: true,
+              transAMT: true,
+              txnID: true,
+              createdAt: true,
+            },
+          },
+          status: true,
+        },
+      },
+    },
+  })
+  if (!transaction) throw new Error('Transaction not found')
+
+  return transaction
+}
+
+export async function getTransactions({
+  userId,
+  keyword,
+  cursor,
+}: {
+  userId: string
+  keyword?: string
+  cursor?: number
+}) {
+  let whereInput: Prisma.TransactionWhereInput = {}
+  if (keyword) {
+    if (keyword.match(/^\#\d+$/)) {
+      // Transaction ID
+      const transactionId = parseInt(keyword.slice(1))
+      whereInput = { id: transactionId }
+    } else if (keyword.match(/^\#\w+$/)) {
+      // TWMP Result ID or Deposit ID
+      const thisId = keyword.slice(1)
+      whereInput = {
+        OR: [{ twmpResultId: thisId }, { twmpResult: { depositId: thisId } }],
+      }
+    } else if (keyword.match(/^[1-9]\d*$/)) {
+      // Price amount
+      const amount = parseInt(keyword)
+      whereInput = {
+        OR: [{ creditAmount: amount }, { pointAmount: amount }],
+      }
+    } else {
+      // Check datetime format
+      let keywordForDate = keyword
+      if (keyword.match(/^\d{1,2}[\ \/\-]\d{1,2}$/)) {
+        keywordForDate = `${new Date().getFullYear()} ${keyword}`
+      } else if (keyword.match(/^\d{4}$/)) {
+        keywordForDate = `${new Date().getFullYear()} ${keyword.slice(
+          0,
+          2,
+        )}-${keyword.slice(2, 4)}`
+      }
+      const searchDate = new Date(keywordForDate)
+      if (
+        !isNaN(searchDate.getTime()) &&
+        searchDate.getFullYear() > 2020 &&
+        searchDate.getFullYear() < 2100
+      ) {
+        const searchDateStart = new Date(searchDate.setHours(0, 0, 0, 0))
+        const searchDateEnd = new Date(searchDate.setHours(23, 59, 59, 999))
+        whereInput = {
+          createdAt: {
+            gte: searchDateStart,
+            lte: searchDateEnd,
+          },
+        }
+      } else {
+        // Transaction Type
+        const filteredTypes = Object.entries(TransactionName)
+          .filter(([, v]) => v.includes(keyword))
+          .map(([k]) => k as TransactionType)
+        console.log(filteredTypes)
+        if (filteredTypes) {
+          whereInput = { type: { in: filteredTypes } }
+        } else {
+          return []
+        }
+      }
+    }
+  }
+
   const transactions = await prisma.transaction.findMany({
     where: {
-      OR: [
+      AND: [
         {
-          sourceUserId: userId,
-          type: { in: [TransactionType.PAYMENT, TransactionType.TRANSFER] },
+          OR: [
+            {
+              sourceUserId: userId,
+              type: { in: [TransactionType.PAYMENT, TransactionType.TRANSFER] },
+            },
+            {
+              targetUserId: userId,
+              type: {
+                in: [
+                  TransactionType.DEPOSIT,
+                  TransactionType.RECHARGE,
+                  TransactionType.REFUND,
+                  TransactionType.CANCELED,
+                  TransactionType.TRANSFER,
+                ],
+              },
+            },
+          ],
         },
-        {
-          targetUserId: userId,
-          type: {
-            in: [
-              TransactionType.DEPOSIT,
-              TransactionType.RECHARGE,
-              TransactionType.REFUND,
-              TransactionType.CANCELED,
-              TransactionType.TRANSFER,
-            ],
-          },
-        },
+        whereInput,
       ],
     },
     orderBy: {

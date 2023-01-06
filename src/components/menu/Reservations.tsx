@@ -194,13 +194,16 @@ export default function Reservations(props: { activeMenuId?: number }) {
                           <div className='absolute inset-y-0 right-0 z-10 w-5 bg-gradient-to-l from-white to-transparent group-hover/card:from-stone-50 group-active/card:from-stone-50 group-data-selected/card:from-stone-100'></div>
                         </div>
                         {/* Date close */}
-                        <p className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-data-loading:skeleton'>
-                          {(menu?.closedDate!.toLocaleString('zh-TW', {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: 'numeric',
-                          }) ?? '1月1日 下午 6:00') + ' 截止'}
+                        <p className='w-fit whitespace-nowrap rounded-xl text-xs tracking-wider text-stone-400 group-data-loading:skeleton'>
+                          {(menu
+                            ?.closedDate!.toLocaleString('zh-TW', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: 'numeric',
+                            })
+                            .replace('午', '午 ') ?? '1月1日 下午 6:00') +
+                            ' 截止'}
                         </p>
                       </div>
                       {/*  */}
