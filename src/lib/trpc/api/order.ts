@@ -40,7 +40,7 @@ export const OrderRouter = router({
   get: userProcedure
     .input(
       z.object({
-        cursor: z.number().optional(),
+        cursor: z.number().int().positive().optional(),
         type: z.enum(['live', 'reservation', 'archived', 'search']),
         keyword: z.string().optional(),
       }),

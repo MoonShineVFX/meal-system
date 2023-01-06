@@ -1,5 +1,6 @@
 import { GetServerSideProps } from 'next'
-import { useRef } from 'react'
+import { BanknotesIcon } from '@heroicons/react/24/outline'
+import z from 'zod'
 
 import { twData } from '@/lib/common'
 import Wallet from '@/components/transaction/Wallet'
@@ -7,50 +8,59 @@ import TransactionList from '@/components/transaction/TransactionList'
 import TransactionDetail from '@/components/transaction/TransactionDetail'
 import Title from '@/components/core/Title'
 
+const transactionArgsSchema = z
+  .array(z.string().regex(/^\d+$/))
+  .length(1)
+  .optional()
+
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { transactionArgs } = context.params as { transactionArgs: string[] }
+  const { transactionArgs } = context.params as { transactionArgs?: string[] }
+
+  const result = transactionArgsSchema.safeParse(transactionArgs)
+  if (!result.success) {
+    return {
+      notFound: true,
+    }
+  }
 
   return {
     props: {
-      transactionId: transactionArgs
-        ? transactionArgs.length > 0
-          ? transactionArgs[0]
-          : undefined
-        : undefined,
+      transactionId: transactionArgs ? parseInt(transactionArgs[0]) : undefined,
     },
   }
 }
 
-export default function PageTransaction(props: { transactionId?: string }) {
-  const isDetailOpened = props.transactionId !== undefined
-  const transactionListScrollRef = useRef<HTMLDivElement>(null)
-
+export default function PageTransaction(props: { transactionId?: number }) {
   return (
     <>
-      <Title prefix='錢包' />
+      <Title prefix='交易紀錄' />
       <div
-        className='group grid h-full grid-cols-1 bg-gray-200 @2xl/main:grid-cols-2'
-        {...twData({ selected: isDetailOpened })}
+        className='group flex h-full'
+        {...twData({ selected: !!props.transactionId })}
       >
         {/* Transaction List */}
-        <section className='@container group-data-selected:hidden @2xl/main:group-data-selected:grid'>
+        <section className='w-full @container group-data-selected:hidden @2xl/main:group-data-selected:grid'>
           <div className='relative h-full'>
-            <div
-              ref={transactionListScrollRef} // for iphone 5 width
-              className='absolute inset-0 grid grid-rows-[min-content_auto] overflow-y-auto @xl:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] @xl:grid-rows-none'
-            >
+            <div className='absolute inset-0 grid grid-rows-[min-content_auto] overflow-y-auto @xl:grid-cols-[minmax(0,max-content)_minmax(0,1fr)] @xl:grid-rows-none'>
               <Wallet />
-              <TransactionList
-                externalScrollElement={
-                  transactionListScrollRef.current ?? undefined
-                }
-              />
+              <TransactionList activeTransactionId={props.transactionId} />
             </div>
           </div>
         </section>
         {/* Transaction Detail */}
-        <section className='group-data-not-selected:hidden @2xl/main:group-data-not-selected:block'>
-          <TransactionDetail transactionId={props.transactionId} />
+        <section className='relative z-[1] w-full shadow-lg group-data-not-selected:hidden @2xl/main:group-data-not-selected:block'>
+          {props.transactionId ? (
+            <TransactionDetail transactionId={props.transactionId} />
+          ) : (
+            <div className='flex h-full flex-col items-center justify-center gap-4'>
+              <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
+                <BanknotesIcon className='h-12 w-12 text-stone-400' />
+              </div>
+              <h1 className='indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>
+                請選擇交易紀錄
+              </h1>
+            </div>
+          )}
         </section>
       </div>
     </>

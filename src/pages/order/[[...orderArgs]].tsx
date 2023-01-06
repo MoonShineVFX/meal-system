@@ -127,7 +127,7 @@ export default function PageOrder(props: {
   }
   const isSearch = props.tabName === '搜尋'
 
-  let orders = data?.pages.flatMap((page) => page.orders) ?? []
+  const orders = data?.pages.flatMap((page) => page.orders) ?? []
 
   return (
     <>

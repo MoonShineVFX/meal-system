@@ -80,6 +80,7 @@ function Navigation() {
         label='交易紀錄'
         path='/transaction'
         icons={[WalletIcon, WalletIconSolid]}
+        rememberSubpath={true}
       />
 
       <div className='hidden grow sm:block'></div>
@@ -182,7 +183,7 @@ function ProfileButton(props: { className?: string }) {
                 href='/transaction'
                 className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
               >
-                錢包
+                交易紀錄
               </Link>
               <div
                 className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'

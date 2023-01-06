@@ -39,7 +39,7 @@ export default function COMCard(props: {
 
   return (
     <LinkWrapper com={com}>
-      <div className='group/com flex flex-col overflow-hidden border-stone-100 bg-white transition-transform duration-150 hover:scale-105 active:scale-95'>
+      <div className='group/com flex flex-col overflow-hidden border-stone-100 bg-white transition-transform duration-150 hover:scale-[1.02] active:scale-95'>
         {/* Image */}
         <section className='px-4 py-2'>
           <div className='relative aspect-square overflow-hidden rounded-2xl group-data-loading:skeleton'>

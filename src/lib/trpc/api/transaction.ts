@@ -1,9 +1,7 @@
-import { UserRole } from '@prisma/client'
-import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 import { rechargeUserBalance, getTransactions } from '@/lib/server/database'
-import { settings, validateRole } from '@/lib/common'
+import { settings } from '@/lib/common'
 
 import { adminProcedure, userProcedure, router } from '../trpc'
 
@@ -23,35 +21,21 @@ export const TransactionRouter = router({
       })
     }),
   // Get transaction records, use until arg to update new records
-  getList: userProcedure
+  get: userProcedure
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
-        role: z.nativeEnum(UserRole),
       }),
     )
     .query(async ({ input, ctx }) => {
-      // Validate role
-      if (!validateRole(ctx.userLite.role, input.role)) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'This user are not allowed to access this resource',
-        })
-      }
-
-      // Get transactions
-      const transactions = await getTransactions(
-        ctx.userLite.id,
-        input.cursor,
-        input.role,
-      )
+      const transactions = await getTransactions(ctx.userLite.id, input.cursor)
 
       let nextCursor: number | undefined = undefined
-      if (transactions.length > settings.TRANSACTIONS_PER_PAGE) {
+      if (transactions.length > settings.TRANSACTIONS_PER_QUERY) {
         nextCursor = transactions.pop()!.id
       }
       return {
-        transactions: transactions,
+        transactions,
         nextCursor,
       }
     }),

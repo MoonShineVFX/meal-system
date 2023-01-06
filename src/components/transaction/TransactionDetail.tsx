@@ -1,12 +1,11 @@
 import Link from 'next/link'
 
-export default function TransactionDetail(props: { transactionId?: string }) {
-  if (!props.transactionId) {
-    return <div className='grid h-full place-items-center'>請選擇交易紀錄</div>
-  }
+import Title from '@/components/core/Title'
 
+export default function TransactionDetail(props: { transactionId: number }) {
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col p-4 lg:p-8'>
+      <Title prefix={`交易紀錄 #${props.transactionId}`} />
       <Link className='lg:hidden' href='/transaction'>
         返回
       </Link>

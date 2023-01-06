@@ -4,13 +4,13 @@ import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
 import { motion } from 'framer-motion'
 import { CalendarDaysIcon } from '@heroicons/react/24/outline'
+import { ChevronRightIcon } from '@heroicons/react/24/outline'
 
 import Title from '@/components/core/Title'
 import trpc, { ReservationDatas } from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
 import { MenuTypeName, settings, twData } from '@/lib/common'
 import Image from '@/components/core/Image'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
 
 const MENU_TYPE_ORDER = [
   MenuType.BREAKFAST,
@@ -146,20 +146,22 @@ export default function Reservations(props: { activeMenuId?: number }) {
                       key={menu?.id ?? `placeholder-${index}`}
                       href={`/reserve/${menu?.id}`}
                       className={twMerge(
-                        'group/card relative flex cursor-pointer gap-4 rounded-2xl p-2 data-selected:pointer-events-none hover:bg-stone-100 active:scale-[98%] active:bg-stone-100',
+                        'group/card relative flex cursor-pointer gap-4 rounded-2xl p-2 data-selected:pointer-events-none hover:bg-stone-50 active:scale-[98%]',
                       )}
                       {...twData({ selected: props.activeMenuId === menu?.id })}
                     >
                       {/* MenuType */}
                       <div className='relative flex items-center justify-center'>
-                        <motion.div
-                          layoutId={
-                            menu ? `reserve-menu-${menu.id}` : undefined
-                          }
-                          className='absolute inset-0 rounded-2xl bg-stone-200'
-                          transition={{ duration: 0.2, type: 'spring' }}
-                        />
-                        <h2 className='relative z-[1] rounded-xl p-2 text-lg font-bold group-data-loading:skeleton'>
+                        {props.activeMenuId !== menu?.id && (
+                          <motion.div
+                            layoutId={
+                              menu ? `reserve-menu-${menu.id}` : undefined
+                            }
+                            className='absolute inset-0 rounded-2xl bg-stone-100'
+                            transition={{ duration: 0.2, type: 'spring' }}
+                          />
+                        )}
+                        <h2 className='relative z-[1] rounded-xl p-2 text-lg font-bold group-data-selected/card:text-yellow-600 group-data-loading:skeleton'>
                           {menu ? MenuTypeName[menu.type][0] : '菜'}
                         </h2>
                       </div>
@@ -189,10 +191,10 @@ export default function Reservations(props: { activeMenuId?: number }) {
                             </div>
                           ))}
                           {/* Fader */}
-                          <div className='absolute inset-y-0 right-0 z-10 w-5 bg-gradient-to-l from-white to-transparent group-hover/card:from-stone-100 group-active/card:from-stone-100 group-data-selected/card:from-stone-200'></div>
+                          <div className='absolute inset-y-0 right-0 z-10 w-5 bg-gradient-to-l from-white to-transparent group-hover/card:from-stone-50 group-active/card:from-stone-50 group-data-selected/card:from-stone-100'></div>
                         </div>
                         {/* Date close */}
-                        <p className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-300 group-data-selected/card:text-stone-400 group-data-loading:skeleton'>
+                        <p className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-data-loading:skeleton'>
                           {(menu?.closedDate!.toLocaleString('zh-TW', {
                             month: 'short',
                             day: 'numeric',
@@ -209,7 +211,7 @@ export default function Reservations(props: { activeMenuId?: number }) {
                               已預訂
                             </p>
                           )}
-                          <ChevronRightIcon className='h-6 w-6 text-stone-400 group-data-selected/card:invisible' />
+                          <ChevronRightIcon className='h-5 w-5 text-stone-400 group-data-selected/card:invisible' />
                         </div>
                       </div>
                       {/* Highlight BG */}
@@ -217,7 +219,7 @@ export default function Reservations(props: { activeMenuId?: number }) {
                         <motion.div
                           initial={false}
                           layoutId={`reserve-menu-${menu.id}`}
-                          className='absolute inset-0 -z-[1] rounded-2xl bg-stone-200'
+                          className='absolute inset-0 -z-[1] rounded-2xl bg-stone-100'
                           transition={{ duration: 0.2, type: 'spring' }}
                         />
                       )}

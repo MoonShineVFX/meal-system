@@ -74,6 +74,15 @@ export const MenuTypeName: Record<MenuType, string> = {
   [MenuType.RETAIL]: '自助',
 }
 
+export const TransactionName: Record<TransactionType, string> = {
+  [TransactionType.PAYMENT]: '付款',
+  [TransactionType.REFUND]: '退款',
+  [TransactionType.RECHARGE]: '獎勵',
+  [TransactionType.CANCELED]: '取消訂單',
+  [TransactionType.TRANSFER]: '轉帳',
+  [TransactionType.DEPOSIT]: '儲值',
+}
+
 /* Settings */
 export const settings = {
   /* Auth */
@@ -85,17 +94,11 @@ export const settings = {
   /* Database */
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
-  TRANSACTION_NAME: {
-    [TransactionType.RECHARGE]: '儲值',
-    [TransactionType.PAYMENT]: '消費',
-    [TransactionType.REFUND]: '退款',
-    [TransactionType.TRANSFER]: '轉帳',
-  },
   POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
     ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
     : 100,
   /* Trade */
-  TRANSACTIONS_PER_PAGE: 20,
+  TRANSACTIONS_PER_QUERY: 20,
   /* TWMP */
   TWMP_API_URL: process.env.TWMP_API_URL!,
   TWMP_ACQ_BANK: process.env.TWMP_ACQ_BANK!,

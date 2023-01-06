@@ -79,7 +79,7 @@ export default function OrderCard(props: {
   return (
     <div
       className={twMerge(
-        'relative flex flex-col gap-4 border-b-4 border-stone-200 py-6 px-4 pb-7 lg:gap-6 lg:py-8 lg:px-8 lg:pb-9',
+        'relative flex flex-col gap-4 border-b border-stone-200 py-6 px-4 pb-7 lg:gap-6 lg:py-8 lg:px-8 lg:pb-9',
         props.isFirst && 'pt-[4.25rem] sm:pt-[4.5rem]',
         props.isLast && 'border-none',
         props.isLoading && 'group pointer-events-none',

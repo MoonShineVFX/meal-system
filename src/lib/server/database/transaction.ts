@@ -1,4 +1,4 @@
-import { UserRole, TransactionType, Prisma, PrismaClient } from '@prisma/client'
+import { TransactionType, Prisma, PrismaClient } from '@prisma/client'
 
 import { prisma } from './define'
 import { settings } from '@/lib/common'
@@ -28,7 +28,11 @@ export async function rechargeUserBalanceBase({
     throw new Error('twmpResultId and orderId are exclusive')
 
   const thisPrisma = client ?? prisma
-  const type = orderId ? TransactionType.CANCELED : TransactionType.RECHARGE
+  const type = orderId
+    ? TransactionType.CANCELED
+    : twmpResultId
+    ? TransactionType.DEPOSIT
+    : TransactionType.RECHARGE
 
   const user = await thisPrisma.user.update({
     where: { id: userId },
@@ -222,63 +226,32 @@ export async function chargeUserBalance({
 export async function getTransactions(
   userId: string | undefined,
   cursor: number | undefined,
-  role: UserRole,
 ) {
-  let whereQuery: Prisma.TransactionWhereInput
-  if (role === UserRole.USER) {
-    whereQuery = {
+  const transactions = await prisma.transaction.findMany({
+    where: {
       OR: [
         {
           sourceUserId: userId,
-          type: { in: [TransactionType.PAYMENT] },
+          type: { in: [TransactionType.PAYMENT, TransactionType.TRANSFER] },
         },
         {
           targetUserId: userId,
-          type: { in: [TransactionType.RECHARGE, TransactionType.REFUND] },
-          creditAmount: { not: 0 },
+          type: {
+            in: [
+              TransactionType.DEPOSIT,
+              TransactionType.RECHARGE,
+              TransactionType.REFUND,
+              TransactionType.CANCELED,
+              TransactionType.TRANSFER,
+            ],
+          },
         },
       ],
-    }
-  } else if (role === UserRole.STAFF) {
-    whereQuery = {
-      targetUserId: settings.SERVER_USER_ID,
-      type: TransactionType.PAYMENT,
-    }
-  } else if (role === UserRole.ADMIN) {
-    // Filter auto recharge
-    whereQuery = {
-      NOT: {
-        sourceUserId: settings.SERVER_USER_ID,
-        type: TransactionType.RECHARGE,
-        pointAmount: {
-          gt: 0,
-        },
-      },
-    }
-  } else {
-    throw new Error('Invalid role')
-  }
-
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      AND: [whereQuery],
     },
     orderBy: {
-      id: 'desc',
+      createdAt: 'desc',
     },
-    include: {
-      sourceUser: {
-        select: {
-          name: true,
-        },
-      },
-      targetUser: {
-        select: {
-          name: true,
-        },
-      },
-    },
-    take: settings.TRANSACTIONS_PER_PAGE + 1,
+    take: settings.TRANSACTIONS_PER_QUERY + 1,
     cursor: cursor ? { id: cursor } : undefined,
   })
   return transactions
