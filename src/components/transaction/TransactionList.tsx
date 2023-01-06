@@ -76,7 +76,10 @@ export default function TransactionList(props: {
   const transactions = data?.pages.flatMap((page) => page.transactions) ?? []
 
   return (
-    <div className='flex grow flex-col'>
+    <div
+      className='group flex grow flex-col'
+      {...twData({ loading: isLoading })}
+    >
       {/* Search */}
       <div className='p-4 lg:px-8 lg:pb-4  @xl:lg:pt-8'>
         <div key='searchBar' className='flex flex-col items-center gap-2'>
@@ -113,15 +116,15 @@ export default function TransactionList(props: {
         }}
         data={
           isLoading
-            ? ([...Array(4).fill(undefined)] as undefined[])
+            ? ([...Array(8).fill(undefined)] as undefined[])
             : hasNextPage
-            ? [...transactions, ...(Array(2).fill(undefined) as undefined[])]
+            ? [...transactions, ...(Array(3).fill(undefined) as undefined[])]
             : transactions
         }
         itemContent={(index, transaction) => (
           <div
             className={twMerge(
-              'mx-4 border-b py-1 lg:mx-8',
+              'mx-4 border-b py-1 group-data-loading:pointer-events-none lg:mx-8',
               index === transactions.length - 1 && 'border-none',
             )}
           >
@@ -134,9 +137,9 @@ export default function TransactionList(props: {
               })}
             >
               {/* Selected highlight */}
-              {transaction?.id === props.activeTransactionId && (
+              {transaction && transaction.id === props.activeTransactionId && (
                 <motion.div
-                  layoutId={`transaction-${transaction?.id ?? 123}`}
+                  layoutId={`transaction-${transaction.id}`}
                   className={twMerge(
                     'absolute inset-0 z-[-1] rounded-2xl border',
                     transaction && TransactionTypeStyle[transaction.type],
@@ -148,29 +151,31 @@ export default function TransactionList(props: {
               <div className='flex flex-1 flex-col gap-2 lg:gap-4'>
                 {/* ID and Date */}
                 <div className='flex items-center gap-2'>
-                  <p className='text-sm font-bold tracking-wider text-stone-500'>
+                  <p className='rounded-xl text-sm font-bold tracking-wider text-stone-500 group-data-loading:skeleton'>
                     #{transaction?.id ?? 123}
                   </p>
-                  <p className='whitespace-nowrap font-mono text-xs tracking-wide text-stone-400'>
+                  <p className='whitespace-nowrap rounded-xl font-mono text-xs tracking-wide text-stone-400 group-data-loading:skeleton'>
                     {transaction?.createdAt
                       .toLocaleString()
-                      .replace('午', '午 ')}
+                      .replace('午', '午 ') ?? '2023/1/1 上午 0:00:00'}
                   </p>
                 </div>
                 {/* Content */}
                 <div className='flex gap-2'>
                   {/* Type */}
-                  <div className='relative rounded-lg border border-transparent py-1 px-2'>
-                    {transaction?.id !== props.activeTransactionId && (
-                      <motion.div
-                        layoutId={`transaction-${transaction?.id ?? 123}`}
-                        className={twMerge(
-                          'absolute inset-0 z-[1] rounded-lg border',
-                          transaction && TransactionTypeStyle[transaction.type],
-                        )}
-                        transition={{ type: 'spring', duration: 0.3 }}
-                      ></motion.div>
-                    )}
+                  <div className='relative rounded-lg border border-transparent py-1 px-2 group-data-loading:skeleton'>
+                    {transaction &&
+                      transaction.id !== props.activeTransactionId && (
+                        <motion.div
+                          layoutId={`transaction-${transaction.id}`}
+                          className={twMerge(
+                            'absolute inset-0 z-[1] rounded-lg border',
+                            transaction &&
+                              TransactionTypeStyle[transaction.type],
+                          )}
+                          transition={{ type: 'spring', duration: 0.3 }}
+                        ></motion.div>
+                      )}
                     <p
                       className={twMerge(
                         'relative z-[1] whitespace-nowrap text-sm tracking-widest',
@@ -183,21 +188,21 @@ export default function TransactionList(props: {
                   <div className='flex-1'></div>
                   {/* Currency */}
                   <div className='flex items-center gap-1'>
-                    <CircleStackIcon className='h-4 w-4 shrink-0 text-yellow-500' />
-                    <p className='font-bold text-stone-500'>
+                    <CircleStackIcon className='h-4 w-4 shrink-0 text-yellow-500 group-data-loading:skeleton group-data-loading:rounded-full' />
+                    <p className='rounded-xl font-bold text-stone-500 group-data-loading:skeleton'>
                       {transaction?.type === 'PAYMENT' &&
                       transaction?.pointAmount > 0
                         ? '-' + transaction?.pointAmount
-                        : transaction?.pointAmount}
+                        : transaction?.pointAmount ?? 50}
                     </p>
                   </div>
                   <div className='flex items-center gap-1'>
-                    <CurrencyDollarIcon className='h-4 w-4 shrink-0 text-yellow-500' />
-                    <p className='font-bold text-stone-500'>
+                    <CurrencyDollarIcon className='h-4 w-4 shrink-0 text-yellow-500 group-data-loading:skeleton group-data-loading:rounded-full' />
+                    <p className='rounded-xl font-bold text-stone-500 group-data-loading:skeleton'>
                       {transaction?.type === 'PAYMENT' &&
                       transaction?.creditAmount > 0
                         ? '-' + transaction?.creditAmount
-                        : transaction?.creditAmount}
+                        : transaction?.creditAmount ?? 50}
                     </p>
                   </div>
                 </div>

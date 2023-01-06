@@ -143,7 +143,7 @@ export default function POSCard(props: {
               {STATUS_NAME_TEXT[step]}
             </motion.p>
           </AnimatePresence>
-          <p className='rounded-xl font-mono text-[0.6rem] tracking-wider text-stone-500/50 group-data-loading:skeleton'>
+          <p className='whitespace-nowrap rounded-xl font-mono text-[0.6rem] tracking-wider text-stone-500/50 group-data-loading:skeleton'>
             {date?.toLocaleTimeString('zh-TW') ?? '　'}
           </p>
         </div>

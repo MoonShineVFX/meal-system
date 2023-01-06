@@ -45,7 +45,7 @@ export default function POSReservationList(props: {
           {isLoading ? (
             <>
               <h1 className='col-span-full mt-4 w-fit rounded-xl text-lg font-bold first:mt-0 group-data-loading:skeleton lg:-mb-4'>
-                菜單
+                1月1日 菜單
               </h1>
               {[...Array(6).keys()].map((index) => (
                 <POSReservationCard key={`loading-${index}`} />
