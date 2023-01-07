@@ -31,7 +31,7 @@ model User {
 
   name                  String
   role                  UserRole  @default(USER)
-  pointBalance          Int       @default(500)
+  pointBalance          Int       @default(0)
   creditBalance         Int       @default(0)
   password              String?
   lastPointRechargeTime DateTime?
