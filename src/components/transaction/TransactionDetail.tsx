@@ -1,6 +1,13 @@
 import Link from 'next/link'
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
 import { Fragment } from 'react'
+import { CircleStackIcon } from '@heroicons/react/24/outline'
+import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { WalletIcon } from '@heroicons/react/24/outline'
+import { UserMinusIcon } from '@heroicons/react/24/outline'
+import { UserPlusIcon } from '@heroicons/react/24/outline'
+import { DocumentTextIcon } from '@heroicons/react/24/outline'
+import { CreditCardIcon } from '@heroicons/react/24/outline'
 
 import Title from '@/components/core/Title'
 import trpc from '@/lib/client/trpc'
@@ -48,40 +55,45 @@ export default function TransactionDetail(props: { transactionId: number }) {
               </p>
             </div>
           </header>
-          <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 sm:grid-cols-2'>
-            <dt className='w-fit rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+          <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+              <WalletIcon className='mr-2 inline-block h-4 w-4' />
               類型
             </dt>
             <dd className='w-fit rounded-xl group-data-loading:skeleton'>
               {data ? TransactionName[data.type] : '類型'}
             </dd>
           </dl>
-          <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 sm:grid-cols-2'>
-            <dt className='w-fit rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+          <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+              <UserMinusIcon className='mr-2 inline-block h-4 w-4' />
               來源
             </dt>
             <dd className='w-fit rounded-xl group-data-loading:skeleton'>
               {data?.sourceUser.name ?? '使用者'}
             </dd>
           </dl>
-          <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 sm:grid-cols-2'>
-            <dt className='w-fit rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+          <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+              <UserPlusIcon className='mr-2 inline-block h-4 w-4' />
               對象
             </dt>
             <dd className='w-fit rounded-xl group-data-loading:skeleton'>
               {data?.targetUser.name ?? '使用者'}
             </dd>
           </dl>
-          <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 sm:grid-cols-2'>
-            <dt className='w-fit rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+          <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+              <CircleStackIcon className='mr-2 inline-block h-4 w-4' />
               點數
             </dt>
             <dd className='w-fit rounded-xl group-data-loading:skeleton'>
               ${data?.pointAmount ?? 50}
             </dd>
           </dl>
-          <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 last:border-none sm:grid-cols-2'>
-            <dt className='w-fit rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+          <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4 last:border-none'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+              <CurrencyDollarIcon className='mr-2 inline-block h-4 w-4' />
               夢想幣
             </dt>
             <dd className='w-fit rounded-xl group-data-loading:skeleton'>
@@ -89,12 +101,13 @@ export default function TransactionDetail(props: { transactionId: number }) {
             </dd>
           </dl>
           {orders.length > 0 && (
-            <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 last:border-none sm:grid-cols-2'>
-              <dt className='text-sm font-bold tracking-widest text-stone-400'>
+            <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 last:border-none'>
+              <dt className='flex items-center text-sm font-bold tracking-widest text-stone-400'>
+                <DocumentTextIcon className='mr-2 inline-block h-4 w-4' />
                 訂單
               </dt>
               <dd>
-                <ul className='divide-y rounded-md border'>
+                <ul className='max-w-xs divide-y rounded-md border'>
                   {orders.map((order) => (
                     <li
                       key={order.id}
@@ -123,8 +136,9 @@ export default function TransactionDetail(props: { transactionId: number }) {
             </dl>
           )}
           {data && data.twmpResult && (
-            <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 last:border-none sm:grid-cols-2'>
-              <dt className='text-sm font-bold tracking-widest text-stone-400'>
+            <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 last:border-none'>
+              <dt className='flex items-center text-sm font-bold tracking-widest text-stone-400'>
+                <CreditCardIcon className='mr-2 inline-block h-4 w-4' />
                 台灣Pay
               </dt>
               <dd>
