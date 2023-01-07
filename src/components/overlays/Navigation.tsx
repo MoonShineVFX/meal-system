@@ -35,11 +35,11 @@ function Navigation() {
   const { data } = trpc.user.get.useQuery(undefined)
 
   return (
-    <ul className='relative z-40 flex h-full items-center justify-evenly bg-white pb-[env(safe-area-inset-bottom)] shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
+    <div className='relative z-40 flex h-full items-center justify-evenly bg-white pb-[env(safe-area-inset-bottom)] shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
       {/* LOGO */}
-      <li className='-order-2 hidden pl-2 sm:block'>
+      <div className='-order-2 hidden pl-2 sm:block'>
         <Logo className='h-8 w-auto text-yellow-500' />
-      </li>
+      </div>
       {data && ['ADMIN', 'STAFF'].includes(data.role) && (
         <NavButton
           className='hidden sm:block'
@@ -96,7 +96,7 @@ function Navigation() {
       />
 
       <ProfileButton className='sm:-order-1' />
-    </ul>
+    </div>
   )
 }
 
@@ -230,7 +230,7 @@ function NavButton(props: {
   }, [router.asPath])
 
   return (
-    <ul
+    <div
       className={twMerge('sm:w-full', props.className)}
       onClick={props.onClick}
     >
@@ -261,7 +261,7 @@ function NavButton(props: {
           {props.numberBadge && <div className='ml-2'>{props.numberBadge}</div>}
         </div>
       </Link>
-    </ul>
+    </div>
   )
 }
 

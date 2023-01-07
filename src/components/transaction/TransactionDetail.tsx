@@ -74,7 +74,7 @@ export default function TransactionDetail(props: { transactionId: number }) {
           </dl>
           <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 sm:grid-cols-2'>
             <dt className='w-fit rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
-              福利點數
+              點數
             </dt>
             <dd className='w-fit rounded-xl group-data-loading:skeleton'>
               ${data?.pointAmount ?? 50}

@@ -29,7 +29,7 @@ export enum SERVER_NOTIFY {
   ORDER_CANCEL = '訂單取消',
   POS_ADD = '',
   POS_UPDATE = '',
-  DAILY_RECHARGE = '今日福利點數已發放',
+  DAILY_RECHARGE = '今日點數已發放',
 }
 
 export enum CurrencyType {
