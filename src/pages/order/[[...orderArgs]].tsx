@@ -1,25 +1,18 @@
-import {
-  useState,
-  useCallback,
-  startTransition,
-  ChangeEvent,
-  useRef,
-} from 'react'
+import { useState, useCallback } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { GetServerSideProps } from 'next'
 import z from 'zod'
 
 import { InboxIcon } from '@heroicons/react/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { XMarkIcon } from '@heroicons/react/24/outline'
 
-import Spinner from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
 import trpc from '@/lib/client/trpc'
 import OrderCard from '@/components/order/OrderCard'
 import Title from '@/components/core/Title'
 import { twData } from '@/lib/common'
 import Tab from '@/components/core/Tab'
+import SearchBar from '@/components/core/SearchBar'
 
 const TAB_NAMES = ['處理中', '預訂', '已完成', '搜尋'] as const
 type TabName = typeof TAB_NAMES[number]
@@ -84,7 +77,6 @@ export default function PageOrder(props: {
   keyword: string
 }) {
   const [searchKeyword, setSearchKeyword] = useState<string>(props.keyword)
-  const searchRef = useRef<HTMLInputElement>(null)
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.order.get.useInfiniteQuery(
       {
@@ -101,26 +93,6 @@ export default function PageOrder(props: {
       fetchNextPage()
     }
   }, [hasNextPage])
-
-  const handleSearchChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const text = event.target.value
-      startTransition(() => {
-        // avoid 注音 typing
-        if (!text.match(/[\u3105-\u3129\u02CA\u02C7\u02CB\u02D9]/)) {
-          setSearchKeyword(text)
-        }
-      })
-    },
-    [],
-  )
-
-  const handleSearchClear = useCallback(() => {
-    setSearchKeyword('')
-    if (!searchRef.current) return
-    searchRef.current.value = ''
-    searchRef.current.focus()
-  }, [])
 
   if (isError) {
     return <Error description={error.message} />
@@ -176,35 +148,16 @@ export default function PageOrder(props: {
                       typeof order === 'string' ? (
                         order === 'searchBar' ? (
                           // Search
-                          <div
-                            key='searchBar'
-                            className='flex flex-col items-center gap-2 bg-white/80 pt-[4.25rem] backdrop-blur sm:pt-[4.5rem] lg:pt-8'
-                          >
-                            <div className='relative'>
-                              <input
-                                ref={searchRef}
-                                type='text'
-                                className='rounded-2xl border border-stone-300 bg-stone-100 py-2 px-4 focus:outline-yellow-500'
-                                placeholder='搜尋訂單'
-                                defaultValue={searchKeyword}
-                                onChange={handleSearchChange}
-                              />
-                              <div className='absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 stroke-2 text-stone-400'>
-                                {isLoading ? (
-                                  <Spinner className='h-full w-full' />
-                                ) : searchKeyword.length > 0 ? (
-                                  <XMarkIcon
-                                    className='h-full w-full cursor-pointer rounded-full hover:scale-125 hover:bg-stone-200 active:scale-90 active:bg-stone-200'
-                                    onClick={handleSearchClear}
-                                  />
-                                ) : (
-                                  <MagnifyingGlassIcon className='h-full w-full' />
-                                )}
-                              </div>
-                            </div>
-                            <p className='text-xs text-stone-400'>
-                              拿鐵、#123、2023-01-01
-                            </p>
+                          <div className='flex justify-center bg-white/80 backdrop-blur'>
+                            <SearchBar
+                              key='searchBar'
+                              placeholder='搜尋訂單'
+                              searchKeyword={searchKeyword}
+                              setSearchKeyword={setSearchKeyword}
+                              hint='拿鐵、#123、2023-01-01'
+                              isLoading={isLoading}
+                              className='w-full max-w-md px-4 pt-[4.25rem] sm:pt-[4.5rem] lg:px-8 lg:pt-8'
+                            />
                           </div>
                         ) : (
                           // Empty search result

@@ -54,7 +54,7 @@ export default function POSReservationList(props: {
           ) : (
             // Cards
             data!.map((menu) => (
-              <Fragment key={menu.type}>
+              <Fragment key={`${menu.type}-${menu.date}`}>
                 {/* Menu header */}
                 <h1 className='col-span-full mt-4 w-fit text-lg font-bold first:mt-0 lg:-mb-4'>
                   {isFuture ? getMenuName(menu) : MenuTypeName[menu.type]}

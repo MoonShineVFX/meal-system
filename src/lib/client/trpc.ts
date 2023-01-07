@@ -22,9 +22,6 @@ type RouterOutput = inferRouterOutputs<AppRouter>
 
 export type UserInfo = RouterOutput['user']['get']
 
-export type TransactionWithNames =
-  RouterOutput['transaction']['getList']['transactions'][0]
-
 export type MenuData = RouterOutput['menu']['get']
 export type CommoditiesOnMenu = MenuData['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]
@@ -54,6 +51,8 @@ export type OrderItems = OrderDatas[0]['items']
 export type POSLiveDatas = RouterOutput['pos']['getLive']
 export type POSReservationDatas = RouterOutput['pos']['getReservation']
 export type ReservationDatas = RouterOutput['menu']['getReservations']
+export type TransactionDatas =
+  RouterOutput['transaction']['get']['transactions']
 
 /* WebSocket Client */
 declare global {

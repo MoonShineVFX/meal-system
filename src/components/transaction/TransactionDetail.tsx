@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
+import { Fragment } from 'react'
 
 import Title from '@/components/core/Title'
 import trpc from '@/lib/client/trpc'
@@ -95,20 +96,23 @@ export default function TransactionDetail(props: { transactionId: number }) {
               <dd>
                 <ul className='divide-y rounded-md border'>
                   {orders.map((order) => (
-                    <li className='text-sm hover:bg-stone-50 active:scale-[0.98] active:bg-stone-50'>
+                    <li
+                      key={order.id}
+                      className='text-sm hover:bg-stone-50 active:scale-[0.98] active:bg-stone-50'
+                    >
                       <Link href={`/order/id/${order.id}`}>
                         <p className='bg-stone-100 py-1 px-2 text-sm text-stone-500'>
                           #{order.id}
                         </p>
                         <ul className='grid grid-cols-3 p-2 tracking-wider text-stone-400'>
-                          {order.items.map((item) => (
-                            <>
+                          {order.items.map((item, index) => (
+                            <Fragment key={index}>
                               <span>{item.name}</span>
                               <span className='text-right'>${item.price}</span>
                               <span className='text-right'>
                                 x {item.quantity}
                               </span>
-                            </>
+                            </Fragment>
                           ))}
                         </ul>
                       </Link>
