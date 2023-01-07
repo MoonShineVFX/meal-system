@@ -1,4 +1,5 @@
 import { TransactionType } from '@prisma/client'
+import { useMediaQuery } from 'usehooks-ts'
 import Link from 'next/link'
 import { Virtuoso } from 'react-virtuoso'
 import {
@@ -32,7 +33,9 @@ const TransactionTypeStyle: Record<TransactionType, string> = {
 
 export default function TransactionList(props: {
   activeTransactionId?: number
+  scrollRef?: React.RefObject<HTMLDivElement>
 }) {
+  const matches = useMediaQuery('(min-width: 576px)') // split wallet and list here
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const searchRef = useRef<HTMLInputElement>(null)
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
@@ -110,6 +113,9 @@ export default function TransactionList(props: {
       {/* List */}
       <Virtuoso
         className='ms-scroll'
+        customScrollParent={
+          matches ? undefined : props.scrollRef?.current ?? undefined
+        }
         endReached={handleScrollEndReached}
         components={{
           Footer: () => <div className='h-4 lg:h-8'></div>,
@@ -154,7 +160,7 @@ export default function TransactionList(props: {
                   <p className='rounded-xl text-sm font-bold tracking-wider text-stone-500 group-data-loading:skeleton'>
                     #{transaction?.id ?? 123}
                   </p>
-                  <p className='whitespace-nowrap rounded-xl font-mono text-xs tracking-wide text-stone-400 group-data-loading:skeleton'>
+                  <p className='whitespace-nowrap rounded-xl font-mono text-sm tracking-wide text-stone-400 group-data-loading:skeleton'>
                     {transaction?.createdAt
                       .toLocaleString()
                       .replace('午', '午 ') ?? '2023/1/1 上午 0:00:00'}

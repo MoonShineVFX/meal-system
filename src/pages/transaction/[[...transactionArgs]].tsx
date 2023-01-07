@@ -1,6 +1,7 @@
 import { GetServerSideProps } from 'next'
 import { BanknotesIcon } from '@heroicons/react/24/outline'
 import z from 'zod'
+import { useRef } from 'react'
 
 import { twData } from '@/lib/common'
 import Wallet from '@/components/transaction/Wallet'
@@ -31,6 +32,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 }
 
 export default function PageTransaction(props: { transactionId?: number }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
   return (
     <>
       <Title prefix='交易紀錄' />
@@ -41,9 +43,15 @@ export default function PageTransaction(props: { transactionId?: number }) {
         {/* Transaction List */}
         <section className='w-full @container group-data-selected:hidden @2xl/main:w-1/2 @2xl/main:group-data-selected:grid'>
           <div className='relative h-full'>
-            <div className='absolute inset-0 grid grid-rows-[min-content_auto] overflow-y-auto @xl:grid-cols-[minmax(0,max-content)_minmax(0,1fr)] @xl:grid-rows-none'>
+            <div
+              ref={scrollRef}
+              className='absolute inset-0 grid grid-rows-[min-content_auto] overflow-y-auto @xl:grid-cols-[minmax(0,max-content)_minmax(0,1fr)] @xl:grid-rows-none'
+            >
               <Wallet />
-              <TransactionList activeTransactionId={props.transactionId} />
+              <TransactionList
+                activeTransactionId={props.transactionId}
+                scrollRef={scrollRef}
+              />
             </div>
           </div>
         </section>
