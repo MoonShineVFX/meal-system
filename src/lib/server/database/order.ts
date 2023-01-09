@@ -777,15 +777,13 @@ export async function updateOrderStatus({
       throw new Error('Payment transaction not found for refund')
     }
 
-    // Calculate refund amount
+    // Calculate refund amount, bypass pointAmount
     let creditAmountRemain = detailedOrder.paymentTransaction.creditAmount
-    let pointAmountRemain = detailedOrder.paymentTransaction.pointAmount
 
     for (const orderForPayment of detailedOrder.paymentTransaction
       .ordersForPayment) {
       if (orderForPayment.canceledTransaction) {
         creditAmountRemain -= orderForPayment.canceledTransaction.creditAmount
-        pointAmountRemain -= orderForPayment.canceledTransaction.pointAmount
       }
     }
 
@@ -793,21 +791,18 @@ export async function updateOrderStatus({
       return acc + item.price * item.quantity
     }, 0)
     const creditAmountToRefund = Math.min(creditAmountRemain, thisOrderPrice)
-    const pointAnountToRefund = Math.min(
-      pointAmountRemain,
-      thisOrderPrice - creditAmountToRefund,
-    )
 
     // Create refund transaction
-    const { callback } = await rechargeUserBalanceBase({
-      userId: order.userId,
-      pointAmount: pointAnountToRefund,
-      creditAmount: creditAmountToRefund,
-      orderId,
-      client,
-    })
-
-    return { order: updatedOrder, callback }
+    if (creditAmountToRefund > 0) {
+      const { callback } = await rechargeUserBalanceBase({
+        userId: order.userId,
+        creditAmount: creditAmountToRefund,
+        orderId,
+        client,
+      })
+      return { order: updatedOrder, callback }
+    }
+    return { order: updatedOrder }
   })
 
   callback?.()
