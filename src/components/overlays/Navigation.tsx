@@ -42,16 +42,6 @@ function Navigation() {
       <div className='-order-2 hidden pl-2 sm:block'>
         <Logo className='h-8 w-auto text-yellow-500' />
       </div>
-      {data && ['ADMIN', 'STAFF'].includes(data.role) && (
-        <NavButton
-          className='hidden sm:block'
-          path='/pos'
-          label='處理訂單'
-          icons={[SquaresPlusIcon, SquaresPlusIconSolid]}
-          numberBadge={<POSNumberBadge />}
-          rememberSubpath={true}
-        />
-      )}
       <NavButton
         label='即時點餐'
         path='/live'
@@ -85,19 +75,27 @@ function Navigation() {
         rememberSubpath={true}
       />
       {data && ['ADMIN', 'STAFF'].includes(data.role) && (
-        <NavButton
-          className='hidden lg:block'
-          label='管理後台'
-          path='/admin'
-          icons={[Cog6ToothIcon, Cog6ToothIconSolid]}
-          rememberSubpath={true}
-        />
+        <>
+          <NavButton
+            className='hidden sm:block'
+            path='/pos'
+            label='處理訂單'
+            icons={[SquaresPlusIcon, SquaresPlusIconSolid]}
+            numberBadge={<POSNumberBadge />}
+            rememberSubpath={true}
+          />
+          <NavButton
+            className='hidden lg:block'
+            label='管理後台'
+            path='/admin'
+            icons={[Cog6ToothIcon, Cog6ToothIconSolid]}
+            rememberSubpath={true}
+          />
+        </>
       )}
 
-      <div className='hidden grow sm:block'></div>
-
       <NavButton
-        className='hidden sm:block'
+        className='hidden sm:mt-auto sm:block'
         label='登出'
         path='/login'
         icons={[ArrowRightOnRectangleIcon, ArrowRightOnRectangleIconSolid]}

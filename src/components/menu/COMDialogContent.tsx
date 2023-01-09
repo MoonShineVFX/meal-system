@@ -127,12 +127,12 @@ function COMDialogContent(props: {
       </section>
       {/* Form */}
       <form
-        className='ms-scroll group flex shrink-0 grow flex-col gap-6 p-4 pb-0 @container/detail sm:p-0 md:overflow-y-auto'
+        className='group flex shrink-0 grow flex-col p-4 pb-0 @container/detail sm:p-0'
         onSubmit={handleSubmit(handleCreateCartItem)}
         {...twData({ available: !isUnavailable })}
       >
         {/* Info */}
-        <header className='sticky top-0 -mb-4 flex flex-col gap-2 bg-white pb-2 sm:gap-1'>
+        <header className='flex flex-col gap-2 bg-white'>
           <h1 className='text-2xl font-bold tracking-widest text-stone-800'>
             {com.commodity.name}
           </h1>
@@ -140,76 +140,77 @@ function COMDialogContent(props: {
             ${com.commodity.price}
           </h2>
         </header>
-        {/* Description */}
-        {com.commodity.description !== '' && (
-          <p className='text-stone-500'>{com.commodity.description}</p>
-        )}
-        {/* Metadata */}
-        {isLimited && (
-          <div className='flex flex-col gap-2 text-sm'>
-            {com.stock > 0 && (
-              <div className='flex items-center gap-2'>
-                <Square3Stack3DIcon className='h-4 w-4 text-stone-300' />
-                <p className='tracking-wider text-stone-500'>{`限量 ${com.stock} 份`}</p>
-              </div>
-            )}
-            {com.limitPerUser > 0 && (
-              <div className='flex items-center gap-2'>
-                <UserPlusIcon className='h-4 w-4 text-stone-300' />
-                <p className='tracking-wider text-stone-500'>{`每人限點 ${com.limitPerUser} 份`}</p>
-              </div>
-            )}
-          </div>
-        )}
-        <div className='border-b border-stone-200'></div>
-        {/* Option Sets */}
-        <main className='flex flex-col gap-4 group-data-not-available:pointer-events-none group-data-not-available:opacity-60'>
-          {com.commodity.optionSets
-            .sort((a, b) => a.order - b.order)
-            .map((optionSet) => (
-              <OptionSetForm
-                key={optionSet.name}
-                optionSet={optionSet}
-                register={register}
-                errors={errors}
-              />
-            ))}
-        </main>
-        {/* Spacer For sm */}
-        <div className='-my-3 shrink grow'></div>
-        {/* Quantity */}
-        <section className='relative mt-2 flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:hidden'>
-          <QuantityInput
-            control={control}
-            isUnavailable={isUnavailable}
-            maxQuantity={Math.min(
-              com.maxQuantity,
-              menu?.maxQuantity ?? Infinity,
-            )}
-            register={register}
-          />
-        </section>
-        {/* Unavailable message */}
-        {isUnavailable && (
-          <section className='flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-red-400'>
-            <div className='flex items-center gap-2'>
-              <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
-              無法加入購物車
+        {/* Scroll on md */}
+        <div className='ms-scroll flex flex-1 flex-col gap-6 py-6 md:-mr-4 md:overflow-y-auto md:pr-4 lg:-mr-6 lg:pr-6'>
+          {/* Description */}
+          {com.commodity.description !== '' && (
+            <p className='text-stone-500'>{com.commodity.description}</p>
+          )}
+          {/* Metadata */}
+          {isLimited && (
+            <div className='flex flex-col gap-2 text-sm'>
+              {com.stock > 0 && (
+                <div className='flex items-center gap-2'>
+                  <Square3Stack3DIcon className='h-4 w-4 text-stone-300' />
+                  <p className='tracking-wider text-stone-500'>{`限量 ${com.stock} 份`}</p>
+                </div>
+              )}
+              {com.limitPerUser > 0 && (
+                <div className='flex items-center gap-2'>
+                  <UserPlusIcon className='h-4 w-4 text-stone-300' />
+                  <p className='tracking-wider text-stone-500'>{`每人限點 ${com.limitPerUser} 份`}</p>
+                </div>
+              )}
             </div>
-            <ul className='flex flex-col gap-1 text-red-300'>
-              {[
-                ...(menu?.unavailableReasons ?? []),
-                ...com.unavailableReasons,
-              ].map((reason) => (
-                <li className='ml-7 text-sm' key={reason}>
-                  {reason}
-                </li>
+          )}
+          <div className='border-b border-stone-200'></div>
+          {/* Option Sets */}
+          <main className='flex flex-col gap-4 group-data-not-available:pointer-events-none group-data-not-available:opacity-60'>
+            {com.commodity.optionSets
+              .sort((a, b) => a.order - b.order)
+              .map((optionSet) => (
+                <OptionSetForm
+                  key={optionSet.name}
+                  optionSet={optionSet}
+                  register={register}
+                  errors={errors}
+                />
               ))}
-            </ul>
+          </main>
+          {/* Quantity */}
+          <section className='relative mt-auto flex shrink-0 select-none justify-center group-data-not-available:pointer-events-none group-data-not-available:hidden'>
+            <QuantityInput
+              control={control}
+              isUnavailable={isUnavailable}
+              maxQuantity={Math.min(
+                com.maxQuantity,
+                menu?.maxQuantity ?? Infinity,
+              )}
+              register={register}
+            />
           </section>
-        )}
+          {/* Unavailable message */}
+          {isUnavailable && (
+            <section className='flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-red-400'>
+              <div className='flex items-center gap-2'>
+                <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
+                無法加入購物車
+              </div>
+              <ul className='flex flex-col gap-1 text-red-300'>
+                {[
+                  ...(menu?.unavailableReasons ?? []),
+                  ...com.unavailableReasons,
+                ].map((reason) => (
+                  <li className='ml-7 text-sm' key={reason}>
+                    {reason}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
         {/* Submit */}
-        <footer className='sticky bottom-0 -mt-2 flex shrink-0 flex-col gap-4 bg-white pt-4 sm:flex-row-reverse'>
+        <footer className='flex shrink-0 flex-col gap-4 bg-white sm:flex-row-reverse'>
           <Button
             isBusy={addCartMutation.isLoading || addCartMutation.isSuccess}
             isLoading={addCartMutation.isLoading || addCartMutation.isSuccess}
