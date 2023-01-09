@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState, startTransition } from 'react'
+import { useEffect, useState } from 'react'
 import { Reorder } from 'framer-motion'
 import { Bars3Icon } from '@heroicons/react/24/outline'
+import { useDebounce } from 'usehooks-ts'
 
 import Error from '@/components/core/Error'
 import trpc from '@/lib/client/trpc'
@@ -10,25 +11,21 @@ import { CategoryDatas } from '@/lib/client/trpc'
 export default function Categories() {
   const { data, error, isError, isLoading } = trpc.category.get.useQuery()
   const [rootCategories, setRootCategories] = useState<CategoryDatas>([])
-  const [isReordered, setIsReordered] = useState(false)
+  const reorderedCategories = useDebounce(rootCategories, 500)
 
-  const handleReorder = useCallback((categories: CategoryDatas) => {
-    if (!isReordered) {
-      setIsReordered(true)
-      console.log('set true')
-    }
-    setRootCategories(categories)
-  }, [])
-
-  const handleReorderComplete = useCallback(() => {
-    startTransition(() => {
-      if (isReordered) {
-        console.log('reorder complete')
-        setIsReordered(false)
+  // Reorder root categories
+  useEffect(() => {
+    if (reorderedCategories) {
+      if (
+        data?.map((category) => category.id).join(',') !==
+        reorderedCategories.map((category) => category.id).join(',')
+      ) {
+        console.log('call reorder api')
       }
-    })
-  }, [])
+    }
+  }, [reorderedCategories])
 
+  // Apply data for reorder
   useEffect(() => {
     if (data) {
       setRootCategories(data)
@@ -50,7 +47,6 @@ export default function Categories() {
           <Reorder.Item
             key={rootCategory.id}
             value={rootCategory}
-            onLayoutAnimationComplete={handleReorderComplete}
             className='cursor-drag flex w-full max-w-xs items-center rounded-lg border bg-white p-2 shadow'
           >
             <Bars3Icon className='h-5 w-5 text-stone-300' />

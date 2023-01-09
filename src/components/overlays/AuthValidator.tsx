@@ -22,14 +22,14 @@ export default function AuthValidator() {
   /* Login success notice */
   useEffect(() => {
     if (!userInfoQuery.isSuccess) return
-    const notify = sessionStorage.getItem('loginSuccessNotify')
+    const notify = sessionStorage.getItem('login-success-notify')
     if (notify && notify === 'true') {
       addNotification({
         type: NotificationType.SUCCESS,
         message: '登入成功',
       })
 
-      sessionStorage.removeItem('loginSuccessNotify')
+      sessionStorage.removeItem('login-success-notify')
     }
   }, [userInfoQuery.isSuccess])
 

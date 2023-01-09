@@ -115,7 +115,7 @@ const authLink: TRPCLink<AppRouter> = () => {
             const cookie = generateCookie(
               (value.result.data as { token: string }).token,
             )
-            sessionStorage.setItem('loginSuccessNotify', 'true')
+            sessionStorage.setItem('login-success-notify', 'true')
             document.cookie = cookie
             window.location.href = '/live' // Redirect to live index page
           }
