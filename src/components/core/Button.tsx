@@ -24,6 +24,7 @@ export default function Button(props: {
   textClassName?: string
   spinnerClassName?: string
   theme?: keyof typeof themes
+  title?: string
 }) {
   const label =
     typeof props.label === 'string' ? (
@@ -63,6 +64,7 @@ export default function Button(props: {
       )}
       type={props.type ?? 'button'}
       onClick={props.onClick}
+      title={props.title}
       {...twData({ busy: isBusy })}
     >
       {content}

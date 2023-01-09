@@ -113,6 +113,7 @@ export default function SwipeToDelete(props: {
               props.isDisabled && 'bg-gray-400',
             )}
             onClick={handleDelete}
+            title='刪除餐點'
           >
             <p className='indent-[0.05em] tracking-wider text-white'>刪除</p>
           </div>

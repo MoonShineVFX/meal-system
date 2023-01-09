@@ -228,6 +228,7 @@ function CartItemCard(props: {
                   <div
                     className='group/options -m-1 flex w-fit cursor-pointer items-center gap-2 rounded-md p-1 active:scale-95'
                     onClick={handleOptionsClick}
+                    title='更改選項'
                   >
                     <div className='flex flex-col gap-0.5 @2xl/cart:gap-1'>
                       {Object.entries(cartItem.options)
@@ -330,6 +331,7 @@ function CartItemCard(props: {
                     textClassName='group-data-loading:skeleton'
                     spinnerClassName='h-4 w-4'
                     label={<TrashIcon className='h-4 w-4 text-stone-400' />}
+                    title='刪除餐點'
                     theme='support'
                     onClick={() => handleQuantityChange(0)}
                   />

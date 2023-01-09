@@ -97,6 +97,7 @@ export default function OrderCard(props: {
         </span>
         {order?.canCancel && (
           <Button
+            title='取消訂單'
             isDisabled={cancelOrderMutation.isLoading}
             isLoading={cancelOrderMutation.isLoading}
             className='flex h-6 w-6 group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200'
@@ -212,9 +213,15 @@ export default function OrderCard(props: {
         open={isCancelDialogOpen}
         onClose={handleCancelDialog}
         title='確認取消訂單？'
-        content={`即將取消「編號 #${order?.id} - ${getMenuName(
-          order?.menu,
-        )}」的訂單，此動作無法復原。`}
+        content={
+          <>
+            <p>
+              {`即將取消「編號 #${order?.id} - ${getMenuName(order?.menu)}
+              」的訂單，此動作無法復原。`}
+            </p>
+            <p className='text-red-400'>如果有使用點數付款，該部分不會退還。</p>
+          </>
+        }
       />
     </div>
   )

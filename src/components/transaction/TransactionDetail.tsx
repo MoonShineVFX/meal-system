@@ -113,7 +113,7 @@ export default function TransactionDetail(props: { transactionId: number }) {
                       key={order.id}
                       className='text-sm hover:bg-stone-50 active:scale-[0.98] active:bg-stone-50'
                     >
-                      <Link href={`/order/id/${order.id}`}>
+                      <Link href={`/order/id/${order.id}`} title='前往訂單頁面'>
                         <p className='bg-stone-100 py-1 px-2 text-sm text-stone-500'>
                           #{order.id}
                         </p>

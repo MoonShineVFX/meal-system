@@ -64,6 +64,7 @@ export default function POSReservationCard(props: {
                 setActiveOptionsWithOrders(optionWithOrders)
                 setIsDialogOpen(true)
               }}
+              title='查看點餐名單'
             >
               <div className='flex flex-wrap gap-2 gap-y-0'>
                 {(optionWithOrders &&

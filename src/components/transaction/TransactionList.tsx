@@ -1,6 +1,7 @@
 import { useMediaQuery } from 'usehooks-ts'
 import { Virtuoso } from 'react-virtuoso'
 import { useCallback, useState, useEffect } from 'react'
+import { WalletIcon } from '@heroicons/react/24/outline'
 
 import Error from '@/components/core/Error'
 import trpc from '@/lib/client/trpc'
@@ -76,6 +77,17 @@ export default function TransactionList(props: {
   }
 
   const transactions = data?.pages.flatMap((page) => page.transactions) ?? []
+
+  if (transactions.length === 0 && !isLoading) {
+    return (
+      <div className='flex h-full flex-col items-center justify-center gap-4'>
+        <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
+          <WalletIcon className='h-12 w-12 text-stone-400' />
+        </div>
+        <h1 className='indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>{`還沒有過交易紀錄`}</h1>
+      </div>
+    )
+  }
 
   return (
     <div

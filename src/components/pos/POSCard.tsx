@@ -116,6 +116,7 @@ export default function POSCard(props: {
           <button
             className='-m-2 rounded-full p-2 group-data-loading:hidden hover:bg-stone-600/10 active:scale-90 active:bg-stone-600/10'
             onClick={() => setIsCanceling((prev) => !prev)}
+            title={isCanceling ? '返回' : '取消訂單'}
           >
             {isCanceling ? (
               <ArrowUturnLeftIcon className='h-6 w-6 p-0.5 text-stone-600/60' />
