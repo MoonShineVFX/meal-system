@@ -70,27 +70,33 @@ export const OrderRouter = router({
         nextCursor,
       }
     }),
-  cancel: userProcedure
+  update: userProcedure
     .input(
       z.object({
         orderId: z.number(),
+        type: z.union([z.literal('cancel'), z.literal('complete')]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const order = await updateOrderStatus({
         orderId: input.orderId,
-        status: 'timeCanceled',
+        status: input.type === 'complete' ? 'timeCompleted' : 'timeCanceled',
         userId: ctx.userLite.id,
       })
 
+      const typeString = input.type === 'complete' ? '完成' : '取消'
+
       eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
-        type: SERVER_NOTIFY.ORDER_CANCEL,
-        message: `訂單 #${order.id} 已經取消`,
+        type:
+          input.type === 'complete'
+            ? SERVER_NOTIFY.ORDER_UPDATE
+            : SERVER_NOTIFY.ORDER_CANCEL,
+        message: `訂單 #${order.id} 已經${typeString}`,
         link: `/order/id/${order.id}`,
       })
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: SERVER_NOTIFY.POS_UPDATE,
-        message: `${ctx.userLite.name} 取消訂單 #${order.id}`,
+        message: `${ctx.userLite.name} ${typeString}訂單 #${order.id}`,
       })
     }),
   getCount: userProcedure.query(async ({ ctx }) => {

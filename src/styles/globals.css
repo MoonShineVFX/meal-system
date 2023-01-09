@@ -30,7 +30,3 @@ body {
     @apply overscroll-y-contain scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md;
   }
 }
-
-::selection {
-  @apply bg-yellow-500 text-stone-50;
-}

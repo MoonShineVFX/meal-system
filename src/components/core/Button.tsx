@@ -9,6 +9,8 @@ const themes = {
     'bg-white border border-stone-200 hover:bg-stone-50 active:bg-stone-50 data-busy:bg-stone-100 data-busy:hover:bg-stone-100 shadow',
   support:
     'hover:bg-stone-100 active:bg-stone-100 data-busy:bg-stone-200 data-busy:hover:bg-stone-200',
+  danger:
+    'bg-red-400 hover:bg-red-300 active:bg-red-300 data-busy:bg-red-500 data-busy:hover:bg-red-500 text-white shadow data-busy:text-red-200 disabled:opacity-50',
 }
 
 export default function Button(props: {
@@ -26,25 +28,6 @@ export default function Button(props: {
   theme?: keyof typeof themes
   title?: string
 }) {
-  const label =
-    typeof props.label === 'string' ? (
-      <p className={props.textClassName}>{props.label}</p>
-    ) : (
-      props.label
-    )
-  const labelOnSuccess =
-    typeof props.labelOnSuccess === 'string' ? (
-      <p className={props.textClassName}>{props.labelOnSuccess}</p>
-    ) : (
-      props.labelOnSuccess
-    )
-  const content = props.isSuccess ? (
-    labelOnSuccess
-  ) : props.isLoading ? (
-    <Spinner className={props.spinnerClassName ?? 'h-6 w-6'} />
-  ) : (
-    label
-  )
   const themeColor = themes[props.theme ?? 'main']
   const isBusy = props.isBusy ?? props.isLoading ?? false
 
@@ -58,7 +41,7 @@ export default function Button(props: {
       }}
       disabled={props.isDisabled ?? isBusy ?? false}
       className={twMerge(
-        `flex items-center justify-center rounded-2xl indent-[0.1em] tracking-widest focus:outline-none disabled:pointer-events-none`,
+        `relative flex items-center justify-center rounded-2xl indent-[0.1em] tracking-widest focus:outline-none disabled:pointer-events-none`,
         themeColor,
         props.className,
       )}
@@ -67,7 +50,31 @@ export default function Button(props: {
       title={props.title}
       {...twData({ busy: isBusy })}
     >
-      {content}
+      <span
+        className={twMerge(
+          (props.isLoading || (props.isSuccess && props.labelOnSuccess)) &&
+            'invisible',
+          props.textClassName,
+        )}
+      >
+        {props.label}
+      </span>
+      <span
+        className={twMerge(
+          'absolute hidden',
+          props.textClassName,
+          props.isSuccess && 'block',
+        )}
+      >
+        {props.labelOnSuccess}
+      </span>
+      <Spinner
+        className={twMerge(
+          'absolute hidden h-6 w-6',
+          props.isLoading && 'block',
+          props.spinnerClassName,
+        )}
+      />
     </motion.button>
   )
 }

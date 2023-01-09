@@ -175,7 +175,7 @@ export async function getOrdersCount({ userId }: { userId: string }) {
 }
 
 // Detect order is cancelable
-function isOrderCancelable({
+function isOrderCancelableByUser({
   order,
 }: {
   order: Pick<Order, OrderStatus> & {
@@ -396,7 +396,7 @@ export async function getOrders({
   })
 
   const injectedCanCancelOrders = rawOrders.map((order) => {
-    const canCancel = isOrderCancelable({ order })
+    const canCancel = isOrderCancelableByUser({ order })
     return {
       ...order,
       canCancel,
@@ -713,6 +713,15 @@ export async function updateOrderStatus({
   const { order, callback } = await prisma.$transaction(async (client) => {
     const order = await client.order.findUnique({
       where: { id: orderId },
+      include: {
+        menu: {
+          select: {
+            date: true,
+            type: true,
+            closedDate: true,
+          },
+        },
+      },
     })
 
     if (!order) {
@@ -723,8 +732,13 @@ export async function updateOrderStatus({
       throw new Error('Order status already updated')
     }
 
-    if (userId && order.userId !== userId) {
-      throw new Error('User not authorized')
+    if (userId) {
+      if (order.userId !== userId)
+        throw new Error('User not authorized to update this order')
+      if (status === 'timeDishedUp' || status === 'timePreparing')
+        throw new Error('User not authorized to update these status')
+      if (!isOrderCancelableByUser({ order: order }))
+        throw new Error('Order not cancelable by user')
     }
 
     if (status === 'timeCanceled' && order.timeCompleted !== null) {

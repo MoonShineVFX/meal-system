@@ -1,7 +1,7 @@
 import { twMerge } from 'tailwind-merge'
-import { TrashIcon } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
 import { useState, useCallback } from 'react'
+import Link from 'next/link'
 
 import trpc, { OrderDatas } from '@/lib/client/trpc'
 import { getMenuName, twData } from '@/lib/common'
@@ -47,7 +47,7 @@ export default function OrderCard(props: {
   isLoading?: boolean
 }) {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
-  const cancelOrderMutation = trpc.order.cancel.useMutation()
+  const updateOrderMutation = trpc.order.update.useMutation()
 
   const { order } = props
   const isCancel = order?.timeCanceled !== null
@@ -69,12 +69,18 @@ export default function OrderCard(props: {
       if (!order) return
 
       if (isConfirm) {
-        cancelOrderMutation.mutate({ orderId: order.id })
+        updateOrderMutation.mutate({ orderId: order.id, type: 'cancel' })
       }
       setIsCancelDialogOpen(false)
     },
     [order],
   )
+
+  const handleCompleteClick = useCallback(() => {
+    if (!order) return
+
+    updateOrderMutation.mutate({ orderId: order.id, type: 'complete' })
+  }, [order])
 
   return (
     <div
@@ -95,39 +101,75 @@ export default function OrderCard(props: {
         <span className='rounded-xl tracking-wider text-stone-400 group-data-loading:skeleton'>
           {order ? getMenuName(order.menu) : '菜單類別'}
         </span>
-        {order?.canCancel && (
-          <Button
-            title='取消訂單'
-            isDisabled={cancelOrderMutation.isLoading}
-            isLoading={cancelOrderMutation.isLoading}
-            className='flex h-6 w-6 group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200'
-            textClassName='group-data-loading:skeleton'
-            spinnerClassName='h-4 w-4'
-            label={<TrashIcon className='h-4 w-4 text-stone-400' />}
-            theme='support'
-            onClick={() => setIsCancelDialogOpen(true)}
-          />
-        )}
         {/* Price */}
-        <span className='flex grow justify-end'>
-          <div className='w-fit rounded-xl text-lg font-bold tracking-wider group-data-loading:skeleton'>{`$${
-            order
-              ? order.items.reduce(
-                  (acc, item) => acc + item.price * item.quantity,
-                  0,
-                )
-              : 100
-          }`}</div>
-        </span>
+        <div
+          className={twMerge(
+            'w-fit rounded-xl font-bold tracking-wider text-yellow-500 group-data-loading:skeleton',
+            isCancel && 'text-stone-400',
+          )}
+        >{`$${
+          order
+            ? order.items.reduce(
+                (acc, item) => acc + item.price * item.quantity,
+                0,
+              )
+            : 100
+        }`}</div>
+        {/* Buttons */}
+        <div className='flex grow justify-end gap-2 text-sm text-stone-400'>
+          {order?.canCancel && (
+            <Button
+              label='取消'
+              isDisabled={updateOrderMutation.isLoading}
+              isLoading={updateOrderMutation.isLoading}
+              className='p-2 group-data-loading:skeleton'
+              textClassName='text-red-400'
+              theme='support'
+              title='取消訂單'
+              onClick={() => setIsCancelDialogOpen(true)}
+            />
+          )}
+          <Link href={`/transaction/${order?.paymentTransactionId ?? 123}`}>
+            <Button
+              label='付款紀錄'
+              className='p-2 group-data-loading:skeleton'
+              title='前往付款的交易紀錄'
+              theme='support'
+            />
+          </Link>
+          {isCancel && (
+            <Link href={`/transaction/${order?.canceledTransactionId ?? 123}`}>
+              <Button
+                label='退款紀錄'
+                className='p-2 group-data-loading:skeleton'
+                title='前往付款的交易紀錄'
+                theme='support'
+              />
+            </Link>
+          )}
+          {step === 2 && (
+            <Button
+              label='完成取餐'
+              title='完成取餐，關閉訂單'
+              className='p-2 group-data-loading:skeleton'
+              theme='main'
+              spinnerClassName='w-4 h-4'
+              isDisabled={updateOrderMutation.isLoading}
+              isLoading={updateOrderMutation.isLoading}
+              onClick={handleCompleteClick}
+            />
+          )}
+        </div>
       </header>
       {/* Items */}
-      <OrderItemList orderItems={order?.items} />
+      <OrderItemList orderItems={order?.items} isCancel={isCancel} />
       {/* Progress */}
       <section className='mt-2 mb-12 flex flex-col gap-4 px-5 lg:mb-14'>
         <div className='relative h-1 rounded-full bg-stone-200 lg:h-1.5'>
           <motion.div
             className={twMerge(
               'absolute inset-y-0 left-0 rounded-full bg-yellow-500',
+              isCancel && 'bg-stone-400',
             )}
             initial={false}
             animate={{ width: `${progress * 100}%` }}
@@ -203,9 +245,6 @@ export default function OrderCard(props: {
           </section>
         </div>
       </section>
-      {isCancel && (
-        <div className='pointer-events-none absolute inset-0 bg-white/40 backdrop-grayscale'></div>
-      )}
       <Dialog
         cancel
         cancelText='返回'
@@ -213,6 +252,7 @@ export default function OrderCard(props: {
         open={isCancelDialogOpen}
         onClose={handleCancelDialog}
         title='確認取消訂單？'
+        confirmButtonTheme='danger'
         content={
           <>
             <p>

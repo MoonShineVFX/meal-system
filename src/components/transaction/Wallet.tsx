@@ -45,7 +45,7 @@ export default function Wallet() {
       <div className='grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] place-content-evenly justify-center gap-4'>
         <Button
           className='h-12 group-data-loading:skeleton'
-          textClassName='font-bold'
+          textClassName='font-bold text-lg'
           label='儲值'
         />
       </div>

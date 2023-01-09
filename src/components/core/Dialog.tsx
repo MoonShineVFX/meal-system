@@ -12,6 +12,7 @@ export default function DialogCore(props: {
   content: JSX.Element | string
   contentClassName?: string
   confirmText?: string
+  confirmButtonTheme?: Parameters<typeof Button>[0]['theme']
   cancel?: boolean
   cancelText?: string
   icon?: string | null
@@ -84,7 +85,7 @@ export default function DialogCore(props: {
                   )}
                   textClassName='fond-bold'
                   label={props.confirmText ?? '確認'}
-                  theme='main'
+                  theme={props.confirmButtonTheme ?? 'main'}
                 ></Button>
               </div>
             </Dialog.Panel>

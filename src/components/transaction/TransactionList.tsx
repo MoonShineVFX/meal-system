@@ -78,17 +78,6 @@ export default function TransactionList(props: {
 
   const transactions = data?.pages.flatMap((page) => page.transactions) ?? []
 
-  if (transactions.length === 0 && !isLoading) {
-    return (
-      <div className='flex h-full flex-col items-center justify-center gap-4'>
-        <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
-          <WalletIcon className='h-12 w-12 text-stone-400' />
-        </div>
-        <h1 className='indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>{`還沒有過交易紀錄`}</h1>
-      </div>
-    )
-  }
-
   return (
     <div
       className='group flex grow flex-col'
@@ -102,6 +91,17 @@ export default function TransactionList(props: {
         searchKeyword={searchKeyword}
         setSearchKeyword={setSearchKeyword}
       />
+      {/* Empty */}
+      {transactions.length === 0 && !isLoading && (
+        <div className='flex h-full flex-col items-center justify-center gap-4'>
+          <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>
+            <WalletIcon className='h-12 w-12 text-stone-400' />
+          </div>
+          <h1 className='indent-[0.1em] text-lg font-bold tracking-widest text-stone-500'>
+            {searchKeyword === '' ? `還沒有過交易紀錄` : '找不到符合的結果'}
+          </h1>
+        </div>
+      )}
       {/* List */}
       <Virtuoso
         className='ms-scroll'

@@ -1,9 +1,10 @@
 import { GetServerSideProps } from 'next'
 import { BanknotesIcon } from '@heroicons/react/24/outline'
 import z from 'zod'
-import { useRef, useState, useLayoutEffect } from 'react'
+import { useRef, useState } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useIsomorphicLayoutEffect } from 'usehooks-ts'
 
 import Wallet from '@/components/transaction/Wallet'
 import TransactionList from '@/components/transaction/TransactionList'
@@ -37,7 +38,7 @@ export default function PageTransaction(props: { transactionId?: number }) {
   const [isLg, setIsLg] = useState<boolean | undefined>(undefined)
   const matches = useMediaQuery('(min-width: 1024px)')
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     setIsLg(matches)
   }, [matches])
 

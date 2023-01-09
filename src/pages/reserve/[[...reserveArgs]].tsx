@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useMediaQuery } from 'usehooks-ts'
 import { ReceiptPercentIcon } from '@heroicons/react/24/outline'
 import { GetServerSideProps } from 'next'
-import { useLayoutEffect, useState } from 'react'
+import { useState } from 'react'
+import { useIsomorphicLayoutEffect } from 'usehooks-ts'
 
 import Menu from '@/components/menu/Menu'
 import Cart from '@/components/cart/Cart'
@@ -51,7 +52,7 @@ export default function PageReserve(props: {
   const [isLg, setIsLg] = useState<boolean | undefined>(undefined)
   const matches = useMediaQuery('(min-width: 1024px)')
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     setIsLg(matches)
   }, [matches])
 

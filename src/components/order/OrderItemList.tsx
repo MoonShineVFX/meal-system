@@ -9,7 +9,11 @@ import { settings } from '@/lib/common'
 
 const SCROLL_WIDTH = 256
 
-export default function OrderItemList(props: { orderItems?: OrderItems }) {
+export default function OrderItemList(props: {
+  orderItems?: OrderItems
+  className?: string
+  isCancel?: boolean
+}) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isScrollable, setIsScrollable] = useState(false)
   const [scrollState, setScrollState] = useState<'left' | 'middle' | 'right'>(
@@ -70,7 +74,7 @@ export default function OrderItemList(props: { orderItems?: OrderItems }) {
   }, [])
 
   return (
-    <section className='relative select-none'>
+    <section className={twMerge('relative', props.className)}>
       <div
         ref={scrollRef}
         className={twMerge('w-full overflow-x-auto scrollbar-none')}
@@ -146,6 +150,9 @@ export default function OrderItemList(props: { orderItems?: OrderItems }) {
           onClick={() => handleFaderClick('right')}
         />
       </div>
+      {props.isCancel && (
+        <div className='pointer-events-none absolute inset-0 bg-white/20 backdrop-grayscale'></div>
+      )}
     </section>
   )
 }

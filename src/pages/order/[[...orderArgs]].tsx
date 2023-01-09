@@ -105,7 +105,7 @@ export default function PageOrder(props: {
     <>
       <Title prefix='訂單' />
       <div
-        className='group flex h-full w-full justify-center data-loading:pointer-events-none'
+        className='group flex h-full w-full justify-center'
         {...twData({ loading: isLoading })}
       >
         <div className='flex w-full lg:max-w-4xl lg:gap-8'>
@@ -117,7 +117,7 @@ export default function PageOrder(props: {
             disableLoading={true}
           />
           {/* Content */}
-          <div className='relative h-full flex-1'>
+          <div className='relative h-full flex-1 group-data-loading:pointer-events-none'>
             {/* Empty / Orders */}
             {orders.length === 0 && !isLoading && !isSearch ? (
               <div className='flex h-full flex-col items-center justify-center gap-4'>
