@@ -6,6 +6,7 @@ import { MenuRouter } from './menu'
 import { CartRouter } from './cart'
 import { OrderRouter } from './order'
 import { POSRouter } from './pos'
+import { CategoryRouter } from './category'
 
 export const appRouter = router({
   user: UserRouter,
@@ -15,6 +16,7 @@ export const appRouter = router({
   cart: CartRouter,
   order: OrderRouter,
   pos: POSRouter,
+  category: CategoryRouter,
 })
 
 export type AppRouter = typeof appRouter

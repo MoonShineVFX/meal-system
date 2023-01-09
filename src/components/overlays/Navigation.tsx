@@ -20,6 +20,8 @@ import { CircleStackIcon } from '@heroicons/react/24/outline'
 import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
 import { ArrowRightOnRectangleIcon as ArrowRightOnRectangleIconSolid } from '@heroicons/react/24/solid'
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon } from '@heroicons/react/24/outline'
+import { Cog6ToothIcon as Cog6ToothIconSolid } from '@heroicons/react/24/solid'
 
 import PriceNumber from '@/components/core/PriceNumber'
 import Error from '@/components/core/Error'
@@ -82,6 +84,15 @@ function Navigation() {
         icons={[WalletIcon, WalletIconSolid]}
         rememberSubpath={true}
       />
+      {data && ['ADMIN', 'STAFF'].includes(data.role) && (
+        <NavButton
+          className='hidden lg:block'
+          label='管理後台'
+          path='/admin'
+          icons={[Cog6ToothIcon, Cog6ToothIconSolid]}
+          rememberSubpath={true}
+        />
+      )}
 
       <div className='hidden grow sm:block'></div>
 

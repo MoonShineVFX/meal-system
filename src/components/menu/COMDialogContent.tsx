@@ -97,7 +97,7 @@ function COMDialogContent(props: {
 
   return (
     <section
-      className='ms-scroll relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-xl md:flex-row md:gap-0 md:rounded-2xl md:p-0 md:shadow-2xl'
+      className='ms-scroll relative mx-auto flex h-auto w-full flex-col overflow-hidden rounded-t-2xl bg-white pb-4 sm:gap-4 sm:rounded-none sm:p-4 sm:max-md:h-full sm:max-md:overflow-y-auto md:h-auto md:max-w-xl md:flex-row md:gap-0 md:rounded-2xl md:p-4 md:shadow-2xl lg:p-6'
       onClick={(event) => event.stopPropagation()}
     >
       <Title
@@ -111,7 +111,7 @@ function COMDialogContent(props: {
         <XMarkIcon className='h-8 w-8 stroke-1 text-white md:text-stone-500' />
       </button>
       {/* Image */}
-      <section className='mx-auto h-min w-full p-4 pb-0 sm:p-0 md:m-4 md:mr-0 md:shrink md:basis-2/5 md:p-4 lg:m-6 lg:mr-0 lg:p-6'>
+      <section className='mx-auto h-min w-full p-4 pb-0 sm:p-0 md:shrink md:basis-2/5 md:pr-4 lg:pr-6'>
         <div className='relative aspect-[4/3] overflow-hidden rounded-xl md:aspect-square md:rounded-2xl'>
           <Image
             style={{ WebkitTouchCallout: 'none' }}
@@ -127,22 +127,23 @@ function COMDialogContent(props: {
       </section>
       {/* Form */}
       <form
-        className='ms-scroll group flex shrink-0 grow flex-col gap-6 p-4 pb-0 @container/detail sm:p-0 md:overflow-y-auto md:p-4 lg:p-6'
+        className='ms-scroll group flex shrink-0 grow flex-col gap-6 p-4 pb-0 @container/detail sm:p-0 md:overflow-y-auto'
         onSubmit={handleSubmit(handleCreateCartItem)}
         {...twData({ available: !isUnavailable })}
       >
         {/* Info */}
-        <header className='flex flex-col gap-2 lg:gap-4'>
+        <header className='sticky top-0 -mb-4 flex flex-col gap-2 bg-white pb-2 sm:gap-1'>
           <h1 className='text-2xl font-bold tracking-widest text-stone-800'>
             {com.commodity.name}
           </h1>
-          <h2 className='text-xl tracking-wider text-yellow-500 lg:-mt-2'>
+          <h2 className='text-xl tracking-wider text-yellow-500'>
             ${com.commodity.price}
           </h2>
-          {com.commodity.description !== '' && (
-            <p className='text-stone-500'>{com.commodity.description}</p>
-          )}
         </header>
+        {/* Description */}
+        {com.commodity.description !== '' && (
+          <p className='text-stone-500'>{com.commodity.description}</p>
+        )}
         {/* Metadata */}
         {isLimited && (
           <div className='flex flex-col gap-2 text-sm'>
@@ -208,7 +209,7 @@ function COMDialogContent(props: {
           </section>
         )}
         {/* Submit */}
-        <footer className='mt-2 flex shrink-0 flex-col gap-4 sm:flex-row-reverse'>
+        <footer className='sticky bottom-0 -mt-2 flex shrink-0 flex-col gap-4 bg-white pt-4 sm:flex-row-reverse'>
           <Button
             isBusy={addCartMutation.isLoading || addCartMutation.isSuccess}
             isLoading={addCartMutation.isLoading || addCartMutation.isSuccess}

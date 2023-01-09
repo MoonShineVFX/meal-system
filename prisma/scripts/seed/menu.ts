@@ -15,19 +15,19 @@ export async function seedMenu() {
   // Create main menu
   console.log('>> Seed menu')
   const menu = await createMenu({ type: 'LIVE' })
-  let mainOrder = 0
-  for (const [mainCategoryName, mainCategoryData] of Object.entries(
+  let rootOrder = 0
+  for (const [rootCategoryName, rootCategoryData] of Object.entries(
     menuMockData,
   )) {
     let subOrder = 0
     for (const [subCategoryName, subCategoryData] of Object.entries(
-      mainCategoryData.subCategories,
+      rootCategoryData.subCategories,
     )) {
-      console.log('>> Seed subCategory:', mainCategoryName, subCategoryName)
+      console.log('>> Seed subCategory:', rootCategoryName, subCategoryName)
       const subCategory = await createCategory({
-        mainName: mainCategoryName,
+        rootName: rootCategoryName,
         subName: subCategoryName,
-        mainOrder,
+        rootOrder,
         subOrder,
       })
       for (const commodityData of subCategoryData) {
@@ -43,7 +43,7 @@ export async function seedMenu() {
           name: commodityData.name,
           price: commodityData.price,
           description: commodityData.description,
-          optionSets: mainCategoryData.optionSets,
+          optionSets: rootCategoryData.optionSets,
           categoryIds: [subCategory.id],
           imageId: image.id,
         })
@@ -52,7 +52,7 @@ export async function seedMenu() {
       }
       subOrder++
     }
-    mainOrder++
+    rootOrder++
   }
 
   // For empty test
@@ -69,15 +69,15 @@ export async function seedReservationsMenu() {
   console.log('>> Seed reservations')
   const reservationCommodities: Record<string, number> = {}
   // Create commodity
-  for (const [mainCategoryName, mainCategoryData] of Object.entries(
+  for (const [rootCategoryName, rootCategoryData] of Object.entries(
     reservationsMockData,
   )) {
     for (const [subCategoryName, subCategoryData] of Object.entries(
-      mainCategoryData.subCategories,
+      rootCategoryData.subCategories,
     )) {
-      console.log('>> Seed subCategory:', mainCategoryName, subCategoryName)
+      console.log('>> Seed subCategory:', rootCategoryName, subCategoryName)
       const subCategory = await createCategory({
-        mainName: mainCategoryName,
+        rootName: rootCategoryName,
         subName: subCategoryName,
       })
       for (const commodityData of subCategoryData) {
@@ -93,7 +93,7 @@ export async function seedReservationsMenu() {
           name: commodityData.name,
           price: commodityData.price,
           description: commodityData.description,
-          optionSets: mainCategoryData.optionSets,
+          optionSets: rootCategoryData.optionSets,
           categoryIds: [subCategory.id],
           imageId: image.id,
         })

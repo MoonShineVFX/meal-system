@@ -122,27 +122,27 @@ export default function Menu(props: {
       const categories = com.commodity.categories
       if (categories.length > 0) {
         for (const category of categories) {
-          if (!comsByCategory.has(category.mainName)) {
-            comsByCategory.set(category.mainName, {
+          if (!comsByCategory.has(category.rootCategory.name)) {
+            comsByCategory.set(category.rootCategory.name, {
               subCategories: new Map(),
-              order: category.mainOrder,
+              order: category.rootCategory.order,
             })
           }
           if (
             !comsByCategory
-              .get(category.mainName)!
-              .subCategories.has(category.subName)
+              .get(category.rootCategory.name)!
+              .subCategories.has(category.name)
           ) {
             comsByCategory
-              .get(category.mainName)!
-              .subCategories.set(category.subName, {
+              .get(category.rootCategory.name)!
+              .subCategories.set(category.name, {
                 coms: [],
-                order: category.subOrder,
+                order: category.order,
               })
           }
           comsByCategory
-            .get(category.mainName)!
-            .subCategories.get(category.subName)!
+            .get(category.rootCategory.name)!
+            .subCategories.get(category.name)!
             .coms.push(com)
         }
       } else {

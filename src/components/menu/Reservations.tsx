@@ -161,7 +161,7 @@ export default function Reservations(props: { activeMenuId?: number }) {
                             transition={{ duration: 0.2, type: 'spring' }}
                           />
                         )}
-                        <h2 className='relative z-[1] rounded-xl p-2 text-lg font-bold group-data-selected/card:text-yellow-600 group-data-loading:skeleton'>
+                        <h2 className='relative z-[1] rounded-xl p-2 text-lg font-bold group-data-selected/card:text-yellow-500 group-data-loading:skeleton'>
                           {menu ? MenuTypeName[menu.type][0] : '菜'}
                         </h2>
                       </div>

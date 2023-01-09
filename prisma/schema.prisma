@@ -186,19 +186,31 @@ model CartItem {
 }
 
 // Menu
+model CommodityRootCategory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name  String @unique
+  order Int    @default(99)
+
+  childCategories CommodityCategory[]
+}
+
 model CommodityCategory {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  mainName  String
-  subName   String
-  mainOrder Int    @default(99)
-  subOrder  Int    @default(99)
+  name     String
+  order    Int    @default(99)
+  subOrder Int    @default(99)
 
-  commodities Commodity[]
+  rootCategory   CommodityRootCategory @relation(fields: [rootCategoryId], references: [id])
+  rootCategoryId Int
+  commodities    Commodity[]
 
-  @@unique([mainName, subName])
+  @@unique([rootCategoryId, name])
 }
 
 model CommodityOptionSetTemplate {
