@@ -173,6 +173,7 @@ export default function Cart() {
                         <CartItemCard
                           key={`${cartItem.menuId}${cartItem.commodityId}${cartItem.optionsKey}`}
                           cartItem={cartItem}
+                          isInvalid
                         />
                       ))}
                   </div>

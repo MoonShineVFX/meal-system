@@ -26,6 +26,7 @@ function CartItemCard(props: {
   isDisabled?: boolean
   onOptionsClick?: (cartItem: CartItems[0]) => void
   isLoading?: boolean
+  isInvalid?: boolean
 }) {
   const { cartItem } = props
   const deleteCartMutation = trpc.cart.delete.useMutation()
@@ -254,8 +255,9 @@ function CartItemCard(props: {
                           </span>
                         ))}
                     </div>
-
-                    <PencilIcon className='h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/options:rotate-45 group-data-loading:hidden' />
+                    {!props.isInvalid && (
+                      <PencilIcon className='h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/options:rotate-45 group-data-loading:hidden' />
+                    )}
                   </div>
                 )}
               </section>
@@ -279,7 +281,7 @@ function CartItemCard(props: {
                           selectedQauntity
                         )}
                       </p>
-                      {isChangingQuantity ? (
+                      {props.isInvalid ? null : isChangingQuantity ? (
                         <Spinner className='absolute right-1 h-4 w-4' />
                       ) : (
                         <ChevronDownIcon className='absolute right-1 h-4 w-4 text-stone-400 transition-transform ui-open:rotate-180' />
@@ -325,16 +327,18 @@ function CartItemCard(props: {
                         portalElement,
                       )}
                   </Listbox>
-                  <Button
-                    isDisabled={isLoading}
-                    className='hidden h-6 w-6 group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200 sm:flex'
-                    textClassName='group-data-loading:skeleton'
-                    spinnerClassName='h-4 w-4'
-                    label={<TrashIcon className='h-4 w-4 text-stone-400' />}
-                    title='刪除餐點'
-                    theme='support'
-                    onClick={() => handleQuantityChange(0)}
-                  />
+                  {!props.isInvalid && (
+                    <Button
+                      isDisabled={isLoading}
+                      className='hidden h-6 w-6 group-data-loading:skeleton hover:bg-stone-200 active:bg-stone-200 sm:flex'
+                      textClassName='group-data-loading:skeleton'
+                      spinnerClassName='h-4 w-4'
+                      label={<TrashIcon className='h-4 w-4 text-stone-400' />}
+                      title='刪除餐點'
+                      theme='support'
+                      onClick={() => handleQuantityChange(0)}
+                    />
+                  )}
                 </div>
                 {/* Price */}
                 <div className='flex flex-col @2xl/cart:pt-1'>
