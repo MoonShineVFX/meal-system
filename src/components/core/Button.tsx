@@ -8,7 +8,7 @@ const themes = {
   secondary:
     'bg-white border border-stone-200 hover:bg-stone-50 active:bg-stone-50 data-busy:bg-stone-100 data-busy:hover:bg-stone-100 shadow',
   support:
-    'hover:bg-stone-100 active:bg-stone-100 data-busy:bg-stone-200 data-busy:hover:bg-stone-200',
+    'hover:bg-stone-100 active:bg-stone-100 data-busy:bg-transparent data-busy:hover:bg-transparent',
   danger:
     'bg-red-400 hover:bg-red-300 active:bg-red-300 data-busy:bg-red-500 data-busy:hover:bg-red-500 text-white shadow data-busy:text-red-200 disabled:opacity-50',
 }

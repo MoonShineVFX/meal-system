@@ -115,6 +115,10 @@ export default function EventListener() {
           trpcContext.pos.getLive.invalidate()
           trpcContext.pos.getReservation.invalidate()
           break
+        case SERVER_NOTIFY.CATEGORY_ADD:
+        case SERVER_NOTIFY.CATEGORY_UPDATE:
+          trpcContext.category.get.invalidate()
+          break
       }
     },
   })

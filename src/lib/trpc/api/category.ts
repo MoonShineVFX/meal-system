@@ -1,8 +1,56 @@
+import z from 'zod'
+
 import { staffProcedure, router } from '../trpc'
-import { getCategories } from '@/lib/server/database'
+import {
+  getCategories,
+  updateCategoriesOrders,
+  createCategory,
+  updateCategory,
+} from '@/lib/server/database'
+import { SERVER_NOTIFY } from '@/lib/common'
+import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const CategoryRouter = router({
   get: staffProcedure.query(async () => {
     return await getCategories()
   }),
+  create: staffProcedure
+    .input(
+      z.object({
+        name: z.string(),
+        rootId: z.number().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await createCategory(input)
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.CATEGORY_ADD,
+        skipNotify: true,
+      })
+    }),
+  update: staffProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        type: z.union([z.literal('root'), z.literal('sub')]),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await updateCategory(input)
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.CATEGORY_UPDATE,
+        skipNotify: true,
+      })
+    }),
+  updateOrders: staffProcedure
+    .input(
+      z.object({
+        categoriesIds: z.array(z.number()),
+        type: z.union([z.literal('root'), z.literal('sub')]),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await updateCategoriesOrders(input)
+    }),
 })

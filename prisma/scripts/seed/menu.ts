@@ -1,7 +1,7 @@
 import {
   createMenu,
   createCommodity,
-  createCategory,
+  createCategoryPair,
   addCommodityToMenu,
   createImage,
 } from '../../../src/lib/server/database'
@@ -24,7 +24,7 @@ export async function seedMenu() {
       rootCategoryData.subCategories,
     )) {
       console.log('>> Seed subCategory:', rootCategoryName, subCategoryName)
-      const subCategory = await createCategory({
+      const subCategory = await createCategoryPair({
         rootName: rootCategoryName,
         subName: subCategoryName,
         rootOrder,
@@ -76,7 +76,7 @@ export async function seedReservationsMenu() {
       rootCategoryData.subCategories,
     )) {
       console.log('>> Seed subCategory:', rootCategoryName, subCategoryName)
-      const subCategory = await createCategory({
+      const subCategory = await createCategoryPair({
         rootName: rootCategoryName,
         subName: subCategoryName,
       })

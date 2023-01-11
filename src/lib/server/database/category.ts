@@ -7,7 +7,7 @@ type CreateCategoryArgs = {
   subName: string
   subOrder?: number
 }
-export async function createCategory({
+export async function createCategoryPair({
   rootName,
   subName,
   rootOrder,
@@ -58,7 +58,7 @@ export async function getCategories() {
         orderBy: {
           order: 'asc',
         },
-        select: {
+        include: {
           _count: {
             select: {
               commodities: true,
@@ -68,4 +68,98 @@ export async function getCategories() {
       },
     },
   })
+}
+
+/* Create Category */
+export async function createCategory({
+  name,
+  rootId,
+}: {
+  name: string
+  rootId?: number
+}) {
+  const isSub = rootId !== undefined
+
+  if (isSub) {
+    return await prisma.commodityCategory.create({
+      data: {
+        name,
+        rootCategory: {
+          connect: {
+            id: rootId,
+          },
+        },
+      },
+    })
+  } else {
+    return await prisma.commodityRootCategory.create({
+      data: {
+        name,
+      },
+    })
+  }
+}
+
+/* Update Category */
+export async function updateCategory({
+  id,
+  name,
+  type,
+}: {
+  id: number
+  name: string
+  type: 'root' | 'sub'
+}) {
+  if (type === 'root') {
+    return await prisma.commodityRootCategory.update({
+      where: {
+        id,
+      },
+      data: {
+        name,
+      },
+    })
+  } else {
+    return await prisma.commodityCategory.update({
+      where: {
+        id,
+      },
+      data: {
+        name,
+      },
+    })
+  }
+}
+
+/* Update categories orders */
+export async function updateCategoriesOrders({
+  categoriesIds,
+  type,
+}: {
+  categoriesIds: number[]
+  type: 'root' | 'sub'
+}) {
+  await prisma.$transaction(
+    categoriesIds.map((id, index) => {
+      if (type === 'root') {
+        return prisma.commodityRootCategory.update({
+          where: {
+            id,
+          },
+          data: {
+            order: index,
+          },
+        })
+      } else {
+        return prisma.commodityCategory.update({
+          where: {
+            id,
+          },
+          data: {
+            order: index,
+          },
+        })
+      }
+    }),
+  )
 }

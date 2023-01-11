@@ -27,9 +27,11 @@ export enum SERVER_NOTIFY {
   ORDER_ADD = '結帳完成',
   ORDER_UPDATE = '訂單狀態更新',
   ORDER_CANCEL = '訂單取消',
-  POS_ADD = '',
-  POS_UPDATE = '',
   DAILY_RECHARGE = '今日點數已發放',
+  POS_ADD = '待處理點餐新增',
+  POS_UPDATE = '待處理點餐更新',
+  CATEGORY_ADD = '分類新增',
+  CATEGORY_UPDATE = '分類更新',
 }
 
 export enum CurrencyType {
