@@ -1,11 +1,14 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Reorder } from 'framer-motion'
+import { Reorder, useDragControls } from 'framer-motion'
 import { Bars3Icon } from '@heroicons/react/24/outline'
 import { useDebounce } from 'usehooks-ts'
 import { PencilIcon } from '@heroicons/react/24/outline'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
 import { PlusIcon } from '@heroicons/react/24/outline'
+import { CheckCircleIcon } from '@heroicons/react/20/solid'
+import { twMerge } from 'tailwind-merge'
 
+import { useDialog } from '@/components/core/Dialog'
 import Button from '@/components/core/Button'
 import Error from '@/components/core/Error'
 import trpc from '@/lib/client/trpc'
@@ -15,11 +18,15 @@ import Spinner from '@/components/core/Spinner'
 import useEditDialog from './useEditDialog'
 
 export default function Categories() {
+  // Queries
   const { data, error, isError, isLoading } = trpc.category.get.useQuery()
   const updateRootOrdersMutation = trpc.category.updateOrders.useMutation()
   const updateSubOrdersMutation = trpc.category.updateOrders.useMutation()
   const updateMutation = trpc.category.update.useMutation()
   const createMutation = trpc.category.create.useMutation()
+  const deleteMutation = trpc.category.deleteMany.useMutation()
+
+  // Reorder hooks
   const [rootCategories, setRootCategories] = useState<CategoryDatas>([])
   const [subCategories, setSubCategories] = useState<{
     rootName?: string
@@ -28,9 +35,16 @@ export default function Categories() {
   }>({ categories: [] })
   const reorderedRootCategories = useDebounce(rootCategories, 500)
   const reorderedSubCategories = useDebounce(subCategories, 500)
-  const { showDialog, dialog } = useEditDialog({
+
+  // Dialog hooks
+  const { showEditDialog, editDialog } = useEditDialog({
     mutations: [createMutation, updateMutation],
   })
+  const { showDialog, dialog } = useDialog()
+
+  // Batch edit hooks
+  const [isSubBatchEdit, setIsSubBatchEdit] = useState(false)
+  const [selectedSubIds, setSelectedSubIds] = useState<number[]>([])
 
   // Reorder root categories
   useEffect(() => {
@@ -40,7 +54,7 @@ export default function Categories() {
         rootCategories.map((category) => category.id)
     ) {
       updateRootOrdersMutation.mutate({
-        categoriesIds: reorderedRootCategories.map((category) => category.id),
+        ids: reorderedRootCategories.map((category) => category.id),
         type: 'root',
       })
     }
@@ -54,17 +68,35 @@ export default function Categories() {
         subCategories.categories.map((category) => category.id)
     ) {
       updateSubOrdersMutation.mutate({
-        categoriesIds: reorderedSubCategories.categories.map(
-          (category) => category.id,
-        ),
+        ids: reorderedSubCategories.categories.map((category) => category.id),
         type: 'sub',
       })
     }
   }, [reorderedSubCategories])
 
+  // Exist edit mode when changed
+  useEffect(() => {
+    setIsSubBatchEdit(false)
+  }, [subCategories])
+
+  // Assign data to rootCategories
+  useEffect(() => {
+    if (data) {
+      setRootCategories(data)
+      if (data[0]) {
+        setSubCategories({
+          rootName: data[0].name,
+          rootId: data[0].id,
+          categories: data[0].childCategories,
+        })
+      }
+    }
+  }, [data])
+
+  // Handlers
   const handleRootCategoryRename = useCallback(
     (rootCategory: CategoryDatas[number]) => {
-      showDialog(
+      showEditDialog(
         {
           title: '重新命名 主分類',
           inputs: {
@@ -85,12 +117,12 @@ export default function Categories() {
         },
       )
     },
-    [showDialog, updateMutation],
+    [showEditDialog, updateMutation],
   )
 
   const handleSubCategoryRename = useCallback(
     (subCategory: CategoryDatas[number]['childCategories'][number]) => {
-      showDialog(
+      showEditDialog(
         {
           title: `重新命名 ${subCategories.rootName} 子分類`,
           inputs: {
@@ -111,11 +143,11 @@ export default function Categories() {
         },
       )
     },
-    [showDialog, updateMutation],
+    [showEditDialog, updateMutation],
   )
 
   const handleRootCategoryCreate = useCallback(() => {
-    showDialog(
+    showEditDialog(
       {
         title: '新增 主分類',
         inputs: {
@@ -133,10 +165,10 @@ export default function Categories() {
         })
       },
     )
-  }, [showDialog, createMutation, data])
+  }, [showEditDialog, createMutation, data])
 
   const handleSubCategoryCreate = useCallback(() => {
-    showDialog(
+    showEditDialog(
       {
         title: `新增 ${subCategories.rootName} 子分類`,
         inputs: {
@@ -156,21 +188,24 @@ export default function Categories() {
         })
       },
     )
-  }, [showDialog, createMutation, data])
+  }, [showEditDialog, createMutation, data])
 
-  // Assign data to rootCategories
-  useEffect(() => {
-    if (data) {
-      setRootCategories(data)
-      if (data[0]) {
-        setSubCategories({
-          rootName: data[0].name,
-          rootId: data[0].id,
-          categories: data[0].childCategories,
-        })
-      }
-    }
-  }, [data])
+  const handleSubCategoryDelete = useCallback(() => {
+    showDialog({
+      title: '刪除子分類',
+      content: `確定要刪除 ${selectedSubIds.length} 個子分類嗎？`,
+      onClose(isConfirm) {
+        console.log('isConfirm', isConfirm)
+        if (isConfirm) {
+          deleteMutation.mutate({
+            ids: selectedSubIds,
+            type: 'sub',
+          })
+        }
+      },
+      cancel: true,
+    })
+  }, [selectedSubIds])
 
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
@@ -179,12 +214,22 @@ export default function Categories() {
     <div className='flex h-full gap-8'>
       {/* Root Categories */}
       <div className='max-w-xs flex-1'>
-        <h1 className='mb-4 flex items-center text-lg font-bold'>
-          主分類
-          {updateRootOrdersMutation.isLoading && (
-            <Spinner className='ml-2 inline h-4 w-4 text-stone-400' />
-          )}
-        </h1>
+        <div className='mb-4 flex items-center'>
+          <p className='items-center text-lg font-bold'>
+            主分類
+            {updateRootOrdersMutation.isLoading && (
+              <Spinner className='ml-2 inline h-4 w-4 text-stone-400' />
+            )}
+          </p>
+          <div className='ml-auto justify-end'>
+            <Button
+              className=''
+              label='刪除'
+              theme='support'
+              textClassName='text-sm text-red-400 p-1'
+            />
+          </div>
+        </div>
         <Reorder.Group
           axis='y'
           className='flex flex-col gap-2'
@@ -192,14 +237,9 @@ export default function Categories() {
           onReorder={setRootCategories}
         >
           {rootCategories.map((rootCategory) => (
-            <Reorder.Item
-              key={rootCategory.id}
-              value={rootCategory}
-              className='cursor-drag flex w-full cursor-grab items-center rounded-lg border bg-white p-2 shadow'
-            >
-              <Bars3Icon className='h-5 w-5 text-stone-300' />
+            <DragItem key={rootCategory.id} value={rootCategory}>
               <button
-                className='group/rename ml-2 cursor-pointer rounded-md hover:bg-stone-100 active:scale-95'
+                className='group/rename ml-2 flex cursor-pointer items-center rounded-md hover:bg-stone-100 active:scale-95'
                 onClick={() => handleRootCategoryRename(rootCategory)}
               >
                 {rootCategory.name}
@@ -219,7 +259,7 @@ export default function Categories() {
                 {rootCategory.childCategories.length} 個子分類
                 <ChevronRightIcon className='inline h-4 w-4 stroke-1 transition-opacity group-disabled/button:opacity-0' />
               </button>
-            </Reorder.Item>
+            </DragItem>
           ))}
           <li className='mt-2 flex justify-center'>
             <Button
@@ -236,12 +276,44 @@ export default function Categories() {
       </div>
       {/* Sub Categories */}
       <div className='max-w-xs flex-1'>
-        <h1 className='mb-4 text-lg font-bold'>
-          {subCategories.rootName}子分類
-          {updateSubOrdersMutation.isLoading && (
-            <Spinner className='ml-2 inline h-4 w-4 text-stone-400' />
-          )}
-        </h1>
+        <div className='mb-4 flex items-center'>
+          <p className='items-center text-lg font-bold'>
+            {subCategories.rootName}子分類
+            {updateSubOrdersMutation.isLoading && (
+              <Spinner className='ml-2 inline h-4 w-4 text-stone-400' />
+            )}
+          </p>
+          <div className='ml-auto flex justify-end'>
+            {isSubBatchEdit && (
+              <>
+                <Button
+                  isLoading={deleteMutation.isLoading}
+                  spinnerClassName='h-4 w-4'
+                  label='刪除'
+                  theme='support'
+                  textClassName='text-sm text-red-400 p-1'
+                  className='disabled:opacity-50'
+                  isDisabled={selectedSubIds.length === 0}
+                  onClick={handleSubCategoryDelete}
+                />
+                <Button
+                  label='移動'
+                  theme='support'
+                  textClassName='text-sm text-stone-400 p-1'
+                  className='disabled:opacity-50'
+                  isDisabled={selectedSubIds.length === 0}
+                />
+              </>
+            )}
+
+            <Button
+              label={isSubBatchEdit ? '完成編輯' : '批次編輯'}
+              theme='support'
+              textClassName='text-sm text-stone-400 p-1'
+              onClick={() => setIsSubBatchEdit((prev) => !prev)}
+            />
+          </div>
+        </div>
         <Reorder.Group
           axis='y'
           className='flex flex-col gap-2'
@@ -251,38 +323,89 @@ export default function Categories() {
           }
         >
           {subCategories.categories.map((subCategory) => (
-            <Reorder.Item
+            <DragItem
               key={subCategory.id}
               value={subCategory}
-              className='cursor-drag flex w-full cursor-grab items-center rounded-lg border bg-white p-2 shadow'
+              isBatchEdit={isSubBatchEdit}
+              isSelected={selectedSubIds.includes(subCategory.id)}
+              onSelectChange={(id, checked) => {
+                if (checked) {
+                  setSelectedSubIds((prev) => [...prev, id])
+                } else {
+                  setSelectedSubIds((prev) =>
+                    prev.filter((selectedId) => selectedId !== id),
+                  )
+                }
+              }}
             >
-              <Bars3Icon className='h-5 w-5 text-stone-300' />
               <button
-                className='group/rename ml-2 cursor-pointer rounded-md hover:bg-stone-100 active:scale-95'
+                disabled={isSubBatchEdit}
+                className='group/rename ml-2 flex cursor-pointer items-center rounded-md disabled:pointer-events-none hover:bg-stone-100 active:scale-95'
                 onClick={() => handleSubCategoryRename(subCategory)}
               >
                 {subCategory.name}
-                <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/rename:rotate-45' />
+                {!isSubBatchEdit && (
+                  <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/rename:rotate-45' />
+                )}
               </button>
               <p className='ml-auto text-sm text-stone-400'>
                 {subCategory._count.commodities} 個餐點
               </p>
-            </Reorder.Item>
+            </DragItem>
           ))}
-          <li className='mt-2 flex justify-center'>
-            <Button
-              onClick={handleSubCategoryCreate}
-              label={
-                <p className='flex items-center p-1 text-sm'>
-                  新增子分類 <PlusIcon className='inline h-4 w-4' />
-                </p>
-              }
-              theme='support'
-            />
-          </li>
+          {!isSubBatchEdit && (
+            <li className='mt-2 flex justify-center'>
+              <Button
+                onClick={handleSubCategoryCreate}
+                label={
+                  <p className='flex items-center p-1 text-sm'>
+                    新增子分類 <PlusIcon className='inline h-4 w-4' />
+                  </p>
+                }
+                theme='support'
+              />
+            </li>
+          )}
         </Reorder.Group>
       </div>
+      {editDialog}
       {dialog}
     </div>
+  )
+}
+
+function DragItem(props: {
+  children: JSX.Element | JSX.Element[]
+  value: { id: number }
+  isBatchEdit?: boolean
+  isSelected?: boolean
+  onSelectChange?: (id: number, isChecked: boolean) => void
+}) {
+  const controls = useDragControls()
+  return (
+    <Reorder.Item
+      value={props.value}
+      className='flex w-full items-center rounded-lg border bg-white p-2 shadow'
+      dragListener={false}
+      dragControls={controls}
+    >
+      {props.isBatchEdit ? (
+        <CheckCircleIcon
+          className={twMerge(
+            'h-6 w-6 cursor-pointer text-stone-200',
+            props.isSelected && 'text-yellow-500',
+          )}
+          onClick={() =>
+            props.onSelectChange?.(props.value.id, !props.isSelected)
+          }
+        />
+      ) : (
+        <Bars3Icon
+          className='h-6 w-6 cursor-grab text-stone-300'
+          onPointerDown={(e) => controls.start(e)}
+        />
+      )}
+      {props.children}
+    </Reorder.Item>
   )
 }

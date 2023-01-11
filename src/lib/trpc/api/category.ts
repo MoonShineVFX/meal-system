@@ -6,6 +6,7 @@ import {
   updateCategoriesOrders,
   createCategory,
   updateCategory,
+  deleteCategories,
 } from '@/lib/server/database'
 import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
@@ -47,11 +48,25 @@ export const CategoryRouter = router({
   updateOrders: staffProcedure
     .input(
       z.object({
-        categoriesIds: z.array(z.number()),
+        ids: z.array(z.number()),
         type: z.union([z.literal('root'), z.literal('sub')]),
       }),
     )
     .mutation(async ({ input }) => {
       await updateCategoriesOrders(input)
+    }),
+  deleteMany: staffProcedure
+    .input(
+      z.object({
+        ids: z.array(z.number()),
+        type: z.union([z.literal('root'), z.literal('sub')]),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await deleteCategories(input)
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.CATEGORY_DELETE,
+        skipNotify: true,
+      })
     }),
 })

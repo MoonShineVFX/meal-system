@@ -35,7 +35,7 @@ export default function useEditDialog<T extends UseEditDialogProps>({
 }: {
   mutations?: { isLoading: boolean; isSuccess: boolean; reset: () => void }[]
 }) {
-  function showDialog<U extends T>(
+  function showEditDialog<U extends T>(
     props: U,
     onSubmit: (formData: {
       [K in keyof U['inputs']]: U['inputs'][K]['value']
@@ -46,7 +46,7 @@ export default function useEditDialog<T extends UseEditDialogProps>({
   }
 
   /* types in function */
-  type OnSubmitArgs = Parameters<typeof showDialog>[1]
+  type OnSubmitArgs = Parameters<typeof showEditDialog>[1]
   type Inputs = Parameters<OnSubmitArgs>[0]
 
   // Hooks
@@ -96,7 +96,16 @@ export default function useEditDialog<T extends UseEditDialogProps>({
     props.onSubmit(formData)
   }
 
-  const dialog = (
+  const isLoading = useMemo(
+    () => mutations && mutations.some((m) => m.isLoading),
+    [mutations],
+  )
+  const isSuccess = useMemo(
+    () => mutations && mutations.some((m) => m.isSuccess),
+    [mutations],
+  )
+
+  const editDialog = (
     <Transition show={isDialogOpen} as={Fragment}>
       <Dialog onClose={() => setIsDialogOpen(false)} className='relative z-50'>
         {/* Backdrop */}
@@ -155,20 +164,19 @@ export default function useEditDialog<T extends UseEditDialogProps>({
                 </section>
                 {/* Buttons */}
                 <section className='flex justify-end gap-6'>
-                  <Button
-                    label='取消'
-                    textClassName='text-lg font-bold p-2 px-4'
-                    theme='support'
-                    type='button'
-                    onClick={() => setIsDialogOpen(false)}
-                  />
+                  {!isLoading && !isSuccess && (
+                    <Button
+                      label='取消'
+                      textClassName='text-lg font-bold p-2 px-4'
+                      theme='support'
+                      type='button'
+                      onClick={() => setIsDialogOpen(false)}
+                    />
+                  )}
                   <Button
                     isDisabled={errors && Object.keys(errors).length > 0}
-                    isLoading={mutations && mutations.some((m) => m.isLoading)}
-                    isBusy={
-                      mutations &&
-                      mutations.some((m) => m.isLoading || m.isSuccess)
-                    }
+                    isLoading={isLoading}
+                    isBusy={isLoading || isSuccess}
                     label='確定'
                     textClassName='text-lg font-bold p-2 px-4'
                     theme='main'
@@ -184,7 +192,7 @@ export default function useEditDialog<T extends UseEditDialogProps>({
   )
 
   return {
-    showDialog,
-    dialog,
+    showEditDialog,
+    editDialog,
   }
 }

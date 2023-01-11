@@ -206,7 +206,7 @@ model CommodityCategory {
   order    Int    @default(99)
   subOrder Int    @default(99)
 
-  rootCategory   CommodityRootCategory @relation(fields: [rootCategoryId], references: [id])
+  rootCategory   CommodityRootCategory @relation(fields: [rootCategoryId], references: [id], onDelete: Cascade)
   rootCategoryId Int
   commodities    Commodity[]
 

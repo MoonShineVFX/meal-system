@@ -175,14 +175,14 @@ export async function updateCategory({
 
 /* Update categories orders */
 export async function updateCategoriesOrders({
-  categoriesIds,
+  ids,
   type,
 }: {
-  categoriesIds: number[]
+  ids: number[]
   type: 'root' | 'sub'
 }) {
   await prisma.$transaction(
-    categoriesIds.map((id, index) => {
+    ids.map((id, index) => {
       if (type === 'root') {
         return prisma.commodityRootCategory.update({
           where: {
@@ -199,6 +199,33 @@ export async function updateCategoriesOrders({
           },
           data: {
             order: index,
+          },
+        })
+      }
+    }),
+  )
+}
+
+/* Delete categories */
+export async function deleteCategories({
+  ids,
+  type,
+}: {
+  ids: number[]
+  type: 'root' | 'sub'
+}) {
+  await prisma.$transaction(
+    ids.map((id) => {
+      if (type === 'root') {
+        return prisma.commodityRootCategory.delete({
+          where: {
+            id,
+          },
+        })
+      } else {
+        return prisma.commodityCategory.delete({
+          where: {
+            id,
           },
         })
       }

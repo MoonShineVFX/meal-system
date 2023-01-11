@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
@@ -94,4 +94,29 @@ export default function DialogCore(props: {
       </Dialog>
     </Transition>
   )
+}
+
+export function useDialog() {
+  const [isOpenDialog, setIsOpenDialog] = useState(false)
+  const [props, setProps] = useState<
+    Omit<Parameters<typeof DialogCore>[0], 'open'> | undefined
+  >(undefined)
+
+  function showDialog(props: Omit<Parameters<typeof DialogCore>[0], 'open'>) {
+    setProps(props)
+    setIsOpenDialog(true)
+  }
+
+  const dialog = props ? (
+    <DialogCore
+      {...props}
+      open={isOpenDialog}
+      onClose={(isConfirm: boolean) => {
+        props.onClose(isConfirm)
+        setIsOpenDialog(false)
+      }}
+    />
+  ) : null
+
+  return { dialog, showDialog }
 }

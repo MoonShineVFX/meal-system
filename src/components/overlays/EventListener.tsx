@@ -117,6 +117,7 @@ export default function EventListener() {
           break
         case SERVER_NOTIFY.CATEGORY_ADD:
         case SERVER_NOTIFY.CATEGORY_UPDATE:
+        case SERVER_NOTIFY.CATEGORY_DELETE:
           trpcContext.category.get.invalidate()
           break
       }

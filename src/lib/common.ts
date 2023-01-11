@@ -32,6 +32,7 @@ export enum SERVER_NOTIFY {
   POS_UPDATE = '待處理點餐更新',
   CATEGORY_ADD = '分類新增',
   CATEGORY_UPDATE = '分類更新',
+  CATEGORY_DELETE = '分類刪除',
 }
 
 export enum CurrencyType {
