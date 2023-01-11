@@ -74,16 +74,27 @@ export async function getCategories() {
 export async function createCategory({
   name,
   rootId,
+  order,
 }: {
   name: string
   rootId?: number
+  order?: number
 }) {
   const isSub = rootId !== undefined
 
   if (isSub) {
+    const conflict = await prisma.commodityCategory.findFirst({
+      where: {
+        name,
+      },
+    })
+    if (conflict) {
+      throw new Error('已有相同名稱的分類')
+    }
     return await prisma.commodityCategory.create({
       data: {
         name,
+        order,
         rootCategory: {
           connect: {
             id: rootId,
@@ -92,9 +103,18 @@ export async function createCategory({
       },
     })
   } else {
+    const conflict = await prisma.commodityRootCategory.findFirst({
+      where: {
+        name,
+      },
+    })
+    if (conflict) {
+      throw new Error('已有相同名稱的分類')
+    }
     return await prisma.commodityRootCategory.create({
       data: {
         name,
+        order,
       },
     })
   }
@@ -111,6 +131,17 @@ export async function updateCategory({
   type: 'root' | 'sub'
 }) {
   if (type === 'root') {
+    const conflict = await prisma.commodityRootCategory.findFirst({
+      where: {
+        name,
+        NOT: {
+          id,
+        },
+      },
+    })
+    if (conflict) {
+      throw new Error('已有相同名稱的分類')
+    }
     return await prisma.commodityRootCategory.update({
       where: {
         id,
@@ -120,6 +151,17 @@ export async function updateCategory({
       },
     })
   } else {
+    const conflict = await prisma.commodityCategory.findFirst({
+      where: {
+        name,
+        NOT: {
+          id,
+        },
+      },
+    })
+    if (conflict) {
+      throw new Error('已有相同名稱的分類')
+    }
     return await prisma.commodityCategory.update({
       where: {
         id,

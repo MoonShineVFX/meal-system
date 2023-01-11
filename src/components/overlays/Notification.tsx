@@ -23,7 +23,7 @@ export default function Notification() {
   const notifications = useStore((state) => state.notifications)
 
   return (
-    <div className='pointer-events-none fixed inset-0 top-4 z-40 flex flex-col items-center gap-6 md:top-6 lg:top-8'>
+    <div className='pointer-events-none fixed inset-0 top-4 z-[100] flex flex-col items-center gap-6 md:top-6 lg:top-8'>
       <AnimatePresence>
         {notifications.map((notification) => (
           <NotificationPod key={notification.id} notification={notification} />

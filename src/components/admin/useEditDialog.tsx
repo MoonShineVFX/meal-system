@@ -17,24 +17,23 @@ import {
 import Button from '@/components/core/Button'
 
 /* Types */
-type InputField<T> = {
+type InputField = {
   label: string
-  value: T
-  defaultValue?: T | undefined
+  value: string | number | boolean
   options?: RegisterOptions
-  attributes?: Omit<InputHTMLAttributes<HTMLInputElement>, 'defaultValue'>
+  attributes?: InputHTMLAttributes<HTMLInputElement>
 }
 
 type UseEditDialogProps = {
   title: string
-  inputs: { [key: string]: InputField<string | number | boolean> }
+  inputs: { [key: string]: InputField }
 }
 
 /* Main */
 export default function useEditDialog<T extends UseEditDialogProps>({
-  mutation,
+  mutations,
 }: {
-  mutation?: { isLoading?: boolean; isSuccess?: boolean; reset?: () => void }
+  mutations?: { isLoading: boolean; isSuccess: boolean; reset: () => void }[]
 }) {
   function showDialog<U extends T>(
     props: U,
@@ -84,11 +83,12 @@ export default function useEditDialog<T extends UseEditDialogProps>({
 
   // Close the dialog when the mutation is successful
   useEffect(() => {
-    if (mutation?.isSuccess && isDialogOpen) {
+    if (!mutations) return
+    if (mutations.some((m) => m.isSuccess) && isDialogOpen) {
       setIsDialogOpen(false)
-      mutation?.reset?.()
+      mutations.forEach((m) => m.reset())
     }
-  }, [mutation?.isSuccess])
+  }, [mutations])
 
   // Handle submit
   const handleEdit: SubmitHandler<Inputs> = (formData) => {
@@ -130,8 +130,6 @@ export default function useEditDialog<T extends UseEditDialogProps>({
                 {/* Inputs */}
                 <section className='ms-scroll overflow-y-auto py-6'>
                   {inputs.map((inputValue) => {
-                    if (typeof inputValue.defaultValue === 'boolean')
-                      return null
                     const error = errors[inputValue.name]
 
                     return (
@@ -166,8 +164,11 @@ export default function useEditDialog<T extends UseEditDialogProps>({
                   />
                   <Button
                     isDisabled={errors && Object.keys(errors).length > 0}
-                    isLoading={mutation?.isLoading}
-                    isBusy={mutation?.isLoading || mutation?.isSuccess}
+                    isLoading={mutations && mutations.some((m) => m.isLoading)}
+                    isBusy={
+                      mutations &&
+                      mutations.some((m) => m.isLoading || m.isSuccess)
+                    }
                     label='確定'
                     textClassName='text-lg font-bold p-2 px-4'
                     theme='main'

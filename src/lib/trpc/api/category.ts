@@ -19,6 +19,7 @@ export const CategoryRouter = router({
       z.object({
         name: z.string(),
         rootId: z.number().optional(),
+        order: z.number().optional(),
       }),
     )
     .mutation(async ({ input }) => {
