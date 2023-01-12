@@ -125,12 +125,12 @@ export default function OrderCard(props: {
               theme='support'
             />
           </Link>
-          {isCancel && (
+          {order?.canceledTransactionId && (
             <Link href={`/transaction/${order?.canceledTransactionId ?? 123}`}>
               <Button
                 label='退款紀錄'
                 className='p-2 group-data-loading:skeleton'
-                title='前往付款的交易紀錄'
+                title='前往退款的交易紀錄'
                 theme='support'
               />
             </Link>
@@ -240,7 +240,7 @@ export default function OrderCard(props: {
           confirmText='確認取消'
           open={isCancelDialogOpen}
           onClose={() => setIsCancelDialogOpen(false)}
-          mutation={updateOrderMutation}
+          useMutation={trpc.order.update.useMutation}
           mutationOptions={{ orderId: order?.id, type: 'cancel' }}
           title='確認取消訂單？'
           confirmButtonTheme='danger'

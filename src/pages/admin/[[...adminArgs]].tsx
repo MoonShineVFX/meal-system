@@ -5,14 +5,7 @@ import Tab from '@/components/core/Tab'
 import Title from '@/components/core/Title'
 import Categories from '@/components/admin/Categories'
 
-const TAB_NAMES = [
-  '編輯餐點',
-  '編輯菜單',
-  '編輯分類',
-  '編輯選項',
-  '瀏覽訂單',
-  '瀏覽交易',
-] as const
+const TAB_NAMES = ['餐點', '菜單', '分類', '選項', '訂單', '交易'] as const
 // type TabName = typeof TAB_NAMES[number]
 const TAB_PATHS = [
   'commodities',

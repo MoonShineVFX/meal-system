@@ -180,7 +180,7 @@ export default function Menu(props: {
 
     setComsByCategory(result)
     setCurrentMenu(data)
-    setCurrentCategory(comsByCategory.keys().next().value)
+    setCurrentCategory([...result.keys()][0])
 
     // if session storage not have confirmed, show notify
     if (!sessionStorage.getItem(UNAVAILABLE_CONFIRM_NAME(data.id))) {

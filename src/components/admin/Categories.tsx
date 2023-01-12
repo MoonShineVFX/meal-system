@@ -194,14 +194,10 @@ export default function Categories() {
     showDialog({
       title: '刪除子分類',
       content: `確定要刪除 ${selectedSubIds.length} 個子分類嗎？`,
-      onClose(isConfirm) {
-        console.log('isConfirm', isConfirm)
-        if (isConfirm) {
-          deleteMutation.mutate({
-            ids: selectedSubIds,
-            type: 'sub',
-          })
-        }
+      useMutation: trpc.category.deleteMany.useMutation,
+      mutationOptions: {
+        ids: selectedSubIds,
+        type: 'sub',
       },
       cancel: true,
     })
@@ -265,7 +261,7 @@ export default function Categories() {
             <Button
               onClick={handleRootCategoryCreate}
               label={
-                <p className='flex items-center p-1 text-sm'>
+                <p className='flex items-center p-2 text-sm'>
                   新增主分類 <PlusIcon className='inline h-4 w-4' />
                 </p>
               }
@@ -358,7 +354,7 @@ export default function Categories() {
               <Button
                 onClick={handleSubCategoryCreate}
                 label={
-                  <p className='flex items-center p-1 text-sm'>
+                  <p className='flex items-center p-2 text-sm'>
                     新增子分類 <PlusIcon className='inline h-4 w-4' />
                   </p>
                 }

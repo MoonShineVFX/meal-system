@@ -5,10 +5,9 @@ import { twMerge } from 'tailwind-merge'
 import type { UseTRPCMutationResult } from '@trpc/react-query/shared'
 
 import Button from '@/components/core/Button'
+type UseMutationResult = UseTRPCMutationResult<any, any, any, any>
 
-export default function DialogCore<
-  T extends UseTRPCMutationResult<any, any, any, any>,
->(props: {
+type DialogProps<T extends UseMutationResult> = {
   open: boolean
   onClose: () => void
   title: string
@@ -19,25 +18,32 @@ export default function DialogCore<
   cancel?: boolean
   cancelText?: string
   icon?: string | null
-  mutation?: T
+  useMutation?: () => T
   mutationOptions?: Parameters<T['mutate']>[0]
-}) {
+}
+
+export default function DialogCore<T extends UseMutationResult>(
+  props: DialogProps<T>,
+) {
+  const mutation = props.useMutation ? props.useMutation() : undefined
   const handleConfirm = useCallback(() => {
-    if (props.mutation && props.mutationOptions) {
-      props.mutation.mutate(props.mutationOptions)
+    if (mutation && props.mutationOptions) {
+      mutation.mutate(props.mutationOptions, {
+        onSuccess: () => {
+          props.onClose()
+        },
+      })
     } else {
       props.onClose()
     }
-  }, [props.mutation, props.mutationOptions])
+  }, [mutation, props.mutationOptions])
 
   useEffect(() => {
-    if (props.mutation?.isSuccess) {
-      props.onClose()
-    }
-  }, [props.mutation])
+    mutation?.reset()
+  }, [props.open])
 
   return (
-    <Transition show={props.open} as={Fragment}>
+    <Transition show={props.open} as={Fragment} appear={true}>
       <Dialog onClose={props.onClose} className='relative z-50'>
         {/* Backdrop */}
         <Transition.Child
@@ -97,12 +103,8 @@ export default function DialogCore<
                   ></Button>
                 )}
                 <Button
-                  isLoading={
-                    props.mutation?.isLoading || props.mutation?.isSuccess
-                  }
-                  isBusy={
-                    props.mutation?.isLoading || props.mutation?.isSuccess
-                  }
+                  isLoading={mutation?.isLoading || mutation?.isSuccess}
+                  isBusy={mutation?.isLoading || mutation?.isSuccess}
                   onClick={handleConfirm}
                   className={twMerge(
                     'h-10 grow font-bold',
@@ -121,16 +123,24 @@ export default function DialogCore<
   )
 }
 
+type ShowDialogProps<T extends UseMutationResult> = Omit<
+  DialogProps<T>,
+  'open' | 'onClose'
+>
+
 export function useDialog() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
   const [props, setProps] = useState<
-    Omit<Parameters<typeof DialogCore>[0], 'open'> | undefined
+    ShowDialogProps<UseMutationResult> | undefined
   >(undefined)
 
-  function showDialog(props: Omit<Parameters<typeof DialogCore>[0], 'open'>) {
-    setProps(props)
-    setIsOpenDialog(true)
-  }
+  const showDialog = useCallback(
+    <T extends UseMutationResult>(props: ShowDialogProps<T>) => {
+      setProps(props)
+      setIsOpenDialog(true)
+    },
+    [],
+  )
 
   const dialog = props ? (
     <DialogCore
