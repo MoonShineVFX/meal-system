@@ -206,6 +206,26 @@ export async function updateCategoriesOrders({
   )
 }
 
+/* Update subCategories parent */
+export async function updateSubCategoriesRoot({
+  ids,
+  rootId,
+}: {
+  ids: number[]
+  rootId: number
+}) {
+  return await prisma.commodityCategory.updateMany({
+    where: {
+      id: {
+        in: ids,
+      },
+    },
+    data: {
+      rootCategoryId: rootId,
+    },
+  })
+}
+
 /* Delete categories */
 export async function deleteCategories({
   ids,

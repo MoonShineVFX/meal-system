@@ -19,12 +19,23 @@ import { UseMutationResult } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
 
 /* Types */
-type InputField = {
-  label: string
-  value: string | number | boolean
-  options?: RegisterOptions
+type TextInput = {
+  value?: string
+  data?: never
+  type: 'text'
   attributes?: InputHTMLAttributes<HTMLInputElement>
 }
+type SelectInput = {
+  value?: { value: any; label: string }
+  data: { value: any; label: string }[]
+  type: 'select'
+  attributes?: InputHTMLAttributes<HTMLSelectElement>
+}
+
+type InputField = {
+  label: string
+  options?: RegisterOptions
+} & (TextInput | SelectInput)
 
 type FormInputsProps = { [key: string]: InputField }
 
@@ -39,7 +50,11 @@ type FormDialogProps<
   useMutation: T
   onSubmit: (
     formData: {
-      [K in keyof U]: U[K]['value']
+      [K in keyof U]: U[K]['type'] extends 'text'
+        ? string
+        : U[K]['type'] extends 'select'
+        ? NonNullable<U[K]['data']>[number]['value']
+        : never
     },
     mutation: ReturnType<T>,
   ) => void
@@ -72,16 +87,17 @@ export default function FormDialog<
 
   // Reset state
   useEffect(() => {
-    if (!open) return
+    if (!props.open) return
     reset(
       inputs.reduce((acc, input) => {
+        if (!input.value) return acc
         return {
           ...acc,
           [input.name]: input.value,
         }
       }, {} as DeepPartial<Inputs>),
     )
-  }, [open])
+  }, [props.open])
 
   // Close the dialog when the mutation is successful
   useEffect(() => {
@@ -130,26 +146,41 @@ export default function FormDialog<
               <form onSubmit={handleSubmit(handleEdit)}>
                 {/* Inputs */}
                 <section className='ms-scroll overflow-y-auto py-6'>
-                  {inputs.map((inputValue) => {
-                    const error = errors[inputValue.name]
+                  {inputs.map((inputItem) => {
+                    const error = errors[inputItem.name]
 
                     return (
-                      <div
-                        key={inputValue.name}
-                        className='flex flex-col gap-1'
-                      >
+                      <div key={inputItem.name} className='flex flex-col gap-1'>
                         <label className='text-sm font-bold text-stone-500'>
-                          {inputValue.label}
+                          {inputItem.label}
                           <span className='ml-[1ch] text-red-400'>
                             {/* @ts-ignore */}
                             {error && error.message}
                           </span>
                         </label>
-                        <input
-                          className='rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:outline-yellow-500 disabled:opacity-75'
-                          {...inputValue.attributes}
-                          {...register(inputValue.name, inputValue.options)}
-                        />
+                        {inputItem.type === 'select' ? (
+                          <select
+                            className='rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:outline-yellow-500 disabled:opacity-75'
+                            {...inputItem.attributes}
+                            {...register(inputItem.name, {
+                              valueAsNumber:
+                                typeof inputItem.data[0].value === 'number',
+                              ...inputItem.options,
+                            })}
+                          >
+                            {inputItem.data.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            className='rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:outline-yellow-500 disabled:opacity-75'
+                            {...inputItem.attributes}
+                            {...register(inputItem.name, inputItem.options)}
+                          />
+                        )}
                       </div>
                     )
                   })}

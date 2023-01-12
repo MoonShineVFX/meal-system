@@ -58,6 +58,7 @@ export default function Categories() {
         {selectedRootCategory !== null && (
           <CategoriesSortableList
             rootCategory={selectedRootCategory}
+            rootCategories={data}
             categories={selectedRootCategory.childCategories}
           />
         )}
@@ -76,6 +77,7 @@ type UniformCategory = {
 function CategoriesSortableList(props: {
   activeRootCategoryId?: number
   rootCategory?: CategoryDatas[number]
+  rootCategories?: CategoryDatas
   categories: UniformCategory[]
   onCategoryTailClick?: (category: UniformCategory) => void
 }) {
@@ -117,20 +119,6 @@ function CategoriesSortableList(props: {
   }, [props.categories])
 
   /* Handles */
-  // Delete
-  const handleCategoryDelete = useCallback(() => {
-    showDialog({
-      title: `刪除${categoryString}`,
-      content: `確定要刪除 ${selectedIds.length} 個${categoryString}嗎？`,
-      useMutation: trpc.category.deleteMany.useMutation,
-      mutationOptions: {
-        ids: selectedIds,
-        type: isRoot ? 'root' : 'sub',
-      },
-      cancel: true,
-    })
-  }, [selectedIds])
-
   // Rename
   const handleCategoryRename = useCallback(
     (category: UniformCategory) => {
@@ -140,6 +128,7 @@ function CategoriesSortableList(props: {
           categoryName: {
             label: '分類名稱',
             value: category.name,
+            type: 'text',
             options: { required: '請輸入分類名稱' },
             attributes: { placeholder: category.name },
           },
@@ -164,7 +153,7 @@ function CategoriesSortableList(props: {
       inputs: {
         categoryName: {
           label: '分類名稱',
-          value: '',
+          type: 'text',
           options: { required: '請輸入分類名稱' },
         },
       },
@@ -198,6 +187,51 @@ function CategoriesSortableList(props: {
     [updateOrdersTimout],
   )
 
+  // Move
+  const handleCategoriesMove = useCallback(() => {
+    showFormDialog({
+      title: `移動 ${selectedIds.length} 個 子分類`,
+      inputs: {
+        rootCategoryId: {
+          label: '主分類名稱',
+          data: props
+            .rootCategories!.filter(
+              (rootCategory) => rootCategory.id !== props.rootCategory?.id,
+            )
+            .map((rootCategory) => ({
+              label: rootCategory.name,
+              value: rootCategory.id,
+            })),
+          type: 'select',
+          options: { required: '請選擇要移動的主分類' },
+        },
+      },
+      useMutation: trpc.category.updateRoot.useMutation,
+      onSubmit(formData, mutation) {
+        const rootCategoryId = formData.rootCategoryId
+        console.log()
+        mutation.mutate({
+          ids: selectedIds,
+          rootId: rootCategoryId,
+        })
+      },
+    })
+  }, [selectedIds])
+
+  // Delete
+  const handleCategoriesDelete = useCallback(() => {
+    showDialog({
+      title: `刪除${categoryString}`,
+      content: `確定要刪除 ${selectedIds.length} 個${categoryString}嗎？`,
+      useMutation: trpc.category.deleteMany.useMutation,
+      mutationOptions: {
+        ids: selectedIds,
+        type: isRoot ? 'root' : 'sub',
+      },
+      cancel: true,
+    })
+  }, [selectedIds])
+
   return (
     <div className='h-full w-full'>
       {/* Header */}
@@ -219,7 +253,7 @@ function CategoriesSortableList(props: {
                 textClassName='text-sm text-red-400 p-1'
                 className='disabled:opacity-50'
                 isDisabled={selectedIds.length === 0}
-                onClick={handleCategoryDelete}
+                onClick={handleCategoriesDelete}
               />
               {!isRoot && (
                 <Button
@@ -228,6 +262,7 @@ function CategoriesSortableList(props: {
                   textClassName='text-sm text-stone-400 p-1'
                   className='disabled:opacity-50'
                   isDisabled={selectedIds.length === 0}
+                  onClick={handleCategoriesMove}
                 />
               )}
             </>
@@ -293,7 +328,7 @@ function CategoriesSortableList(props: {
         ))}
         {/* Footer */}
         {!isBatchEdit && (
-          <li className='mt-2 flex justify-center'>
+          <li className='mt-2 flex justify-center first:mt-0'>
             <Button
               onClick={handleCategoryCreate}
               label={
