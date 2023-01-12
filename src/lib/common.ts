@@ -33,6 +33,7 @@ export enum SERVER_NOTIFY {
   CATEGORY_ADD = '分類新增',
   CATEGORY_UPDATE = '分類更新',
   CATEGORY_DELETE = '分類刪除',
+  COMMODITY_UPDATE = '餐點更新',
 }
 
 export enum CurrencyType {

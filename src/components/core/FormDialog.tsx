@@ -20,14 +20,14 @@ import Button from '@/components/core/Button'
 
 /* Types */
 type TextInput = {
-  value?: string
+  defaultValue?: string
   data?: never
   type: 'text'
   attributes?: InputHTMLAttributes<HTMLInputElement>
 }
 type SelectInput = {
-  value?: { value: any; label: string }
-  data: { value: any; label: string }[]
+  defaultValue?: string | string[]
+  data: { value: string; label: string }[]
   type: 'select'
   attributes?: InputHTMLAttributes<HTMLSelectElement>
 }
@@ -53,7 +53,13 @@ type FormDialogProps<
       [K in keyof U]: U[K]['type'] extends 'text'
         ? string
         : U[K]['type'] extends 'select'
-        ? NonNullable<U[K]['data']>[number]['value']
+        ? Extract<U[K], { type: 'select' }>['attributes'] extends undefined
+          ? NonNullable<U[K]['data']>[number]['value']
+          : NonNullable<
+              Extract<U[K], { type: 'select' }>['attributes']
+            >['multiple'] extends true
+          ? NonNullable<U[K]['data']>[number]['value'][]
+          : NonNullable<U[K]['data']>[number]['value']
         : never
     },
     mutation: ReturnType<T>,
@@ -88,15 +94,15 @@ export default function FormDialog<
   // Reset state
   useEffect(() => {
     if (!props.open) return
-    reset(
-      inputs.reduce((acc, input) => {
-        if (!input.value) return acc
-        return {
-          ...acc,
-          [input.name]: input.value,
-        }
-      }, {} as DeepPartial<Inputs>),
-    )
+    const defaultValues = inputs.reduce((acc, input) => {
+      if (!input.defaultValue) return acc
+      return {
+        ...acc,
+        [input.name]: input.defaultValue,
+      }
+    }, {} as DeepPartial<Inputs>)
+    console.log(defaultValues)
+    reset(defaultValues)
   }, [props.open])
 
   // Close the dialog when the mutation is successful
@@ -163,8 +169,6 @@ export default function FormDialog<
                             className='rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:outline-yellow-500 disabled:opacity-75'
                             {...inputItem.attributes}
                             {...register(inputItem.name, {
-                              valueAsNumber:
-                                typeof inputItem.data[0].value === 'number',
                               ...inputItem.options,
                             })}
                           >

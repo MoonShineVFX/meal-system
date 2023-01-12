@@ -252,3 +252,45 @@ export async function deleteCategories({
     }),
   )
 }
+
+/* Update commodities */
+export async function updateCategoryCommodities({
+  commodityIds,
+  id,
+}: {
+  commodityIds: number[]
+  id: number
+}) {
+  const category = await prisma.commodityCategory.findUnique({
+    where: {
+      id: id,
+    },
+    select: {
+      commodities: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  })
+
+  if (!category) {
+    throw new Error('找不到分類')
+  }
+
+  const idsToRemove = category.commodities
+    .map((c) => c.id)
+    .filter((id) => !commodityIds.includes(id))
+
+  return await prisma.commodityCategory.update({
+    where: {
+      id: id,
+    },
+    data: {
+      commodities: {
+        connect: [...commodityIds.map((id) => ({ id: id }))],
+        disconnect: [...idsToRemove.map((id) => ({ id: id }))],
+      },
+    },
+  })
+}

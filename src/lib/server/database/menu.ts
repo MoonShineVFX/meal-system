@@ -1,6 +1,6 @@
 import { MenuType, Prisma, PrismaClient } from '@prisma/client'
 
-import { OptionSet, ConvertPrismaJson } from '@/lib/common'
+import { ConvertPrismaJson } from '@/lib/common'
 import {
   MenuUnavailableReason,
   ComUnavailableReason,
@@ -402,39 +402,6 @@ export async function deleteMenu(args: { menuId: number }) {
       })
     }
   })
-}
-
-/* Create Commodity */
-type CreateCommodityArgs = {
-  name: string
-  price: number
-  description?: string
-  optionSets?: OptionSet[]
-  categoryIds?: number[]
-  imageId?: string
-}
-export async function createCommodity({
-  name,
-  price,
-  description,
-  optionSets,
-  categoryIds,
-  imageId,
-}: CreateCommodityArgs) {
-  const commodity = await prisma.commodity.create({
-    data: {
-      name,
-      description,
-      price,
-      optionSets: optionSets ?? [],
-      imageId,
-      categories: {
-        connect: categoryIds?.map((id) => ({ id })) ?? [],
-      },
-    },
-  })
-
-  return commodity
 }
 
 /* Add COM */

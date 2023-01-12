@@ -1,5 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Reorder, useDragControls } from 'framer-motion'
+import {
+  Reorder,
+  useDragControls,
+  AnimatePresence,
+  motion,
+} from 'framer-motion'
 import { Bars3Icon } from '@heroicons/react/24/outline'
 import { PencilIcon } from '@heroicons/react/24/outline'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
@@ -17,13 +22,16 @@ import Spinner from '@/components/core/Spinner'
 import { useFormDialog } from '../core/FormDialog'
 
 export default function Categories() {
-  const { data, error, isError, isLoading } = trpc.category.get.useQuery()
+  const categoryQuery = trpc.category.get.useQuery()
+  const commodityQuery = trpc.commodity.get.useQuery()
   const [selectedRootCategory, setSelectedRootCategory] = useState<
     CategoryDatas[number] | null
   >(null)
+  const { showFormDialog, formDialog } = useFormDialog()
 
   // set selected root category
   useEffect(() => {
+    const { data } = categoryQuery
     if (data) {
       if (selectedRootCategory) {
         const foundCategory = data.find(
@@ -36,33 +44,86 @@ export default function Categories() {
       }
       setSelectedRootCategory(data[0])
     }
-  }, [data])
+  }, [categoryQuery.data])
 
-  if (isError) return <Error description={error.message} />
-  if (isLoading) return <SpinnerBlock />
+  const handleSubcategoryAssignCommodities = useCallback(
+    (category: UniformCategory) => {
+      showFormDialog({
+        title: `編輯屬於 ${category.name} 的餐點`,
+        inputs: {
+          commodityIds: {
+            label: '餐點',
+            defaultValue: commodityQuery
+              .data!.filter((commodity) =>
+                commodity.categories.some((cat) => cat.id === category.id),
+              )
+              .map((commodity) => commodity.id.toString()),
+            data: commodityQuery.data!.map((commodity) => ({
+              label: commodity.name,
+              value: commodity.id.toString(),
+            })),
+            type: 'select',
+            attributes: { multiple: true },
+          },
+        },
+        useMutation: trpc.category.updateCommodities.useMutation,
+        onSubmit(formData, mutation) {
+          const commodityIds = formData.commodityIds.map((id) => parseInt(id))
+          mutation.mutate({
+            commodityIds,
+            id: category.id,
+          })
+        },
+      })
+    },
+    [commodityQuery.data],
+  )
+
+  if (categoryQuery.isError || commodityQuery.isError)
+    return (
+      <Error
+        description={
+          categoryQuery.error?.message ??
+          commodityQuery.error?.message ??
+          '未知錯誤'
+        }
+      />
+    )
+  if (categoryQuery.isLoading || commodityQuery.isLoading)
+    return <SpinnerBlock />
 
   return (
     <div className='flex h-full gap-8'>
       {/* Root Categories */}
-      <div className='max-w-xs flex-1'>
+      <div className='max-w-sm flex-1'>
         <CategoriesSortableList
           activeRootCategoryId={selectedRootCategory?.id}
-          categories={data}
+          categories={categoryQuery.data}
           onCategoryTailClick={(category) =>
             setSelectedRootCategory(category as CategoryDatas[number])
           }
         />
       </div>
       {/* Sub Categories */}
-      <div className='max-w-xs flex-1'>
-        {selectedRootCategory !== null && (
-          <CategoriesSortableList
-            rootCategory={selectedRootCategory}
-            rootCategories={data}
-            categories={selectedRootCategory.childCategories}
-          />
-        )}
-      </div>
+      <AnimatePresence initial={false} mode='popLayout'>
+        <motion.div
+          key={selectedRootCategory?.id ?? 'none'}
+          initial={{ x: '-33%', opacity: 0, scale: 0.75 }}
+          animate={{ x: 0, opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2 }}
+          className='max-w-sm flex-1'
+        >
+          {selectedRootCategory !== null && (
+            <CategoriesSortableList
+              rootCategory={selectedRootCategory}
+              rootCategories={categoryQuery.data}
+              categories={selectedRootCategory.childCategories}
+              onCategoryTailClick={handleSubcategoryAssignCommodities}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+      {formDialog}
     </div>
   )
 }
@@ -74,6 +135,7 @@ type UniformCategory = {
   _count?: { commodities: number }
   childCategories?: {}[]
 }
+
 function CategoriesSortableList(props: {
   activeRootCategoryId?: number
   rootCategory?: CategoryDatas[number]
@@ -200,7 +262,7 @@ function CategoriesSortableList(props: {
             )
             .map((rootCategory) => ({
               label: rootCategory.name,
-              value: rootCategory.id,
+              value: rootCategory.id.toString(),
             })),
           type: 'select',
           options: { required: '請選擇要移動的主分類' },
@@ -209,10 +271,9 @@ function CategoriesSortableList(props: {
       useMutation: trpc.category.updateRoot.useMutation,
       onSubmit(formData, mutation) {
         const rootCategoryId = formData.rootCategoryId
-        console.log()
         mutation.mutate({
           ids: selectedIds,
-          rootId: rootCategoryId,
+          rootId: Number(rootCategoryId),
         })
       },
     })
@@ -237,8 +298,9 @@ function CategoriesSortableList(props: {
       {/* Header */}
       <div className='mb-4 flex items-center'>
         <p className='flex items-center text-lg font-bold'>
-          {!isRoot && props.rootCategory?.name + ' '}
-          {categoryString}
+          {isRoot
+            ? categoryString
+            : `${props.rootCategory?.name} (${props.categories.length})`}
           {updateOrdersMutation.isLoading && (
             <Spinner className='ml-2 inline h-4 w-4 text-stone-400' />
           )}
@@ -269,7 +331,7 @@ function CategoriesSortableList(props: {
           )}
 
           <Button
-            label={isBatchEdit ? '完成編輯' : '批次編輯'}
+            label={isBatchEdit ? '完成' : '編輯'}
             theme='support'
             textClassName='text-sm text-stone-400 p-1'
             onClick={() => setIsBatchEdit((prev) => !prev)}
@@ -302,7 +364,7 @@ function CategoriesSortableList(props: {
           >
             <button
               disabled={isBatchEdit}
-              className='group/rename ml-2 flex cursor-pointer items-center rounded-md disabled:pointer-events-none hover:bg-stone-100 active:scale-95'
+              className='group/rename ml-2 flex cursor-pointer items-center rounded-2xl p-2 disabled:pointer-events-none hover:bg-stone-100 active:scale-95'
               onClick={() => handleCategoryRename(category)}
             >
               {category.name}
@@ -313,16 +375,19 @@ function CategoriesSortableList(props: {
             {isRoot ? (
               <button
                 disabled={props.activeRootCategoryId === category.id}
-                className='group/button ml-auto rounded-md text-sm text-stone-400 disabled:pointer-events-none hover:bg-stone-100 active:scale-95'
+                className='group/button ml-auto rounded-2xl p-2 text-sm text-stone-400 transition-opacity disabled:opacity-0 hover:bg-stone-100 active:scale-95'
                 onClick={() => props.onCategoryTailClick?.(category)}
               >
                 {category.childCategories?.length} 個子分類
                 <ChevronRightIcon className='inline h-4 w-4 stroke-1 transition-opacity group-disabled/button:opacity-0' />
               </button>
             ) : (
-              <p className='ml-auto text-sm text-stone-400'>
+              <button
+                className='ml-auto rounded-2xl p-2 text-sm text-stone-400 hover:bg-stone-100 active:scale-95'
+                onClick={() => props.onCategoryTailClick?.(category)}
+              >
                 {!isRoot && <span>{category._count?.commodities} 個餐點</span>}
-              </p>
+              </button>
             )}
           </DragItem>
         ))}
