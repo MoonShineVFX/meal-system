@@ -9,6 +9,7 @@ import type { inferRouterOutputs } from '@trpc/server'
 import { createTRPCNext } from '@trpc/next'
 import superjson from 'superjson'
 import { observable } from '@trpc/server/observable'
+import type { UseTRPCMutationResult } from '@trpc/react-query/shared'
 
 import { generateCookie, settings } from '@/lib/common'
 import type { AppRouter } from '@/lib/trpc'
@@ -19,6 +20,7 @@ export const onQueryMutationErrorCallbacks: ((error: Error) => void)[] = []
 
 /* Types */
 type RouterOutput = inferRouterOutputs<AppRouter>
+export type UseMutationResult = UseTRPCMutationResult<any, any, any, any>
 
 export type UserInfo = RouterOutput['user']['get']
 export type MenuData = RouterOutput['menu']['get']

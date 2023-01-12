@@ -4,6 +4,7 @@ import {
   useState,
   useMemo,
   InputHTMLAttributes,
+  useCallback,
 } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import {
@@ -14,6 +15,7 @@ import {
   RegisterOptions,
 } from 'react-hook-form'
 
+import { UseMutationResult } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
 
 /* Types */
@@ -24,36 +26,36 @@ type InputField = {
   attributes?: InputHTMLAttributes<HTMLInputElement>
 }
 
-type UseEditDialogProps = {
+type FormInputsProps = { [key: string]: InputField }
+
+type FormDialogProps<
+  T extends () => UseMutationResult,
+  U extends FormInputsProps,
+> = {
+  open: boolean
+  onClose: () => void
   title: string
-  inputs: { [key: string]: InputField }
+  inputs: U
+  useMutation: T
+  onSubmit: (
+    formData: {
+      [K in keyof U]: U[K]['value']
+    },
+    mutation: ReturnType<T>,
+  ) => void
 }
 
 /* Main */
-export default function useEditDialog<T extends UseEditDialogProps>({
-  mutations,
-}: {
-  mutations?: { isLoading: boolean; isSuccess: boolean; reset: () => void }[]
-}) {
-  function showEditDialog<U extends T>(
-    props: U,
-    onSubmit: (formData: {
-      [K in keyof U['inputs']]: U['inputs'][K]['value']
-    }) => void,
-  ) {
-    setProps({ ...props, onSubmit })
-    setIsDialogOpen(true)
-  }
-
+export default function FormDialog<
+  T extends () => UseMutationResult,
+  U extends FormInputsProps,
+>(props: FormDialogProps<T, U>) {
   /* types in function */
-  type OnSubmitArgs = Parameters<typeof showEditDialog>[1]
-  type Inputs = Parameters<OnSubmitArgs>[0]
+  type Inputs = Parameters<typeof props.onSubmit>[0]
 
   // Hooks
-  const [props, setProps] = useState<
-    (T & { onSubmit: OnSubmitArgs }) | undefined
-  >(undefined)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const mutation = props.useMutation() as ReturnType<T>
+
   const inputs = useMemo(() => {
     if (!props) return []
     return Object.entries(props.inputs).map(([key, value]) => ({
@@ -70,7 +72,7 @@ export default function useEditDialog<T extends UseEditDialogProps>({
 
   // Reset state
   useEffect(() => {
-    if (!isDialogOpen) return
+    if (!open) return
     reset(
       inputs.reduce((acc, input) => {
         return {
@@ -79,35 +81,25 @@ export default function useEditDialog<T extends UseEditDialogProps>({
         }
       }, {} as DeepPartial<Inputs>),
     )
-  }, [isDialogOpen])
+  }, [open])
 
   // Close the dialog when the mutation is successful
   useEffect(() => {
-    if (!mutations) return
-    if (mutations.some((m) => m.isSuccess) && isDialogOpen) {
-      setIsDialogOpen(false)
-      mutations.forEach((m) => m.reset())
+    if (mutation.isSuccess && props.open) {
+      props.onClose()
+      mutation.reset()
     }
-  }, [mutations])
+  }, [mutation])
 
   // Handle submit
   const handleEdit: SubmitHandler<Inputs> = (formData) => {
     if (!props) return
-    props.onSubmit(formData)
+    props.onSubmit(formData, mutation)
   }
 
-  const isLoading = useMemo(
-    () => mutations && mutations.some((m) => m.isLoading),
-    [mutations],
-  )
-  const isSuccess = useMemo(
-    () => mutations && mutations.some((m) => m.isSuccess),
-    [mutations],
-  )
-
-  const editDialog = (
-    <Transition show={isDialogOpen} as={Fragment}>
-      <Dialog onClose={() => setIsDialogOpen(false)} className='relative z-50'>
+  return (
+    <Transition show={props.open} as={Fragment} appear={true}>
+      <Dialog onClose={props.onClose} className='relative z-50'>
         {/* Backdrop */}
         <Transition.Child
           as={Fragment}
@@ -164,19 +156,19 @@ export default function useEditDialog<T extends UseEditDialogProps>({
                 </section>
                 {/* Buttons */}
                 <section className='flex justify-end gap-6'>
-                  {!isLoading && !isSuccess && (
+                  {!mutation.isLoading && !mutation.isSuccess && (
                     <Button
                       label='取消'
                       textClassName='text-lg font-bold p-2 px-4'
                       theme='support'
                       type='button'
-                      onClick={() => setIsDialogOpen(false)}
+                      onClick={props.onClose}
                     />
                   )}
                   <Button
                     isDisabled={errors && Object.keys(errors).length > 0}
-                    isLoading={isLoading}
-                    isBusy={isLoading || isSuccess}
+                    isLoading={mutation.isLoading || mutation.isSuccess}
+                    isBusy={mutation.isLoading || mutation.isSuccess}
                     label='確定'
                     textClassName='text-lg font-bold p-2 px-4'
                     theme='main'
@@ -190,9 +182,40 @@ export default function useEditDialog<T extends UseEditDialogProps>({
       </Dialog>
     </Transition>
   )
+}
+
+type ShowFormDialogProps<
+  T extends () => UseMutationResult,
+  U extends FormInputsProps,
+> = Omit<FormDialogProps<T, U>, 'open' | 'onClose'>
+
+export function useFormDialog<
+  T extends () => UseMutationResult,
+  U extends FormInputsProps,
+>() {
+  const [isOpenDialog, setIsOpenDialog] = useState(false)
+  const [props, setProps] = useState<ShowFormDialogProps<T, U> | undefined>(
+    undefined,
+  )
+
+  const showFormDialog = useCallback(
+    <TT extends T, UU extends U>(thisProps: ShowFormDialogProps<TT, UU>) => {
+      setProps(thisProps as ShowFormDialogProps<T, U>)
+      setIsOpenDialog(true)
+    },
+    [],
+  )
+
+  const formDialog = props ? (
+    <FormDialog
+      {...props}
+      open={isOpenDialog}
+      onClose={() => setIsOpenDialog(false)}
+    />
+  ) : null
 
   return {
-    showEditDialog,
-    editDialog,
+    showFormDialog,
+    formDialog,
   }
 }

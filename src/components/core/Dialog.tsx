@@ -2,10 +2,9 @@ import { Fragment, useState, useCallback, useEffect } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
-import type { UseTRPCMutationResult } from '@trpc/react-query/shared'
 
 import Button from '@/components/core/Button'
-type UseMutationResult = UseTRPCMutationResult<any, any, any, any>
+import type { UseMutationResult } from '@/lib/client/trpc'
 
 type DialogProps<T extends UseMutationResult> = {
   open: boolean
@@ -135,8 +134,8 @@ export function useDialog() {
   >(undefined)
 
   const showDialog = useCallback(
-    <T extends UseMutationResult>(props: ShowDialogProps<T>) => {
-      setProps(props)
+    <T extends UseMutationResult>(thisProps: ShowDialogProps<T>) => {
+      setProps(thisProps)
       setIsOpenDialog(true)
     },
     [],
