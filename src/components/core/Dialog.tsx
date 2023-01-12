@@ -1,13 +1,16 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useState, useCallback, useEffect } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
+import type { UseTRPCMutationResult } from '@trpc/react-query/shared'
 
 import Button from '@/components/core/Button'
 
-export default function DialogCore(props: {
+export default function DialogCore<
+  T extends UseTRPCMutationResult<any, any, any, any>,
+>(props: {
   open: boolean
-  onClose: ((isConfirm: boolean) => void) | (() => void)
+  onClose: () => void
   title: string
   content: JSX.Element | string
   contentClassName?: string
@@ -16,7 +19,23 @@ export default function DialogCore(props: {
   cancel?: boolean
   cancelText?: string
   icon?: string | null
+  mutation?: T
+  mutationOptions?: Parameters<T['mutate']>[0]
 }) {
+  const handleConfirm = useCallback(() => {
+    if (props.mutation && props.mutationOptions) {
+      props.mutation.mutate(props.mutationOptions)
+    } else {
+      props.onClose()
+    }
+  }, [props.mutation, props.mutationOptions])
+
+  useEffect(() => {
+    if (props.mutation?.isSuccess) {
+      props.onClose()
+    }
+  }, [props.mutation])
+
   return (
     <Transition show={props.open} as={Fragment}>
       <Dialog onClose={props.onClose} className='relative z-50'>
@@ -71,14 +90,20 @@ export default function DialogCore(props: {
               <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-4'>
                 {props.cancel && (
                   <Button
-                    onClick={() => props.onClose(false)}
+                    onClick={() => props.onClose()}
                     className='h-10 grow font-bold sm:max-w-[50%]'
                     label={props.cancelText ?? '取消'}
                     theme='support'
                   ></Button>
                 )}
                 <Button
-                  onClick={() => props.onClose(true)}
+                  isLoading={
+                    props.mutation?.isLoading || props.mutation?.isSuccess
+                  }
+                  isBusy={
+                    props.mutation?.isLoading || props.mutation?.isSuccess
+                  }
+                  onClick={handleConfirm}
                   className={twMerge(
                     'h-10 grow font-bold',
                     props.cancel && 'sm:max-w-[50%]',
@@ -111,10 +136,7 @@ export function useDialog() {
     <DialogCore
       {...props}
       open={isOpenDialog}
-      onClose={(isConfirm: boolean) => {
-        props.onClose(isConfirm)
-        setIsOpenDialog(false)
-      }}
+      onClose={() => setIsOpenDialog(false)}
     />
   ) : null
 

@@ -21,7 +21,6 @@ export const onQueryMutationErrorCallbacks: ((error: Error) => void)[] = []
 type RouterOutput = inferRouterOutputs<AppRouter>
 
 export type UserInfo = RouterOutput['user']['get']
-
 export type MenuData = RouterOutput['menu']['get']
 export type CommoditiesOnMenu = MenuData['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]

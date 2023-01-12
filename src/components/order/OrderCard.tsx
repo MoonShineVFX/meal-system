@@ -64,18 +64,6 @@ export default function OrderCard(props: {
 
   const progress = step / (steps.length - 1)
 
-  const handleCancelDialog = useCallback(
-    (isConfirm: boolean) => {
-      if (!order) return
-
-      if (isConfirm) {
-        updateOrderMutation.mutate({ orderId: order.id, type: 'cancel' })
-      }
-      setIsCancelDialogOpen(false)
-    },
-    [order],
-  )
-
   const handleCompleteClick = useCallback(() => {
     if (!order) return
 
@@ -245,24 +233,30 @@ export default function OrderCard(props: {
           </section>
         </div>
       </section>
-      <Dialog
-        cancel
-        cancelText='返回'
-        confirmText='確認取消'
-        open={isCancelDialogOpen}
-        onClose={handleCancelDialog}
-        title='確認取消訂單？'
-        confirmButtonTheme='danger'
-        content={
-          <>
-            <p>
-              {`即將取消「編號 #${order?.id} - ${getMenuName(order?.menu)}
+      {order && order.canCancel && (
+        <Dialog
+          cancel
+          cancelText='返回'
+          confirmText='確認取消'
+          open={isCancelDialogOpen}
+          onClose={() => setIsCancelDialogOpen(false)}
+          mutation={updateOrderMutation}
+          mutationOptions={{ orderId: order?.id, type: 'cancel' }}
+          title='確認取消訂單？'
+          confirmButtonTheme='danger'
+          content={
+            <>
+              <p>
+                {`即將取消「編號 #${order?.id} - ${getMenuName(order?.menu)}
               」的訂單，此動作無法復原。`}
-            </p>
-            <p className='text-red-400'>如果有使用點數付款，該部分不會退還。</p>
-          </>
-        }
-      />
+              </p>
+              <p className='text-red-400'>
+                如果有使用點數付款，該部分不會退還。
+              </p>
+            </>
+          }
+        />
+      )}
     </div>
   )
 }
