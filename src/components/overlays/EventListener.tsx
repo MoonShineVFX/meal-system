@@ -123,6 +123,11 @@ export default function EventListener() {
         case SERVER_NOTIFY.COMMODITY_UPDATE:
           trpcContext.commodity.get.invalidate()
           break
+        case SERVER_NOTIFY.OPTION_SETS_ADD:
+        case SERVER_NOTIFY.OPTION_SETS_UPDATE:
+        case SERVER_NOTIFY.OPTION_SETS_DELETE:
+          trpcContext.optionSet.get.invalidate()
+          break
       }
     },
   })

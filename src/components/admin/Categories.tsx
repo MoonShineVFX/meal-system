@@ -254,7 +254,6 @@ export default function Categories() {
       {/* Sub Categories */}
       <AnimatePresence initial={false} mode='popLayout'>
         <motion.div
-          key={selectedRootCategory?.id ?? 'none'}
           initial={{ x: '-33%', opacity: 0, scale: 0.75 }}
           animate={{ x: 0, opacity: 1, scale: 1 }}
           transition={{ duration: 0.2 }}
@@ -262,6 +261,7 @@ export default function Categories() {
         >
           {selectedRootCategory !== null && (
             <SortableList
+              key={`sub-cat-${selectedRootCategory.id}`}
               header={`${selectedRootCategory.name} (${selectedRootCategory.childCategories.length})`}
               items={selectedRootCategory.childCategories}
               onReorder={handleReorders}

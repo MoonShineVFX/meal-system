@@ -33,6 +33,9 @@ export enum SERVER_NOTIFY {
   CATEGORY_ADD = '分類新增',
   CATEGORY_UPDATE = '分類更新',
   CATEGORY_DELETE = '分類刪除',
+  OPTION_SETS_ADD = '選項新增',
+  OPTION_SETS_UPDATE = '選項更新',
+  OPTION_SETS_DELETE = '選項刪除',
   COMMODITY_UPDATE = '餐點更新',
 }
 

@@ -218,8 +218,8 @@ model CommodityOptionSetsTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name       String
-  order      Int
+  name       String @unique
+  order      Int    @default(99)
   optionSets Json   @db.Json // { "name": string, "multiSelect": boolean, "options": string[], "order": number }[]
 }
 

@@ -140,7 +140,7 @@ const InputField: React.FC<InputFieldProps> = ({
         })}
         autoCapitalize='none'
         autoCorrect='off'
-        className='rounded-2xl border border-stone-300 bg-stone-50 py-2 px-4 text-lg font-bold focus:outline-yellow-500 disabled:opacity-75'
+        className='rounded-2xl border border-stone-300 bg-stone-50 py-2 px-4 text-lg font-bold focus:border-yellow-500 focus:ring-yellow-500 disabled:opacity-75'
       />
     </div>
   )

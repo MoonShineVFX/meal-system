@@ -11,8 +11,7 @@ import Spinner from '@/components/core/Spinner'
 
 type SortableItem = {
   id: number | string
-  name: string
-  order: number
+  name?: string
 }
 
 type BatchEditButton<TSortableItem extends SortableItem> = {
@@ -93,8 +92,9 @@ export default function SortableList<
         <div className='ml-auto flex justify-end'>
           {isBatchEdit &&
             props.batchEditButtons &&
-            props.batchEditButtons.map((buttonData) => (
+            props.batchEditButtons.map((buttonData, index) => (
               <Button
+                key={index}
                 spinnerClassName='h-4 w-4'
                 label={buttonData.label}
                 theme='support'
@@ -149,7 +149,7 @@ export default function SortableList<
                   className='group/rename ml-2 flex cursor-pointer items-center rounded-2xl p-2 disabled:pointer-events-none hover:bg-stone-100 active:scale-95'
                   onClick={() => props.onRename?.(item)}
                 >
-                  {item.name}
+                  {item.name ?? item.id}
                   {!isBatchEdit && (
                     <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/rename:rotate-45' />
                   )}
@@ -168,7 +168,12 @@ export default function SortableList<
         </Reorder.Group>
         {/* Footer */}
         {!isBatchEdit && props.onCreate && (
-          <li className='mt-2 flex justify-center first:mt-0'>
+          <div
+            className={twMerge(
+              'mt-2 flex justify-center',
+              props.items.length === 0 && 'mt-0',
+            )}
+          >
             <Button
               onClick={props.onCreate}
               label={
@@ -179,7 +184,7 @@ export default function SortableList<
               }
               theme='support'
             />
-          </li>
+          </div>
         )}
       </div>
     </div>

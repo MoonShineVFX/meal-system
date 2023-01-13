@@ -19,6 +19,12 @@ import { UseMutationResult } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
 
 /* Types */
+type CheckboxInput = {
+  defaultValue?: boolean
+  data?: never
+  type: 'checkbox'
+  attributes?: InputHTMLAttributes<HTMLInputElement>
+}
 type TextInput = {
   defaultValue?: string
   data?: never
@@ -35,9 +41,31 @@ type SelectInput = {
 type InputField = {
   label: string
   options?: RegisterOptions
-} & (TextInput | SelectInput)
+} & (TextInput | SelectInput | CheckboxInput)
 
 type FormInputsProps = { [key: string]: InputField }
+
+type FormData<TInputs extends FormInputsProps> = {
+  [K in keyof TInputs]: TInputs[K]['type'] extends 'text'
+    ? string
+    : TInputs[K]['type'] extends 'select'
+    ? Extract<TInputs[K], { type: 'select' }>['attributes'] extends undefined
+      ? NonNullable<TInputs[K]['data']>[number]['value']
+      : NonNullable<
+          Extract<TInputs[K], { type: 'select' }>['attributes']
+        >['multiple'] extends true
+      ? NonNullable<TInputs[K]['data']>[number]['value'][]
+      : NonNullable<TInputs[K]['data']>[number]['value']
+    : TInputs[K]['type'] extends 'checkbox'
+    ? boolean
+    : never
+}
+
+type ExpandRecursively<T> = T extends object
+  ? T extends infer O
+    ? { [K in keyof O]: ExpandRecursively<O[K]> }
+    : never
+  : T
 
 type FormDialogProps<
   T extends () => UseMutationResult,
@@ -49,19 +77,7 @@ type FormDialogProps<
   inputs: U
   useMutation: T
   onSubmit: (
-    formData: {
-      [K in keyof U]: U[K]['type'] extends 'text'
-        ? string
-        : U[K]['type'] extends 'select'
-        ? Extract<U[K], { type: 'select' }>['attributes'] extends undefined
-          ? NonNullable<U[K]['data']>[number]['value']
-          : NonNullable<
-              Extract<U[K], { type: 'select' }>['attributes']
-            >['multiple'] extends true
-          ? NonNullable<U[K]['data']>[number]['value'][]
-          : NonNullable<U[K]['data']>[number]['value']
-        : never
-    },
+    formData: ExpandRecursively<FormData<U>>,
     mutation: ReturnType<T>,
   ) => void
 }
@@ -72,7 +88,7 @@ export default function FormDialog<
   U extends FormInputsProps,
 >(props: FormDialogProps<T, U>) {
   /* types in function */
-  type Inputs = Parameters<typeof props.onSubmit>[0]
+  type Inputs = FormData<U>
 
   // Hooks
   const mutation = props.useMutation() as ReturnType<T>
@@ -115,7 +131,7 @@ export default function FormDialog<
   // Handle submit
   const handleEdit: SubmitHandler<Inputs> = (formData) => {
     if (!props) return
-    props.onSubmit(formData, mutation)
+    props.onSubmit(formData as ExpandRecursively<FormData<U>>, mutation)
   }
 
   return (
@@ -150,42 +166,84 @@ export default function FormDialog<
               </Dialog.Title>
               <form onSubmit={handleSubmit(handleEdit)}>
                 {/* Inputs */}
-                <section className='ms-scroll overflow-y-auto py-6'>
+                <section className='ms-scroll flex flex-col gap-4 overflow-y-auto py-6'>
                   {inputs.map((inputItem) => {
                     const error = errors[inputItem.name]
+                    const errorMessage = error?.message as string | undefined
 
-                    return (
-                      <div key={inputItem.name} className='flex flex-col gap-1'>
-                        <label className='text-sm font-bold text-stone-500'>
-                          {inputItem.label}
-                          <span className='ml-[1ch] text-red-400'>
-                            {/* @ts-ignore */}
-                            {error && error.message}
-                          </span>
-                        </label>
-                        {inputItem.type === 'select' ? (
-                          <select
-                            className='rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:outline-yellow-500 disabled:opacity-75'
-                            {...inputItem.attributes}
-                            {...register(inputItem.name, {
-                              ...inputItem.options,
-                            })}
+                    switch (inputItem.type) {
+                      // Text
+                      case 'text':
+                        return (
+                          <div
+                            key={inputItem.name}
+                            className='flex flex-col gap-1'
                           >
-                            {inputItem.data.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            className='rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:outline-yellow-500 disabled:opacity-75'
-                            {...inputItem.attributes}
-                            {...register(inputItem.name, inputItem.options)}
-                          />
-                        )}
-                      </div>
-                    )
+                            <label className='text-sm font-bold text-stone-500'>
+                              {inputItem.label}
+                              <span className='ml-[1ch] text-red-400'>
+                                {errorMessage}
+                              </span>
+                            </label>
+                            <input
+                              type='text'
+                              className='mx-1 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 placeholder:text-stone-300 focus:border-yellow-500 focus:ring-yellow-500'
+                              {...inputItem.attributes}
+                              {...register(inputItem.name, inputItem.options)}
+                            />
+                          </div>
+                        )
+                      // Select
+                      case 'select':
+                        return (
+                          <div
+                            key={inputItem.name}
+                            className='flex flex-col gap-1'
+                          >
+                            <label className='text-sm font-bold text-stone-500'>
+                              {inputItem.label}
+                              <span className='ml-[1ch] text-red-400'>
+                                {/* @ts-ignore */}
+                                {error && error.message}
+                              </span>
+                            </label>
+                            <select
+                              className='ms-scroll mx-1 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:border-yellow-500 focus:ring-yellow-500'
+                              {...inputItem.attributes}
+                              {...register(inputItem.name, {
+                                ...inputItem.options,
+                              })}
+                            >
+                              {inputItem.data.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )
+                      // Checkbox
+                      case 'checkbox':
+                        return (
+                          <div
+                            key={inputItem.name}
+                            className='flex items-center gap-2'
+                          >
+                            <input
+                              type='checkbox'
+                              className='focus:ring-none h-5 w-5 rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
+                              {...inputItem.attributes}
+                              {...register(inputItem.name, inputItem.options)}
+                            />
+                            <label className='font-bold text-stone-500'>
+                              {inputItem.label}
+                              <span className='ml-[1ch] text-red-400'>
+                                {errorMessage}
+                              </span>
+                            </label>
+                          </div>
+                        )
+                    }
                   })}
                 </section>
                 {/* Buttons */}

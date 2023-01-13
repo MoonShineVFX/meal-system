@@ -25,6 +25,12 @@ body {
   display: none;
 }
 
+@layer base {
+  input {
+    @apply caret-yellow-500;
+  }
+}
+
 @layer components {
   .ms-scroll {
     @apply overscroll-y-contain scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md;

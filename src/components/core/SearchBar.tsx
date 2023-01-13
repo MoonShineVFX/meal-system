@@ -39,7 +39,7 @@ function SearchBar(props: {
           <input
             ref={searchRef}
             type='text'
-            className='w-full rounded-2xl border border-stone-300 bg-stone-100 py-2 px-4 focus:outline-yellow-500'
+            className='w-full rounded-2xl border border-stone-300 bg-stone-100 py-2 px-4 placeholder:text-stone-400 focus:border-yellow-500 focus:ring-yellow-500'
             placeholder={props.placeholder}
             defaultValue={props.searchKeyword}
             onChange={handleSearchChange}
