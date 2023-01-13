@@ -58,9 +58,8 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
           tabLinks={TAB_LINKS}
         />
         <div className='relative h-full grow'>
-          <div className='absolute inset-0 p-8 pb-0'>
+          <div className='absolute inset-0'>
             {props.tabPath === 'categories' && <Categories />}
-            <footer className='h-8'></footer>
           </div>
         </div>
       </div>

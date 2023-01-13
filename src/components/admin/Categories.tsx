@@ -93,7 +93,7 @@ export default function Categories() {
     return <SpinnerBlock />
 
   return (
-    <div className='flex h-full gap-8'>
+    <div className='flex h-full gap-8 p-8'>
       {/* Root Categories */}
       <div className='max-w-sm flex-1'>
         <CategoriesSortableList
@@ -189,7 +189,7 @@ function CategoriesSortableList(props: {
         inputs: {
           categoryName: {
             label: '分類名稱',
-            value: category.name,
+            defaultValue: category.name,
             type: 'text',
             options: { required: '請輸入分類名稱' },
             attributes: { placeholder: category.name },
@@ -294,7 +294,7 @@ function CategoriesSortableList(props: {
   }, [selectedIds])
 
   return (
-    <div className='h-full w-full'>
+    <div className='flex h-full w-full flex-col'>
       {/* Header */}
       <div className='mb-4 flex items-center'>
         <p className='flex items-center text-lg font-bold'>
@@ -339,58 +339,62 @@ function CategoriesSortableList(props: {
         </div>
       </div>
       {/* List */}
-      <Reorder.Group
-        axis='y'
-        className='flex flex-col gap-2'
-        values={orderedCategories}
-        onReorder={handleCategoriesReorder}
-      >
-        {orderedCategories.map((category) => (
-          // Category items
-          <DragItem
-            key={category.id}
-            value={category}
-            isBatchEdit={isBatchEdit}
-            isSelected={selectedIds.includes(category.id)}
-            onSelectChange={(id, checked) => {
-              if (checked) {
-                setSelectedIds((prev) => [...prev, id])
-              } else {
-                setSelectedIds((prev) =>
-                  prev.filter((selectedId) => selectedId !== id),
-                )
-              }
-            }}
-          >
-            <button
-              disabled={isBatchEdit}
-              className='group/rename ml-2 flex cursor-pointer items-center rounded-2xl p-2 disabled:pointer-events-none hover:bg-stone-100 active:scale-95'
-              onClick={() => handleCategoryRename(category)}
+      <div className='ms-scroll h-full flex-1 overflow-y-auto'>
+        <Reorder.Group
+          axis='y'
+          className='flex flex-col gap-2'
+          values={orderedCategories}
+          onReorder={handleCategoriesReorder}
+        >
+          {orderedCategories.map((category) => (
+            // Category items
+            <DragItem
+              key={category.id}
+              value={category}
+              isBatchEdit={isBatchEdit}
+              isSelected={selectedIds.includes(category.id)}
+              onSelectChange={(id, checked) => {
+                if (checked) {
+                  setSelectedIds((prev) => [...prev, id])
+                } else {
+                  setSelectedIds((prev) =>
+                    prev.filter((selectedId) => selectedId !== id),
+                  )
+                }
+              }}
             >
-              {category.name}
-              {!isBatchEdit && (
-                <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/rename:rotate-45' />
+              <button
+                disabled={isBatchEdit}
+                className='group/rename ml-2 flex cursor-pointer items-center rounded-2xl p-2 disabled:pointer-events-none hover:bg-stone-100 active:scale-95'
+                onClick={() => handleCategoryRename(category)}
+              >
+                {category.name}
+                {!isBatchEdit && (
+                  <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/rename:rotate-45' />
+                )}
+              </button>
+              {isRoot ? (
+                <button
+                  disabled={props.activeRootCategoryId === category.id}
+                  className='group/button ml-auto rounded-2xl p-2 text-sm text-stone-400 transition-opacity disabled:opacity-0 hover:bg-stone-100 active:scale-95'
+                  onClick={() => props.onCategoryTailClick?.(category)}
+                >
+                  {category.childCategories?.length} 個子分類
+                  <ChevronRightIcon className='inline h-4 w-4 stroke-1 transition-opacity group-disabled/button:opacity-0' />
+                </button>
+              ) : (
+                <button
+                  className='ml-auto rounded-2xl p-2 text-sm text-stone-400 hover:bg-stone-100 active:scale-95'
+                  onClick={() => props.onCategoryTailClick?.(category)}
+                >
+                  {!isRoot && (
+                    <span>{category._count?.commodities} 個餐點</span>
+                  )}
+                </button>
               )}
-            </button>
-            {isRoot ? (
-              <button
-                disabled={props.activeRootCategoryId === category.id}
-                className='group/button ml-auto rounded-2xl p-2 text-sm text-stone-400 transition-opacity disabled:opacity-0 hover:bg-stone-100 active:scale-95'
-                onClick={() => props.onCategoryTailClick?.(category)}
-              >
-                {category.childCategories?.length} 個子分類
-                <ChevronRightIcon className='inline h-4 w-4 stroke-1 transition-opacity group-disabled/button:opacity-0' />
-              </button>
-            ) : (
-              <button
-                className='ml-auto rounded-2xl p-2 text-sm text-stone-400 hover:bg-stone-100 active:scale-95'
-                onClick={() => props.onCategoryTailClick?.(category)}
-              >
-                {!isRoot && <span>{category._count?.commodities} 個餐點</span>}
-              </button>
-            )}
-          </DragItem>
-        ))}
+            </DragItem>
+          ))}
+        </Reorder.Group>
         {/* Footer */}
         {!isBatchEdit && (
           <li className='mt-2 flex justify-center first:mt-0'>
@@ -405,7 +409,7 @@ function CategoriesSortableList(props: {
             />
           </li>
         )}
-      </Reorder.Group>
+      </div>
       {formDialog}
       {dialog}
     </div>
@@ -423,14 +427,15 @@ function DragItem(props: {
   return (
     <Reorder.Item
       value={props.value}
-      className='flex w-full items-center rounded-lg border bg-white p-2 shadow'
+      className='flex w-full items-center rounded-lg border bg-white p-2 pl-4 shadow'
       dragListener={false}
       dragControls={controls}
     >
       {props.isBatchEdit ? (
         <CheckCircleIcon
           className={twMerge(
-            'h-6 w-6 cursor-pointer text-stone-200',
+            'h-6 w-6 cursor-pointer text-stone-200 active:scale-90',
+            !props.isSelected && 'hover:text-yellow-400',
             props.isSelected && 'text-yellow-500',
           )}
           onClick={() =>
