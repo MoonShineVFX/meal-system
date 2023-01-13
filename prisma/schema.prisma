@@ -213,14 +213,14 @@ model CommodityCategory {
   @@unique([rootCategoryId, name])
 }
 
-model CommodityOptionSetTemplate {
+model CommodityOptionSetsTemplate {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name        String
-  multiSelect Boolean
-  options     String[]
+  name       String
+  order      Int
+  optionSets Json   @db.Json // { "name": string, "multiSelect": boolean, "options": string[], "order": number }[]
 }
 
 model Commodity {

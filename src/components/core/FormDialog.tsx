@@ -101,7 +101,6 @@ export default function FormDialog<
         [input.name]: input.defaultValue,
       }
     }, {} as DeepPartial<Inputs>)
-    console.log(defaultValues)
     reset(defaultValues)
   }, [props.open])
 
