@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
 
 import { useDialog } from '@/components/core/Dialog'
@@ -220,76 +219,65 @@ export default function Categories() {
     return <SpinnerBlock />
 
   return (
-    <div className='flex h-full gap-8 p-8'>
+    <div className='grid h-full grid-cols-3 gap-8 p-8'>
       {/* Root Categories */}
-      <div className='max-w-sm flex-1'>
+      <SortableList
+        header='主分類'
+        items={categoryQuery.data}
+        onReorder={handleReorder}
+        onReordering={rootOrdersMutation.isLoading}
+        onCreate={() => handleCategoryCreate(true)}
+        onCreateLabel='新增主分類'
+        onRename={handleCategoryRename}
+        batchEditButtons={[
+          {
+            label: '刪除',
+            onClick: (ids) => handleCategoriesDelete(ids, true),
+            isDanger: true,
+          },
+        ]}
+      >
+        {(category) => (
+          <button
+            disabled={selectedRootCategory?.id === category.id}
+            className='group/button ml-auto rounded-2xl p-2 text-sm text-stone-400 transition-opacity disabled:opacity-0 hover:bg-stone-100 active:scale-95'
+            onClick={() => setSelectedRootCategory(category)}
+          >
+            {category.childCategories?.length} 個子分類
+            <ChevronRightIcon className='inline h-4 w-4 stroke-1 transition-opacity group-disabled/button:opacity-0' />
+          </button>
+        )}
+      </SortableList>
+      {/* Sub Categories */}
+      {selectedRootCategory !== null && (
         <SortableList
-          header='主分類'
-          items={categoryQuery.data}
+          key={`sub-cat-${selectedRootCategory.id}`}
+          header={`${selectedRootCategory.name} (${selectedRootCategory.childCategories.length})`}
+          items={selectedRootCategory.childCategories}
           onReorder={handleReorder}
-          onReordering={rootOrdersMutation.isLoading}
-          onCreate={() => handleCategoryCreate(true)}
-          onCreateLabel='新增主分類'
+          onReordering={subOrdersMutation.isLoading}
+          onCreate={() => handleCategoryCreate(false)}
+          onCreateLabel='新增子分類'
           onRename={handleCategoryRename}
           batchEditButtons={[
             {
               label: '刪除',
-              onClick: (ids) => handleCategoriesDelete(ids, true),
+              onClick: (ids) => handleCategoriesDelete(ids, false),
               isDanger: true,
             },
+            { label: '移動', onClick: handleCategoriesMove },
           ]}
         >
           {(category) => (
             <button
-              disabled={selectedRootCategory?.id === category.id}
-              className='group/button ml-auto rounded-2xl p-2 text-sm text-stone-400 transition-opacity disabled:opacity-0 hover:bg-stone-100 active:scale-95'
-              onClick={() => setSelectedRootCategory(category)}
+              className='ml-auto rounded-2xl p-2 text-sm text-stone-400 hover:bg-stone-100 active:scale-95'
+              onClick={() => handleSubcategoryAssignCommodities(category)}
             >
-              {category.childCategories?.length} 個子分類
-              <ChevronRightIcon className='inline h-4 w-4 stroke-1 transition-opacity group-disabled/button:opacity-0' />
+              <span>{category._count?.commodities} 個餐點</span>
             </button>
           )}
         </SortableList>
-      </div>
-      {/* Sub Categories */}
-      <AnimatePresence initial={false} mode='popLayout'>
-        <motion.div
-          initial={{ x: '-33%', opacity: 0, scale: 0.75 }}
-          animate={{ x: 0, opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-          className='max-w-sm flex-1'
-        >
-          {selectedRootCategory !== null && (
-            <SortableList
-              key={`sub-cat-${selectedRootCategory.id}`}
-              header={`${selectedRootCategory.name} (${selectedRootCategory.childCategories.length})`}
-              items={selectedRootCategory.childCategories}
-              onReorder={handleReorder}
-              onReordering={subOrdersMutation.isLoading}
-              onCreate={() => handleCategoryCreate(false)}
-              onCreateLabel='新增子分類'
-              onRename={handleCategoryRename}
-              batchEditButtons={[
-                {
-                  label: '刪除',
-                  onClick: (ids) => handleCategoriesDelete(ids, false),
-                  isDanger: true,
-                },
-                { label: '移動', onClick: handleCategoriesMove },
-              ]}
-            >
-              {(category) => (
-                <button
-                  className='ml-auto rounded-2xl p-2 text-sm text-stone-400 hover:bg-stone-100 active:scale-95'
-                  onClick={() => handleSubcategoryAssignCommodities(category)}
-                >
-                  <span>{category._count?.commodities} 個餐點</span>
-                </button>
-              )}
-            </SortableList>
-          )}
-        </motion.div>
-      </AnimatePresence>
+      )}
       {formDialog}
       {dialog}
     </div>
