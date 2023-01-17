@@ -9,6 +9,8 @@ export default function Commodities() {
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
 
+  console.log(data)
+
   return (
     <Table
       data={[

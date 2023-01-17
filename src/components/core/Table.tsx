@@ -4,13 +4,18 @@ type TableData<T> = {
   render?: (value: T) => JSX.Element,
 }
 
-type TableDataItem = <R>(cb: <T>(tableData: TableData<T>) => R) => R
-export const td = <T,>(arg: TableData<T>): TableDataItem => (cb) => cb(arg)
+type TableDataCallback = <R>(unpack: <T>(tableData: TableData<T>) => R) => R
+
+export function td<T>(tableData: TableData<T>): TableDataCallback {
+  return function<R>(unpack: <T>(tableData: TableData<T>) => R) {
+    return unpack(tableData)
+  }
+}
 
 export default function Table(props: {
-  data: TableDataItem[]
+  data: TableDataCallback[]
 }) {
-  const data = props.data.map((item) => item((tableData) => ({
+  props.data.map((unpack) => unpack((tableData) => ({
     name: tableData.name,
     value: tableData.value,
     render: tableData.render ? tableData.render(tableData.value) : <span>{tableData.value as string}</span>,
