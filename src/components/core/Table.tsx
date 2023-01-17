@@ -1,26 +1,19 @@
-type TableData = {
-  name: string
-  value: any
-  render: (value: any) => JSX.Element
+type TableData<T> = {
+  name: string,
+  value: T,
+  render?: (value: T) => JSX.Element,
 }
 
-type GTableData<T> = T extends infer U
-  ? {
-      name: string
-      value: U
-      render: (value: Guess<U>) => JSX.Element
-    }
-  : never
+type TableDataItem = <R>(cb: <T>(tableData: TableData<T>) => R) => R
+export const td = <T,>(arg: TableData<T>): TableDataItem => (cb) => cb(arg)
 
-type TableDataList<T extends Record<string, TableData>> = {
-  [K in keyof T]: GTableData<T[K]['value']>
-}
-
-type Guess<T> = T extends string ? string : number
-
-export default function Table<T extends Record<string, TableData>>(props: {
-  data: TableDataList<T>
+export default function Table(props: {
+  data: TableDataItem[]
 }) {
-  console.log(props.data)
+  const data = props.data.map((item) => item((tableData) => ({
+    name: tableData.name,
+    value: tableData.value,
+    render: tableData.render ? tableData.render(tableData.value) : <span>{tableData.value as string}</span>,
+  })))
   return <table></table>
 }
