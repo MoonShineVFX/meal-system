@@ -50,6 +50,7 @@ export async function updateOptionSetsTemplate(props: {
       id,
     },
     data: {
+      name,
       optionSets,
     },
   })

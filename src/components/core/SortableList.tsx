@@ -24,6 +24,7 @@ export default function SortableList<
   TSortableItem extends SortableItem,
 >(props: {
   header: string
+  className?: string
   items: TSortableItem[]
   children?:
     | ((item: TSortableItem) => JSX.Element)
@@ -55,6 +56,24 @@ export default function SortableList<
 
   // Assign categories and filter selected ids when props changed
   useEffect(() => {
+    // Check if items are the same
+    if (props.items.length === orderedItems.length) {
+      const isSame = props.items.every((item) => {
+        const targetItem = orderedItems.find((i) => i.id === item.id)
+        if (!targetItem) {
+          return false
+        }
+        return Object.keys(item).every((key) => {
+          if (key === 'order') return true // Ignore order
+          const k = key as keyof TSortableItem
+          return targetItem[k] === item[k]
+        })
+      })
+      if (isSame) {
+        return
+      }
+    }
+
     setOrderedItems(props.items)
 
     const newIds = props.items.map((item) => item.id)
@@ -80,7 +99,7 @@ export default function SortableList<
   )
 
   return (
-    <div className='flex h-full w-full flex-col'>
+    <div className={twMerge('flex h-full w-full flex-col', props.className)}>
       {/* Header */}
       <div className='mb-4 flex items-center'>
         <p className='flex items-center text-lg font-bold'>

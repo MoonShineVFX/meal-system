@@ -7,6 +7,7 @@ import trpc, { OptionSetsTemplateDatas } from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
 import { OptionSet } from '@/lib/common'
+import { useDialog } from '@/components/core/Dialog'
 
 export default function OptionSets() {
   const { data, isError, error, isLoading } = trpc.optionSet.get.useQuery()
@@ -17,6 +18,10 @@ export default function OptionSets() {
     OptionSet | undefined
   >(undefined)
   const { showFormDialog, formDialog } = useFormDialog()
+  const { showDialog, dialog } = useDialog()
+  const updateTemplateOrdersMutation = trpc.optionSet.updateOrders.useMutation()
+  const updateOptionSetOrdersMutation = trpc.optionSet.update.useMutation()
+  const updateOptionOrdersMutation = trpc.optionSet.update.useMutation()
 
   // Selected template on data change
   useEffect(() => {
@@ -52,6 +57,142 @@ export default function OptionSets() {
   }, [selectedTemplate])
 
   /* Handles */
+  // Rename Template
+  const handleTemplateRename = useCallback(
+    (template: OptionSetsTemplateDatas[number]) => {
+      if (!data) return
+      showFormDialog({
+        title: `重新命名 ${template.name}`,
+        inputs: {
+          templateName: {
+            label: '樣本名稱',
+            defaultValue: template.name,
+            type: 'text',
+            options: {
+              required: '請輸入樣本名稱',
+              validate: (value: string) => {
+                return (
+                  !data
+                    .filter((d) => d.id !== template.id)
+                    .map((d) => d.name)
+                    .includes(value) || '名稱重複'
+                )
+              },
+            },
+            attributes: { placeholder: template.name },
+          },
+        },
+        useMutation: trpc.optionSet.update.useMutation,
+        onSubmit(formData, mutation) {
+          mutation.mutate({
+            id: template.id,
+            name: formData.templateName,
+          })
+        },
+      })
+    },
+    [data],
+  )
+
+  // Rename OptionSet
+  const handleOptionSetRename = useCallback(
+    (optionSet: OptionSet) => {
+      if (!selectedTemplate) return
+      showFormDialog({
+        title: `重新命名 ${optionSet.name}`,
+        inputs: {
+          optionSetName: {
+            label: '選項集名稱',
+            defaultValue: optionSet.name,
+            type: 'text',
+            options: {
+              required: '請輸入選項集名稱',
+              validate: (value) => {
+                return (
+                  !selectedTemplate.optionSets
+                    .filter((o) => o.name !== optionSet.name)
+                    .map((o) => o.name)
+                    .includes(value) || '名稱重複'
+                )
+              },
+            },
+            attributes: { placeholder: optionSet.name },
+          },
+          multiSelect: {
+            label: '多選',
+            type: 'checkbox',
+            defaultValue: optionSet.multiSelect,
+          },
+        },
+        useMutation: trpc.optionSet.update.useMutation,
+        onSubmit(formData, mutation) {
+          const newOptionSets = selectedTemplate.optionSets.map((o) => {
+            if (o.name === optionSet.name) {
+              return {
+                ...o,
+                name: formData.optionSetName,
+                multiSelect: formData.multiSelect,
+              }
+            }
+            return o
+          })
+          mutation.mutate({
+            id: selectedTemplate.id,
+            optionSets: newOptionSets,
+          })
+        },
+      })
+    },
+    [selectedTemplate],
+  )
+
+  // Rename Option
+  const handleOptionRename = useCallback(
+    (option: { id: string }) => {
+      if (!selectedTemplate || !selectedOptionSet) return
+      showFormDialog({
+        title: `重新命名 ${option.id}`,
+        inputs: {
+          optionSetName: {
+            label: '選項名稱',
+            defaultValue: option.id,
+            type: 'text',
+            options: {
+              required: '請輸入選項名稱',
+              validate: (value) => {
+                return (
+                  !selectedOptionSet.options
+                    .filter((o) => o !== option.id)
+                    .includes(value) || '名稱重複'
+                )
+              },
+            },
+            attributes: { placeholder: option.id },
+          },
+        },
+        useMutation: trpc.optionSet.update.useMutation,
+        onSubmit(formData, mutation) {
+          const newOptionSets = selectedTemplate.optionSets.map((o) => {
+            if (o.name === selectedOptionSet.name) {
+              return {
+                ...o,
+                options: o.options.map((op) =>
+                  op === option.id ? formData.optionSetName : op,
+                ),
+              }
+            }
+            return o
+          })
+          mutation.mutate({
+            id: selectedTemplate.id,
+            optionSets: newOptionSets,
+          })
+        },
+      })
+    },
+    [selectedTemplate, selectedOptionSet],
+  )
+
   // Create template
   const handleTemplateCreate = useCallback(() => {
     if (!data) return
@@ -61,7 +202,12 @@ export default function OptionSets() {
         templateName: {
           label: '樣本名稱',
           type: 'text',
-          options: { required: '請輸入樣本名稱' },
+          options: {
+            required: '請輸入樣本名稱',
+            validate: (value: string) => {
+              return !data.map((d) => d.name).includes(value) || '名稱重複'
+            },
+          },
         },
       },
       useMutation: trpc.optionSet.create.useMutation,
@@ -76,9 +222,9 @@ export default function OptionSets() {
 
   // Create option set
   const handleOptionSetCreate = useCallback(() => {
-    if (!data || !selectedTemplate) return
+    if (!selectedTemplate) return
     showFormDialog({
-      title: `新增${selectedTemplate.name}的選項集`,
+      title: `新增 ${selectedTemplate.name} 的選項集`,
       inputs: {
         optionSetName: {
           label: '選項集名稱',
@@ -116,51 +262,146 @@ export default function OptionSets() {
         })
       },
     })
-  }, [data, selectedTemplate])
+  }, [selectedTemplate])
 
   // Create option
   const handleOptionCreate = useCallback(() => {
-    if (!data || !selectedTemplate) return
+    if (!selectedOptionSet || !selectedTemplate) return
     showFormDialog({
-      title: `新增${selectedTemplate.name}的選項集`,
+      title: `新增 ${selectedOptionSet.name} 的選項`,
       inputs: {
-        optionSetName: {
-          label: '選項集名稱',
+        optionName: {
+          label: '選項名稱',
           type: 'text',
           options: {
-            required: '請輸入選項集名稱',
+            required: '請輸入選項名稱',
             validate: (value: string) => {
-              return (
-                !selectedTemplate.optionSets
-                  .map((o) => o.name)
-                  .includes(value) || '名稱重複'
-              )
+              return !selectedOptionSet.options.includes(value) || '名稱重複'
             },
           },
-        },
-        multiSelect: {
-          label: '多選',
-          type: 'checkbox',
         },
       },
       useMutation: trpc.optionSet.update.useMutation,
       onSubmit(formData, mutation) {
-        const newOptionSets = [
-          ...selectedTemplate.optionSets,
-          {
-            name: formData.optionSetName,
-            multiSelect: formData.multiSelect,
-            order: selectedTemplate.optionSets.length,
-            options: [],
-          },
-        ]
+        const newOptionSets = selectedTemplate.optionSets.map((optionSet) => {
+          if (optionSet.name === selectedOptionSet.name) {
+            return {
+              ...optionSet,
+              options: [...optionSet.options, formData.optionName],
+            }
+          }
+          return optionSet
+        })
         mutation.mutate({
           id: selectedTemplate.id,
           optionSets: newOptionSets,
         })
       },
     })
-  }, [data, selectedTemplate])
+  }, [selectedTemplate, selectedOptionSet])
+
+  // reorder templates
+  const handleTemplateReorder = useCallback(
+    (reorderedTemplates: OptionSetsTemplateDatas) => {
+      updateTemplateOrdersMutation.mutate({
+        ids: reorderedTemplates.map((t) => t.id),
+      })
+    },
+    [],
+  )
+
+  // reorder option sets
+  const handleOptionSetReorder = useCallback(
+    (reorderedOptionSets: OptionSet[]) => {
+      if (!selectedTemplate) return
+      updateOptionSetOrdersMutation.mutate({
+        id: selectedTemplate.id,
+        optionSets: reorderedOptionSets,
+      })
+    },
+    [selectedTemplate],
+  )
+
+  // reorder option
+  const handleOptionReorder = useCallback(
+    (reorderedOptions: { id: string }[]) => {
+      if (!selectedTemplate || !selectedOptionSet) return
+      updateOptionOrdersMutation.mutate({
+        id: selectedTemplate.id,
+        optionSets: selectedTemplate.optionSets.map((o) => {
+          if (o.name === selectedOptionSet.name) {
+            return {
+              ...o,
+              options: reorderedOptions.map((op) => op.id),
+            }
+          }
+          return o
+        }),
+      })
+    },
+    [selectedTemplate, selectedOptionSet],
+  )
+
+  // Delete template
+  const handleTemplateDelete = useCallback((selectedIds: number[]) => {
+    showDialog({
+      title: `刪除選項集樣本`,
+      content: `確定要刪除 ${selectedIds.length} 個選項集樣本嗎？`,
+      useMutation: trpc.optionSet.deleteMany.useMutation,
+      mutationOptions: {
+        ids: selectedIds,
+      },
+      cancel: true,
+    })
+  }, [])
+
+  // Delete option set
+  const handleOptionSetDelete = useCallback(
+    (selectedIds: string[]) => {
+      if (!selectedTemplate) return
+      const newOptionSets = selectedTemplate.optionSets.filter(
+        (o) => !selectedIds.includes(o.name),
+      )
+      showDialog({
+        title: `刪除選項集`,
+        content: `確定要刪除 ${selectedIds.length} 個選項集嗎？`,
+        useMutation: trpc.optionSet.update.useMutation,
+        mutationOptions: {
+          id: selectedTemplate.id,
+          optionSets: newOptionSets,
+        },
+        cancel: true,
+      })
+    },
+    [selectedTemplate],
+  )
+
+  // Delete option
+  const handleOptionDelete = useCallback(
+    (selectedIds: string[]) => {
+      if (!selectedTemplate || !selectedOptionSet) return
+      const newOptionSets = selectedTemplate.optionSets.map((o) => {
+        if (o.name === selectedOptionSet.name) {
+          return {
+            ...o,
+            options: o.options.filter((op) => !selectedIds.includes(op)),
+          }
+        }
+        return o
+      })
+      showDialog({
+        title: `刪除選項`,
+        content: `確定要刪除 ${selectedIds.length} 個選項嗎？`,
+        useMutation: trpc.optionSet.update.useMutation,
+        mutationOptions: {
+          id: selectedTemplate.id,
+          optionSets: newOptionSets,
+        },
+        cancel: true,
+      })
+    },
+    [selectedTemplate, selectedOptionSet],
+  )
 
   // Filter
   if (isError) return <Error description={error.message} />
@@ -174,6 +415,16 @@ export default function OptionSets() {
         items={data}
         onCreate={handleTemplateCreate}
         onCreateLabel='新增選項集樣本'
+        onRename={handleTemplateRename}
+        onReorder={handleTemplateReorder}
+        onReordering={updateTemplateOrdersMutation.isLoading}
+        batchEditButtons={[
+          {
+            label: '刪除',
+            onClick: (ids) => handleTemplateDelete(ids),
+            isDanger: true,
+          },
+        ]}
       >
         {(template) => (
           <button
@@ -196,6 +447,16 @@ export default function OptionSets() {
           }))}
           onCreate={handleOptionSetCreate}
           onCreateLabel='新增選項集'
+          onRename={handleOptionSetRename}
+          onReorder={handleOptionSetReorder}
+          onReordering={updateOptionSetOrdersMutation.isLoading}
+          batchEditButtons={[
+            {
+              label: '刪除',
+              onClick: (ids) => handleOptionSetDelete(ids),
+              isDanger: true,
+            },
+          ]}
         >
           {(optionSet) => (
             <button
@@ -209,18 +470,31 @@ export default function OptionSets() {
           )}
         </SortableList>
       )}
-      {formDialog}
       {/* Options */}
       {selectedOptionSet && (
         <SortableList
-          header={selectedOptionSet.name + ' 選項'}
+          header={`${selectedOptionSet.name} [${
+            selectedOptionSet.multiSelect ? '多選' : '單選'
+          }]`}
           items={selectedOptionSet.options.map((option) => ({
             id: option,
           }))}
           onCreate={handleOptionCreate}
           onCreateLabel='新增選項'
+          onRename={handleOptionRename}
+          onReorder={handleOptionReorder}
+          onReordering={updateOptionOrdersMutation.isLoading}
+          batchEditButtons={[
+            {
+              label: '刪除',
+              onClick: (ids) => handleOptionDelete(ids),
+              isDanger: true,
+            },
+          ]}
         ></SortableList>
       )}
+      {formDialog}
+      {dialog}
     </div>
   )
 }

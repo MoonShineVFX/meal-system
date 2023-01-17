@@ -49,7 +49,7 @@ export default function Categories() {
 
   /* Handles */
   // Reorders
-  const handleReorders = useCallback(
+  const handleReorder = useCallback(
     (reorderedCategories: UniformCategories) => {
       if (reorderedCategories.length === 0) return
       const isRoot = 'childCategories' in reorderedCategories[0]
@@ -226,7 +226,7 @@ export default function Categories() {
         <SortableList
           header='主分類'
           items={categoryQuery.data}
-          onReorder={handleReorders}
+          onReorder={handleReorder}
           onReordering={rootOrdersMutation.isLoading}
           onCreate={() => handleCategoryCreate(true)}
           onCreateLabel='新增主分類'
@@ -264,7 +264,7 @@ export default function Categories() {
               key={`sub-cat-${selectedRootCategory.id}`}
               header={`${selectedRootCategory.name} (${selectedRootCategory.childCategories.length})`}
               items={selectedRootCategory.childCategories}
-              onReorder={handleReorders}
+              onReorder={handleReorder}
               onReordering={subOrdersMutation.isLoading}
               onCreate={() => handleCategoryCreate(false)}
               onCreateLabel='新增子分類'
