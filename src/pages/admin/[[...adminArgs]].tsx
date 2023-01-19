@@ -61,9 +61,9 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
         />
         <div className='relative h-full grow'>
           <div className='absolute inset-0'>
-            {props.tabPath === 'categories' && <Categories />}
-            {props.tabPath === 'optionsets' && <OptionSets />}
-            {props.tabPath === 'commodities' && <Commodities />}
+            {tabName === '分類' && <Categories />}
+            {tabName === '選項' && <OptionSets />}
+            {tabName === '餐點' && <Commodities />}
           </div>
         </div>
       </div>

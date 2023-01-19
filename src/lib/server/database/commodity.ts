@@ -42,6 +42,7 @@ export async function getCommodities() {
     },
     include: {
       categories: true,
+      image: true,
     },
   })
 
