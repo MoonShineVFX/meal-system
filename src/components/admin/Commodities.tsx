@@ -1,4 +1,4 @@
-import Table, {td} from '@/components/core/Table'
+import Table from '@/components/core/Table'
 import trpc from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
@@ -9,22 +9,14 @@ export default function Commodities() {
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
 
-  console.log(data)
-
   return (
     <Table
-      data={[
-        td({
-          name: 'Name',
-          value: 'nwow',
-          render: (value) => <span>{value}</span>,
-        }),
-        td({
-          name: 'Name',
+      data={{
+        name: {
           value: 123,
-          render: (value) => <span>{value}</span>,
-        }),
-      ]}
+          render: (arg) => <td>{arg}</td>,
+        },
+      }}
     />
   )
 }

@@ -1,24 +1,19 @@
-type TableData<T> = {
-  name: string,
-  value: T,
-  render?: (value: T) => JSX.Element,
+type TableData = {
+  value: number | string | object
 }
 
-type TableDataCallback = <R>(unpack: <T>(tableData: TableData<T>) => R) => R
+type TableDatas = Record<string, TableData>
 
-export function td<T>(tableData: TableData<T>): TableDataCallback {
-  return function<R>(unpack: <T>(tableData: TableData<T>) => R) {
-    return unpack(tableData)
+type TableProps<TTableDatas extends TableDatas> = {
+  [TName in keyof TTableDatas]: {
+    [K in keyof TTableDatas[TName]]: TTableDatas[TName][K]
+  } & {
+    render?: (arg: TTableDatas[TName]['value']) => JSX.Element
   }
 }
 
-export default function Table(props: {
-  data: TableDataCallback[]
+export default function Table<T extends TableDatas>(props: {
+  data: TableProps<T>
 }) {
-  props.data.map((unpack) => unpack((tableData) => ({
-    name: tableData.name,
-    value: tableData.value,
-    render: tableData.render ? tableData.render(tableData.value) : <span>{tableData.value as string}</span>,
-  })))
   return <table></table>
 }

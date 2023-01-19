@@ -144,7 +144,7 @@ function ProfileButton(props: { className?: string }) {
           </div>
         </div>
         {/* User Info */}
-        <div className='hidden grow items-center pl-4 sm:flex'>
+        <div className='hidden grow items-center px-2 sm:flex'>
           <div className='flex grow flex-col text-left'>
             <span className='tracking-widest'>{user?.name}</span>
             <div className='flex gap-2'>
