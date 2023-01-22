@@ -1,19 +1,76 @@
+import { useCallback } from 'react'
+
+import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
 import Table from '@/components/core/Table'
 import trpc from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
 import { settings } from '@/lib/common'
+import { useFormDialog } from '@/components/core/FormDialog'
 
 export default function Commodities() {
   const { data, error, isError, isLoading } = trpc.commodity.get.useQuery()
+  const { showFormDialog, formDialog } = useFormDialog()
+
+  const handleAddCommodity = useCallback(() => {
+    showFormDialog({
+      title: '新增餐點',
+      className: 'grid grid-cols-2 grid-rows-[repeat(3,min-content)] gap-x-8',
+      inputs: {
+        image: {
+          label: '圖片',
+          type: 'image',
+          className: 'row-span-full',
+        },
+        name: {
+          label: '名稱',
+          type: 'text',
+          options: {
+            required: '請輸入名稱',
+          },
+        },
+        description: {
+          label: '描述',
+          type: 'textarea',
+        },
+        price: {
+          label: '價錢',
+          type: 'number',
+          defaultValue: 0,
+          options: {
+            required: '請輸入價錢',
+            min: { value: 0, message: '價錢不能小於 0' },
+            max: { value: 9999, message: '價錢不能大於 9999' },
+          },
+        },
+      },
+      useMutation: trpc.optionSet.create.useMutation,
+      onSubmit(formData, mutation) {
+        console.log(formData)
+      },
+    })
+  }, [data]) // dev for frequent re-render
 
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
 
   return (
     <div className='relative h-full min-h-full w-full'>
-      <div className='absolute inset-0 p-8'>
+      <div className='absolute inset-0 flex flex-col p-8'>
+        {/* Top */}
+        <div className='flex justify-between'>
+          <div>餐點</div>
+          <div className='p-4'>
+            <Button
+              label='新增餐點'
+              className='py-3 px-4'
+              textClassName='font-bold'
+              onClick={handleAddCommodity}
+            />
+          </div>
+        </div>
+        {/* Table */}
         <Table
           data={data}
           columns={[
@@ -45,11 +102,12 @@ export default function Commodities() {
             {
               name: '價錢',
               sort: true,
-              render: (row) => row.price * 10000000000000,
+              render: (row) => row.price,
             },
           ]}
         />
       </div>
+      {formDialog}
     </div>
   )
 }

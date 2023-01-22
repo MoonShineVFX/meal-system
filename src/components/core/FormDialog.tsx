@@ -1,3 +1,5 @@
+import { PhotoIcon } from '@heroicons/react/24/outline'
+import { twMerge } from 'tailwind-merge'
 import {
   Fragment,
   useEffect,
@@ -13,6 +15,9 @@ import {
   Path,
   DeepPartial,
   RegisterOptions,
+  UseFormRegister,
+  FieldValues,
+  FieldPath,
 } from 'react-hook-form'
 
 import { UseMutationResult } from '@/lib/client/trpc'
@@ -37,13 +42,39 @@ type SelectInput = {
   type: 'select'
   attributes?: InputHTMLAttributes<HTMLSelectElement>
 }
+type TextAreaInput = {
+  defaultValue?: string
+  data?: never
+  type: 'textarea'
+  attributes?: InputHTMLAttributes<HTMLTextAreaElement>
+}
+type NumberInput = {
+  defaultValue?: number
+  data?: never
+  type: 'number'
+  attributes?: InputHTMLAttributes<HTMLInputElement>
+}
+type ImageInput = {
+  defaultValue?: never
+  data?: never
+  type: 'image'
+  attributes?: InputHTMLAttributes<HTMLInputElement>
+}
 
-type InputField = {
+type FormInput = {
   label: string
   options?: RegisterOptions
-} & (TextInput | SelectInput | CheckboxInput)
+  className?: string
+} & (
+  | TextInput
+  | SelectInput
+  | CheckboxInput
+  | TextAreaInput
+  | NumberInput
+  | ImageInput
+)
 
-type FormInputsProps = { [key: string]: InputField }
+type FormInputsProps = { [key: string]: FormInput }
 
 type FormData<TInputs extends FormInputsProps> = {
   [K in keyof TInputs]: TInputs[K]['type'] extends 'text'
@@ -74,6 +105,7 @@ type FormDialogProps<
   open: boolean
   onClose: () => void
   title: string
+  className?: string
   inputs: U
   useMutation: T
   onSubmit: (
@@ -93,6 +125,7 @@ export default function FormDialog<
   // Hooks
   const mutation = props.useMutation() as ReturnType<T>
 
+  // Add key to input.name
   const inputs = useMemo(() => {
     if (!props) return []
     return Object.entries(props.inputs).map(([key, value]) => ({
@@ -111,7 +144,7 @@ export default function FormDialog<
   useEffect(() => {
     if (!props.open) return
     const defaultValues = inputs.reduce((acc, input) => {
-      if (!input.defaultValue) return acc
+      if (input.defaultValue === undefined) return acc
       return {
         ...acc,
         [input.name]: input.defaultValue,
@@ -166,82 +199,76 @@ export default function FormDialog<
               </Dialog.Title>
               <form onSubmit={handleSubmit(handleEdit)}>
                 {/* Inputs */}
-                <section className='ms-scroll flex flex-col gap-4 overflow-y-auto py-6'>
-                  {inputs.map((inputItem) => {
-                    const error = errors[inputItem.name]
+                <section
+                  className={twMerge(
+                    'ms-scroll flex flex-col gap-4 overflow-y-auto py-6',
+                    props.className,
+                  )}
+                >
+                  {inputs.map((formInput) => {
+                    const error = errors[formInput.name]
                     const errorMessage = error?.message as string | undefined
 
-                    switch (inputItem.type) {
+                    switch (formInput.type) {
                       // Text
                       case 'text':
                         return (
-                          <div
-                            key={inputItem.name}
-                            className='flex flex-col gap-1'
-                          >
-                            <label className='text-sm font-bold text-stone-500'>
-                              {inputItem.label}
-                              <span className='ml-[1ch] text-red-400'>
-                                {errorMessage}
-                              </span>
-                            </label>
-                            <input
-                              type='text'
-                              className='mx-1 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 placeholder:text-stone-300 focus:border-yellow-500 focus:ring-yellow-500'
-                              {...inputItem.attributes}
-                              {...register(inputItem.name, inputItem.options)}
-                            />
-                          </div>
+                          <TextInputField
+                            key={formInput.name}
+                            errorMessage={errorMessage}
+                            formInput={formInput}
+                            register={register}
+                          />
+                        )
+                      // Textarea
+                      case 'textarea':
+                        return (
+                          <TextAreaField
+                            key={formInput.name}
+                            errorMessage={errorMessage}
+                            formInput={formInput}
+                            register={register}
+                          />
                         )
                       // Select
                       case 'select':
                         return (
-                          <div
-                            key={inputItem.name}
-                            className='flex flex-col gap-1'
-                          >
-                            <label className='text-sm font-bold text-stone-500'>
-                              {inputItem.label}
-                              <span className='ml-[1ch] text-red-400'>
-                                {/* @ts-ignore */}
-                                {error && error.message}
-                              </span>
-                            </label>
-                            <select
-                              className='ms-scroll mx-1 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:border-yellow-500 focus:ring-yellow-500'
-                              {...inputItem.attributes}
-                              {...register(inputItem.name, {
-                                ...inputItem.options,
-                              })}
-                            >
-                              {inputItem.data.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                          <SelectField
+                            key={formInput.name}
+                            errorMessage={errorMessage}
+                            formInput={formInput}
+                            register={register}
+                          />
                         )
                       // Checkbox
                       case 'checkbox':
                         return (
-                          <div
-                            key={inputItem.name}
-                            className='flex items-center gap-2'
-                          >
-                            <input
-                              type='checkbox'
-                              className='focus:ring-none h-5 w-5 rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
-                              {...inputItem.attributes}
-                              {...register(inputItem.name, inputItem.options)}
-                            />
-                            <label className='font-bold text-stone-500'>
-                              {inputItem.label}
-                              <span className='ml-[1ch] text-red-400'>
-                                {errorMessage}
-                              </span>
-                            </label>
-                          </div>
+                          <CheckboxField
+                            key={formInput.name}
+                            errorMessage={errorMessage}
+                            formInput={formInput}
+                            register={register}
+                          />
+                        )
+                      // Number
+                      case 'number':
+                        return (
+                          <NumberField
+                            key={formInput.name}
+                            errorMessage={errorMessage}
+                            formInput={formInput}
+                            register={register}
+                          />
+                        )
+                      // Image
+                      case 'image':
+                        return (
+                          <ImageField
+                            key={formInput.name}
+                            errorMessage={errorMessage}
+                            formInput={formInput}
+                            register={register}
+                          />
                         )
                     }
                   })}
@@ -276,6 +303,7 @@ export default function FormDialog<
   )
 }
 
+/* Show command */
 type ShowFormDialogProps<
   T extends () => UseMutationResult,
   U extends FormInputsProps,
@@ -310,4 +338,189 @@ export function useFormDialog<
     showFormDialog,
     formDialog,
   }
+}
+
+/* Input Fields */
+// Types
+type InputFieldProps<
+  TType extends FormInput['type'],
+  TFieldValues extends FieldValues,
+> = {
+  errorMessage?: string
+  formInput: Extract<FormInput, { type: TType }> & {
+    name: FieldPath<TFieldValues>
+  }
+  register: UseFormRegister<TFieldValues>
+}
+
+// Components
+function BaseLabel(props: {
+  label: string
+  errorMessage?: string
+  children?: JSX.Element
+}) {
+  return (
+    <div className='flex flex-col gap-1'>
+      <label className='text-sm font-bold text-stone-500'>
+        {props.label}
+        <span className='ml-[1ch] text-red-400'>{props.errorMessage}</span>
+      </label>
+      {props.children}
+    </div>
+  )
+}
+
+function TextInputField<T extends FieldValues>(
+  props: InputFieldProps<'text', T>,
+) {
+  return (
+    <div className={props.formInput.className}>
+      <BaseLabel
+        label={props.formInput.label}
+        errorMessage={props.errorMessage}
+      >
+        <input
+          type='text'
+          className='mx-1 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 placeholder:text-stone-300 focus:border-yellow-500 focus:ring-yellow-500'
+          {...props.formInput.attributes}
+          {...props.register(props.formInput.name, props.formInput.options)}
+        />
+      </BaseLabel>
+    </div>
+  )
+}
+
+function TextAreaField<T extends FieldValues>(
+  props: InputFieldProps<'textarea', T>,
+) {
+  return (
+    <div className={props.formInput.className}>
+      <BaseLabel
+        label={props.formInput.label}
+        errorMessage={props.errorMessage}
+      >
+        <textarea
+          type='text'
+          className='ms-scroll mx-1 max-h-72 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 placeholder:text-stone-300 focus:border-yellow-500 focus:ring-yellow-500'
+          {...props.formInput.attributes}
+          {...props.register(props.formInput.name, props.formInput.options)}
+        />
+      </BaseLabel>
+    </div>
+  )
+}
+
+function SelectField<T extends FieldValues>(
+  props: InputFieldProps<'select', T>,
+) {
+  return (
+    <div className={props.formInput.className}>
+      <BaseLabel
+        label={props.formInput.label}
+        errorMessage={props.errorMessage}
+      >
+        <select
+          className='ms-scroll mx-1 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:border-yellow-500 focus:ring-yellow-500'
+          {...props.formInput.attributes}
+          {...props.register(props.formInput.name, {
+            ...props.formInput.options,
+          })}
+        >
+          {props.formInput.data.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </BaseLabel>
+    </div>
+  )
+}
+
+function CheckboxField<T extends FieldValues>(
+  props: InputFieldProps<'checkbox', T>,
+) {
+  return (
+    <div className={props.formInput.className}>
+      <label className='flex cursor-pointer items-center gap-2'>
+        <input
+          type='checkbox'
+          className='focus:ring-none h-5 w-5 rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
+          {...props.formInput.attributes}
+          {...props.register(props.formInput.name, props.formInput.options)}
+        />
+        <span className='font-bold text-stone-500'>
+          {props.formInput.label}
+        </span>
+        <span className='ml-[1ch] text-red-400'>{props.errorMessage}</span>
+      </label>
+    </div>
+  )
+}
+
+function NumberField<T extends FieldValues>(
+  props: InputFieldProps<'number', T>,
+) {
+  return (
+    <div className={props.formInput.className}>
+      <BaseLabel
+        label={props.formInput.label}
+        errorMessage={props.errorMessage}
+      >
+        <input
+          type='number'
+          className='mx-1 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 placeholder:text-stone-300 focus:border-yellow-500 focus:ring-yellow-500'
+          min={
+            typeof props.formInput.options?.min === 'number'
+              ? props.formInput.options.min
+              : typeof props.formInput.options?.min === 'string'
+              ? parseInt(props.formInput.options?.min)
+              : props.formInput.options?.min?.value !== undefined
+              ? props.formInput.options?.min?.value
+              : undefined
+          }
+          max={
+            typeof props.formInput.options?.max === 'number'
+              ? props.formInput.options.max
+              : typeof props.formInput.options?.max === 'string'
+              ? parseInt(props.formInput.options?.max)
+              : props.formInput.options?.max?.value !== undefined
+              ? props.formInput.options?.max?.value
+              : undefined
+          }
+          {...props.formInput.attributes}
+          {...props.register(props.formInput.name, {
+            valueAsNumber: true,
+            ...props.formInput.options,
+          })}
+        />
+      </BaseLabel>
+    </div>
+  )
+}
+
+function ImageField<T extends FieldValues>(props: InputFieldProps<'image', T>) {
+  return (
+    <div className={props.formInput.className}>
+      <BaseLabel
+        label={props.formInput.label}
+        errorMessage={props.errorMessage}
+      >
+        <label className='flex aspect-square cursor-pointer flex-col justify-center rounded-2xl border border-stone-300 bg-stone-50 p-4 text-center text-sm'>
+          <PhotoIcon className='mx-auto h-10 w-10 text-stone-300' />
+          <div className='mt-2'>
+            <span className='text-yellow-500'>上傳檔案</span>
+            <input
+              type='file'
+              accept='image/*'
+              className='sr-only'
+              {...props.formInput.attributes}
+              {...props.register(props.formInput.name, props.formInput.options)}
+            />
+            <span>或拖曳至此處</span>
+          </div>
+        </label>
+      </BaseLabel>
+    </div>
+  )
 }
