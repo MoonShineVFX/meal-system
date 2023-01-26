@@ -56,7 +56,7 @@ export default function TransactionDetail(props: { transactionId: number }) {
             </div>
           </header>
           <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4'>
-            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400'>
               <WalletIcon className='mr-2 inline-block h-4 w-4' />
               類型
             </dt>
@@ -65,7 +65,7 @@ export default function TransactionDetail(props: { transactionId: number }) {
             </dd>
           </dl>
           <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4'>
-            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400'>
               <UserMinusIcon className='mr-2 inline-block h-4 w-4' />
               來源
             </dt>
@@ -74,7 +74,7 @@ export default function TransactionDetail(props: { transactionId: number }) {
             </dd>
           </dl>
           <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4'>
-            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400'>
               <UserPlusIcon className='mr-2 inline-block h-4 w-4' />
               對象
             </dt>
@@ -83,7 +83,7 @@ export default function TransactionDetail(props: { transactionId: number }) {
             </dd>
           </dl>
           <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4'>
-            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400'>
               <CircleStackIcon className='mr-2 inline-block h-4 w-4' />
               點數
             </dt>
@@ -92,7 +92,7 @@ export default function TransactionDetail(props: { transactionId: number }) {
             </dd>
           </dl>
           <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4 last:border-none'>
-            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400 group-data-loading:skeleton'>
+            <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400'>
               <CurrencyDollarIcon className='mr-2 inline-block h-4 w-4' />
               夢想幣
             </dt>
