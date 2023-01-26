@@ -23,6 +23,7 @@ import {
 } from 'react-hook-form'
 import { uploadImage } from '@/lib/client/bunny'
 
+import { useStore, NotificationType } from '@/lib/client/store'
 import { UseMutationResult } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
 import { settings } from '@/lib/common'
@@ -507,7 +508,7 @@ function NumberField<T extends FieldValues>(
   )
 }
 
-function validateFile(files: FileList) {
+function validateImageFile(files: FileList) {
   if (files.length === 0 || files.length > 1) return undefined
   if (settings.RESOURCE_IMAGE_TYPES.includes(files[0].type)) {
     return files[0]
@@ -524,6 +525,7 @@ function ImageField<T extends FieldValues>(
   const [isUploading, setIsUploading] = useState<boolean>(false)
   const getImageMutation = trpc.image.get.useMutation()
   const createImageMutation = trpc.image.create.useMutation()
+  const addNotification = useStore((state) => state.addNotification)
 
   // Get default image path
   useEffect(() => {
@@ -575,6 +577,11 @@ function ImageField<T extends FieldValues>(
             props.formInput.name,
             imageId as Parameters<typeof props.setValue>[1],
           )
+        } else {
+          addNotification({
+            type: NotificationType.ERROR,
+            message: '上傳失敗',
+          })
         }
         setIsUploading(false)
       }
@@ -586,7 +593,7 @@ function ImageField<T extends FieldValues>(
     (e: React.DragEvent<HTMLLabelElement>) => {
       e.preventDefault()
       setDragState(false)
-      const file = validateFile(e.dataTransfer.files)
+      const file = validateImageFile(e.dataTransfer.files)
       if (file) {
         uploadImageFile(file)
       }
@@ -597,7 +604,7 @@ function ImageField<T extends FieldValues>(
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-        const file = validateFile(e.target.files)
+        const file = validateImageFile(e.target.files)
         if (file) {
           uploadImageFile(file)
         }
