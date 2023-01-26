@@ -1,4 +1,5 @@
 import { PhotoIcon } from '@heroicons/react/24/outline'
+import trpc from '@/lib/client/trpc'
 import { twMerge } from 'tailwind-merge'
 import {
   Fragment,
@@ -18,10 +19,15 @@ import {
   UseFormRegister,
   FieldValues,
   FieldPath,
+  UseFormSetValue,
 } from 'react-hook-form'
+import { uploadImage } from '@/lib/client/bunny'
 
 import { UseMutationResult } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
+import { settings } from '@/lib/common'
+import Spinner from '@/components/core/Spinner'
+import Image from '@/components/core/Image'
 
 /* Types */
 type CheckboxInput = {
@@ -55,10 +61,10 @@ type NumberInput = {
   attributes?: InputHTMLAttributes<HTMLInputElement>
 }
 type ImageInput = {
-  defaultValue?: never
+  defaultValue?: string
   data?: never
   type: 'image'
-  attributes?: InputHTMLAttributes<HTMLInputElement>
+  attributes?: never
 }
 
 type FormInput = {
@@ -138,6 +144,7 @@ export default function FormDialog<
     handleSubmit,
     reset,
     formState: { errors },
+    setValue,
   } = useForm<Inputs>()
 
   // Reset state
@@ -268,6 +275,7 @@ export default function FormDialog<
                             errorMessage={errorMessage}
                             formInput={formInput}
                             register={register}
+                            setValue={setValue}
                           />
                         )
                     }
@@ -499,28 +507,170 @@ function NumberField<T extends FieldValues>(
   )
 }
 
-function ImageField<T extends FieldValues>(props: InputFieldProps<'image', T>) {
+function validateFile(files: FileList) {
+  if (files.length === 0 || files.length > 1) return undefined
+  if (settings.RESOURCE_IMAGE_TYPES.includes(files[0].type)) {
+    return files[0]
+  }
+  return undefined
+}
+function ImageField<T extends FieldValues>(
+  props: InputFieldProps<'image', T> & {
+    setValue: UseFormSetValue<T>
+  },
+) {
+  const [imagePath, setImagePath] = useState<string | undefined>(undefined)
+  const [dragState, setDragState] = useState<boolean>(false)
+  const [isUploading, setIsUploading] = useState<boolean>(false)
+  const getImageMutation = trpc.image.get.useMutation()
+  const createImageMutation = trpc.image.create.useMutation()
+
+  // Get default image path
+  useEffect(() => {
+    const checkImage = async (id: string) => {
+      const result = await getImageMutation.mutateAsync({ id })
+      if (result.isFound) {
+        setImagePath(result.image!.path)
+      }
+    }
+    if (props.formInput.defaultValue) {
+      checkImage(props.formInput.defaultValue)
+    }
+  }, [props.formInput.defaultValue])
+
+  // Upload image
+  const uploadImageFile = useCallback(
+    async (imageFile: File) => {
+      const CryptoJS = await import('crypto-js')
+      const dataString = await imageFile.text()
+      const imageId = CryptoJS.SHA256(dataString).toString()
+      const filename = imageId + '.' + imageFile.type.split('/')[1]
+      const checkImageResult = await getImageMutation.mutateAsync({
+        id: imageId,
+      })
+
+      if (checkImageResult.isFound) {
+        // Exists
+        setImagePath(checkImageResult.image!.path)
+        props.setValue(
+          props.formInput.name,
+          imageId as Parameters<typeof props.setValue>[1],
+        )
+      } else {
+        // Upload
+        setIsUploading(true)
+        const isSuccess = await uploadImage({
+          apiKey: checkImageResult.apiKey!,
+          url: `${checkImageResult.url!}/${settings.RESOURCE_UPLOAD_PATH}`,
+          filename: filename,
+          file: imageFile,
+        })
+        if (isSuccess) {
+          const createImageResult = await createImageMutation.mutateAsync({
+            id: imageId,
+            path: `${settings.RESOURCE_UPLOAD_PATH}/${filename}`,
+          })
+          setImagePath(createImageResult.path)
+          props.setValue(
+            props.formInput.name,
+            imageId as Parameters<typeof props.setValue>[1],
+          )
+        }
+        setIsUploading(false)
+      }
+    },
+    [props],
+  )
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLLabelElement>) => {
+      e.preventDefault()
+      setDragState(false)
+      const file = validateFile(e.dataTransfer.files)
+      if (file) {
+        uploadImageFile(file)
+      }
+    },
+    [uploadImageFile],
+  )
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+        const file = validateFile(e.target.files)
+        if (file) {
+          uploadImageFile(file)
+        }
+      }
+    },
+    [uploadImageFile],
+  )
+
   return (
     <div className={props.formInput.className}>
       <BaseLabel
         label={props.formInput.label}
         errorMessage={props.errorMessage}
       >
-        <label className='flex aspect-square cursor-pointer flex-col justify-center rounded-2xl border border-stone-300 bg-stone-50 p-4 text-center text-sm'>
-          <PhotoIcon className='mx-auto h-10 w-10 text-stone-300' />
-          <div className='mt-2'>
-            <span className='text-yellow-500'>上傳檔案</span>
-            <input
-              type='file'
-              accept='image/*'
-              className='sr-only'
-              {...props.formInput.attributes}
-              {...props.register(props.formInput.name, props.formInput.options)}
+        <div className='relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-2xl border border-stone-300 bg-stone-50'>
+          {imagePath && !isUploading && (
+            <Image
+              alt='商品預覽圖片'
+              src={imagePath}
+              className='object-cover'
+              sizes='240px'
             />
-            <span>或拖曳至此處</span>
-          </div>
-        </label>
+          )}
+          {isUploading ? (
+            <div className='flex flex-col gap-2'>
+              <Spinner className='h-12 w-12' />
+              <span>上傳中...</span>
+            </div>
+          ) : (
+            <label
+              className={twMerge(
+                'absolute inset-0 flex cursor-pointer flex-col justify-center p-4 text-center text-sm',
+                imagePath &&
+                  'bg-white/80 opacity-0 transition-opacity hover:opacity-100',
+                dragState && 'opacity-100',
+              )}
+              onDragEnter={() => setDragState(true)}
+              onDragOver={(e) => e.preventDefault()}
+              onDragLeave={() => setDragState(false)}
+              onDrop={handleDrop}
+            >
+              {imagePath ? (
+                <p className='pointer-events-none text-xl font-bold'>
+                  更改圖片
+                </p>
+              ) : (
+                <PhotoIcon className='pointer-events-none mx-auto h-10 w-10 text-stone-300' />
+              )}
+              <div className='pointer-events-none mt-2'>
+                {dragState ? (
+                  <span>拖曳至此處</span>
+                ) : (
+                  <>
+                    <span className='text-yellow-500'>上傳檔案</span>
+                    <span>或拖曳至此處</span>
+                  </>
+                )}
+                <input
+                  type='file'
+                  accept={settings.RESOURCE_IMAGE_TYPES.join(',')}
+                  className='sr-only'
+                  onChange={handleFileChange}
+                />
+              </div>
+            </label>
+          )}
+        </div>
       </BaseLabel>
+      <input
+        type='text'
+        className='sr-only'
+        {...props.register(props.formInput.name, props.formInput.options)}
+      />
     </div>
   )
 }

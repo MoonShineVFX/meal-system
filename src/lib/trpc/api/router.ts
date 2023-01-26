@@ -9,6 +9,7 @@ import { POSRouter } from './pos'
 import { CategoryRouter } from './category'
 import { CommodityRouter } from './commodity'
 import { OptionSetRouter } from './optionSet'
+import { ImageRouter } from './image'
 
 export const appRouter = router({
   user: UserRouter,
@@ -21,6 +22,7 @@ export const appRouter = router({
   category: CategoryRouter,
   commodity: CommodityRouter,
   optionSet: OptionSetRouter,
+  image: ImageRouter,
 })
 
 export type AppRouter = typeof appRouter

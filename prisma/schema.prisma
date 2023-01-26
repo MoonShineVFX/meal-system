@@ -295,12 +295,12 @@ model Menu {
 
 // Resource
 model Image {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid()) // SHA256 hash
   createdAt DateTime @default(now())
 
   path   String
-  width  Int
-  height Int
+  width  Int?
+  height Int?
 
   Commodity Commodity[]
   OrderItem OrderItem[]

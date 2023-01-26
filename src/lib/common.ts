@@ -134,6 +134,11 @@ export const settings = {
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
+  RESOURCE_IMAGE_TYPES: ['image/png', 'image/jpeg', 'image/webp'],
+  RESOURCE_UPLOAD_PATH: 'upload',
+  /* Bunny */
+  BUNNY_API_KEY: process.env.BUNNY_API_KEY!,
+  BUNNY_UPLOAD_URL: process.env.BUNNY_UPLOAD_URL!,
   /* Order */
   ORDER_TAKE_PER_QUERY: 20,
   /* Menu */
