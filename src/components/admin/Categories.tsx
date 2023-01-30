@@ -224,6 +224,9 @@ export default function Categories() {
       <SortableList
         header='主分類'
         items={categoryQuery.data}
+        childrenClassName={(category) =>
+          category.id === selectedRootCategory?.id ? 'bg-stone-100' : ''
+        }
         onReorder={handleReorder}
         onReordering={rootOrdersMutation.isLoading}
         onCreate={() => handleCategoryCreate(true)}

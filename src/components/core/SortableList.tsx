@@ -25,6 +25,7 @@ export default function SortableList<
 >(props: {
   header: string
   className?: string
+  childrenClassName?: string | ((item: TSortableItem) => string)
   items: TSortableItem[]
   children?:
     | ((item: TSortableItem) => JSX.Element)
@@ -149,6 +150,11 @@ export default function SortableList<
             // Category items
             <DragItem
               key={item.id}
+              className={
+                typeof props.childrenClassName === 'function'
+                  ? props.childrenClassName(item)
+                  : props.childrenClassName
+              }
               value={item}
               isBatchEdit={isBatchEdit}
               isSelected={selectedIds.includes(item.id)}
@@ -216,12 +222,16 @@ function DragItem<TSortableItem extends SortableItem>(props: {
   isBatchEdit?: boolean
   isSelected?: boolean
   onSelectChange?: (id: TSortableItem['id'], isChecked: boolean) => void
+  className?: string
 }) {
   const controls = useDragControls()
   return (
     <Reorder.Item
       value={props.value}
-      className='flex w-full items-center rounded-lg border bg-white p-2 pl-4 shadow'
+      className={twMerge(
+        'flex w-full items-center rounded-lg border bg-white p-2 pl-4 shadow',
+        props.className,
+      )}
       dragListener={false}
       dragControls={controls}
     >

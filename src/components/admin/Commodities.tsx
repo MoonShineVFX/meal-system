@@ -11,19 +11,22 @@ import { useFormDialog } from '@/components/core/FormDialog'
 
 export default function Commodities() {
   const { data, error, isError, isLoading } = trpc.commodity.get.useQuery()
+  const categoryQuery = trpc.category.get.useQuery()
   const { showFormDialog, formDialog } = useFormDialog()
 
   const handleAddCommodity = useCallback(() => {
+    if (!categoryQuery.data) return
     showFormDialog({
       title: '新增餐點',
-      className: 'grid grid-cols-2 grid-rows-[repeat(3,min-content)] gap-x-8',
       inputs: {
         image: {
+          column: 1,
           label: '圖片',
           type: 'image',
           className: 'row-span-full',
         },
         name: {
+          column: 2,
           label: '名稱',
           type: 'text',
           options: {
@@ -44,13 +47,29 @@ export default function Commodities() {
             max: { value: 9999, message: '價錢不能大於 9999' },
           },
         },
+        categories: {
+          label: '分類',
+          column: 3,
+          type: 'select',
+          data: categoryQuery.data.map((category) => ({
+            label: category.name,
+            children: category.childCategories.map((childCategory) => ({
+              label: childCategory.name,
+              value: childCategory.id.toString(),
+            })),
+          })),
+          attributes: { multiple: true },
+          className: 'h-full',
+          coreClassName: 'h-full',
+        },
       },
       useMutation: trpc.optionSet.create.useMutation,
       onSubmit(formData, mutation) {
         console.log(formData)
+        // mutation.mutate({})
       },
     })
-  }, [data]) // dev for frequent re-render
+  }, [data, categoryQuery.data]) // dev for frequent re-render
 
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />

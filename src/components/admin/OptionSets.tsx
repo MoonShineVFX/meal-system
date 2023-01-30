@@ -413,6 +413,9 @@ export default function OptionSets() {
       <SortableList
         header='選項集樣本'
         items={data}
+        childrenClassName={(template) =>
+          selectedTemplate?.id === template.id ? 'bg-stone-100' : ''
+        }
         onCreate={handleTemplateCreate}
         onCreateLabel='新增選項集樣本'
         onRename={handleTemplateRename}
@@ -445,6 +448,9 @@ export default function OptionSets() {
             id: optionSet.name,
             ...optionSet,
           }))}
+          childrenClassName={(optionSet) =>
+            optionSet.name === selectedOptionSet?.name ? 'bg-stone-100' : ''
+          }
           onCreate={handleOptionSetCreate}
           onCreateLabel='新增選項集'
           onRename={handleOptionSetRename}
