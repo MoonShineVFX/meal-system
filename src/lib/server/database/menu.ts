@@ -60,6 +60,33 @@ export async function createMenu({
   })
 }
 
+/* Get active menus */
+export async function getActiveMenus(props: { includeIds?: number[] }) {
+  const now = new Date()
+  const menus = await prisma.menu.findMany({
+    where: {
+      OR: [
+        {
+          date: { not: null },
+          isDeleted: false,
+          closedDate: { gte: now },
+        },
+        {
+          date: null,
+          isDeleted: false,
+          type: {
+            in: ['LIVE', 'RETAIL'],
+          },
+        },
+        {
+          id: { in: props.includeIds },
+        },
+      ],
+    },
+  })
+  return menus
+}
+
 /* Get Menu reservation list */
 export async function getReservationMenus({ userId }: { userId: string }) {
   const now = new Date()

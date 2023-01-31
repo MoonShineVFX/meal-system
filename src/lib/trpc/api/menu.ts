@@ -2,7 +2,11 @@ import z from 'zod'
 import { MenuType } from '@prisma/client'
 
 import { userProcedure, router } from '../trpc'
-import { getMenuWithComs, getReservationMenus } from '@/lib/server/database'
+import {
+  getMenuWithComs,
+  getReservationMenus,
+  getActiveMenus,
+} from '@/lib/server/database'
 
 export const MenuRouter = router({
   get: userProcedure
@@ -40,4 +44,13 @@ export const MenuRouter = router({
   getReservations: userProcedure.query(async ({ ctx }) => {
     return await getReservationMenus({ userId: ctx.userLite.id })
   }),
+  getActives: userProcedure
+    .input(
+      z.object({
+        includeIds: z.array(z.number()).optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      return await getActiveMenus({ includeIds: input.includeIds })
+    }),
 })

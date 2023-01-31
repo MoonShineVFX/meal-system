@@ -88,6 +88,7 @@ export default function Table<T extends object[]>(props: {
     <TableVirtuoso
       className='ms-scroll'
       data={data}
+      increaseViewportBy={4}
       fixedHeaderContent={() => (
         // Header
         <tr className='divide-stone-200 bg-stone-100'>

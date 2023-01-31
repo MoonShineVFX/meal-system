@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
@@ -6,16 +6,23 @@ import Table from '@/components/core/Table'
 import trpc from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
-import { settings } from '@/lib/common'
+import { settings, getMenuName } from '@/lib/common'
 import { useFormDialog } from '@/components/core/FormDialog'
 
 export default function Commodities() {
-  const { data, error, isError, isLoading } = trpc.commodity.get.useQuery()
-  const categoryQuery = trpc.category.get.useQuery()
   const { showFormDialog, formDialog } = useFormDialog()
+  const { data, error, isError, isLoading } = trpc.commodity.get.useQuery()
+  const [isLoadingDialog, setIsLoadingDialog] = useState(false)
+  const context = trpc.useContext()
 
-  const handleAddCommodity = useCallback(() => {
-    if (!categoryQuery.data) return
+  const handleAddCommodity = useCallback(async () => {
+    // query needed data
+    setIsLoadingDialog(true)
+    const categoryData = await context.category.get.fetch()
+    const menuData = await context.menu.getActives.fetch({})
+    setIsLoadingDialog(false)
+
+    // show
     showFormDialog({
       title: '新增餐點',
       inputs: {
@@ -26,7 +33,6 @@ export default function Commodities() {
           className: 'row-span-full',
         },
         name: {
-          column: 2,
           label: '名稱',
           type: 'text',
           options: {
@@ -49,15 +55,43 @@ export default function Commodities() {
         },
         categories: {
           label: '分類',
-          column: 3,
+          column: 2,
           type: 'select',
-          data: categoryQuery.data.map((category) => ({
+          data: categoryData.map((category) => ({
             label: category.name,
             children: category.childCategories.map((childCategory) => ({
               label: childCategory.name,
               value: childCategory.id.toString(),
             })),
           })),
+          attributes: { multiple: true },
+          className: 'h-full',
+          coreClassName: 'h-full',
+        },
+        menus: {
+          label: '菜單',
+          column: 2,
+          type: 'select',
+          data: [
+            {
+              label: '即時 / 零售',
+              children: menuData
+                .filter((menu) => menu.date === null)
+                .map((menu) => ({
+                  label: getMenuName(menu)!,
+                  value: menu.id.toString(),
+                })),
+            },
+            {
+              label: '預訂',
+              children: menuData
+                .filter((menu) => menu.date !== null)
+                .map((menu) => ({
+                  label: getMenuName(menu)!,
+                  value: menu.id.toString(),
+                })),
+            },
+          ],
           attributes: { multiple: true },
           className: 'h-full',
           coreClassName: 'h-full',
@@ -69,7 +103,7 @@ export default function Commodities() {
         // mutation.mutate({})
       },
     })
-  }, [data, categoryQuery.data]) // dev for frequent re-render
+  }, [data]) // dev for frequent re-render
 
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
@@ -82,6 +116,7 @@ export default function Commodities() {
           <div>餐點</div>
           <div className='p-4'>
             <Button
+              isLoading={isLoadingDialog}
               label='新增餐點'
               className='py-3 px-4'
               textClassName='font-bold'
