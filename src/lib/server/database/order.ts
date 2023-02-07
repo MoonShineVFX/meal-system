@@ -737,8 +737,13 @@ export async function updateOrderStatus({
         throw new Error('User not authorized to update this order')
       if (status === 'timeDishedUp' || status === 'timePreparing')
         throw new Error('User not authorized to update these status')
-      if (!isOrderCancelableByUser({ order: order }))
+      if (
+        status === 'timeCanceled' &&
+        !isOrderCancelableByUser({ order: order })
+      )
         throw new Error('Order not cancelable by user')
+      if (status === 'timeCompleted' && order.timeDishedUp === null)
+        throw new Error('Order not dished up yet')
     }
 
     if (status === 'timeCanceled' && order.timeCompleted !== null) {
