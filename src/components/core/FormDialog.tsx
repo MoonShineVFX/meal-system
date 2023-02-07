@@ -24,7 +24,9 @@ import {
   CheckboxField,
   NumberField,
   ImageField,
+  OptionSetsField,
 } from './FormFields'
+import { OptionSet } from '@/lib/common'
 
 /* Types */
 type CheckboxInput = {
@@ -66,10 +68,10 @@ type ImageInput = {
   type: 'image'
   attributes?: never
 }
-type CategoriesInput = {
-  defaultValue?: number[]
+type OptionSetsInput = {
+  defaultValue?: OptionSet[]
   data?: never
-  type: 'categories'
+  type: 'optionSets'
   attributes?: never
 }
 
@@ -86,7 +88,7 @@ export type FormInput = {
   | TextAreaInput
   | NumberInput
   | ImageInput
-  | CategoriesInput
+  | OptionSetsInput
 )
 
 type FormInputsProps = { [key: string]: FormInput }
@@ -113,6 +115,8 @@ type FormData<TInputs extends FormInputsProps> = {
     ? number
     : TInputs[K]['type'] extends 'image'
     ? string
+    : TInputs[K]['type'] extends 'optionSets'
+    ? OptionSet[]
     : never
 }
 
@@ -193,7 +197,7 @@ export default function FormDialog<
       }
     }, {} as DeepPartial<Inputs>)
     reset(defaultValues)
-  }, [props.open])
+  }, [props.open, inputs])
 
   // Close the dialog when the mutation is successful
   useEffect(() => {
@@ -246,7 +250,7 @@ export default function FormDialog<
             leaveFrom='opacity-100 scale-100'
             leaveTo='opacity-0 scale-75'
           >
-            <Dialog.Panel className='min-w-[16rem] rounded-2xl bg-white p-6 shadow-lg'>
+            <Dialog.Panel className='ms-scroll max-h-full min-w-[16rem] overflow-y-auto rounded-2xl bg-white p-6 shadow-lg'>
               <Dialog.Title className='text-lg font-bold'>
                 {props?.title}
               </Dialog.Title>
@@ -254,7 +258,7 @@ export default function FormDialog<
                 {/* Inputs */}
                 <section
                   className={twMerge(
-                    'ms-scroll grid gap-4 gap-x-8 overflow-y-auto py-6',
+                    'ms-scroll grid gap-4 gap-x-8 py-6',
                     props.className,
                   )}
                   style={{
@@ -334,6 +338,16 @@ export default function FormDialog<
                                 setValue={setValue}
                               />
                             )
+                          // OptionSets
+                          case 'optionSets':
+                            return (
+                              <OptionSetsField
+                                key={formInput.name}
+                                errorMessage={errorMessage}
+                                formInput={formInput}
+                                register={register}
+                              />
+                            )
                         }
                       })}
                     </div>
@@ -384,17 +398,20 @@ export function useFormDialog<
   const [props, setProps] = useState<ShowFormDialogProps<T, U> | undefined>(
     undefined,
   )
+  const [iterCount, setIterCount] = useState(0)
 
   const showFormDialog = useCallback(
     <TT extends T, UU extends U>(thisProps: ShowFormDialogProps<TT, UU>) => {
       setProps(thisProps as ShowFormDialogProps<T, U>)
       setIsOpenDialog(true)
+      setIterCount((prev) => prev + 1)
     },
     [],
   )
 
   const formDialog = props ? (
     <FormDialog
+      key={iterCount}
       {...props}
       open={isOpenDialog}
       onClose={() => setIsOpenDialog(false)}

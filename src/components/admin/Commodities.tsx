@@ -35,6 +35,9 @@ export default function Commodities() {
         name: {
           label: '名稱',
           type: 'text',
+          attributes: {
+            placeholder: '餐點名稱',
+          },
           options: {
             required: '請輸入名稱',
           },
@@ -65,8 +68,6 @@ export default function Commodities() {
             })),
           })),
           attributes: { multiple: true },
-          className: 'h-full',
-          coreClassName: 'h-full',
         },
         menus: {
           label: '菜單',
@@ -93,8 +94,11 @@ export default function Commodities() {
             },
           ],
           attributes: { multiple: true },
-          className: 'h-full',
-          coreClassName: 'h-full',
+        },
+        optionSets: {
+          label: '選項',
+          column: 3,
+          type: 'optionSets',
         },
       },
       useMutation: trpc.optionSet.create.useMutation,
