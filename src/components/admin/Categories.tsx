@@ -6,7 +6,7 @@ import Error from '@/components/core/Error'
 import trpc from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import { CategoryDatas } from '@/lib/client/trpc'
-import { useFormDialog } from '../core/FormDialog'
+import { useFormDialog } from '../form/FormDialog'
 import SortableList from '@/components/core/SortableList'
 
 type UniformCategories =

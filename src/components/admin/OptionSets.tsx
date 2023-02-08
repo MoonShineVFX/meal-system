@@ -1,7 +1,7 @@
 import { useCallback, useState, useEffect } from 'react'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
 
-import { useFormDialog } from '@/components/core/FormDialog'
+import { useFormDialog } from '@/components/form/FormDialog'
 import SortableList from '@/components/core/SortableList'
 import trpc, { OptionSetsTemplateDatas } from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'

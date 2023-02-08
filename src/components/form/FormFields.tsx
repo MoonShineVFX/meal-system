@@ -3,6 +3,7 @@ import {
   ChevronDownIcon,
   Bars3Icon,
   TrashIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
 import { useEffect, useState, useCallback, Fragment, useRef } from 'react'
@@ -22,6 +23,7 @@ import { OptionSet, settings } from '@/lib/common'
 import Spinner from '@/components/core/Spinner'
 import Image from '@/components/core/Image'
 import type { FormInput } from './FormDialog'
+import { DdMenu, DdMenuItem } from '@/components/core/DropdownMenu'
 
 /* Input Fields */
 // Types
@@ -379,13 +381,22 @@ export function ImageField<T extends FieldValues>(
 }
 
 export function OptionSetsField<T extends FieldValues>(
-  props: InputFieldProps<'optionSets', T>,
+  props: Omit<InputFieldProps<'optionSets', T>, 'register' | 'errorMessage'> & {
+    setValue: UseFormSetValue<T>
+  },
 ) {
   const { data, isError, isLoading } = trpc.optionSet.get.useQuery()
   const [currentOptionSets, setCurrentOptionSets] = useState<OptionSet[]>(
     props.formInput.defaultValue || [],
   )
   const addNotification = useStore((state) => state.addNotification)
+  // Register onChange callback
+  useEffect(() => {
+    props.setValue(
+      props.formInput.name,
+      currentOptionSets as Parameters<typeof props.setValue>[1],
+    )
+  }, [currentOptionSets])
 
   const handleTemplateAdd = useCallback(
     (addedOptionSets: OptionSet[]) => {
@@ -408,10 +419,7 @@ export function OptionSetsField<T extends FieldValues>(
 
   return (
     <div className={props.formInput.className}>
-      <BaseLabel
-        label={props.formInput.label}
-        errorMessage={props.errorMessage}
-      >
+      <BaseLabel label={props.formInput.label}>
         <>
           {/* Template */}
           <Menu as='div' className='relative mx-auto w-fit'>
@@ -448,21 +456,67 @@ export function OptionSetsField<T extends FieldValues>(
             axis='y'
             className='flex flex-col gap-2'
             values={currentOptionSets}
-            onReorder={setCurrentOptionSets}
+            onReorder={(newOptionSets) =>
+              setCurrentOptionSets(
+                newOptionSets.map((oss, index) => ({ ...oss, order: index })),
+              )
+            }
           >
-            {currentOptionSets.map((optionSet) => (
+            {currentOptionSets.map((optionSet, index) => (
               <OptionSetField
                 key={optionSet.name}
                 optionSet={optionSet}
-                onChange={(newOptionSet) =>
-                  setCurrentOptionSets((prevOptionSets) =>
-                    prevOptionSets.map((os) =>
-                      os.name === newOptionSet.name ? newOptionSet : os,
-                    ),
-                  )
+                added={
+                  optionSet.name === '' &&
+                  index === currentOptionSets.length - 1
                 }
+                onChange={(newOptionSet) => {
+                  if (newOptionSet && newOptionSet.name !== optionSet.name) {
+                    if (
+                      currentOptionSets.some(
+                        (os) => os.name === newOptionSet.name,
+                      )
+                    ) {
+                      addNotification({
+                        type: NotificationType.ERROR,
+                        message: '選項集名稱重複',
+                      })
+                      return false
+                    }
+                  }
+                  if (newOptionSet === undefined) {
+                    setCurrentOptionSets((prevOptionSets) =>
+                      prevOptionSets.filter((os) => os.name !== optionSet.name),
+                    )
+                  } else {
+                    setCurrentOptionSets((prevOptionSets) =>
+                      prevOptionSets.map((os) =>
+                        os.name === optionSet.name ? newOptionSet : os,
+                      ),
+                    )
+                  }
+                  return true
+                }}
               />
             ))}
+            <button
+              type='button'
+              className='mx-auto flex w-fit items-center rounded-2xl p-2 text-sm hover:bg-stone-100 active:scale-95'
+              onClick={() => {
+                setCurrentOptionSets((prevOptionSets) => [
+                  ...prevOptionSets,
+                  {
+                    name: '',
+                    options: [],
+                    multiSelect: false,
+                    order: prevOptionSets.length,
+                  },
+                ])
+              }}
+            >
+              新增選項集
+              <PlusIcon className='h-4 w-4' />
+            </button>
           </Reorder.Group>
         </>
       </BaseLabel>
@@ -471,31 +525,95 @@ export function OptionSetsField<T extends FieldValues>(
 }
 function OptionSetField(props: {
   optionSet: OptionSet
-  onChange: (optionSet: OptionSet) => void
+  onChange: (optionSet: OptionSet | undefined) => boolean
+  added?: boolean
 }) {
   const controls = useDragControls()
+  const [isEdit, setIsEdit] = useState(props.added ?? false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // autofocus
+  useEffect(() => {
+    if (!isEdit || !inputRef.current) return
+    inputRef.current.focus()
+  }, [isEdit, inputRef.current])
+
+  // applyedit
+  const applyEdit = useCallback(() => {
+    if (!inputRef.current) return
+    const name = inputRef.current.value.trim()
+    if (name !== '') {
+      const result = props.onChange({
+        ...props.optionSet,
+        name,
+      })
+      if (!result) {
+        inputRef.current.value = props.optionSet.name
+      }
+    } else {
+      props.onChange(undefined)
+      inputRef.current.value = props.optionSet.name
+    }
+
+    setIsEdit(false)
+  }, [inputRef.current, props.onChange])
+
   return (
     <Reorder.Item
-      className='rounded-2xl border bg-white p-4'
+      className='rounded-2xl border bg-white p-3'
       value={props.optionSet}
       dragListener={false}
       dragControls={controls}
     >
-      <div className='mb-4 flex items-center'>
+      {/* Header */}
+      <div className='mb-2 flex items-center'>
         <Bars3Icon
           className='h-5 w-5 cursor-grab text-stone-300'
           onPointerDown={(e) => controls.start(e)}
         />
-        <h3 className='ml-1'>{props.optionSet.name}</h3>
-        <label className='ml-auto flex cursor-pointer items-center gap-2'>
+        <div onClick={() => setIsEdit(true)}>
           <input
-            type='checkbox'
-            className='focus:ring-none h-4 w-4 cursor-pointer rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
-            value={props.optionSet.multiSelect ? 'true' : 'false'}
+            ref={inputRef}
+            type='text'
+            className={twMerge(
+              'ml-1 max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300',
+              !isEdit && 'cursor-text hover:bg-stone-100',
+              isEdit &&
+                'bg-stone-100 focus:border focus:border-yellow-500 focus:ring-yellow-500',
+            )}
+            placeholder={props.optionSet.name}
+            disabled={!isEdit}
+            onBlur={applyEdit}
+            defaultValue={props.optionSet.name}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') applyEdit()
+            }}
           />
-          <span className='text-sm text-stone-500'>多選</span>
-        </label>
+        </div>
+        <button
+          type='button'
+          className='ml-auto rounded-full p-1 hover:bg-stone-100 active:scale-90'
+          onClick={() => props.onChange(undefined)}
+        >
+          <TrashIcon className='h-4 w-4 text-stone-300' />
+        </button>
       </div>
+      {/* Multiselect */}
+      <label className='mb-3 flex cursor-pointer items-center gap-2'>
+        <input
+          type='checkbox'
+          className='focus:ring-none h-4 w-4 cursor-pointer rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
+          checked={props.optionSet.multiSelect}
+          onChange={(e) =>
+            props.onChange({
+              ...props.optionSet,
+              multiSelect: e.target.checked,
+            })
+          }
+        />
+        <span className='text-sm text-stone-500'>多選</span>
+      </label>
+      {/* Options */}
       <div>
         <Reorder.Group
           axis='y'
@@ -528,7 +646,7 @@ function OptionSetField(props: {
           ))}
           <button
             type='button'
-            className='rounded-2xl p-2 text-sm hover:bg-stone-100 active:scale-95'
+            className='mx-auto flex w-fit items-center rounded-2xl p-2 text-sm hover:bg-stone-100 active:scale-95'
             onClick={() => {
               props.onChange({
                 ...props.optionSet,
@@ -537,6 +655,7 @@ function OptionSetField(props: {
             }}
           >
             新增選項
+            <PlusIcon className='h-4 w-4' />
           </button>
         </Reorder.Group>
       </div>
@@ -567,7 +686,7 @@ function OptionField(props: {
 
   return (
     <Reorder.Item
-      className='flex items-center rounded-2xl border bg-white p-2'
+      className='flex items-center rounded-2xl border bg-white px-2 py-1'
       value={props.option}
       dragListener={false}
       dragControls={controls}
@@ -599,11 +718,50 @@ function OptionField(props: {
       {/* Delete */}
       <button
         type='button'
-        className='ml-auto rounded-full p-1 hover:bg-stone-100 active:scale-95'
+        className='ml-auto rounded-full p-1 hover:bg-stone-100 active:scale-90'
         onClick={() => props.onChange('')}
       >
         <TrashIcon className='h-4 w-4 text-stone-300' />
       </button>
     </Reorder.Item>
+  )
+}
+
+export function CategoriesField<T extends FieldValues>(
+  props: Omit<InputFieldProps<'categories', T>, 'register' | 'errorMessage'> & {
+    setValue: UseFormSetValue<T>
+  },
+) {
+  const [categoriesIds, setCategoriesIds] = useState<number[]>(
+    props.formInput.defaultValue ?? [],
+  )
+  const { data, isError, isLoading } = trpc.category.get.useQuery()
+
+  if (isError || isLoading) return <Spinner className='h-12 w-12' />
+
+  return (
+    <div className={props.formInput.className}>
+      <BaseLabel label={props.formInput.label}>
+        <DdMenu label='新增分類'>
+          {data.map((category) => (
+            <DdMenu label={category.name}>
+              {category.childCategories.map((subCategory) =>
+                categoriesIds.includes(subCategory.id) ? null : (
+                  <DdMenuItem
+                    label={subCategory.name}
+                    onClick={() =>
+                      setCategoriesIds((prevIds) => [
+                        ...prevIds,
+                        subCategory.id,
+                      ])
+                    }
+                  />
+                ),
+              )}
+            </DdMenu>
+          ))}
+        </DdMenu>
+      </BaseLabel>
+    </div>
   )
 }

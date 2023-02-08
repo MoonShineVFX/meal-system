@@ -7,7 +7,7 @@ import trpc from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
 import { settings, getMenuName } from '@/lib/common'
-import { useFormDialog } from '@/components/core/FormDialog'
+import { useFormDialog } from '@/components/form/FormDialog'
 
 export default function Commodities() {
   const { showFormDialog, formDialog } = useFormDialog()
@@ -18,7 +18,6 @@ export default function Commodities() {
   const handleAddCommodity = useCallback(async () => {
     // query needed data
     setIsLoadingDialog(true)
-    const categoryData = await context.category.get.fetch()
     const menuData = await context.menu.getActives.fetch({})
     setIsLoadingDialog(false)
 
@@ -59,15 +58,7 @@ export default function Commodities() {
         categories: {
           label: '分類',
           column: 2,
-          type: 'select',
-          data: categoryData.map((category) => ({
-            label: category.name,
-            children: category.childCategories.map((childCategory) => ({
-              label: childCategory.name,
-              value: childCategory.id.toString(),
-            })),
-          })),
-          attributes: { multiple: true },
+          type: 'categories',
         },
         menus: {
           label: '菜單',

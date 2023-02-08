@@ -25,6 +25,7 @@ import {
   NumberField,
   ImageField,
   OptionSetsField,
+  CategoriesField,
 } from './FormFields'
 import { OptionSet } from '@/lib/common'
 
@@ -74,6 +75,12 @@ type OptionSetsInput = {
   type: 'optionSets'
   attributes?: never
 }
+type CategoriesInput = {
+  defaultValue?: number[]
+  data?: never
+  type: 'categories'
+  attributes?: never
+}
 
 export type FormInput = {
   label: string
@@ -89,6 +96,7 @@ export type FormInput = {
   | NumberInput
   | ImageInput
   | OptionSetsInput
+  | CategoriesInput
 )
 
 type FormInputsProps = { [key: string]: FormInput }
@@ -117,6 +125,8 @@ type FormData<TInputs extends FormInputsProps> = {
     ? string
     : TInputs[K]['type'] extends 'optionSets'
     ? OptionSet[]
+    : TInputs[K]['type'] extends 'categories'
+    ? number[]
     : never
 }
 
@@ -343,9 +353,17 @@ export default function FormDialog<
                             return (
                               <OptionSetsField
                                 key={formInput.name}
-                                errorMessage={errorMessage}
                                 formInput={formInput}
-                                register={register}
+                                setValue={setValue}
+                              />
+                            )
+                          // Categories
+                          case 'categories':
+                            return (
+                              <CategoriesField
+                                key={formInput.name}
+                                formInput={formInput}
+                                setValue={setValue}
                               />
                             )
                         }
