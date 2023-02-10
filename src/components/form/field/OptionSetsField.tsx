@@ -1,0 +1,366 @@
+import {
+  ChevronDownIcon,
+  Bars3Icon,
+  TrashIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline'
+import { twMerge } from 'tailwind-merge'
+import { useEffect, useState, useCallback, Fragment, useRef } from 'react'
+import { FieldValues, UseFormSetValue } from 'react-hook-form'
+import { Menu, Transition } from '@headlessui/react'
+import { useDragControls, Reorder } from 'framer-motion'
+
+import trpc from '@/lib/client/trpc'
+import { useStore, NotificationType } from '@/lib/client/store'
+import { OptionSet } from '@/lib/common'
+import Spinner from '@/components/core/Spinner'
+import { InputFieldProps, BaseLabel } from './define'
+
+export default function OptionSetsField<T extends FieldValues>(
+  props: Omit<InputFieldProps<'optionSets', T>, 'register' | 'errorMessage'> & {
+    setValue: UseFormSetValue<T>
+  },
+) {
+  const { data, isError, isLoading } = trpc.optionSet.get.useQuery()
+  const [currentOptionSets, setCurrentOptionSets] = useState<OptionSet[]>(
+    props.formInput.defaultValue || [],
+  )
+  const addNotification = useStore((state) => state.addNotification)
+  // Register onChange callback
+  useEffect(() => {
+    props.setValue(
+      props.formInput.name,
+      currentOptionSets as Parameters<typeof props.setValue>[1],
+    )
+  }, [currentOptionSets])
+
+  const handleTemplateAdd = useCallback(
+    (addedOptionSets: OptionSet[]) => {
+      const addedNames = addedOptionSets.map((os) => os.name)
+      if (currentOptionSets.some((os) => addedNames.includes(os.name))) {
+        addNotification({
+          type: NotificationType.ERROR,
+          message: '選項集名稱重複',
+        })
+        return
+      }
+      setCurrentOptionSets((prev) => [...prev, ...addedOptionSets])
+    },
+    [currentOptionSets],
+  )
+
+  if (isLoading || isError) {
+    return <Spinner className='h-12 w-12' />
+  }
+
+  return (
+    <div className={props.formInput.className}>
+      <BaseLabel label={props.formInput.label}>
+        <>
+          {/* Template */}
+          <Menu as='div' className='relative mx-auto w-fit'>
+            <Menu.Button className='ml-auto flex w-fit items-center gap-1 rounded-2xl px-3 py-2 text-xs text-stone-500 hover:bg-stone-100 active:scale-95'>
+              讀取選項集樣本
+              <ChevronDownIcon className='h-3 w-3' />
+            </Menu.Button>
+            <Transition
+              as={Fragment}
+              enter='transition duration-100 ease-out'
+              enterFrom='transform scale-y-50 opacity-0'
+              enterTo='transform scale-y-100 opacity-100'
+              leave='transition duration-75 ease-out'
+              leaveFrom='transform scale-y-100 opacity-100'
+              leaveTo='transform scale-y-50 opacity-0'
+            >
+              <Menu.Items className='absolute right-0 mt-1 flex origin-top-right flex-col overflow-hidden rounded-2xl border bg-white py-2 shadow-md'>
+                {data.map((optionSets) => (
+                  <Menu.Item>
+                    <button
+                      type='button'
+                      className='px-3 py-2 hover:bg-stone-100'
+                      onClick={() => handleTemplateAdd(optionSets.optionSets)}
+                    >
+                      {optionSets.name}
+                    </button>
+                  </Menu.Item>
+                ))}
+              </Menu.Items>
+            </Transition>
+          </Menu>
+          {/* OptionSets */}
+          <Reorder.Group
+            axis='y'
+            className='flex flex-col gap-2'
+            values={currentOptionSets}
+            onReorder={(newOptionSets) =>
+              setCurrentOptionSets(
+                newOptionSets.map((oss, index) => ({ ...oss, order: index })),
+              )
+            }
+          >
+            {currentOptionSets.map((optionSet, index) => (
+              <OptionSetField
+                key={optionSet.name}
+                optionSet={optionSet}
+                added={
+                  optionSet.name === '' &&
+                  index === currentOptionSets.length - 1
+                }
+                onChange={(newOptionSet) => {
+                  if (newOptionSet && newOptionSet.name !== optionSet.name) {
+                    if (
+                      currentOptionSets.some(
+                        (os) => os.name === newOptionSet.name,
+                      )
+                    ) {
+                      addNotification({
+                        type: NotificationType.ERROR,
+                        message: '選項集名稱重複',
+                      })
+                      return false
+                    }
+                  }
+                  if (newOptionSet === undefined) {
+                    setCurrentOptionSets((prevOptionSets) =>
+                      prevOptionSets.filter((os) => os.name !== optionSet.name),
+                    )
+                  } else {
+                    setCurrentOptionSets((prevOptionSets) =>
+                      prevOptionSets.map((os) =>
+                        os.name === optionSet.name ? newOptionSet : os,
+                      ),
+                    )
+                  }
+                  return true
+                }}
+              />
+            ))}
+            <button
+              type='button'
+              className='mx-auto flex w-fit items-center rounded-2xl p-2 text-sm hover:bg-stone-100 active:scale-95'
+              onClick={() => {
+                setCurrentOptionSets((prevOptionSets) => [
+                  ...prevOptionSets,
+                  {
+                    name: '',
+                    options: [],
+                    multiSelect: false,
+                    order: prevOptionSets.length,
+                  },
+                ])
+              }}
+            >
+              新增選項集
+              <PlusIcon className='h-4 w-4' />
+            </button>
+          </Reorder.Group>
+        </>
+      </BaseLabel>
+    </div>
+  )
+}
+
+function OptionSetField(props: {
+  optionSet: OptionSet
+  onChange: (optionSet: OptionSet | undefined) => boolean
+  added?: boolean
+}) {
+  const controls = useDragControls()
+  const [isEdit, setIsEdit] = useState(props.added ?? false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // autofocus
+  useEffect(() => {
+    if (!isEdit || !inputRef.current) return
+    inputRef.current.focus()
+  }, [isEdit, inputRef.current])
+
+  // applyedit
+  const applyEdit = useCallback(() => {
+    if (!inputRef.current) return
+    const name = inputRef.current.value.trim()
+    if (name !== '') {
+      const result = props.onChange({
+        ...props.optionSet,
+        name,
+      })
+      if (!result) {
+        inputRef.current.value = props.optionSet.name
+      }
+    } else {
+      props.onChange(undefined)
+      inputRef.current.value = props.optionSet.name
+    }
+
+    setIsEdit(false)
+  }, [inputRef.current, props.onChange])
+
+  return (
+    <Reorder.Item
+      className='rounded-2xl border bg-white p-3'
+      value={props.optionSet}
+      dragListener={false}
+      dragControls={controls}
+    >
+      {/* Header */}
+      <div className='mb-2 flex items-center'>
+        <Bars3Icon
+          className='h-5 w-5 cursor-grab text-stone-300'
+          onPointerDown={(e) => controls.start(e)}
+        />
+        <div onClick={() => setIsEdit(true)}>
+          <input
+            ref={inputRef}
+            type='text'
+            className={twMerge(
+              'ml-1 max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300',
+              !isEdit && 'cursor-text hover:bg-stone-100',
+              isEdit &&
+                'bg-stone-100 focus:border focus:border-yellow-500 focus:ring-yellow-500',
+            )}
+            placeholder={props.optionSet.name}
+            disabled={!isEdit}
+            onBlur={applyEdit}
+            defaultValue={props.optionSet.name}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') applyEdit()
+            }}
+          />
+        </div>
+        <button
+          type='button'
+          className='ml-auto rounded-full p-1 hover:bg-stone-100 active:scale-90'
+          onClick={() => props.onChange(undefined)}
+        >
+          <TrashIcon className='h-4 w-4 text-stone-300' />
+        </button>
+      </div>
+      {/* Multiselect */}
+      <label className='mb-3 flex cursor-pointer items-center gap-2'>
+        <input
+          type='checkbox'
+          className='focus:ring-none h-4 w-4 cursor-pointer rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
+          checked={props.optionSet.multiSelect}
+          onChange={(e) =>
+            props.onChange({
+              ...props.optionSet,
+              multiSelect: e.target.checked,
+            })
+          }
+        />
+        <span className='text-sm text-stone-500'>多選</span>
+      </label>
+      {/* Options */}
+      <div>
+        <Reorder.Group
+          axis='y'
+          className='flex flex-col gap-2'
+          values={props.optionSet.options}
+          onReorder={(newOptions) =>
+            props.onChange({ ...props.optionSet, options: newOptions })
+          }
+        >
+          {props.optionSet.options.map((option, index) => (
+            <OptionField
+              key={option}
+              option={option}
+              onChange={(newOption) =>
+                props.onChange({
+                  ...props.optionSet,
+                  options: [
+                    ...new Set(
+                      props.optionSet.options
+                        .map((o) => (o === option ? newOption : o))
+                        .filter((o) => o !== ''),
+                    ),
+                  ],
+                })
+              }
+              added={
+                option === ' ' && index === props.optionSet.options.length - 1
+              }
+            />
+          ))}
+          <button
+            type='button'
+            className='mx-auto flex w-fit items-center rounded-2xl p-2 text-sm hover:bg-stone-100 active:scale-95'
+            onClick={() => {
+              props.onChange({
+                ...props.optionSet,
+                options: [...props.optionSet.options, ' '],
+              })
+            }}
+          >
+            新增選項
+            <PlusIcon className='h-4 w-4' />
+          </button>
+        </Reorder.Group>
+      </div>
+    </Reorder.Item>
+  )
+}
+
+function OptionField(props: {
+  option: string
+  onChange: (option: string) => void
+  added?: boolean
+}) {
+  const controls = useDragControls()
+  const [isEdit, setIsEdit] = useState(props.added ?? false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // autofocus
+  useEffect(() => {
+    if (!isEdit || !inputRef.current) return
+    inputRef.current.focus()
+  }, [isEdit, inputRef.current])
+
+  // applyedit
+  const applyEdit = useCallback(() => {
+    if (!inputRef.current) return
+    props.onChange(inputRef.current.value.trim())
+    setIsEdit(false)
+  }, [inputRef.current, props.onChange])
+
+  return (
+    <Reorder.Item
+      className='flex items-center rounded-2xl border bg-white px-2 py-1'
+      value={props.option}
+      dragListener={false}
+      dragControls={controls}
+    >
+      <Bars3Icon
+        className='mr-2 h-4 w-4 cursor-grab text-stone-300'
+        onPointerDown={(e) => controls.start(e)}
+      />
+      {/* Name */}
+      <div onClick={() => setIsEdit(true)}>
+        <input
+          ref={inputRef}
+          type='text'
+          className={twMerge(
+            'max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300',
+            !isEdit && 'cursor-text hover:bg-stone-100',
+            isEdit &&
+              'bg-stone-100 focus:border focus:border-yellow-500 focus:ring-yellow-500',
+          )}
+          placeholder={props.option}
+          disabled={!isEdit}
+          onBlur={applyEdit}
+          defaultValue={props.added ? '' : props.option}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') applyEdit()
+          }}
+        />
+      </div>
+      {/* Delete */}
+      <button
+        type='button'
+        className='ml-auto rounded-full p-1 hover:bg-stone-100 active:scale-90'
+        onClick={() => props.onChange('')}
+      >
+        <TrashIcon className='h-4 w-4 text-stone-300' />
+      </button>
+    </Reorder.Item>
+  )
+}

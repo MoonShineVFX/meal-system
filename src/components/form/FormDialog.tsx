@@ -1,134 +1,13 @@
 import { twMerge } from 'tailwind-merge'
-import {
-  Fragment,
-  useEffect,
-  useState,
-  InputHTMLAttributes,
-  useCallback,
-} from 'react'
+import { Fragment, useEffect, useState, useCallback } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import {
-  useForm,
-  SubmitHandler,
-  Path,
-  DeepPartial,
-  RegisterOptions,
-} from 'react-hook-form'
+import { useForm, SubmitHandler, Path, DeepPartial } from 'react-hook-form'
 
 import { UseMutationResult } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
-import {
-  TextInputField,
-  TextAreaField,
-  SelectField,
-  CheckboxField,
-  NumberField,
-  ImageField,
-  OptionSetsField,
-  CategoriesField,
-} from './FormFields'
-import { OptionSet } from '@/lib/common'
 
-/* Types */
-type CheckboxInput = {
-  defaultValue?: boolean
-  data?: never
-  type: 'checkbox'
-  attributes?: InputHTMLAttributes<HTMLInputElement>
-}
-type TextInput = {
-  defaultValue?: string
-  data?: never
-  type: 'text'
-  attributes?: InputHTMLAttributes<HTMLInputElement>
-}
-type SelectInput = {
-  defaultValue?: string | string[]
-  data: (
-    | { label: string; value: string }
-    | { label: string; children: { label: string; value: string }[] }
-  )[]
-  type: 'select'
-  attributes?: InputHTMLAttributes<HTMLSelectElement>
-}
-type TextAreaInput = {
-  defaultValue?: string
-  data?: never
-  type: 'textarea'
-  attributes?: InputHTMLAttributes<HTMLTextAreaElement>
-}
-type NumberInput = {
-  defaultValue?: number
-  data?: never
-  type: 'number'
-  attributes?: InputHTMLAttributes<HTMLInputElement>
-}
-type ImageInput = {
-  defaultValue?: string
-  data?: never
-  type: 'image'
-  attributes?: never
-}
-type OptionSetsInput = {
-  defaultValue?: OptionSet[]
-  data?: never
-  type: 'optionSets'
-  attributes?: never
-}
-type CategoriesInput = {
-  defaultValue?: number[]
-  data?: never
-  type: 'categories'
-  attributes?: never
-}
-
-export type FormInput = {
-  label: string
-  options?: RegisterOptions
-  className?: string
-  coreClassName?: string
-  column?: number
-} & (
-  | TextInput
-  | SelectInput
-  | CheckboxInput
-  | TextAreaInput
-  | NumberInput
-  | ImageInput
-  | OptionSetsInput
-  | CategoriesInput
-)
-
-type FormInputsProps = { [key: string]: FormInput }
-
-type FormData<TInputs extends FormInputsProps> = {
-  [K in keyof TInputs]: TInputs[K]['type'] extends 'text'
-    ? string
-    : TInputs[K]['type'] extends 'select'
-    ? Extract<TInputs[K], { type: 'select' }>['attributes'] extends undefined
-      ? string
-      : NonNullable<
-          Extract<
-            Extract<TInputs[K], { type: 'select' }>,
-            { type: 'select' }
-          >['attributes']
-        >['multiple'] extends true
-      ? string[]
-      : string
-    : TInputs[K]['type'] extends 'checkbox'
-    ? boolean
-    : TInputs[K]['type'] extends 'textarea'
-    ? string
-    : TInputs[K]['type'] extends 'number'
-    ? number
-    : TInputs[K]['type'] extends 'image'
-    ? string
-    : TInputs[K]['type'] extends 'optionSets'
-    ? OptionSet[]
-    : TInputs[K]['type'] extends 'categories'
-    ? number[]
-    : never
-}
+import type { FormInput, FormInputsProps, FormData } from './field'
+import { FormField } from './field'
 
 type ExpandRecursively<T> = T extends object
   ? T extends infer O
@@ -286,87 +165,15 @@ export default function FormDialog<
                           | string
                           | undefined
 
-                        switch (formInput.type) {
-                          // Text
-                          case 'text':
-                            return (
-                              <TextInputField
-                                key={formInput.name}
-                                errorMessage={errorMessage}
-                                formInput={formInput}
-                                register={register}
-                              />
-                            )
-                          // Textarea
-                          case 'textarea':
-                            return (
-                              <TextAreaField
-                                key={formInput.name}
-                                errorMessage={errorMessage}
-                                formInput={formInput}
-                                register={register}
-                              />
-                            )
-                          // Select
-                          case 'select':
-                            return (
-                              <SelectField
-                                key={formInput.name}
-                                errorMessage={errorMessage}
-                                formInput={formInput}
-                                register={register}
-                              />
-                            )
-                          // Checkbox
-                          case 'checkbox':
-                            return (
-                              <CheckboxField
-                                key={formInput.name}
-                                errorMessage={errorMessage}
-                                formInput={formInput}
-                                register={register}
-                              />
-                            )
-                          // Number
-                          case 'number':
-                            return (
-                              <NumberField
-                                key={formInput.name}
-                                errorMessage={errorMessage}
-                                formInput={formInput}
-                                register={register}
-                              />
-                            )
-                          // Image
-                          case 'image':
-                            return (
-                              <ImageField
-                                key={formInput.name}
-                                errorMessage={errorMessage}
-                                formInput={formInput}
-                                register={register}
-                                setValue={setValue}
-                              />
-                            )
-                          // OptionSets
-                          case 'optionSets':
-                            return (
-                              <OptionSetsField
-                                key={formInput.name}
-                                formInput={formInput}
-                                setValue={setValue}
-                              />
-                            )
-                          // Categories
-                          case 'categories':
-                            return (
-                              <CategoriesField
-                                key={formInput.name}
-                                formInput={formInput}
-                                setValue={setValue}
-                              />
-                            )
-                        }
+                        return (
+                          <FormField
+                            key={formInput.name}
+                            formInput={formInput}
+                            register={register}
+                            setValue={setValue}
+                            errorMessage={errorMessage}
+                          />
+                        )
                       })}
                     </div>
                   ))}
