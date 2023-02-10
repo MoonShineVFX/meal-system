@@ -29,11 +29,11 @@ import { Transition } from '@headlessui/react'
 import { ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 interface MenuItemProps {
-  label: string
+  label: string | JSX.Element
   disabled?: boolean
 }
 
-export const DdMenuItem = React.forwardRef<
+export const DropdownMenuItem = React.forwardRef<
   HTMLButtonElement,
   MenuItemProps & React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ label, disabled, ...props }, ref) => {
@@ -51,13 +51,13 @@ export const DdMenuItem = React.forwardRef<
 })
 
 interface MenuProps {
-  label: string
+  label: string | JSX.Element
   nested?: boolean
   children?: React.ReactNode
 }
 export const MenuComponent = React.forwardRef<
   HTMLButtonElement,
-  MenuProps & React.HTMLProps<HTMLButtonElement>
+  MenuProps & Omit<React.HTMLProps<HTMLButtonElement>, 'label'>
 >(({ children, label, ...props }, forwardedRef) => {
   const [open, setOpen] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null)
@@ -188,11 +188,15 @@ export const MenuComponent = React.forwardRef<
         data-open={open ? '' : undefined}
         {...getReferenceProps({
           ...props,
-          className: `${
-            nested
-              ? 'flex w-full min-w-[7rem] justify-between text-left p-2 hover:bg-stone-100 items-center'
-              : 'p-1 rounded-2xl hover:bg-stone-100 text-sm flex items-center gap-1 w-fit'
-          }`,
+          className: twMerge(
+            // Menu button
+            nested &&
+              'flex w-full min-w-[7rem] justify-between text-left p-2 hover:bg-stone-100 items-center',
+            // Root button
+            !nested &&
+              'py-1 px-2 rounded-2xl hover:bg-stone-100 text-sm flex items-center gap-1 w-fit active:scale-90',
+            props.className,
+          ),
           onClick(event) {
             event.stopPropagation()
           },
@@ -203,11 +207,13 @@ export const MenuComponent = React.forwardRef<
         })}
       >
         {label}
-        {nested ? (
-          <ChevronRightIcon className='h-4 w-4' aria-hidden />
-        ) : (
-          <ChevronDownIcon className='h-4 w-4' aria-hidden />
-        )}
+        {typeof label === 'string' ? (
+          nested ? (
+            <ChevronRightIcon className='h-4 w-4' aria-hidden />
+          ) : (
+            <ChevronDownIcon className='h-4 w-4' aria-hidden />
+          )
+        ) : null}
       </button>
       <FloatingPortal>
         {open && (
@@ -251,8 +257,9 @@ export const MenuComponent = React.forwardRef<
             >
               <div
                 ref={refs.setFloating}
+                // Menu div styles
                 className={twMerge(
-                  'relative z-[1000] w-max origin-top-right overflow-hidden rounded-2xl border bg-white py-2 shadow-lg',
+                  'relative z-[1000] flex w-max origin-top-right flex-col overflow-hidden rounded-2xl border bg-white py-2 shadow-lg',
                   nested && 'origin-top-left',
                 )}
                 style={{
@@ -284,8 +291,11 @@ export const MenuComponent = React.forwardRef<
                       getItemProps({
                         tabIndex: activeIndex === index ? 0 : -1,
                         role: 'menuitem',
-                        className:
-                          'flex w-full justify-between p-2 text-left hover:bg-stone-100',
+                        // Menu child item styles
+                        className: twMerge(
+                          'p-2 text-left hover:bg-stone-100',
+                          child.props.className,
+                        ),
                         ref(node: HTMLButtonElement) {
                           listItemsRef.current[index] = node
                         },
@@ -311,9 +321,9 @@ export const MenuComponent = React.forwardRef<
   )
 })
 
-export const DdMenu = React.forwardRef<
+export const DropdownMenu = React.forwardRef<
   HTMLButtonElement,
-  MenuProps & React.HTMLProps<HTMLButtonElement>
+  MenuProps & Omit<React.HTMLProps<HTMLButtonElement>, 'label'>
 >((props, ref) => {
   const parentId = useFloatingParentNodeId()
 

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 
 import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
@@ -6,21 +6,14 @@ import Table from '@/components/core/Table'
 import trpc from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
-import { settings, getMenuName } from '@/lib/common'
+import { settings } from '@/lib/common'
 import { useFormDialog } from '@/components/form/FormDialog'
 
 export default function Commodities() {
   const { showFormDialog, formDialog } = useFormDialog()
   const { data, error, isError, isLoading } = trpc.commodity.get.useQuery()
-  const [isLoadingDialog, setIsLoadingDialog] = useState(false)
-  const context = trpc.useContext()
 
   const handleAddCommodity = useCallback(async () => {
-    // query needed data
-    setIsLoadingDialog(true)
-    const menuData = await context.menu.getActives.fetch({})
-    setIsLoadingDialog(false)
-
     // show
     showFormDialog({
       title: '新增餐點',
@@ -63,28 +56,7 @@ export default function Commodities() {
         menus: {
           label: '菜單',
           column: 2,
-          type: 'select',
-          data: [
-            {
-              label: '即時 / 零售',
-              children: menuData
-                .filter((menu) => menu.date === null)
-                .map((menu) => ({
-                  label: getMenuName(menu)!,
-                  value: menu.id.toString(),
-                })),
-            },
-            {
-              label: '預訂',
-              children: menuData
-                .filter((menu) => menu.date !== null)
-                .map((menu) => ({
-                  label: getMenuName(menu)!,
-                  value: menu.id.toString(),
-                })),
-            },
-          ],
-          attributes: { multiple: true },
+          type: 'com',
         },
         optionSets: {
           label: '選項',
@@ -111,7 +83,6 @@ export default function Commodities() {
           <div>餐點</div>
           <div className='p-4'>
             <Button
-              isLoading={isLoadingDialog}
               label='新增餐點'
               className='py-3 px-4'
               textClassName='font-bold'

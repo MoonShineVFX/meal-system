@@ -14,6 +14,7 @@ import NumberField from './NumberField'
 import ImageField from './ImageField'
 import OptionSetsField from './OptionSetsField'
 import CategoriesField from './CategoriesField'
+import COMField from './COMField'
 
 export function FormField<TFieldValues extends FieldValues>(props: {
   formInput: FormInput & {
@@ -100,6 +101,15 @@ export function FormField<TFieldValues extends FieldValues>(props: {
     case 'categories':
       return (
         <CategoriesField
+          key={formInput.name}
+          formInput={formInput}
+          setValue={setValue}
+        />
+      )
+    // COM
+    case 'com':
+      return (
+        <COMField
           key={formInput.name}
           formInput={formInput}
           setValue={setValue}

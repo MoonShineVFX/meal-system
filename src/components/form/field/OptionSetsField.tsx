@@ -1,13 +1,12 @@
 import {
-  ChevronDownIcon,
   Bars3Icon,
   TrashIcon,
   PlusIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
-import { useEffect, useState, useCallback, Fragment, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { FieldValues, UseFormSetValue } from 'react-hook-form'
-import { Menu, Transition } from '@headlessui/react'
 import { useDragControls, Reorder } from 'framer-motion'
 
 import trpc from '@/lib/client/trpc'
@@ -15,6 +14,7 @@ import { useStore, NotificationType } from '@/lib/client/store'
 import { OptionSet } from '@/lib/common'
 import Spinner from '@/components/core/Spinner'
 import { InputFieldProps, BaseLabel } from './define'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 
 export default function OptionSetsField<T extends FieldValues>(
   props: Omit<InputFieldProps<'optionSets', T>, 'register' | 'errorMessage'> & {
@@ -26,7 +26,8 @@ export default function OptionSetsField<T extends FieldValues>(
     props.formInput.defaultValue || [],
   )
   const addNotification = useStore((state) => state.addNotification)
-  // Register onChange callback
+
+  // set rfh value
   useEffect(() => {
     props.setValue(
       props.formInput.name,
@@ -58,35 +59,15 @@ export default function OptionSetsField<T extends FieldValues>(
       <BaseLabel label={props.formInput.label}>
         <>
           {/* Template */}
-          <Menu as='div' className='relative mx-auto w-fit'>
-            <Menu.Button className='ml-auto flex w-fit items-center gap-1 rounded-2xl px-3 py-2 text-xs text-stone-500 hover:bg-stone-100 active:scale-95'>
-              讀取選項集樣本
-              <ChevronDownIcon className='h-3 w-3' />
-            </Menu.Button>
-            <Transition
-              as={Fragment}
-              enter='transition duration-100 ease-out'
-              enterFrom='transform scale-y-50 opacity-0'
-              enterTo='transform scale-y-100 opacity-100'
-              leave='transition duration-75 ease-out'
-              leaveFrom='transform scale-y-100 opacity-100'
-              leaveTo='transform scale-y-50 opacity-0'
-            >
-              <Menu.Items className='absolute right-0 mt-1 flex origin-top-right flex-col overflow-hidden rounded-2xl border bg-white py-2 shadow-md'>
-                {data.map((optionSets) => (
-                  <Menu.Item>
-                    <button
-                      type='button'
-                      className='px-3 py-2 hover:bg-stone-100'
-                      onClick={() => handleTemplateAdd(optionSets.optionSets)}
-                    >
-                      {optionSets.name}
-                    </button>
-                  </Menu.Item>
-                ))}
-              </Menu.Items>
-            </Transition>
-          </Menu>
+          <DropdownMenu label='樣本' className='ml-auto text-stone-400'>
+            {data.map((optionSets) => (
+              <DropdownMenuItem
+                key={optionSets.name}
+                label={optionSets.name}
+                onClick={() => handleTemplateAdd(optionSets.optionSets)}
+              />
+            ))}
+          </DropdownMenu>
           {/* OptionSets */}
           <Reorder.Group
             axis='y'
@@ -232,7 +213,7 @@ function OptionSetField(props: {
           className='ml-auto rounded-full p-1 hover:bg-stone-100 active:scale-90'
           onClick={() => props.onChange(undefined)}
         >
-          <TrashIcon className='h-4 w-4 text-stone-300' />
+          <XMarkIcon className='h-5 w-5 text-stone-400' />
         </button>
       </div>
       {/* Multiselect */}

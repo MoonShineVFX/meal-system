@@ -5,6 +5,12 @@ import { UseFormRegister, FieldValues, FieldPath } from 'react-hook-form'
 import { OptionSet } from '@/lib/common'
 
 /* Types */
+export type COMData = {
+  menuId: number
+  limitPerUser: number
+  stock: number
+}
+
 // Inputs
 type CheckboxInput = {
   defaultValue?: boolean
@@ -57,6 +63,12 @@ type CategoriesInput = {
   type: 'categories'
   attributes?: never
 }
+type COMInput = {
+  defaultValue?: COMData[]
+  data?: never
+  type: 'com'
+  attributes?: never
+}
 
 export type FormInput = {
   label: string
@@ -73,6 +85,7 @@ export type FormInput = {
   | ImageInput
   | OptionSetsInput
   | CategoriesInput
+  | COMInput
 )
 
 export type FormInputsProps = { [key: string]: FormInput }
@@ -122,7 +135,7 @@ export type InputFieldProps<
 export function BaseLabel(props: {
   label: string
   errorMessage?: string
-  children?: JSX.Element
+  children?: JSX.Element | JSX.Element[]
 }) {
   return (
     <div className='flex h-full flex-col gap-1'>

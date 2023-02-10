@@ -443,7 +443,7 @@ export default function OptionSets() {
       {/* Option sets */}
       {selectedTemplate && (
         <SortableList
-          key={selectedTemplate.id}
+          key={'sets_' + selectedTemplate.id}
           header={selectedTemplate.name + ' 選項集'}
           items={selectedTemplate.optionSets.map((optionSet) => ({
             id: optionSet.name,
@@ -480,7 +480,7 @@ export default function OptionSets() {
       {/* Options */}
       {selectedOptionSet && (
         <SortableList
-          key={selectedOptionSet.name}
+          key={'options_' + selectedOptionSet.name}
           header={`${selectedOptionSet.name} [${
             selectedOptionSet.multiSelect ? '多選' : '單選'
           }]`}
