@@ -20,7 +20,6 @@ function CATEGORY_STRING(isRoot: boolean) {
 
 export default function Categories() {
   const categoryQuery = trpc.category.get.useQuery()
-  const commodityQuery = trpc.commodity.get.useQuery()
   const [selectedRootCategory, setSelectedRootCategory] = useState<
     CategoryDatas[number] | null
   >(null)
@@ -66,33 +65,25 @@ export default function Categories() {
     (category: SubCategory) => {
       showFormDialog({
         title: `編輯屬於 ${category.name} 的餐點`,
+        className: 'h-[70vh]',
         inputs: {
           commodityIds: {
+            className: 'h-full',
             label: '餐點',
-            defaultValue: commodityQuery
-              .data!.filter((commodity) =>
-                commodity.categories.some((cat) => cat.id === category.id),
-              )
-              .map((commodity) => commodity.id.toString()),
-            data: commodityQuery.data!.map((commodity) => ({
-              label: commodity.name,
-              value: commodity.id.toString(),
-            })),
-            type: 'select',
-            attributes: { multiple: true },
+            data: category.id,
+            type: 'commodities',
           },
         },
         useMutation: trpc.category.updateCommodities.useMutation,
         onSubmit(formData, mutation) {
-          const commodityIds = formData.commodityIds.map((id) => parseInt(id))
           mutation.mutate({
-            commodityIds,
+            commodityIds: formData.commodityIds,
             id: category.id,
           })
         },
       })
     },
-    [commodityQuery.data],
+    [],
   )
 
   // Rename
@@ -205,18 +196,9 @@ export default function Categories() {
   )
 
   // Filter
-  if (categoryQuery.isError || commodityQuery.isError)
-    return (
-      <Error
-        description={
-          categoryQuery.error?.message ??
-          commodityQuery.error?.message ??
-          '未知錯誤'
-        }
-      />
-    )
-  if (categoryQuery.isLoading || commodityQuery.isLoading)
-    return <SpinnerBlock />
+  if (categoryQuery.isError)
+    return <Error description={categoryQuery.error?.message ?? '未知錯誤'} />
+  if (categoryQuery.isLoading) return <SpinnerBlock />
 
   return (
     <div className='grid h-full grid-cols-3 gap-8 p-8'>

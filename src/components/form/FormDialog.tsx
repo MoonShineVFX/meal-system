@@ -156,7 +156,7 @@ export default function FormDialog<
                 >
                   {[...Array(columns).keys()].map((column) => (
                     // Column
-                    <div key={column} className='flex flex-col gap-4'>
+                    <div key={column} className='flex grow flex-col gap-4'>
                       {inputs.map((formInput) => {
                         if (formInput.column !== column + 1) return null
 

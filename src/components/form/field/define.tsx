@@ -69,6 +69,12 @@ type COMInput = {
   type: 'com'
   attributes?: never
 }
+type CommoditiesInput = {
+  defaultValue?: number[]
+  data: number // category id
+  type: 'commodities'
+  attributes?: never
+}
 
 export type FormInput = {
   label: string
@@ -86,6 +92,7 @@ export type FormInput = {
   | OptionSetsInput
   | CategoriesInput
   | COMInput
+  | CommoditiesInput
 )
 
 export type FormInputsProps = { [key: string]: FormInput }
@@ -118,6 +125,8 @@ export type FormData<TInputs extends FormInputsProps> = {
     ? number[]
     : TInputs[K]['type'] extends 'com'
     ? COMData[]
+    : TInputs[K]['type'] extends 'commodities'
+    ? number[]
     : never
 }
 
