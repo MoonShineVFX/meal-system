@@ -126,7 +126,6 @@ export default function COMField<T extends FieldValues>(
                       <input
                         type='number'
                         className='w-1/2 rounded-md border border-stone-300 bg-stone-50 py-1 px-2 text-right focus:border-yellow-500 focus:ring-yellow-500'
-                        defaultValue={0}
                         value={comData.stock}
                         min={0}
                         max={999}
@@ -157,7 +156,6 @@ export default function COMField<T extends FieldValues>(
                       <input
                         type='number'
                         className='w-1/2 rounded-md border border-stone-300 bg-stone-50 py-1 px-2 text-right focus:border-yellow-500 focus:ring-yellow-500'
-                        defaultValue={0}
                         min={0}
                         max={comData.stock === 0 ? 999 : comData.stock}
                         value={comData.limitPerUser}

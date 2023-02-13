@@ -116,6 +116,8 @@ export type FormData<TInputs extends FormInputsProps> = {
     ? OptionSet[]
     : TInputs[K]['type'] extends 'categories'
     ? number[]
+    : TInputs[K]['type'] extends 'com'
+    ? COMData[]
     : never
 }
 

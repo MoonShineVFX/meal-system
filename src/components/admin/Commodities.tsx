@@ -64,10 +64,18 @@ export default function Commodities() {
           type: 'optionSets',
         },
       },
-      useMutation: trpc.optionSet.create.useMutation,
+      useMutation: trpc.commodity.create.useMutation,
       onSubmit(formData, mutation) {
         console.log(formData)
-        // mutation.mutate({})
+        mutation.mutate({
+          name: formData.name,
+          price: formData.price,
+          description: formData.description,
+          optionSets: formData.optionSets,
+          categoryIds: formData.categories,
+          imageId: formData.image,
+          menus: formData.menus,
+        })
       },
     })
   }, [data]) // dev for frequent re-render
