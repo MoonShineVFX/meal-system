@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { PencilIcon } from '@heroicons/react/24/outline'
 
 import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
@@ -6,14 +7,16 @@ import Table from '@/components/core/Table'
 import trpc from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
-import { settings } from '@/lib/common'
+import { settings, getMenuName } from '@/lib/common'
 import { useFormDialog } from '@/components/form/FormDialog'
 
 export default function Commodities() {
   const { showFormDialog, formDialog } = useFormDialog()
-  const { data, error, isError, isLoading } = trpc.commodity.get.useQuery()
+  const { data, error, isError, isLoading } = trpc.commodity.get.useQuery({
+    includeMenus: true,
+  })
 
-  const handleAddCommodity = useCallback(async () => {
+  const handleAddCommodity = useCallback(() => {
     // show
     showFormDialog({
       title: '新增餐點',
@@ -77,8 +80,20 @@ export default function Commodities() {
           menus: formData.menus,
         })
       },
+      closeConfirm: {
+        title: '取消新增餐點',
+        content: '確定要取消新增餐點嗎？',
+        cancel: true,
+        cancelText: '繼續新增',
+        confirmText: '確定取消',
+        confirmButtonTheme: 'danger',
+      },
     })
   }, [data]) // dev for frequent re-render
+
+  const handleEditCommodity = useCallback((commodityId: number) => {
+    console.log(commodityId)
+  }, [])
 
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
@@ -117,9 +132,23 @@ export default function Commodities() {
             },
             {
               name: '名稱',
-              cellClassName: 'min-w-[18ch]',
               sort: true,
-              render: (row) => row.name,
+              hint: (row) => row.name,
+              render: (row) => (
+                <button
+                  className='group/edit flex items-center rounded-2xl p-2 hover:bg-black/5 active:scale-90'
+                  onClick={() => handleEditCommodity(row.id)}
+                >
+                  {row.name}
+                  <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
+                </button>
+              ),
+              sort: (a, b) => a.name.localeCompare(b.name), //TODO: fix ts error
+            },
+            {
+              name: '價錢',
+              sort: true,
+              render: (row) => row.price,
             },
             {
               name: '描述',
@@ -128,11 +157,48 @@ export default function Commodities() {
               render: (row) => row.description,
             },
             {
-              name: '價錢',
+              name: '分類',
               sort: true,
-              render: (row) => row.price,
+              render: (row) => row.categories.map((c) => c.name).join(', '),
+            },
+            {
+              name: '選項',
+              sort: true,
+              hint: (row) =>
+                row.optionSets
+                  ? row.optionSets
+                      .map((o) => `${o.name}: ${o.options.join(', ')}`)
+                      .join('\n')
+                  : '無選項',
+              render: (row) =>
+                row.optionSets
+                  ? row.optionSets
+                      .map((o) => `${o.name}(${o.options.length})`)
+                      .join(', ')
+                  : '無選項',
+            },
+            {
+              name: '菜單',
+              cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
+              sort: true,
+              hint: (row) =>
+                row.onMenus.length > 0
+                  ? [...row.onMenus]
+                      .reverse()
+                      .map((com) => getMenuName(com.menu))
+                      .join('\n')
+                  : '無菜單',
+              render: (row) =>
+                row.onMenus.length > 0
+                  ? [...row.onMenus]
+                      .reverse()
+                      .map((com) => getMenuName(com.menu))
+                      .join(', ')
+                  : '無菜單',
             },
           ]}
+          idField='id'
+          onSelectedIdsChange={(ids) => console.log(ids)}
         />
       </div>
       {formDialog}

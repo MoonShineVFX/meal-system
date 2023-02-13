@@ -19,7 +19,7 @@ export default function CommoditiesField<T extends FieldValues>(
   )
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [onlyShowSelected, setOnlyShowSelected] = useState<boolean>(false)
-  const { data, isError, isLoading } = trpc.commodity.get.useQuery()
+  const { data, isError, isLoading } = trpc.commodity.get.useQuery({})
 
   // set rfh value
   useEffect(() => {

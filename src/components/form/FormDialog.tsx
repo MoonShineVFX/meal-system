@@ -3,6 +3,7 @@ import { Fragment, useEffect, useState, useCallback } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { useForm, SubmitHandler, Path, DeepPartial } from 'react-hook-form'
 
+import { useDialog } from '@/components/core/Dialog'
 import { UseMutationResult } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
 
@@ -29,6 +30,7 @@ type FormDialogProps<
     formData: ExpandRecursively<FormData<U>>,
     mutation: T extends undefined ? never : ReturnType<Extract<T, Function>>,
   ) => void
+  closeConfirm?: Parameters<ReturnType<typeof useDialog>['showDialog']>[0]
 }
 
 /* Main */
@@ -51,6 +53,7 @@ export default function FormDialog<
   const mutation = props.useMutation
     ? (props.useMutation() as ReturnType<Extract<T, Function>>)
     : undefined
+  const { dialog: closingDialog, showDialog: showClosingDialog } = useDialog()
 
   // Add key to input.name
   const [inputs, setInputs] = useState<(FormInput & { name: Path<Inputs> })[]>(
@@ -113,9 +116,23 @@ export default function FormDialog<
     }
   }
 
+  // Handle close
+  const handleClose = useCallback(() => {
+    if (props.closeConfirm) {
+      showClosingDialog({
+        ...props.closeConfirm,
+        onConfirm: () => {
+          props.onClose()
+        },
+      })
+    } else {
+      props.onClose()
+    }
+  }, [])
+
   return (
     <Transition show={props.open} as={Fragment} appear={true}>
-      <Dialog onClose={props.onClose} className='relative z-50'>
+      <Dialog onClose={handleClose} className='relative z-50'>
         {/* Backdrop */}
         <Transition.Child
           as={Fragment}
@@ -187,7 +204,7 @@ export default function FormDialog<
                       textClassName='text-lg font-bold p-2 px-4'
                       theme='support'
                       type='button'
-                      onClick={props.onClose}
+                      onClick={handleClose}
                     />
                   )}
                   <Button
@@ -204,6 +221,7 @@ export default function FormDialog<
             </Dialog.Panel>
           </Transition.Child>
         </div>
+        {closingDialog}
       </Dialog>
     </Transition>
   )

@@ -190,6 +190,7 @@ export default function Categories() {
           type: isRoot ? 'root' : 'sub',
         },
         cancel: true,
+        confirmButtonTheme: 'danger',
       })
     },
     [],

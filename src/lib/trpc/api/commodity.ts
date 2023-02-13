@@ -53,7 +53,13 @@ export const CommodityRouter = router({
         skipNotify: false,
       })
     }),
-  get: staffProcedure.query(async () => {
-    return await getCommodities()
-  }),
+  get: staffProcedure
+    .input(
+      z.object({
+        includeMenus: z.boolean().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      return await getCommodities(input)
+    }),
 })

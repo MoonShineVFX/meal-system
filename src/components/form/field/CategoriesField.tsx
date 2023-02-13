@@ -43,7 +43,7 @@ export default function CategoriesField<T extends FieldValues>(
             return (
               <div
                 key={id}
-                className='flex items-center gap-2 rounded-2xl bg-stone-100 px-2 py-1'
+                className='flex items-center gap-2 rounded-2xl border bg-stone-100 px-2 py-1'
               >
                 <span>{category?.name}</span>
                 <button

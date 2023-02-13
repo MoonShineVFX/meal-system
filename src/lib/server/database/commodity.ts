@@ -1,5 +1,5 @@
 import { prisma } from './define'
-import { OptionSet } from '@/lib/common'
+import { OptionSet, ConvertPrismaJson } from '@/lib/common'
 
 /* Create Commodity */
 type CreateCommodityArgs = {
@@ -35,7 +35,7 @@ export async function createCommodity({
 }
 
 /* Get Commodities */
-export async function getCommodities() {
+export async function getCommodities(props: { includeMenus?: boolean }) {
   const commodities = await prisma.commodity.findMany({
     where: {
       isDeleted: false,
@@ -43,8 +43,21 @@ export async function getCommodities() {
     include: {
       categories: true,
       image: true,
+      onMenus: props.includeMenus
+        ? {
+            select: {
+              menu: {
+                select: {
+                  name: true,
+                  type: true,
+                  date: true,
+                },
+              },
+            },
+          }
+        : undefined,
     },
   })
 
-  return commodities
+  return commodities as ConvertPrismaJson<typeof commodities>
 }

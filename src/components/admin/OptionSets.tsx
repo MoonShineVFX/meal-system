@@ -352,6 +352,7 @@ export default function OptionSets() {
         ids: selectedIds,
       },
       cancel: true,
+      confirmButtonTheme: 'danger',
     })
   }, [])
 
@@ -371,6 +372,7 @@ export default function OptionSets() {
           optionSets: newOptionSets,
         },
         cancel: true,
+        confirmButtonTheme: 'danger',
       })
     },
     [selectedTemplate],
@@ -398,6 +400,7 @@ export default function OptionSets() {
           optionSets: newOptionSets,
         },
         cancel: true,
+        confirmButtonTheme: 'danger',
       })
     },
     [selectedTemplate, selectedOptionSet],

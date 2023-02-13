@@ -5,25 +5,25 @@ import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
 import { ChevronUpIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 
-type Layout<T extends object[]> = ({
+type Layout<T extends object[]> = {
   name: string
   colClassName?: string
   cellClassName?: string
-} & (
-  | {
-      render: (row: T[number]) => number | string
-      sort?: boolean // Only render primitive can be sorted defaultly
-    }
-  | {
-      render: (row: T[number]) => number | string | JSX.Element
-      sort?: (a: T[number], b: T[number]) => number
-    }
-))[]
+  hint?: (row: T[number]) => string
+  render: (row: T[number]) => number | string | JSX.Element
+  sort?: ((a: T[number], b: T[number]) => number) | boolean
+}[]
 
-export default function Table<T extends object[]>(props: {
+export default function Table<
+  T extends object[],
+  K extends keyof T[number],
+>(props: {
   data: T
   columns: Layout<T>
+  idField?: K
+  onSelectedIdsChange?: (ids: T[number][K][]) => void
 }) {
+  const [selectedIds, setSelectedIds] = useState<T[number][K][]>([])
   const [data, setData] = useState<T[number][]>(props.data)
   const [sortColumn, setSortColumn] = useState<
     { name: Layout<T>[number]['name']; type: 'asc' | 'desc' } | undefined
@@ -65,6 +65,13 @@ export default function Table<T extends object[]>(props: {
     }
   }, [props.data, sortColumn])
 
+  // onchange selected ids
+  useEffect(() => {
+    if (props.onSelectedIdsChange) {
+      props.onSelectedIdsChange(selectedIds)
+    }
+  }, [selectedIds])
+
   // Toggle sort column
   const handleSortColumn = useCallback(
     (columnName: string) => {
@@ -85,99 +92,164 @@ export default function Table<T extends object[]>(props: {
   )
 
   return (
-    <TableVirtuoso
-      className='ms-scroll'
-      data={data}
-      increaseViewportBy={4}
-      fixedHeaderContent={() => (
-        // Header
-        <tr className='divide-stone-200 bg-stone-100'>
-          {props.columns.map((col) => {
-            const renderType = data[0] ? typeof col.render(data[0]) : 'string'
-            let sortType: 'asc' | 'desc' | 'none' | undefined
-            if (col.sort) {
-              if (sortColumn?.name === col.name) {
-                sortType = sortColumn.type
-              } else {
-                sortType = 'none'
-              }
-            } else {
-              sortType = undefined
-            }
-
-            return (
+    <div className='h-full w-fit min-w-full overflow-hidden rounded-2xl border'>
+      <TableVirtuoso
+        className='ms-scroll'
+        data={data}
+        increaseViewportBy={4}
+        fixedHeaderContent={() => (
+          // Header
+          <tr className='bg-stone-100 shadow'>
+            {props.idField && (
               <th
-                key={col.name}
+                key='select'
                 role='col'
-                className={twMerge(
-                  'whitespace-nowrap p-4 hover:bg-stone-200',
-                  col.colClassName,
-                )}
+                className={'whitespace-nowrap p-4 hover:bg-stone-200'}
               >
-                <div
-                  className={twMerge(
-                    'flex items-center font-normal',
-                    renderType === 'string' && 'justify-start',
-                    renderType === 'number' && 'justify-end',
-                    renderType === 'object' && 'justify-center',
-                    col.sort && 'cursor-pointer',
-                  )}
-                  onClick={() => handleSortColumn(col.name)}
-                >
-                  {col.name}
-                  {/* Sort icon */}
-                  {sortType === 'asc' && (
-                    <ChevronDownIcon className='h-4 w-4' />
-                  )}
-                  {sortType === 'desc' && <ChevronUpIcon className='h-4 w-4' />}
-                  {sortType === 'none' && (
-                    <ChevronUpDownIcon className='h-4 w-4' />
-                  )}
-                </div>
+                <label className='flex cursor-pointer items-center'>
+                  <input
+                    className='focus:ring-none mr-2 h-5 w-5 cursor-pointer rounded-md border-stone-300 text-yellow-500 focus:ring-transparent'
+                    type='checkbox'
+                    checked={selectedIds.length === data.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds(data.map((row) => row[props.idField!]))
+                      } else {
+                        setSelectedIds([])
+                      }
+                    }}
+                  />
+                  <span>全選</span>
+                </label>
               </th>
-            )
-          })}
-          <th className='w-full hover:bg-stone-200'></th>
-        </tr>
-      )}
-      itemContent={(_, row) => (
-        <>
-          {/* Row */}
-          {props.columns.map((col) => {
-            const content = col.render(row)
-            return (
-              <td
-                key={col.name}
-                className={twMerge(
-                  'whitespace-nowrap p-4',
-                  typeof content === 'string' && 'text-left',
-                  typeof content === 'number' && 'text-right',
-                  col.cellClassName,
-                )}
-                title={typeof content === 'string' ? content : undefined}
-              >
-                {col.render(row)}
+            )}
+            {props.columns.map((col) => {
+              const renderType = data[0] ? typeof col.render(data[0]) : 'string'
+              let sortType: 'asc' | 'desc' | 'none' | undefined
+              if (col.sort) {
+                if (sortColumn?.name === col.name) {
+                  sortType = sortColumn.type
+                } else {
+                  sortType = 'none'
+                }
+              } else {
+                sortType = undefined
+              }
+
+              return (
+                <th
+                  key={col.name}
+                  role='col'
+                  className={twMerge(
+                    'whitespace-nowrap p-4 hover:bg-stone-200',
+                    col.colClassName,
+                  )}
+                >
+                  <div
+                    className={twMerge(
+                      'flex items-center font-normal',
+                      renderType === 'string' && 'justify-start',
+                      renderType === 'number' && 'justify-end',
+                      renderType === 'object' && 'justify-center',
+                      col.sort && 'cursor-pointer',
+                    )}
+                    onClick={() => handleSortColumn(col.name)}
+                  >
+                    {col.name}
+                    {/* Sort icon */}
+                    {sortType === 'asc' && (
+                      <ChevronDownIcon className='h-4 w-4' />
+                    )}
+                    {sortType === 'desc' && (
+                      <ChevronUpIcon className='h-4 w-4' />
+                    )}
+                    {sortType === 'none' && (
+                      <ChevronUpDownIcon className='h-4 w-4' />
+                    )}
+                  </div>
+                </th>
+              )
+            })}
+            <th className='w-full hover:bg-stone-200'></th>
+          </tr>
+        )}
+        itemContent={(_, row) => (
+          <>
+            {/* Row */}
+            {props.idField && (
+              <td key='select' className='p-4 text-center'>
+                <input
+                  className='focus:ring-none h-6 w-6 cursor-pointer rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
+                  type='checkbox'
+                  checked={selectedIds.includes(row[props.idField])}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedIds([...selectedIds, row[props.idField!]])
+                    } else {
+                      setSelectedIds(
+                        selectedIds.filter((id) => id !== row[props.idField!]),
+                      )
+                    }
+                  }}
+                />
               </td>
-            )
-          })}
-        </>
-      )}
-      components={{
-        // Table
-        Table: ({ style, ...props }) => (
-          <div className='w-fit min-w-full overflow-hidden rounded-2xl border'>
+            )}
+            {props.columns.map((col) => {
+              const content = col.render(row)
+              const hint = col.hint ? col.hint(row) : undefined
+              return (
+                <td
+                  key={col.name}
+                  className={twMerge(
+                    'whitespace-nowrap p-4',
+                    typeof content === 'string' && 'text-left',
+                    typeof content === 'number' && 'text-right',
+                    col.cellClassName,
+                  )}
+                  title={
+                    hint ?? (typeof content === 'string' ? content : undefined)
+                  }
+                >
+                  {col.render(row)}
+                </td>
+              )
+            })}
+          </>
+        )}
+        components={{
+          // Table
+          Table: ({ style, ...props }) => (
             <table
               {...props}
               className='divide-y divide-stone-200'
               style={style}
             />
-          </div>
-        ),
-        // Body
-        TableBody: React.forwardRef(({ style, ...props }, ref) => (
-          <tbody className='divide-y divide-stone-200' {...props} ref={ref} />
-        )),
-      }}
-    />
+          ),
+          TableRow: ({ style, ...rest }) => (
+            <tr
+              {...rest}
+              className={twMerge(
+                'hover:bg-stone-100',
+                props.idField &&
+                  selectedIds.includes(
+                    data[rest['data-item-index']][props.idField!],
+                  ) &&
+                  'bg-yellow-50 hover:bg-yellow-100',
+              )}
+              style={style}
+            />
+          ),
+          // Body
+          TableBody: React.forwardRef(({ style, ...props }, ref) => (
+            <tbody
+              className='divide-y divide-stone-200'
+              {...props}
+              ref={ref}
+              style={style}
+            />
+          )),
+        }}
+      />
+    </div>
   )
 }

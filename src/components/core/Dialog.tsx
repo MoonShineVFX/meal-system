@@ -19,6 +19,7 @@ type DialogProps<T extends UseMutationResult> = {
   icon?: string | null
   useMutation?: () => T
   mutationOptions?: Parameters<T['mutate']>[0]
+  onConfirm?: () => void
 }
 
 export default function DialogCore<T extends UseMutationResult>(
@@ -32,9 +33,10 @@ export default function DialogCore<T extends UseMutationResult>(
           props.onClose()
         },
       })
-    } else {
-      props.onClose()
+    } else if (props.onConfirm) {
+      props.onConfirm()
     }
+    props.onClose()
   }, [mutation, props.mutationOptions])
 
   useEffect(() => {
