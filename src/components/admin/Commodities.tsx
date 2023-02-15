@@ -16,84 +16,115 @@ export default function Commodities() {
     includeMenus: true,
   })
 
-  const handleAddCommodity = useCallback(() => {
-    // show
-    showFormDialog({
-      title: '新增餐點',
-      inputs: {
-        image: {
-          column: 1,
-          label: '圖片',
-          type: 'image',
-          className: 'row-span-full',
-        },
-        name: {
-          label: '名稱',
-          type: 'text',
-          attributes: {
-            placeholder: '餐點名稱',
+  const handleEditCommodity = useCallback(
+    (commodity?: NonNullable<typeof data>[number]) => {
+      const title = commodity ? '編輯餐點' : '新增餐點'
+      // show
+      showFormDialog({
+        title,
+        inputs: {
+          image: {
+            column: 1,
+            label: '圖片',
+            type: 'image',
+            className: 'row-span-full',
+            defaultValue: commodity?.image?.id,
           },
-          options: {
-            required: '請輸入名稱',
+          name: {
+            label: '名稱',
+            type: 'text',
+            defaultValue: commodity?.name,
+            attributes: {
+              placeholder: '餐點名稱',
+            },
+            options: {
+              required: '請輸入名稱',
+            },
+          },
+          description: {
+            defaultValue: commodity?.description,
+            label: '描述',
+            type: 'textarea',
+            attributes: {
+              style: { minHeight: '9rem' },
+            },
+          },
+          price: {
+            defaultValue: commodity?.price ?? 0,
+            label: '價錢',
+            type: 'number',
+            options: {
+              required: '請輸入價錢',
+              min: { value: 0, message: '價錢不能小於 0' },
+              max: { value: 9999, message: '價錢不能大於 9999' },
+            },
+          },
+          categories: {
+            label: '分類',
+            column: 2,
+            type: 'categories',
+            defaultValue: commodity?.categories.map((c) => c.id),
+          },
+          menus: {
+            label: '菜單',
+            column: 2,
+            type: 'com',
+            defaultValue: commodity?.onMenus.map((com) => ({
+              menuId: com.menu.id,
+              limitPerUser: com.limitPerUser,
+              stock: com.stock,
+            })),
+          },
+          optionSets: {
+            label: '選項',
+            column: 3,
+            type: 'optionSets',
+            defaultValue: commodity?.optionSets,
           },
         },
-        description: {
-          label: '描述',
-          type: 'textarea',
+        useMutation: commodity
+          ? trpc.commodity.update.useMutation
+          : trpc.commodity.create.useMutation,
+        onSubmit(formData, mutation) {
+          if (commodity) {
+            ;(
+              mutation as ReturnType<typeof trpc.commodity.update.useMutation>
+            ).mutate({
+              id: commodity.id,
+              name: formData.name,
+              price: formData.price,
+              description: formData.description,
+              optionSets: formData.optionSets,
+              categoryIds: formData.categories,
+              imageId: formData.image,
+              menus: formData.menus,
+            })
+          } else {
+            ;(
+              mutation as ReturnType<typeof trpc.commodity.create.useMutation>
+            ).mutate({
+              name: formData.name,
+              price: formData.price,
+              description: formData.description,
+              optionSets: formData.optionSets,
+              categoryIds: formData.categories,
+              imageId: formData.image,
+              menus: formData.menus,
+            })
+          }
         },
-        price: {
-          label: '價錢',
-          type: 'number',
-          defaultValue: 0,
-          options: {
-            required: '請輸入價錢',
-            min: { value: 0, message: '價錢不能小於 0' },
-            max: { value: 9999, message: '價錢不能大於 9999' },
-          },
+        closeConfirm: {
+          title: `取消${title}`,
+          content: `確定要取消${title}嗎？`,
+          cancel: true,
+          cancelText: '繼續',
+          confirmText: '確定取消',
+          confirmButtonTheme: 'danger',
         },
-        categories: {
-          label: '分類',
-          column: 2,
-          type: 'categories',
-        },
-        menus: {
-          label: '菜單',
-          column: 2,
-          type: 'com',
-        },
-        optionSets: {
-          label: '選項',
-          column: 3,
-          type: 'optionSets',
-        },
-      },
-      useMutation: trpc.commodity.create.useMutation,
-      onSubmit(formData, mutation) {
-        console.log(formData)
-        mutation.mutate({
-          name: formData.name,
-          price: formData.price,
-          description: formData.description,
-          optionSets: formData.optionSets,
-          categoryIds: formData.categories,
-          imageId: formData.image,
-          menus: formData.menus,
-        })
-      },
-      closeConfirm: {
-        title: '取消新增餐點',
-        content: '確定要取消新增餐點嗎？',
-        cancel: true,
-        cancelText: '繼續新增',
-        confirmText: '確定取消',
-        confirmButtonTheme: 'danger',
-      },
-    })
-  }, [data]) // dev for frequent re-render
-
-  const handleEditCommodity = useCallback((commodityId: number) => {
-    console.log(commodityId)
-  }, [])
+      })
+    },
+    [data],
+  ) // dev for frequent re-render
 
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
@@ -109,7 +140,7 @@ export default function Commodities() {
               label='新增餐點'
               className='py-3 px-4'
               textClassName='font-bold'
-              onClick={handleAddCommodity}
+              onClick={() => handleEditCommodity()}
             />
           </div>
         </div>
@@ -132,18 +163,18 @@ export default function Commodities() {
             },
             {
               name: '名稱',
-              sort: true,
+              unhidable: true,
               hint: (row) => row.name,
               render: (row) => (
                 <button
                   className='group/edit flex items-center rounded-2xl p-2 hover:bg-black/5 active:scale-90'
-                  onClick={() => handleEditCommodity(row.id)}
+                  onClick={() => handleEditCommodity(row)}
                 >
                   {row.name}
                   <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
                 </button>
               ),
-              sort: (a, b) => a.name.localeCompare(b.name), //TODO: fix ts error
+              sort: (a, b) => a.name.localeCompare(b.name),
             },
             {
               name: '價錢',
@@ -195,6 +226,18 @@ export default function Commodities() {
                       .map((com) => getMenuName(com.menu))
                       .join(', ')
                   : '無菜單',
+            },
+            {
+              name: '創建日期',
+              render: (row) => row.createdAt.toLocaleDateString(),
+              hint: (row) => row.createdAt.toLocaleString(),
+              sort: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+            },
+            {
+              name: '修改日期',
+              render: (row) => row.updatedAt.toLocaleDateString(),
+              hint: (row) => row.updatedAt.toLocaleString(),
+              sort: (a, b) => a.updatedAt.getTime() - b.updatedAt.getTime(),
             },
           ]}
           idField='id'

@@ -466,3 +466,21 @@ export async function addCommodityToMenu({
     },
   })
 }
+
+export async function removeCommodityFromMenus(args: {
+  commodityId: number
+  excludeMenuIds: number[]
+}) {
+  const { commodityId, excludeMenuIds } = args
+  return await prisma.commodityOnMenu.updateMany({
+    where: {
+      commodityId,
+      menuId: {
+        notIn: excludeMenuIds,
+      },
+    },
+    data: {
+      isDeleted: true,
+    },
+  })
+}

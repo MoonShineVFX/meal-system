@@ -34,6 +34,57 @@ export async function createCommodity({
   return commodity
 }
 
+/* Edit Commodity */
+type EditCommodityArgs = CreateCommodityArgs & {
+  id: number
+}
+export async function editCommodity({
+  id,
+  name,
+  price,
+  description,
+  optionSets,
+  categoryIds,
+  imageId,
+}: EditCommodityArgs) {
+  const originCommodity = await prisma.commodity.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      categories: true,
+    },
+  })
+
+  if (!originCommodity) {
+    throw new Error('Commodity not found')
+  }
+
+  const commodity = await prisma.commodity.update({
+    where: {
+      id,
+    },
+    data: {
+      name,
+      description,
+      price,
+      optionSets: optionSets ?? [],
+      imageId,
+      categories: {
+        connect: categoryIds?.map((id) => ({ id })) ?? [],
+        disconnect: originCommodity.categories.filter(
+          (category) => !categoryIds?.includes(category.id),
+        ),
+      },
+    },
+    include: {
+      onMenus: true,
+    },
+  })
+
+  return commodity
+}
+
 /* Get Commodities */
 export async function getCommodities(props: { includeMenus?: boolean }) {
   const commodities = await prisma.commodity.findMany({
@@ -46,8 +97,11 @@ export async function getCommodities(props: { includeMenus?: boolean }) {
       onMenus: props.includeMenus
         ? {
             select: {
+              limitPerUser: true,
+              stock: true,
               menu: {
                 select: {
+                  id: true,
                   name: true,
                   type: true,
                   date: true,
@@ -56,6 +110,9 @@ export async function getCommodities(props: { includeMenus?: boolean }) {
             },
           }
         : undefined,
+    },
+    orderBy: {
+      id: 'asc',
     },
   })
 

@@ -1,4 +1,4 @@
-/* Modified from floating-ui example */
+/* Modified from floating-ui example: https://codesandbox.io/s/admiring-lamport-5wt3yg */
 import * as React from 'react'
 import { twMerge } from 'tailwind-merge'
 import {

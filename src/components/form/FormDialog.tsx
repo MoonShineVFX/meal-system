@@ -46,7 +46,7 @@ export default function FormDialog<
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
     setValue,
   } = useForm<Inputs>()
   const [columns, setColumns] = useState(1)
@@ -118,7 +118,7 @@ export default function FormDialog<
 
   // Handle close
   const handleClose = useCallback(() => {
-    if (props.closeConfirm) {
+    if (props.closeConfirm && isDirty) {
       showClosingDialog({
         ...props.closeConfirm,
         onConfirm: () => {
@@ -128,7 +128,7 @@ export default function FormDialog<
     } else {
       props.onClose()
     }
-  }, [])
+  }, [isDirty, props.closeConfirm, props.onClose])
 
   return (
     <Transition show={props.open} as={Fragment} appear={true}>

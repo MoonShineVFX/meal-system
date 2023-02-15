@@ -16,7 +16,11 @@ export default function COMField<T extends FieldValues>(
   const [comDatas, setComDatas] = useState<COMData[]>(
     props.formInput.defaultValue ?? [],
   )
-  const { data, isError, isLoading } = trpc.menu.getActives.useQuery({})
+  const { data, isError, isLoading } = trpc.menu.getActives.useQuery({
+    includeIds:
+      props.formInput.defaultValue?.map((comData) => comData.menuId) ??
+      undefined,
+  })
 
   // set rfh value
   useEffect(() => {

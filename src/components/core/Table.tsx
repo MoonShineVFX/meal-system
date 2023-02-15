@@ -1,12 +1,19 @@
 import React, { useCallback, useState, useEffect } from 'react'
 import { TableVirtuoso } from 'react-virtuoso'
 import { twMerge } from 'tailwind-merge'
-import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
-import { ChevronUpIcon } from '@heroicons/react/24/outline'
-import { ChevronDownIcon } from '@heroicons/react/24/outline'
+import {
+  ChevronUpDownIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from '@heroicons/react/24/outline'
+
+import { ContextMenu, ContextMenuItem } from './ContextMenu'
 
 type Layout<T extends object[]> = {
   name: string
+  unhidable?: boolean
   colClassName?: string
   cellClassName?: string
   hint?: (row: T[number]) => string
@@ -28,6 +35,10 @@ export default function Table<
   const [sortColumn, setSortColumn] = useState<
     { name: Layout<T>[number]['name']; type: 'asc' | 'desc' } | undefined
   >(undefined)
+  const [filterColumns, setFilterColumns] = useState<
+    Layout<T>[number]['name'][]
+  >([])
+  const contextMenuRef = React.useRef<HTMLTableRowElement>(null)
 
   // Sort data
   useEffect(() => {
@@ -99,7 +110,44 @@ export default function Table<
         increaseViewportBy={4}
         fixedHeaderContent={() => (
           // Header
-          <tr className='bg-stone-100 shadow'>
+          <tr className='bg-stone-100 shadow' ref={contextMenuRef}>
+            {/* ContextMenu */}
+            <ContextMenu parentRef={contextMenuRef}>
+              {props.columns.map((col) => {
+                if (col.unhidable) return null
+                const isFiltered = filterColumns.includes(col.name)
+                return (
+                  <ContextMenuItem
+                    key={col.name}
+                    label={
+                      <span
+                        className={twMerge(
+                          'flex items-center gap-2',
+                          isFiltered && 'text-stone-400',
+                        )}
+                      >
+                        {isFiltered ? (
+                          <EyeSlashIcon className='h-4 w-4' />
+                        ) : (
+                          <EyeIcon className='h-4 w-4' />
+                        )}
+                        {col.name}
+                      </span>
+                    }
+                    onClick={() => {
+                      if (isFiltered) {
+                        setFilterColumns(
+                          filterColumns.filter((name) => name !== col.name),
+                        )
+                      } else {
+                        setFilterColumns([...filterColumns, col.name])
+                      }
+                    }}
+                  />
+                )
+              })}
+            </ContextMenu>
+            {/* Select field */}
             {props.idField && (
               <th
                 key='select'
@@ -108,7 +156,7 @@ export default function Table<
               >
                 <label className='flex cursor-pointer items-center'>
                   <input
-                    className='focus:ring-none mr-2 h-5 w-5 cursor-pointer rounded-md border-stone-300 text-yellow-500 focus:ring-transparent'
+                    className='focus:ring-none mr-1 h-5 w-5 cursor-pointer rounded-md border-stone-300 text-yellow-500 focus:ring-transparent'
                     type='checkbox'
                     checked={selectedIds.length === data.length}
                     onChange={(e) => {
@@ -119,63 +167,68 @@ export default function Table<
                       }
                     }}
                   />
-                  <span>全選</span>
+                  <span className='text-sm font-normal'>全選</span>
                 </label>
               </th>
             )}
-            {props.columns.map((col) => {
-              const renderType = data[0] ? typeof col.render(data[0]) : 'string'
-              let sortType: 'asc' | 'desc' | 'none' | undefined
-              if (col.sort) {
-                if (sortColumn?.name === col.name) {
-                  sortType = sortColumn.type
+            {props.columns
+              .filter((col) => !filterColumns.includes(col.name))
+              .map((col) => {
+                const renderType = data[0]
+                  ? typeof col.render(data[0])
+                  : 'string'
+                let sortType: 'asc' | 'desc' | 'none' | undefined
+                if (col.sort) {
+                  if (sortColumn?.name === col.name) {
+                    sortType = sortColumn.type
+                  } else {
+                    sortType = 'none'
+                  }
                 } else {
-                  sortType = 'none'
+                  sortType = undefined
                 }
-              } else {
-                sortType = undefined
-              }
 
-              return (
-                <th
-                  key={col.name}
-                  role='col'
-                  className={twMerge(
-                    'whitespace-nowrap p-4 hover:bg-stone-200',
-                    col.colClassName,
-                  )}
-                >
-                  <div
+                return (
+                  <th
+                    key={col.name}
+                    role='col'
                     className={twMerge(
-                      'flex items-center font-normal',
-                      renderType === 'string' && 'justify-start',
-                      renderType === 'number' && 'justify-end',
-                      renderType === 'object' && 'justify-center',
-                      col.sort && 'cursor-pointer',
+                      'whitespace-nowrap p-4 hover:bg-stone-200',
+                      col.colClassName,
                     )}
-                    onClick={() => handleSortColumn(col.name)}
                   >
-                    {col.name}
-                    {/* Sort icon */}
-                    {sortType === 'asc' && (
-                      <ChevronDownIcon className='h-4 w-4' />
-                    )}
-                    {sortType === 'desc' && (
-                      <ChevronUpIcon className='h-4 w-4' />
-                    )}
-                    {sortType === 'none' && (
-                      <ChevronUpDownIcon className='h-4 w-4' />
-                    )}
-                  </div>
-                </th>
-              )
-            })}
+                    <div
+                      className={twMerge(
+                        'flex items-center font-normal',
+                        renderType === 'string' && 'justify-start',
+                        renderType === 'number' && 'justify-end',
+                        renderType === 'object' && 'justify-center',
+                        col.sort && 'cursor-pointer',
+                      )}
+                      onClick={() => handleSortColumn(col.name)}
+                    >
+                      {col.name}
+                      {/* Sort icon */}
+                      {sortType === 'asc' && (
+                        <ChevronDownIcon className='h-4 w-4' />
+                      )}
+                      {sortType === 'desc' && (
+                        <ChevronUpIcon className='h-4 w-4' />
+                      )}
+                      {sortType === 'none' && (
+                        <ChevronUpDownIcon className='h-4 w-4' />
+                      )}
+                    </div>
+                  </th>
+                )
+              })}
             <th className='w-full hover:bg-stone-200'></th>
           </tr>
         )}
         itemContent={(_, row) => (
           <>
             {/* Row */}
+            {/* select */}
             {props.idField && (
               <td key='select' className='p-4 text-center'>
                 <input
@@ -194,26 +247,32 @@ export default function Table<
                 />
               </td>
             )}
-            {props.columns.map((col) => {
-              const content = col.render(row)
-              const hint = col.hint ? col.hint(row) : undefined
-              return (
-                <td
-                  key={col.name}
-                  className={twMerge(
-                    'whitespace-nowrap p-4',
-                    typeof content === 'string' && 'text-left',
-                    typeof content === 'number' && 'text-right',
-                    col.cellClassName,
-                  )}
-                  title={
-                    hint ?? (typeof content === 'string' ? content : undefined)
-                  }
-                >
-                  {col.render(row)}
-                </td>
-              )
-            })}
+            {/* content */}
+            {props.columns
+              .filter((col) => !filterColumns.includes(col.name))
+              .map((col) => {
+                const content = col.render(row)
+                const hint = col.hint ? col.hint(row) : undefined
+                return (
+                  <td
+                    key={col.name}
+                    className={twMerge(
+                      'whitespace-nowrap p-4',
+                      typeof content === 'string' && 'text-left',
+                      typeof content === 'number' && 'text-right',
+                      col.cellClassName,
+                    )}
+                    title={
+                      hint ??
+                      (typeof content === 'string' ? content : undefined)
+                    }
+                  >
+                    {col.render(row)}
+                  </td>
+                )
+              })}
+            {/* filler */}
+            <td className='w-full'></td>
           </>
         )}
         components={{
