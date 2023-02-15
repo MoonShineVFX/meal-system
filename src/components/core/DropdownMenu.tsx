@@ -230,6 +230,7 @@ export const MenuComponent = React.forwardRef<
             visuallyHiddenDismiss
           >
             <Transition
+              show={open}
               as={React.Fragment}
               appear={true}
               enter='transition duration-100 ease-out'
@@ -293,7 +294,7 @@ export const MenuComponent = React.forwardRef<
                         role: 'menuitem',
                         // Menu child item styles
                         className: twMerge(
-                          'p-2 text-left hover:bg-stone-100',
+                          'py-2 px-4 text-left hover:bg-stone-100',
                           child.props.className,
                         ),
                         ref(node: HTMLButtonElement) {

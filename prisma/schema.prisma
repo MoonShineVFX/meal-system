@@ -236,7 +236,7 @@ model Commodity {
   isDeleted  Boolean @default(false)
 
   categories CommodityCategory[]
-  image      Image?              @relation(fields: [imageId], references: [id])
+  image      Image?              @relation(fields: [imageId], references: [id], onDelete: SetNull)
   imageId    String?
   onMenus    CommodityOnMenu[]
 

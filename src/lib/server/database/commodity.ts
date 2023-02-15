@@ -35,7 +35,7 @@ export async function createCommodity({
 }
 
 /* Edit Commodity */
-type EditCommodityArgs = CreateCommodityArgs & {
+type EditCommodityArgs = Partial<CreateCommodityArgs> & {
   id: number
 }
 export async function editCommodity({
@@ -68,17 +68,25 @@ export async function editCommodity({
       name,
       description,
       price,
-      optionSets: optionSets ?? [],
+      optionSets: optionSets
+        ? optionSets.map((os, index) => ({ ...os, order: index }))
+        : undefined,
       imageId,
-      categories: {
-        connect: categoryIds?.map((id) => ({ id })) ?? [],
-        disconnect: originCommodity.categories.filter(
-          (category) => !categoryIds?.includes(category.id),
-        ),
-      },
+      categories: categoryIds
+        ? {
+            connect: categoryIds.map((id) => ({ id })),
+            disconnect: originCommodity.categories
+              .filter((category) => !categoryIds?.includes(category.id))
+              .map((cat) => ({ id: cat.id })),
+          }
+        : undefined,
     },
     include: {
-      onMenus: true,
+      onMenus: {
+        where: {
+          isDeleted: false,
+        },
+      },
     },
   })
 
@@ -108,6 +116,9 @@ export async function getCommodities(props: { includeMenus?: boolean }) {
                 },
               },
             },
+            where: {
+              isDeleted: false,
+            },
           }
         : undefined,
     },
@@ -117,4 +128,18 @@ export async function getCommodities(props: { includeMenus?: boolean }) {
   })
 
   return commodities as ConvertPrismaJson<typeof commodities>
+}
+
+/* Delete Commodities */
+export async function deleteCommodities(props: { ids: number[] }) {
+  await prisma.commodity.updateMany({
+    where: {
+      id: {
+        in: props.ids,
+      },
+    },
+    data: {
+      isDeleted: true,
+    },
+  })
 }

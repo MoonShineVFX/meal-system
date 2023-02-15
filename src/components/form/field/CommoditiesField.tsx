@@ -26,6 +26,7 @@ export default function CommoditiesField<T extends FieldValues>(
     props.setValue(
       props.formInput.name,
       commoditiesIds as Parameters<typeof props.setValue>[1],
+      { shouldDirty: true },
     )
   }, [commoditiesIds])
 

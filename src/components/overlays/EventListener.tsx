@@ -122,6 +122,7 @@ export default function EventListener() {
           break
         case SERVER_NOTIFY.COMMODITY_ADD:
         case SERVER_NOTIFY.COMMODITY_UPDATE:
+        case SERVER_NOTIFY.COMMODITY_DELETE:
           trpcContext.commodity.get.invalidate()
           break
         case SERVER_NOTIFY.OPTION_SETS_ADD:

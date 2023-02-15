@@ -16,6 +16,7 @@ import OptionSetsField from './OptionSetsField'
 import CategoriesField from './CategoriesField'
 import COMField from './COMField'
 import CommoditiesField from './CommoditiesField'
+import LabelField from './LabelField'
 
 export function FormField<TFieldValues extends FieldValues>(props: {
   formInput: FormInput & {
@@ -26,6 +27,8 @@ export function FormField<TFieldValues extends FieldValues>(props: {
   errorMessage?: string
 }) {
   const { formInput, register, errorMessage, setValue } = props
+
+  if (formInput.hide) return null
 
   switch (formInput.type) {
     // Text
@@ -125,6 +128,9 @@ export function FormField<TFieldValues extends FieldValues>(props: {
           setValue={setValue}
         />
       )
+    // Label
+    case 'label':
+      return <LabelField key={formInput.name} formInput={formInput} />
     default:
       return null
   }

@@ -22,6 +22,7 @@ export default function CategoriesField<T extends FieldValues>(
     props.setValue(
       props.formInput.name,
       categoriesIds as Parameters<typeof props.setValue>[1],
+      { shouldDirty: true },
     )
   }, [categoriesIds])
 

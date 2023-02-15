@@ -6,6 +6,7 @@ import {
   editCommodity,
   addCommodityToMenu,
   removeCommodityFromMenus,
+  deleteCommodities,
 } from '@/lib/server/database'
 import { staffProcedure, router } from '../trpc'
 import { SERVER_NOTIFY } from '@/lib/common'
@@ -59,8 +60,8 @@ export const CommodityRouter = router({
     .input(
       z.object({
         id: z.number(),
-        name: z.string(),
-        price: z.number(),
+        name: z.string().optional(),
+        price: z.number().optional(),
         description: z.string().optional(),
         optionSets: z
           .array(
@@ -103,6 +104,67 @@ export const CommodityRouter = router({
         skipNotify: false,
       })
     }),
+  updateMany: staffProcedure
+    .input(
+      z.array(
+        z.object({
+          id: z.number(),
+          name: z.string().optional(),
+          price: z.number().optional(),
+          description: z.string().optional(),
+          optionSets: z
+            .array(
+              z.object({
+                name: z.string(),
+                multiSelect: z.boolean(),
+                options: z.array(z.string()),
+                order: z.number(),
+              }),
+            )
+            .optional(),
+          categoryIds: z.array(z.number()).optional(),
+          imageId: z.string().optional(),
+          menus: z
+            .array(
+              z.object({
+                menuId: z.number(),
+                stock: z.number(),
+                limitPerUser: z.number(),
+              }),
+            )
+            .optional(),
+        }),
+      ),
+    )
+    .mutation(async ({ input }) => {
+      const commodities = await Promise.all(
+        input.map((editArgs) => editCommodity(editArgs)),
+      )
+      await Promise.all(
+        commodities.flatMap((commodity) => {
+          const editArgs = input.find((args) => args.id === commodity.id)
+          if (editArgs?.menus) {
+            return [
+              ...editArgs.menus.map((menu) =>
+                addCommodityToMenu({
+                  ...menu,
+                  commodityId: commodity.id,
+                }),
+              ),
+              removeCommodityFromMenus({
+                commodityId: commodity.id,
+                excludeMenuIds: editArgs.menus.map((menu) => menu.menuId),
+              }),
+            ]
+          }
+        }),
+      )
+
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.COMMODITY_UPDATE,
+        skipNotify: false,
+      })
+    }),
   get: staffProcedure
     .input(
       z.object({
@@ -111,5 +173,18 @@ export const CommodityRouter = router({
     )
     .query(async ({ input }) => {
       return await getCommodities(input)
+    }),
+  deleteMany: staffProcedure
+    .input(
+      z.object({
+        ids: z.array(z.number()),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await deleteCommodities(input)
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.COMMODITY_DELETE,
+        skipNotify: false,
+      })
     }),
 })

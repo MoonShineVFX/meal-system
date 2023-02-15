@@ -38,6 +38,7 @@ export enum SERVER_NOTIFY {
   OPTION_SETS_DELETE = '選項刪除',
   COMMODITY_ADD = '餐點已新增',
   COMMODITY_UPDATE = '餐點編輯成功',
+  COMMODITY_DELETE = '餐點已刪除',
 }
 
 export enum CurrencyType {

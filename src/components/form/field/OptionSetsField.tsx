@@ -32,6 +32,7 @@ export default function OptionSetsField<T extends FieldValues>(
     props.setValue(
       props.formInput.name,
       currentOptionSets as Parameters<typeof props.setValue>[1],
+      { shouldDirty: true },
     )
   }, [currentOptionSets])
 

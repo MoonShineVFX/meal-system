@@ -14,6 +14,7 @@ import { ContextMenu, ContextMenuItem } from './ContextMenu'
 type Layout<T extends object[]> = {
   name: string
   unhidable?: boolean
+  hideByDefault?: boolean
   colClassName?: string
   cellClassName?: string
   hint?: (row: T[number]) => string
@@ -29,52 +30,56 @@ export default function Table<
   columns: Layout<T>
   idField?: K
   onSelectedIdsChange?: (ids: T[number][K][]) => void
+  onDataFilter?: (data: T[number][]) => T
 }) {
   const [selectedIds, setSelectedIds] = useState<T[number][K][]>([])
-  const [data, setData] = useState<T[number][]>(props.data)
+  const [tableData, setTableData] = useState<T[number][]>(props.data)
   const [sortColumn, setSortColumn] = useState<
     { name: Layout<T>[number]['name']; type: 'asc' | 'desc' } | undefined
   >(undefined)
   const [filterColumns, setFilterColumns] = useState<
     Layout<T>[number]['name'][]
-  >([])
-  const contextMenuRef = React.useRef<HTMLTableRowElement>(null)
+  >(props.columns.filter((col) => col.hideByDefault).map((col) => col.name))
+  const tableHeaderRef = React.useRef<HTMLTableRowElement>(null)
 
-  // Sort data
+  // Sort and filter tableData
   useEffect(() => {
-    if (!sortColumn) {
-      setData(props.data)
-      return
-    }
+    let tableData = [...props.data]
 
-    const col = props.columns.find((col) => col.name === sortColumn.name)
-    if (!col) {
-      setData(props.data)
-      console.warn('Column not found to sort')
-      return
-    }
-
-    if (typeof col.sort === 'function') {
-      if (sortColumn.type === 'asc') {
-        setData([...props.data].sort(col.sort))
-      } else if (sortColumn.type === 'desc') {
-        setData([...props.data].sort(col.sort).reverse())
-      }
-    } else if (col.sort === true) {
-      const sortedData = [...props.data].sort((a, b) => {
-        const aRender = col.render(a)
-        if (typeof aRender === 'string') {
-          return aRender.localeCompare(col.render(b) as string)
+    // If sort
+    if (sortColumn) {
+      const col = props.columns.find((col) => col.name === sortColumn.name)
+      if (!col) {
+        console.warn('Column not found to sort')
+      } else if (typeof col.sort === 'function') {
+        if (sortColumn.type === 'asc') {
+          tableData = [...props.data].sort(col.sort)
+        } else if (sortColumn.type === 'desc') {
+          tableData = [...props.data].sort(col.sort).reverse()
         }
-        return (col.render(a) as number) - (col.render(b) as number)
-      })
-      if (sortColumn.type === 'asc') {
-        setData(sortedData)
-      } else if (sortColumn.type === 'desc') {
-        setData(sortedData.reverse())
+      } else if (col.sort === true) {
+        const sortedData = [...props.data].sort((a, b) => {
+          const aRender = col.render(a)
+          if (typeof aRender === 'string') {
+            return aRender.localeCompare(col.render(b) as string)
+          }
+          return (col.render(a) as number) - (col.render(b) as number)
+        })
+        if (sortColumn.type === 'asc') {
+          tableData = sortedData
+        } else if (sortColumn.type === 'desc') {
+          tableData = sortedData.reverse()
+        }
       }
     }
-  }, [props.data, sortColumn])
+
+    // If filter
+    if (props.onDataFilter) {
+      tableData = props.onDataFilter(tableData)
+    }
+
+    setTableData(tableData)
+  }, [props.data, sortColumn, props.onDataFilter])
 
   // onchange selected ids
   useEffect(() => {
@@ -106,13 +111,13 @@ export default function Table<
     <div className='h-full w-fit min-w-full overflow-hidden rounded-2xl border'>
       <TableVirtuoso
         className='ms-scroll'
-        data={data}
+        data={tableData}
         increaseViewportBy={4}
         fixedHeaderContent={() => (
           // Header
-          <tr className='bg-stone-100 shadow' ref={contextMenuRef}>
+          <tr className='bg-stone-100 shadow' ref={tableHeaderRef}>
             {/* ContextMenu */}
-            <ContextMenu parentRef={contextMenuRef}>
+            <ContextMenu parentRef={tableHeaderRef}>
               {props.columns.map((col) => {
                 if (col.unhidable) return null
                 const isFiltered = filterColumns.includes(col.name)
@@ -156,26 +161,43 @@ export default function Table<
               >
                 <label className='flex cursor-pointer items-center'>
                   <input
-                    className='focus:ring-none mr-1 h-5 w-5 cursor-pointer rounded-md border-stone-300 text-yellow-500 focus:ring-transparent'
+                    ref={(input) => {
+                      if (input) {
+                        input.indeterminate =
+                          selectedIds.length > 0 &&
+                          selectedIds.length < props.data.length
+                      }
+                    }}
+                    className='focus:ring-none peer/checkbox mr-1 h-5 w-5 cursor-pointer rounded-md border-stone-300 text-yellow-500 focus:ring-transparent disabled:opacity-50'
                     type='checkbox'
-                    checked={selectedIds.length === data.length}
+                    checked={
+                      selectedIds.length === props.data.length &&
+                      props.data.length > 0
+                    }
+                    disabled={props.data.length === 0}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedIds(data.map((row) => row[props.idField!]))
+                        setSelectedIds(
+                          props.data.map(
+                            (row: T[number]) => row[props.idField!],
+                          ),
+                        )
                       } else {
                         setSelectedIds([])
                       }
                     }}
                   />
-                  <span className='text-sm font-normal'>全選</span>
+                  <span className='text-sm font-normal peer-disabled/checkbox:opacity-50'>
+                    全選
+                  </span>
                 </label>
               </th>
             )}
             {props.columns
               .filter((col) => !filterColumns.includes(col.name))
               .map((col) => {
-                const renderType = data[0]
-                  ? typeof col.render(data[0])
+                const renderType = tableData[0]
+                  ? typeof col.render(tableData[0])
                   : 'string'
                 let sortType: 'asc' | 'desc' | 'none' | undefined
                 if (col.sort) {
@@ -225,7 +247,7 @@ export default function Table<
             <th className='w-full hover:bg-stone-200'></th>
           </tr>
         )}
-        itemContent={(_, row) => (
+        itemContent={(_, row: T[number]) => (
           <>
             {/* Row */}
             {/* select */}
@@ -291,7 +313,7 @@ export default function Table<
                 'hover:bg-stone-100',
                 props.idField &&
                   selectedIds.includes(
-                    data[rest['data-item-index']][props.idField!],
+                    tableData[rest['data-item-index']][props.idField!],
                   ) &&
                   'bg-yellow-50 hover:bg-yellow-100',
               )}

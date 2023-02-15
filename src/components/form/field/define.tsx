@@ -1,6 +1,7 @@
 import { InputHTMLAttributes } from 'react'
 import { RegisterOptions } from 'react-hook-form'
 import { UseFormRegister, FieldValues, FieldPath } from 'react-hook-form'
+import { twMerge } from 'tailwind-merge'
 
 import { OptionSet } from '@/lib/common'
 
@@ -12,6 +13,12 @@ export type COMData = {
 }
 
 // Inputs
+type LabelInput = {
+  defaultValue?: never
+  data?: never
+  type: 'label'
+  attributes?: never
+}
 type CheckboxInput = {
   defaultValue?: boolean
   data?: never
@@ -82,6 +89,7 @@ export type FormInput = {
   className?: string
   coreClassName?: string
   column?: number
+  hide?: boolean
 } & (
   | TextInput
   | SelectInput
@@ -93,6 +101,7 @@ export type FormInput = {
   | CategoriesInput
   | COMInput
   | CommoditiesInput
+  | LabelInput
 )
 
 export type FormInputsProps = { [key: string]: FormInput }
@@ -147,10 +156,13 @@ export function BaseLabel(props: {
   label: string
   errorMessage?: string
   children?: JSX.Element | JSX.Element[]
+  className?: string
 }) {
   return (
     <div className='flex h-full flex-col gap-1'>
-      <label className='text-sm font-bold text-stone-500'>
+      <label
+        className={twMerge('text-sm font-bold text-stone-500', props.className)}
+      >
         {props.label}
         <span className='ml-[1ch] text-red-400'>{props.errorMessage}</span>
       </label>

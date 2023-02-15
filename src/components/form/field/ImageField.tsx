@@ -60,6 +60,7 @@ export default function ImageField<T extends FieldValues>(
         props.setValue(
           props.formInput.name,
           imageId as Parameters<typeof props.setValue>[1],
+          { shouldDirty: true },
         )
       } else {
         // Upload
