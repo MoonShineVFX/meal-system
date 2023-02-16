@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useFloating, offset, flip, shift, arrow } from '@floating-ui/react-dom'
+import { useFloating, offset, flip, shift, arrow } from '@floating-ui/react'
 import { twMerge } from 'tailwind-merge'
 import { motion } from 'framer-motion'
 
