@@ -48,9 +48,11 @@ export const MenuRouter = router({
     .input(
       z.object({
         includeIds: z.array(z.number()).optional(),
+        includeClosed: z.boolean().optional(),
+        withDetails: z.boolean().optional(),
       }),
     )
     .query(async ({ input }) => {
-      return await getActiveMenus({ includeIds: input.includeIds })
+      return await getActiveMenus(input)
     }),
 })

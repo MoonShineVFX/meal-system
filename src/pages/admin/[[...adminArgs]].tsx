@@ -6,6 +6,7 @@ import Title from '@/components/core/Title'
 import Categories from '@/components/admin/Categories'
 import OptionSets from '@/components/admin/OptionSets'
 import Commodities from '@/components/admin/Commodities'
+import Menus from '@/components/admin/Menus'
 
 const TAB_NAMES = ['餐點', '菜單', '分類', '選項', '訂單', '交易'] as const
 // type TabName = typeof TAB_NAMES[number]
@@ -64,6 +65,7 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
             {tabName === '分類' && <Categories />}
             {tabName === '選項' && <OptionSets />}
             {tabName === '餐點' && <Commodities />}
+            {tabName === '菜單' && <Menus />}
           </div>
         </div>
       </div>

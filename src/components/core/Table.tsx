@@ -20,6 +20,7 @@ type Layout<T extends object[]> = {
   hint?: (row: T[number]) => string
   render: (row: T[number]) => number | string | JSX.Element
   sort?: ((a: T[number], b: T[number]) => number) | boolean
+  align?: 'left' | 'center' | 'right'
 }[]
 
 export default function Table<
@@ -53,9 +54,9 @@ export default function Table<
         console.warn('Column not found to sort')
       } else if (typeof col.sort === 'function') {
         if (sortColumn.type === 'asc') {
-          tableData = [...props.data].sort(col.sort)
-        } else if (sortColumn.type === 'desc') {
           tableData = [...props.data].sort(col.sort).reverse()
+        } else if (sortColumn.type === 'desc') {
+          tableData = [...props.data].sort(col.sort)
         }
       } else if (col.sort === true) {
         const sortedData = [...props.data].sort((a, b) => {
@@ -66,9 +67,9 @@ export default function Table<
           return (col.render(a) as number) - (col.render(b) as number)
         })
         if (sortColumn.type === 'asc') {
-          tableData = sortedData
-        } else if (sortColumn.type === 'desc') {
           tableData = sortedData.reverse()
+        } else if (sortColumn.type === 'desc') {
+          tableData = sortedData
         }
       }
     }
@@ -225,6 +226,9 @@ export default function Table<
                         renderType === 'string' && 'justify-start',
                         renderType === 'number' && 'justify-end',
                         renderType === 'object' && 'justify-center',
+                        col.align === 'center' && 'justify-center',
+                        col.align === 'right' && 'justify-end',
+                        col.align === 'left' && 'justify-start',
                         col.sort && 'cursor-pointer',
                       )}
                       onClick={() => handleSortColumn(col.name)}
@@ -282,6 +286,9 @@ export default function Table<
                       'whitespace-nowrap p-4',
                       typeof content === 'string' && 'text-left',
                       typeof content === 'number' && 'text-right',
+                      col.align === 'center' && 'text-center',
+                      col.align === 'right' && 'text-right',
+                      col.align === 'left' && 'text-left',
                       col.cellClassName,
                     )}
                     title={

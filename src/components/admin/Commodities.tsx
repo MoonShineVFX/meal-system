@@ -335,9 +335,9 @@ export default function Commodities() {
 
   return (
     <div className='relative h-full min-h-full w-full'>
-      <div className='absolute inset-0 flex flex-col p-8'>
+      <div className='absolute inset-0 flex flex-col gap-4 p-8'>
         {/* Top */}
-        <div className='flex items-center gap-4 p-4'>
+        <div className='flex items-center gap-4'>
           <SearchBar
             className='mr-auto'
             placeholder='搜尋餐點'
@@ -420,6 +420,7 @@ export default function Commodities() {
             },
             {
               name: '名稱',
+              align: 'left',
               unhidable: true,
               hint: (row) => row.name,
               render: (row) => (

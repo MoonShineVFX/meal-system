@@ -1,4 +1,4 @@
-import { MenuType, Prisma, PrismaClient } from '@prisma/client'
+import { MenuType, Prisma, PrismaClient, Menu } from '@prisma/client'
 
 import { ConvertPrismaJson } from '@/lib/common'
 import {
@@ -61,30 +61,70 @@ export async function createMenu({
 }
 
 /* Get active menus */
-export async function getActiveMenus(props: { includeIds?: number[] }) {
-  const now = new Date()
-  const menus = await prisma.menu.findMany({
-    where: {
-      OR: [
-        {
-          date: { not: null },
-          isDeleted: false,
-          closedDate: { gte: now },
-        },
-        {
-          date: null,
-          isDeleted: false,
-          type: {
-            in: ['LIVE', 'RETAIL'],
+const GetActiveMenusDetailArgs = Prisma.validator<Prisma.MenuArgs>()({
+  include: {
+    commodities: {
+      select: {
+        commodity: {
+          select: {
+            id: true,
+            name: true,
           },
         },
-        {
-          id: { in: props.includeIds },
-        },
-      ],
+        limitPerUser: true,
+        stock: true,
+      },
     },
+    _count: {
+      select: {
+        orders: {
+          where: {
+            timeCanceled: null,
+          },
+        },
+      },
+    },
+  },
+})
+type GetActiveMenusDetailResult = Prisma.MenuGetPayload<
+  typeof GetActiveMenusDetailArgs
+>
+export async function getActiveMenus(props: {
+  includeIds?: number[]
+  includeClosed?: boolean
+  withDetails?: boolean
+}): Promise<GetActiveMenusDetailResult[] | Menu[]> {
+  const now = new Date()
+  const menusFindArgs: Prisma.MenuWhereInput = {
+    OR: [
+      {
+        date: { not: null },
+        isDeleted: false,
+        closedDate: props.includeClosed ? undefined : { gte: now },
+      },
+      {
+        date: null,
+        isDeleted: false,
+        type: {
+          in: ['LIVE', 'RETAIL'],
+        },
+      },
+      {
+        id: { in: props.includeIds },
+      },
+    ],
+  }
+
+  if (props.withDetails) {
+    return await prisma.menu.findMany({
+      where: menusFindArgs,
+      include: GetActiveMenusDetailArgs.include,
+    })
+  }
+
+  return await prisma.menu.findMany({
+    where: menusFindArgs,
   })
-  return menus
 }
 
 /* Get Menu reservation list */
