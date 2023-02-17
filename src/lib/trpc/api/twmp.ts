@@ -1,16 +1,13 @@
 import { z } from 'zod'
 
 import { userProcedure, router } from '../trpc'
-import {
-  createTwmpDeposit,
-  getTwmpDeposit,
-} from '@/lib/server/database'
+import { createTwmpDeposit, getTwmpDeposit } from '@/lib/server/database'
 
 export const TwmpRouter = router({
   createDeposit: userProcedure
     .input(
       z.object({
-        amount: z.number().positive(),
+        amount: z.number().positive().min(1).max(9999),
         isMobile: z.boolean(),
       }),
     )

@@ -1,5 +1,6 @@
 import { CircleStackIcon } from '@heroicons/react/24/outline'
 import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
@@ -36,18 +37,20 @@ export default function Wallet() {
               夢想幣
             </h3>
             <h1 className='w-fit rounded-xl text-xl font-bold text-stone-600 group-data-loading:skeleton'>
-              ${data?.creditBalance ?? 50}
+              {data?.creditBalance ?? 50}
             </h1>
           </div>
         </div>
       </div>
       {/* Action */}
       <div className='grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] place-content-evenly justify-center gap-4'>
-        <Button
-          className='h-12 group-data-loading:skeleton'
-          textClassName='font-bold text-lg'
-          label='儲值'
-        />
+        <Link href='/deposit' className='w-full'>
+          <Button
+            className='h-12 w-full group-data-loading:skeleton'
+            textClassName='font-bold text-lg'
+            label='儲值'
+          />
+        </Link>
       </div>
     </div>
   )

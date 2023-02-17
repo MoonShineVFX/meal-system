@@ -136,6 +136,7 @@ export const settings = {
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
+  RESOURCE_TWPAY_LOGO: 'asset/twpay.png',
   RESOURCE_IMAGE_TYPES: ['image/png', 'image/jpeg', 'image/webp'],
   RESOURCE_UPLOAD_PATH: 'upload',
   /* Bunny */

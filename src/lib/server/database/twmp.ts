@@ -16,16 +16,22 @@ export async function createTwmpDeposit(
     },
   })
 
-  const response = await createTwmp(twmpDeposit.orderNo, amount, callbackHost)
-
-  twmpDeposit = await prisma.twmpDeposit.update({
-    where: { orderNo: twmpDeposit.orderNo },
-    data: {
-      txnID: response.txnID,
-      callbackUrl: 'twmpUrl' in response ? response.twmpUrl : undefined,
-      qrcode: 'qrcode' in response ? response.qrcode : undefined,
-    },
-  })
+  try {
+    const response = await createTwmp(twmpDeposit.orderNo, amount, callbackHost)
+    twmpDeposit = await prisma.twmpDeposit.update({
+      where: { orderNo: twmpDeposit.orderNo },
+      data: {
+        txnID: response.txnID,
+        callbackUrl: 'twmpUrl' in response ? response.twmpUrl : undefined,
+        qrcode: 'qrcode' in response ? response.qrcode : undefined,
+      },
+    })
+  } catch (error) {
+    await prisma.twmpDeposit.delete({
+      where: { orderNo: twmpDeposit.orderNo },
+    })
+    throw error
+  }
 
   return twmpDeposit
 }

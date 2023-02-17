@@ -1,4 +1,5 @@
 import { twMerge } from 'tailwind-merge'
+import Link from 'next/link'
 
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
@@ -100,11 +101,13 @@ export function Checkout(props: {
           className=' h-12 grow text-lg font-bold group-data-loading:skeleton @xs/checkout:order-1'
           onClick={handleCheckout}
         />
-        <Button
-          label='儲值'
-          className='h-12 grow text-lg font-bold group-data-loading:skeleton'
-          theme='secondary'
-        />
+        <Link href='/deposit' className='w-full'>
+          <Button
+            label='儲值'
+            className='h-12 w-full grow text-lg font-bold group-data-loading:skeleton'
+            theme='secondary'
+          />
+        </Link>
       </div>
     </div>
   )
