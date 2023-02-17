@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   CurrencyDollarIcon,
   PlusCircleIcon,
@@ -18,6 +18,7 @@ const DEPOSIT_AMOUNT_MAX = 9999
 const DEPOSIT_PRESET_AMOUNTS = [100, 300, 500, 1000]
 
 export default function DepositPage() {
+  const inputRef = useRef<HTMLInputElement>(null)
   const { data, isError, error, isLoading } = trpc.user.get.useQuery()
   const [depositAmount, setDepositAmount] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
@@ -27,6 +28,10 @@ export default function DepositPage() {
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
   }, [])
+
+  useEffect(() => {
+    if (inputRef.current) inputRef.current.focus()
+  }, [inputRef])
 
   const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.value === '') return setDepositAmount(0)
@@ -88,9 +93,10 @@ export default function DepositPage() {
           </div>
           <div className='relative w-full flex-1'>
             <input
+              ref={inputRef}
               type='number'
               pattern='\d*'
-              className='h-12 w-full rounded-lg border-stone-100 pr-8 text-right text-3xl font-bold text-yellow-500 placeholder:text-base focus:border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-500'
+              className='no-spin h-12 w-full rounded-lg border-stone-100 pr-8 text-right text-3xl font-bold text-yellow-500 placeholder:text-base focus:border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-500'
               value={depositAmount}
               min={DEPOSIT_AMOUNT_MIN}
               max={DEPOSIT_AMOUNT_MAX}
@@ -129,7 +135,7 @@ export default function DepositPage() {
           <Image
             src={settings.RESOURCE_TWPAY_LOGO}
             alt='台灣pay圖案'
-            sizes='32px'
+            sizes='64px'
           />
         </div>
         <span className='font-bold'>台灣Pay</span>進行儲值

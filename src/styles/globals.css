@@ -29,6 +29,15 @@ body {
   input {
     @apply caret-yellow-500;
   }
+
+  input.no-spin::-webkit-outer-spin-button,
+  input.no-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'].no-spin {
+    -moz-appearance: textfield;
+  }
 }
 
 @layer components {
