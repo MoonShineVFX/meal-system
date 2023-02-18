@@ -54,7 +54,7 @@ export default function Menus() {
           idField='id'
           columns={[
             {
-              name: '顯示名稱',
+              name: '名稱',
               align: 'left',
               unhidable: true,
               hint: (row) => getMenuName(row) || '未命名',
@@ -110,11 +110,6 @@ export default function Menus() {
               },
             },
             {
-              name: '訂購數',
-              render: (row) => row._count.orders,
-              sort: true,
-            },
-            {
               name: '關閉時間',
               align: 'right',
               render: (row) =>
@@ -132,6 +127,18 @@ export default function Menus() {
                 if (!b.closedDate) return -1
                 return a.closedDate.getTime() - b.closedDate.getTime()
               },
+            },
+            {
+              name: '餐點數',
+              render: (row) => row.commodities.length,
+              hint: (row) =>
+                row.commodities.map((c) => c.commodity.name).join('\n'),
+              sort: true,
+            },
+            {
+              name: '訂購數',
+              render: (row) => row._count.orders,
+              sort: true,
             },
             {
               name: '創建日期',

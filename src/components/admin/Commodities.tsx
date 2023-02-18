@@ -441,6 +441,7 @@ export default function Commodities() {
             },
             {
               name: '描述',
+              hideByDefault: true,
               cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
               sort: true,
               render: (row) => row.description,

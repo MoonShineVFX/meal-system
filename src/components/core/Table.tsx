@@ -278,7 +278,13 @@ export default function Table<
               .filter((col) => !filterColumns.includes(col.name))
               .map((col) => {
                 const content = col.render(row)
-                const hint = col.hint ? col.hint(row) : undefined
+                const hint = col.hint
+                  ? col.hint(row)
+                  : typeof content === 'string'
+                  ? content
+                  : typeof content === 'number'
+                  ? content.toString()
+                  : undefined
                 return (
                   <td
                     key={col.name}
@@ -291,10 +297,7 @@ export default function Table<
                       col.align === 'left' && 'text-left',
                       col.cellClassName,
                     )}
-                    title={
-                      hint ??
-                      (typeof content === 'string' ? content : undefined)
-                    }
+                    title={hint}
                   >
                     {col.render(row)}
                   </td>
