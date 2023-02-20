@@ -2,6 +2,7 @@ import { memo, ChangeEvent, useCallback, useRef, startTransition } from 'react'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 import Spinner from '@/components/core/Spinner'
+import TextInput from '@/components/form/base/TextInput'
 
 function SearchBar(props: {
   className?: string
@@ -36,10 +37,8 @@ function SearchBar(props: {
     <div className={props.className}>
       <div key='searchBar' className='flex flex-col items-center gap-2'>
         <div className='relative w-full'>
-          <input
+          <TextInput
             ref={searchRef}
-            type='text'
-            className='w-full rounded-2xl border border-stone-300 bg-stone-100 py-2 px-4 placeholder:text-stone-400 focus:border-yellow-500 focus:ring-yellow-500'
             placeholder={props.placeholder}
             defaultValue={props.searchKeyword}
             onChange={handleSearchChange}

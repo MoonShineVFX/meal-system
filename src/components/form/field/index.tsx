@@ -1,9 +1,5 @@
-import {
-  FieldValues,
-  UseFormSetValue,
-  UseFormRegister,
-  FieldPath,
-} from 'react-hook-form'
+import { twMerge } from 'tailwind-merge'
+import { FieldValues, FieldPath, UseFormReturn } from 'react-hook-form'
 
 import type { FormInput } from './define'
 import TextInputField from './TextInputField'
@@ -16,124 +12,115 @@ import OptionSetsField from './OptionSetsField'
 import CategoriesField from './CategoriesField'
 import COMField from './COMField'
 import CommoditiesField from './CommoditiesField'
-import LabelField from './LabelField'
 
 export function FormField<TFieldValues extends FieldValues>(props: {
   formInput: FormInput & {
     name: FieldPath<TFieldValues>
   }
-  register: UseFormRegister<TFieldValues>
-  setValue: UseFormSetValue<TFieldValues>
-  errorMessage?: string
+  useFormReturns: UseFormReturn<TFieldValues>
 }) {
-  const { formInput, register, errorMessage, setValue } = props
+  const { formInput, useFormReturns } = props
+
+  const error = useFormReturns.formState.errors[formInput.name]
+  const errorMessage = error?.message as string | undefined
 
   if (formInput.hide) return null
 
+  let content: JSX.Element | null
   switch (formInput.type) {
     // Text
     case 'text':
-      return (
-        <TextInputField
-          key={formInput.name}
-          errorMessage={errorMessage}
-          formInput={formInput}
-          register={register}
-        />
+      content = (
+        <TextInputField formInput={formInput} useFormReturns={useFormReturns} />
       )
+      break
     // Textarea
     case 'textarea':
-      return (
-        <TextAreaField
-          key={formInput.name}
-          errorMessage={errorMessage}
-          formInput={formInput}
-          register={register}
-        />
+      content = (
+        <TextAreaField formInput={formInput} useFormReturns={useFormReturns} />
       )
+      break
     // Select
     case 'select':
-      return (
-        <SelectField
-          key={formInput.name}
-          errorMessage={errorMessage}
-          formInput={formInput}
-          register={register}
-        />
+      content = (
+        <SelectField formInput={formInput} useFormReturns={useFormReturns} />
       )
+      break
     // Checkbox
     case 'checkbox':
-      return (
-        <CheckboxField
-          key={formInput.name}
-          errorMessage={errorMessage}
-          formInput={formInput}
-          register={register}
-        />
+      content = (
+        <CheckboxField formInput={formInput} useFormReturns={useFormReturns} />
       )
+      break
     // Number
     case 'number':
-      return (
-        <NumberField
-          key={formInput.name}
-          errorMessage={errorMessage}
-          formInput={formInput}
-          register={register}
-        />
+      content = (
+        <NumberField formInput={formInput} useFormReturns={useFormReturns} />
       )
+      break
     // Image
     case 'image':
-      return (
-        <ImageField
-          key={formInput.name}
-          errorMessage={errorMessage}
-          formInput={formInput}
-          register={register}
-          setValue={setValue}
-        />
+      content = (
+        <ImageField formInput={formInput} useFormReturns={useFormReturns} />
       )
+      break
     // OptionSets
     case 'optionSets':
-      return (
+      content = (
         <OptionSetsField
-          key={formInput.name}
           formInput={formInput}
-          setValue={setValue}
+          useFormReturns={useFormReturns}
         />
       )
+      break
     // Categories
     case 'categories':
-      return (
+      content = (
         <CategoriesField
-          key={formInput.name}
           formInput={formInput}
-          setValue={setValue}
+          useFormReturns={useFormReturns}
         />
       )
+      break
     // COM
     case 'com':
-      return (
-        <COMField
-          key={formInput.name}
-          formInput={formInput}
-          setValue={setValue}
-        />
+      content = (
+        <COMField formInput={formInput} useFormReturns={useFormReturns} />
       )
+      break
     // Commodities
     case 'commodities':
-      return (
+      content = (
         <CommoditiesField
-          key={formInput.name}
           formInput={formInput}
-          setValue={setValue}
+          useFormReturns={useFormReturns}
         />
       )
+      break
     // Label
     case 'label':
-      return <LabelField key={formInput.name} formInput={formInput} />
+      content = null
+      break
     default:
-      return null
+      content = null
   }
+
+  return (
+    <div className={twMerge('flex h-full flex-col gap-1', formInput.className)}>
+      {formInput.type !== 'checkbox' && (
+        <label
+          className={twMerge(
+            'text-sm font-bold text-stone-500',
+            formInput.type === 'label' && props.formInput.coreClassName,
+          )}
+        >
+          {formInput.label}
+          <span className='ml-[1ch] text-red-400'>{errorMessage}</span>
+        </label>
+      )}
+      {content}
+    </div>
+  )
 }
 
 export * from './define'

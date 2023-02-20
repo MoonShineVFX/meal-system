@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 import { ContextMenu, ContextMenuItem } from './ContextMenu'
+import CheckBox from '@/components/form/base/CheckBox'
 
 type Layout<T extends object[]> = {
   name: string
@@ -161,7 +162,7 @@ export default function Table<
                 className={'whitespace-nowrap p-4 hover:bg-stone-200'}
               >
                 <label className='flex cursor-pointer items-center'>
-                  <input
+                  <CheckBox
                     ref={(input) => {
                       if (input) {
                         input.indeterminate =
@@ -169,8 +170,7 @@ export default function Table<
                           selectedIds.length < props.data.length
                       }
                     }}
-                    className='focus:ring-none peer/checkbox mr-1 h-5 w-5 cursor-pointer rounded-md border-stone-300 text-yellow-500 focus:ring-transparent disabled:opacity-50'
-                    type='checkbox'
+                    className='peer/checkbox mr-1 h-5 w-5 disabled:opacity-50'
                     checked={
                       selectedIds.length === props.data.length &&
                       props.data.length > 0
@@ -257,9 +257,8 @@ export default function Table<
             {/* select */}
             {props.idField && (
               <td key='select' className='p-4 text-center'>
-                <input
-                  className='focus:ring-none h-6 w-6 cursor-pointer rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
-                  type='checkbox'
+                <CheckBox
+                  className='h-6 w-6'
                   checked={selectedIds.includes(row[props.idField])}
                   onChange={(e) => {
                     if (e.target.checked) {

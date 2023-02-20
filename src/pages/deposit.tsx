@@ -12,6 +12,7 @@ import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
 import { settings } from '@/lib/common'
 import Spinner from '@/components/core/Spinner'
+import NumberInput from '@/components/form/base/NumberInput'
 
 const DEPOSIT_AMOUNT_MIN = 1
 const DEPOSIT_AMOUNT_MAX = 9999
@@ -92,11 +93,11 @@ export default function DepositPage() {
             <p className='whitespace-nowrap'>儲值金額</p>
           </div>
           <div className='relative w-full flex-1'>
-            <input
+            <NumberInput
               ref={inputRef}
-              type='number'
               pattern='\d*'
-              className='no-spin h-12 w-full rounded-lg border-stone-100 pr-8 text-right text-3xl font-bold text-yellow-500 placeholder:text-base focus:border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-500'
+              hideSpinner={true}
+              className='h-12 w-full rounded-lg pr-10 text-right text-3xl font-bold text-yellow-500'
               value={depositAmount}
               min={DEPOSIT_AMOUNT_MIN}
               max={DEPOSIT_AMOUNT_MAX}
@@ -107,7 +108,7 @@ export default function DepositPage() {
                 className='group/clear absolute inset-y-0 right-1 flex cursor-pointer items-center active:scale-90'
                 onClick={() => setDepositAmount(0)}
               >
-                <XMarkIcon className=' h-7 w-7 rounded-full text-stone-300 group-hover/clear:bg-stone-100 group-active/clear:bg-stone-100' />
+                <XMarkIcon className=' h-7 w-7 rounded-full text-stone-300 group-hover/clear:bg-stone-200 group-active/clear:bg-stone-200' />
               </div>
             )}
           </div>

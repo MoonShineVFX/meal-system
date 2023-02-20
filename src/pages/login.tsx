@@ -14,6 +14,7 @@ import trpc from '@/lib/client/trpc'
 import { generateCookie, settings, twData } from '@/lib/common'
 import Logo from '@/components/core/Logo'
 import Button from '@/components/core/Button'
+import TextInput from '@/components/form/base/TextInput'
 
 type FormInputs = {
   username: string
@@ -133,14 +134,14 @@ const InputField: React.FC<InputFieldProps> = ({
         {label}
         <span className='ml-[1ch] text-red-400'>{error && error.message}</span>
       </p>
-      <input
+      <TextInput
         {...props}
         {...register(name, {
           required: '此欄位為必填',
         })}
         autoCapitalize='none'
         autoCorrect='off'
-        className='rounded-2xl border border-stone-300 bg-stone-50 py-2 px-4 text-lg font-bold focus:border-yellow-500 focus:ring-yellow-500 disabled:opacity-75'
+        className='px-4 text-lg font-bold'
       />
     </div>
   )

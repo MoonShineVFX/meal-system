@@ -1,52 +1,50 @@
-import { twMerge } from 'tailwind-merge'
 import { FieldValues } from 'react-hook-form'
+import { useEffect, useState } from 'react'
 
-import { InputFieldProps, BaseLabel } from './define'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import { InputFieldProps } from './define'
 
 export default function SelectField<T extends FieldValues>(
   props: InputFieldProps<'select', T>,
 ) {
-  const selectSize = props.formInput.data.reduce(
-    (acc, curr) => acc + ('children' in curr ? curr.children.length + 1 : 1),
-    0,
-  )
+  const [selectedValue, setSelectedValue] = useState<
+    typeof props.formInput.data[number]['value'] | undefined
+  >(props.formInput.defaultValue)
+
+  useEffect(() => {
+    if (selectedValue) {
+      props.useFormReturns.clearErrors(props.formInput.name)
+      props.useFormReturns.setValue(
+        props.formInput.name,
+        selectedValue as Parameters<typeof props.useFormReturns.setValue>[1],
+        { shouldDirty: true },
+      )
+    } else {
+      if (props.formInput.attributes?.required) {
+        props.useFormReturns.setError(props.formInput.name, {
+          type: 'required',
+          message: '請選擇項目',
+        })
+      }
+    }
+  }, [selectedValue])
+
   return (
-    <div className={props.formInput.className}>
-      <BaseLabel
-        label={props.formInput.label}
-        errorMessage={props.errorMessage}
-      >
-        <select
-          className={twMerge(
-            'ms-scroll mx-1 rounded-2xl border border-stone-300 bg-stone-50 p-2 px-3 focus:border-yellow-500 focus:ring-yellow-500',
-            props.formInput.coreClassName,
-          )}
-          size={selectSize}
-          {...props.formInput.attributes}
-          {...props.register(props.formInput.name, {
-            ...props.formInput.options,
-          })}
-        >
-          {props.formInput.data.map((optionData) => {
-            if ('children' in optionData) {
-              return (
-                <optgroup key={optionData.label} label={optionData.label}>
-                  {optionData.children.map((child) => (
-                    <option key={child.value} value={child.value}>
-                      {child.label}
-                    </option>
-                  ))}
-                </optgroup>
-              )
-            }
-            return (
-              <option key={optionData.value} value={optionData.value}>
-                {optionData.label}
-              </option>
-            )
-          })}
-        </select>
-      </BaseLabel>
-    </div>
+    <DropdownMenu
+      label={
+        props.formInput.data.find((option) => option.value === selectedValue)
+          ?.label ??
+        props.formInput.attributes?.placeholder ??
+        '請選擇項目'
+      }
+    >
+      {props.formInput.data.map((option) => (
+        <DropdownMenuItem
+          key={option.value}
+          label={option.label}
+          onClick={() => setSelectedValue(option.value)}
+        />
+      ))}
+    </DropdownMenu>
   )
 }

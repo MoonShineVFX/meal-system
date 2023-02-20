@@ -42,13 +42,12 @@ export default function FormDialog<
   type Inputs = FormData<U>
 
   // Hooks
+  const useFormReturns = useForm<Inputs>()
   const {
-    register,
     handleSubmit,
     reset,
     formState: { errors, isDirty },
-    setValue,
-  } = useForm<Inputs>()
+  } = useFormReturns
   const [columns, setColumns] = useState(1)
   const mutation = props.useMutation
     ? (props.useMutation() as ReturnType<Extract<T, Function>>)
@@ -177,18 +176,11 @@ export default function FormDialog<
                       {inputs.map((formInput) => {
                         if (formInput.column !== column + 1) return null
 
-                        const error = errors[formInput.name]
-                        const errorMessage = error?.message as
-                          | string
-                          | undefined
-
                         return (
                           <FormField
                             key={formInput.name}
                             formInput={formInput}
-                            register={register}
-                            setValue={setValue}
-                            errorMessage={errorMessage}
+                            useFormReturns={useFormReturns}
                           />
                         )
                       })}

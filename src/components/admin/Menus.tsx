@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
 
 import trpc from '@/lib/client/trpc'
@@ -7,9 +7,12 @@ import Error from '@/components/core/Error'
 import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
 import Button from '@/components/core/Button'
-import { getMenuName } from '@/lib/common'
+import { getMenuName, MenuTypeName } from '@/lib/common'
+import { useFormDialog } from '@/components/form/FormDialog'
+import CheckBox from '@/components/form/base/CheckBox'
 
 export default function Menus() {
+  const { showFormDialog, formDialog } = useFormDialog()
   const [isIncludeClosed, setIsIncludeClosed] = useState(false)
   const [searchKeyword, setSearchKeyword] = useState('')
   const { data, error, isError, isLoading } = trpc.menu.getActives.useQuery({
@@ -17,10 +20,43 @@ export default function Menus() {
     withDetails: true,
   })
 
+  const handleEditMenu = useCallback(
+    (menu?: NonNullable<typeof data>[number]) => {
+      const title = menu ? '編輯菜單' : '新增菜單'
+      showFormDialog({
+        title,
+        inputs: {
+          type: {
+            label: '類型',
+            type: 'select',
+            data: Object.entries(MenuTypeName).map(([value, label]) => ({
+              label,
+              value,
+            })),
+            options: {
+              required: '請選擇類型',
+            },
+          },
+          name: {
+            label: '名稱',
+            type: 'text',
+            defaultValue: menu?.name,
+            attributes: {
+              placeholder: '餐點名稱',
+            },
+          },
+        },
+        useMutation: trpc.commodity.create.useMutation,
+        onSubmit(formData, mutation) {
+          console.log(formData)
+        },
+      })
+    },
+    [],
+  )
+
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
-
-  const now = new Date()
 
   return (
     <div className='relative h-full min-h-full w-full'>
@@ -34,9 +70,7 @@ export default function Menus() {
             setSearchKeyword={setSearchKeyword}
           />
           <label className='mr-auto flex cursor-pointer items-center gap-2'>
-            <input
-              type='checkbox'
-              className='focus:ring-none h-5 w-5 cursor-pointer rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent'
+            <CheckBox
               checked={isIncludeClosed}
               onChange={(e) => setIsIncludeClosed(e.target.checked)}
             />
@@ -46,11 +80,20 @@ export default function Menus() {
             label='新增菜單'
             className='py-3 px-4'
             textClassName='font-bold'
+            onClick={() => handleEditMenu()}
           />
         </div>
         {/* Table */}
         <Table
-          data={data as Extract<typeof data[number], { _count: any }>[]}
+          data={
+            data.sort((a, b) => {
+              const isAReserved = !['live', 'retail'].includes(a.type)
+              const isBReserved = !['live', 'retail'].includes(b.type)
+              if (isAReserved && !isBReserved) return 1
+              if (!isAReserved && isBReserved) return -1
+              return b.id - a.id
+            }) as Extract<typeof data[number], { _count: any }>[]
+          }
           idField='id'
           columns={[
             {
@@ -69,9 +112,9 @@ export default function Menus() {
             {
               name: '狀態',
               render: (row) =>
-                row.closedDate && now > row.closedDate
+                row.closedDate && new Date() > row.closedDate
                   ? '已關閉'
-                  : row.publishedDate && now < row.publishedDate
+                  : row.publishedDate && new Date() < row.publishedDate
                   ? '未發佈'
                   : '公開',
               sort: true,
@@ -157,6 +200,7 @@ export default function Menus() {
           ]}
         />
       </div>
+      {formDialog}
     </div>
   )
 }

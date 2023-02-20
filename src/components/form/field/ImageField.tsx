@@ -1,7 +1,7 @@
 import { PhotoIcon } from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
 import { useEffect, useState, useCallback } from 'react'
-import { FieldValues, UseFormSetValue } from 'react-hook-form'
+import { FieldValues } from 'react-hook-form'
 
 import { uploadImage } from '@/lib/client/bunny'
 import trpc from '@/lib/client/trpc'
@@ -9,7 +9,7 @@ import { useStore, NotificationType } from '@/lib/client/store'
 import { settings } from '@/lib/common'
 import Spinner from '@/components/core/Spinner'
 import Image from '@/components/core/Image'
-import { BaseLabel, InputFieldProps } from './define'
+import { InputFieldProps } from './define'
 
 function validateImageFile(files: FileList) {
   if (files.length === 0 || files.length > 1) return undefined
@@ -19,9 +19,7 @@ function validateImageFile(files: FileList) {
   return undefined
 }
 export default function ImageField<T extends FieldValues>(
-  props: InputFieldProps<'image', T> & {
-    setValue: UseFormSetValue<T>
-  },
+  props: InputFieldProps<'image', T>,
 ) {
   const [imagePath, setImagePath] = useState<string | undefined>(undefined)
   const [dragState, setDragState] = useState<boolean>(false)
@@ -57,9 +55,9 @@ export default function ImageField<T extends FieldValues>(
       if (checkImageResult.isFound) {
         // Exists
         setImagePath(checkImageResult.image!.path)
-        props.setValue(
+        props.useFormReturns.setValue(
           props.formInput.name,
-          imageId as Parameters<typeof props.setValue>[1],
+          imageId as Parameters<typeof props.useFormReturns.setValue>[1],
           { shouldDirty: true },
         )
       } else {
@@ -77,9 +75,9 @@ export default function ImageField<T extends FieldValues>(
             path: `${settings.RESOURCE_UPLOAD_PATH}/${filename}`,
           })
           setImagePath(createImageResult.path)
-          props.setValue(
+          props.useFormReturns.setValue(
             props.formInput.name,
-            imageId as Parameters<typeof props.setValue>[1],
+            imageId as Parameters<typeof props.useFormReturns.setValue>[1],
           )
         } else {
           addNotification({
@@ -118,71 +116,57 @@ export default function ImageField<T extends FieldValues>(
   )
 
   return (
-    <div className={props.formInput.className}>
-      <BaseLabel
-        label={props.formInput.label}
-        errorMessage={props.errorMessage}
-      >
-        <div className='relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-2xl border border-stone-300 bg-stone-50'>
-          {imagePath && !isUploading && (
-            <Image
-              alt='商品預覽圖片'
-              src={imagePath}
-              className='object-cover'
-              sizes='240px'
-            />
-          )}
-          {isUploading ? (
-            <div className='flex flex-col items-center gap-2'>
-              <Spinner className='h-12 w-12' />
-              <span>上傳中...</span>
-            </div>
-          ) : (
-            <label
-              className={twMerge(
-                'absolute inset-0 flex cursor-pointer flex-col justify-center p-4 text-center text-sm',
-                !imagePath && 'hover:bg-stone-100',
-                imagePath &&
-                  'bg-white/80 opacity-0 transition-opacity hover:opacity-100',
-                dragState && 'opacity-100',
-              )}
-              onDragEnter={() => setDragState(true)}
-              onDragOver={(e) => e.preventDefault()}
-              onDragLeave={() => setDragState(false)}
-              onDrop={handleDrop}
-            >
-              {imagePath ? (
-                <p className='pointer-events-none text-xl font-bold'>
-                  更改圖片
-                </p>
-              ) : (
-                <PhotoIcon className='pointer-events-none mx-auto h-10 w-10 text-stone-300' />
-              )}
-              <div className='pointer-events-none mt-2'>
-                {dragState ? (
-                  <span>拖曳至此處</span>
-                ) : (
-                  <>
-                    <span className='text-yellow-500'>上傳檔案</span>
-                    <span>或拖曳至此處</span>
-                  </>
-                )}
-                <input
-                  type='file'
-                  accept={settings.RESOURCE_IMAGE_TYPES.join(',')}
-                  className='sr-only'
-                  onChange={handleFileChange}
-                />
-              </div>
-            </label>
-          )}
+    <div className='relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-2xl border border-stone-300 bg-stone-50'>
+      {imagePath && !isUploading && (
+        <Image
+          alt='商品預覽圖片'
+          src={imagePath}
+          className='object-cover'
+          sizes='240px'
+        />
+      )}
+      {isUploading ? (
+        <div className='flex flex-col items-center gap-2'>
+          <Spinner className='h-12 w-12' />
+          <span>上傳中...</span>
         </div>
-      </BaseLabel>
-      <input
-        type='text'
-        className='sr-only'
-        {...props.register(props.formInput.name, props.formInput.options)}
-      />
+      ) : (
+        <label
+          className={twMerge(
+            'absolute inset-0 flex cursor-pointer flex-col justify-center p-4 text-center text-sm',
+            !imagePath && 'hover:bg-stone-100',
+            imagePath &&
+              'bg-white/80 opacity-0 transition-opacity hover:opacity-100',
+            dragState && 'opacity-100',
+          )}
+          onDragEnter={() => setDragState(true)}
+          onDragOver={(e) => e.preventDefault()}
+          onDragLeave={() => setDragState(false)}
+          onDrop={handleDrop}
+        >
+          {imagePath ? (
+            <p className='pointer-events-none text-xl font-bold'>更改圖片</p>
+          ) : (
+            <PhotoIcon className='pointer-events-none mx-auto h-10 w-10 text-stone-300' />
+          )}
+          <div className='pointer-events-none mt-2'>
+            {dragState ? (
+              <span>拖曳至此處</span>
+            ) : (
+              <>
+                <span className='text-yellow-500'>上傳檔案</span>
+                <span>或拖曳至此處</span>
+              </>
+            )}
+            <input
+              type='file'
+              accept={settings.RESOURCE_IMAGE_TYPES.join(',')}
+              className='sr-only'
+              onChange={handleFileChange}
+            />
+          </div>
+        </label>
+      )}
     </div>
   )
 }

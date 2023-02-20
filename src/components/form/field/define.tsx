@@ -1,7 +1,6 @@
 import { InputHTMLAttributes } from 'react'
 import { RegisterOptions } from 'react-hook-form'
-import { UseFormRegister, FieldValues, FieldPath } from 'react-hook-form'
-import { twMerge } from 'tailwind-merge'
+import { FieldValues, FieldPath, UseFormReturn } from 'react-hook-form'
 
 import { OptionSet } from '@/lib/common'
 
@@ -32,11 +31,8 @@ type TextInput = {
   attributes?: InputHTMLAttributes<HTMLInputElement>
 }
 type SelectInput = {
-  defaultValue?: string | string[]
-  data: (
-    | { label: string; value: string }
-    | { label: string; children: { label: string; value: string }[] }
-  )[]
+  defaultValue?: string
+  data: { label: string; value: string }[]
   type: 'select'
   attributes?: InputHTMLAttributes<HTMLSelectElement>
 }
@@ -110,16 +106,7 @@ export type FormData<TInputs extends FormInputsProps> = {
   [K in keyof TInputs]: TInputs[K]['type'] extends 'text'
     ? string
     : TInputs[K]['type'] extends 'select'
-    ? Extract<TInputs[K], { type: 'select' }>['attributes'] extends undefined
-      ? string
-      : NonNullable<
-          Extract<
-            Extract<TInputs[K], { type: 'select' }>,
-            { type: 'select' }
-          >['attributes']
-        >['multiple'] extends true
-      ? string[]
-      : string
+    ? string
     : TInputs[K]['type'] extends 'checkbox'
     ? boolean
     : TInputs[K]['type'] extends 'textarea'
@@ -144,29 +131,8 @@ export type InputFieldProps<
   TType extends FormInput['type'],
   TFieldValues extends FieldValues,
 > = {
-  errorMessage?: string
   formInput: Extract<FormInput, { type: TType }> & {
     name: FieldPath<TFieldValues>
   }
-  register: UseFormRegister<TFieldValues>
-}
-
-/* Components */
-export function BaseLabel(props: {
-  label: string
-  errorMessage?: string
-  children?: JSX.Element | JSX.Element[]
-  className?: string
-}) {
-  return (
-    <div className='flex h-full flex-col gap-1'>
-      <label
-        className={twMerge('text-sm font-bold text-stone-500', props.className)}
-      >
-        {props.label}
-        <span className='ml-[1ch] text-red-400'>{props.errorMessage}</span>
-      </label>
-      {props.children}
-    </div>
-  )
+  useFormReturns: UseFormReturn<TFieldValues>
 }
