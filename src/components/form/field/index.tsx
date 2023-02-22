@@ -12,6 +12,9 @@ import OptionSetsField from './OptionSetsField'
 import CategoriesField from './CategoriesField'
 import COMField from './COMField'
 import CommoditiesField from './CommoditiesField'
+import DateField from './DateField'
+import MenuTypeDateField from './MenuTypeDateField'
+import DatetimeField from './DatetimeField'
 
 export function FormField<TFieldValues extends FieldValues>(props: {
   formInput: FormInput & {
@@ -100,6 +103,27 @@ export function FormField<TFieldValues extends FieldValues>(props: {
     // Label
     case 'label':
       content = null
+      break
+    // Date
+    case 'date':
+      content = (
+        <DateField formInput={formInput} useFormReturns={useFormReturns} />
+      )
+      break
+    // MenuTypeDate
+    case 'menuTypeDate':
+      content = (
+        <MenuTypeDateField
+          formInput={formInput}
+          useFormReturns={useFormReturns}
+        />
+      )
+      break
+    // Datetime
+    case 'datetime':
+      content = (
+        <DatetimeField formInput={formInput} useFormReturns={useFormReturns} />
+      )
       break
     default:
       content = null

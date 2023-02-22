@@ -1,12 +1,13 @@
 import { FieldValues } from 'react-hook-form'
 import { InputFieldProps } from './define'
-import TextInput from '../base/TextInput'
 
-export default function TextInputField<T extends FieldValues>(
-  props: InputFieldProps<'text', T>,
+import DatetimeInput from '../base/DatetimeInput'
+
+export default function DatetimeField<T extends FieldValues>(
+  props: InputFieldProps<'datetime', T>,
 ) {
   return (
-    <TextInput
+    <DatetimeInput
       className={props.formInput.coreClassName}
       {...props.formInput.attributes}
       {...props.useFormReturns.register(

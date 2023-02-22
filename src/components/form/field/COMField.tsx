@@ -11,7 +11,7 @@ import { getMenuName } from '@/lib/common'
 import NumberInput from '../base/NumberInput'
 
 export default function COMField<T extends FieldValues>(
-  props: Omit<InputFieldProps<'com', T>, 'register' | 'errorMessage'>,
+  props: InputFieldProps<'com', T>,
 ) {
   const [comDatas, setComDatas] = useState<COMData[]>(
     props.formInput.defaultValue ?? [],

@@ -1,7 +1,12 @@
 import { InputHTMLAttributes } from 'react'
-import { RegisterOptions } from 'react-hook-form'
-import { FieldValues, FieldPath, UseFormReturn } from 'react-hook-form'
+import {
+  RegisterOptions,
+  FieldValues,
+  FieldPath,
+  UseFormReturn,
+} from 'react-hook-form'
 
+import { MenuType } from '@prisma/client'
 import { OptionSet } from '@/lib/common'
 
 /* Types */
@@ -48,6 +53,19 @@ type NumberInput = {
   type: 'number'
   attributes?: InputHTMLAttributes<HTMLInputElement>
 }
+type DateInput = {
+  defaultValue?: string
+  data?: never
+  type: 'date'
+  attributes?: InputHTMLAttributes<HTMLInputElement>
+}
+type DatetimeInput = {
+  defaultValue?: string
+  data?: never
+  type: 'datetime'
+  attributes?: InputHTMLAttributes<HTMLInputElement>
+}
+// Extend Inputs
 type ImageInput = {
   defaultValue?: string
   data?: never
@@ -78,6 +96,12 @@ type CommoditiesInput = {
   type: 'commodities'
   attributes?: never
 }
+type MenuTypeDateInput = {
+  defaultValue?: { date: string | null; type: MenuType }
+  data?: never
+  type: 'menuTypeDate'
+  attributes?: never
+}
 
 export type FormInput = {
   label: string
@@ -98,32 +122,44 @@ export type FormInput = {
   | COMInput
   | CommoditiesInput
   | LabelInput
+  | DateInput
+  | MenuTypeDateInput
+  | DatetimeInput
 )
+
+export type InferFormInputData<TFormInput extends FormInput> =
+  TFormInput['type'] extends 'text'
+    ? string
+    : TFormInput['type'] extends 'select'
+    ? string
+    : TFormInput['type'] extends 'checkbox'
+    ? boolean
+    : TFormInput['type'] extends 'textarea'
+    ? string
+    : TFormInput['type'] extends 'number'
+    ? number
+    : TFormInput['type'] extends 'image'
+    ? string
+    : TFormInput['type'] extends 'optionSets'
+    ? OptionSet[]
+    : TFormInput['type'] extends 'categories'
+    ? number[]
+    : TFormInput['type'] extends 'com'
+    ? COMData[]
+    : TFormInput['type'] extends 'commodities'
+    ? number[]
+    : TFormInput['type'] extends 'date'
+    ? string
+    : TFormInput['type'] extends 'menuTypeDate'
+    ? { date: string | null; type: MenuType }
+    : TFormInput['type'] extends 'datetime'
+    ? string
+    : never
 
 export type FormInputsProps = { [key: string]: FormInput }
 
 export type FormData<TInputs extends FormInputsProps> = {
-  [K in keyof TInputs]: TInputs[K]['type'] extends 'text'
-    ? string
-    : TInputs[K]['type'] extends 'select'
-    ? string
-    : TInputs[K]['type'] extends 'checkbox'
-    ? boolean
-    : TInputs[K]['type'] extends 'textarea'
-    ? string
-    : TInputs[K]['type'] extends 'number'
-    ? number
-    : TInputs[K]['type'] extends 'image'
-    ? string
-    : TInputs[K]['type'] extends 'optionSets'
-    ? OptionSet[]
-    : TInputs[K]['type'] extends 'categories'
-    ? number[]
-    : TInputs[K]['type'] extends 'com'
-    ? COMData[]
-    : TInputs[K]['type'] extends 'commodities'
-    ? number[]
-    : never
+  [K in keyof TInputs]: InferFormInputData<TInputs[K]>
 }
 
 // Field

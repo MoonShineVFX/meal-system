@@ -6,6 +6,7 @@ import {
   offset,
   flip,
   shift,
+  size,
   useListNavigation,
   useHover,
   useTypeahead,
@@ -23,6 +24,7 @@ import {
   FloatingNode,
   FloatingTree,
   FloatingFocusManager,
+  UseFloatingProps,
 } from '@floating-ui/react'
 import { Transition } from '@headlessui/react'
 
@@ -35,7 +37,10 @@ interface MenuItemProps {
 
 export const DropdownMenuItem = React.forwardRef<
   HTMLButtonElement,
-  MenuItemProps & React.ButtonHTMLAttributes<HTMLButtonElement>
+  MenuItemProps &
+    React.ButtonHTMLAttributes<HTMLButtonElement> & {
+      floating?: Partial<UseFloatingProps>
+    }
 >(({ label, disabled, ...props }, ref) => {
   return (
     <button
@@ -57,7 +62,10 @@ interface MenuProps {
 }
 export const MenuComponent = React.forwardRef<
   HTMLButtonElement,
-  MenuProps & Omit<React.HTMLProps<HTMLButtonElement>, 'label'>
+  MenuProps &
+    Omit<React.HTMLProps<HTMLButtonElement>, 'label'> & {
+      floating?: Partial<UseFloatingProps>
+    }
 >(({ children, label, ...props }, forwardedRef) => {
   const [open, setOpen] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null)
@@ -81,11 +89,19 @@ export const MenuComponent = React.forwardRef<
     onOpenChange: setOpen,
     placement: nested ? 'right-start' : 'bottom-start',
     middleware: [
-      offset({ mainAxis: 5, alignmentAxis: nested ? -8 : 0 }),
+      offset({ mainAxis: 6, alignmentAxis: nested ? -8 : 0 }),
+      size({
+        apply({ rects, elements }) {
+          Object.assign(elements.floating.style, {
+            minWidth: `${rects.reference.width}px`,
+          })
+        },
+      }),
       flip(),
       shift(),
     ],
     whileElementsMounted: autoUpdate,
+    ...props.floating,
   })
 
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions(
@@ -191,10 +207,10 @@ export const MenuComponent = React.forwardRef<
           className: twMerge(
             // Menu button
             nested &&
-              'flex w-full min-w-[7rem] justify-between text-left p-2 hover:bg-stone-100 items-center',
+              'flex w-full min-w-[7rem] justify-between text-left p-2 hover:bg-stone-100 items-center active:scale-90',
             // Root button
             !nested &&
-              'py-1 px-2 rounded-2xl hover:bg-stone-100 text-sm flex items-center gap-1 w-fit active:scale-90',
+              'py-1 px-2 rounded-2xl hover:bg-stone-100 text-sm flex items-center gap-1 w-fit active:scale-95',
             props.className,
           ),
           onClick(event) {
@@ -267,7 +283,6 @@ export const MenuComponent = React.forwardRef<
                   position: strategy,
                   top: y ?? 0,
                   left: x ?? 0,
-                  width: 'max-content',
                 }}
                 {...getFloatingProps({
                   // Pressing tab dismisses the menu due to the modal
@@ -294,7 +309,7 @@ export const MenuComponent = React.forwardRef<
                         role: 'menuitem',
                         // Menu child item styles
                         className: twMerge(
-                          'py-2 px-4 text-left hover:bg-stone-100',
+                          'py-2 px-4 text-left hover:bg-stone-100 active:scale-90',
                           child.props.className,
                         ),
                         ref(node: HTMLButtonElement) {
@@ -324,7 +339,10 @@ export const MenuComponent = React.forwardRef<
 
 export const DropdownMenu = React.forwardRef<
   HTMLButtonElement,
-  MenuProps & Omit<React.HTMLProps<HTMLButtonElement>, 'label'>
+  MenuProps &
+    Omit<React.HTMLProps<HTMLButtonElement>, 'label'> & {
+      floating?: Partial<UseFloatingProps>
+    }
 >((props, ref) => {
   const parentId = useFloatingParentNodeId()
 
