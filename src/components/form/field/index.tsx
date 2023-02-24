@@ -130,7 +130,7 @@ export function FormField<TFieldValues extends FieldValues>(props: {
   }
 
   return (
-    <div className={twMerge('flex h-full flex-col gap-1', formInput.className)}>
+    <div className={twMerge('flex h-fit flex-col gap-1', formInput.className)}>
       {formInput.type !== 'checkbox' && (
         <label
           className={twMerge(

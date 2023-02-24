@@ -140,7 +140,6 @@ export default function DepositPage() {
           />
         </div>
         <span className='font-bold'>台灣Pay</span>進行儲值
-        {isMobile ? 'mo' : 'de'}
       </div>
       <Button
         isDisabled={

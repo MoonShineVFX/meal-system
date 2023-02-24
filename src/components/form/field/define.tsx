@@ -97,7 +97,12 @@ type CommoditiesInput = {
   attributes?: never
 }
 type MenuTypeDateInput = {
-  defaultValue?: { date: string | null; type: MenuType }
+  defaultValue?: {
+    date: string | null
+    type: MenuType
+    publishedDate: string | null
+    closedDate: string | null
+  }
   data?: never
   type: 'menuTypeDate'
   attributes?: never

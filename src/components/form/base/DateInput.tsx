@@ -12,7 +12,7 @@ const DateInput = forwardRef<
       ref={ref}
       type='date'
       className={twMerge(
-        'mx-[1px] rounded-2xl border-stone-300 bg-stone-50 text-stone-600 focus:border-yellow-500 focus:ring-yellow-500 disabled:opacity-50',
+        'rounded-2xl border-stone-300 bg-stone-50 text-stone-600 focus:border-yellow-500 focus:ring-yellow-500 disabled:opacity-50',
         className,
       )}
       {...rest}

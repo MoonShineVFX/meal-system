@@ -27,23 +27,6 @@ export default function Menus() {
       showFormDialog({
         title,
         inputs: {
-          typeDate: {
-            column: 1,
-            label: '類型 / 日期',
-            type: 'menuTypeDate',
-            defaultValue: menu
-              ? {
-                  type: menu.type,
-                  // date to input date value
-                  date: menu.date
-                    ? menu.date.toISOString().split('T')[0]
-                    : null,
-                }
-              : undefined,
-            options: {
-              required: '請選擇類型 / 日期',
-            },
-          },
           name: {
             label: '名稱',
             type: 'text',
@@ -65,20 +48,28 @@ export default function Menus() {
             label: '每人限購數量',
             type: 'number',
           },
-          publishedDate: {
+          typeDate: {
             column: 2,
-            defaultValue: menu?.publishedDate
-              ? menu.publishedDate.toISOString().split('T')[0]
+            label: '類型 / 日期',
+            type: 'menuTypeDate',
+            defaultValue: menu
+              ? {
+                  type: menu.type,
+                  // date to input date value
+                  date: menu.date
+                    ? menu.date.toISOString().split('T')[0]
+                    : null,
+                  publishedDate: menu.publishedDate
+                    ? menu.publishedDate.toISOString()
+                    : null,
+                  closedDate: menu.closedDate
+                    ? menu.closedDate.toISOString()
+                    : null,
+                }
               : undefined,
-            label: '發佈日期',
-            type: 'datetime',
-          },
-          closedDate: {
-            defaultValue: menu?.closedDate
-              ? menu.closedDate.toISOString().split('T')[0]
-              : undefined,
-            label: '結束日期',
-            type: 'datetime',
+            options: {
+              required: '請選擇類型 / 日期',
+            },
           },
         },
         useMutation: trpc.commodity.create.useMutation,
@@ -109,7 +100,7 @@ export default function Menus() {
               checked={isIncludeClosed}
               onChange={(e) => setIsIncludeClosed(e.target.checked)}
             />
-            <span className='font-bold text-stone-500'>顯示已結束菜單</span>
+            <span className='font-bold text-stone-500'>顯示已關閉菜單</span>
           </label>
           <Button
             label='新增菜單'
@@ -148,7 +139,7 @@ export default function Menus() {
               name: '狀態',
               render: (row) =>
                 row.closedDate && new Date() > row.closedDate
-                  ? '已結束'
+                  ? '已關閉'
                   : row.publishedDate && new Date() < row.publishedDate
                   ? '未發佈'
                   : '公開',
