@@ -91,7 +91,7 @@ type COMInput = {
   attributes?: never
 }
 type CommoditiesInput = {
-  defaultValue?: number[]
+  defaultValue?: never
   data: number // category id
   type: 'commodities'
   attributes?: never

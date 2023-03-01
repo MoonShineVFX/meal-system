@@ -81,6 +81,14 @@ export default function Categories() {
             id: category.id,
           })
         },
+        closeConfirm: {
+          title: `取消編輯屬於 ${category.name} 的餐點`,
+          content: `確定要取消編輯嗎？`,
+          cancel: true,
+          cancelText: '繼續',
+          confirmText: '確定取消',
+          confirmButtonTheme: 'danger',
+        },
       })
     },
     [],

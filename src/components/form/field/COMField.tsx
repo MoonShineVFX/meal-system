@@ -27,7 +27,11 @@ export default function COMField<T extends FieldValues>(
     props.useFormReturns.setValue(
       props.formInput.name,
       comDatas as Parameters<typeof props.useFormReturns.setValue>[1],
-      { shouldDirty: true },
+      {
+        shouldDirty: props.formInput.defaultValue
+          ? comDatas !== props.formInput.defaultValue
+          : comDatas.length > 0,
+      },
     )
   }, [comDatas])
 

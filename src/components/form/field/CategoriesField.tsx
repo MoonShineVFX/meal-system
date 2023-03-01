@@ -20,7 +20,11 @@ export default function CategoriesField<T extends FieldValues>(
     props.useFormReturns.setValue(
       props.formInput.name,
       categoriesIds as Parameters<typeof props.useFormReturns.setValue>[1],
-      { shouldDirty: true },
+      {
+        shouldDirty: props.formInput.defaultValue
+          ? categoriesIds !== props.formInput.defaultValue
+          : categoriesIds.length > 0,
+      },
     )
   }, [categoriesIds])
 
