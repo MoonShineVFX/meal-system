@@ -63,14 +63,15 @@ export default function Categories() {
   // Assign commodities
   const handleSubcategoryAssignCommodities = useCallback(
     (category: SubCategory) => {
+      const commodityIds = category.commodities.map((commodity) => commodity.id)
       showFormDialog({
         title: `編輯屬於 ${category.name} 的餐點`,
         className: 'h-[70vh]',
         inputs: {
           commodityIds: {
+            defaultValue: commodityIds,
             className: 'h-full',
             label: '餐點',
-            data: category.id,
             type: 'commodities',
           },
         },
@@ -267,7 +268,7 @@ export default function Categories() {
               className='ml-auto rounded-2xl p-2 text-sm text-stone-400 hover:bg-stone-100 active:scale-95'
               onClick={() => handleSubcategoryAssignCommodities(category)}
             >
-              <span>{category._count?.commodities} 個餐點</span>
+              <span>{category.commodities.length} 個餐點</span>
             </button>
           )}
         </SortableList>

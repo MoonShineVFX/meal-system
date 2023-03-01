@@ -59,9 +59,9 @@ export async function getCategories() {
           order: 'asc',
         },
         include: {
-          _count: {
+          commodities: {
             select: {
-              commodities: true,
+              id: true,
             },
           },
         },

@@ -96,22 +96,18 @@ export async function editCommodity({
 /* Get Commodities */
 export async function getCommodities(props: {
   includeMenus?: boolean
-  hasCategories?: number[]
+  includeIds?: number[]
 }) {
   const commodities = await prisma.commodity.findMany({
-    where: props.hasCategories
+    where: props.includeIds
       ? {
           OR: [
             {
               isDeleted: false,
             },
             {
-              categories: {
-                some: {
-                  id: {
-                    in: props.hasCategories,
-                  },
-                },
+              id: {
+                in: props.includeIds,
               },
             },
           ],

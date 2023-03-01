@@ -10,11 +10,26 @@ import { MenuType } from '@prisma/client'
 import { OptionSet } from '@/lib/common'
 
 /* Types */
-export type COMData = {
+export type MenuCOMData = {
   menuId: number
   limitPerUser: number
   stock: number
 }
+export type COMData =
+  | {
+      commodityId: number
+      limitPerUser: number
+      stock: number
+    }
+  | {
+      commodity: {
+        name: string
+        price: number
+        optionSets: OptionSet[]
+      }
+      limitPerUser: number
+      stock: number
+    }
 
 // Inputs
 type LabelInput = {
@@ -84,15 +99,15 @@ type CategoriesInput = {
   type: 'categories'
   attributes?: never
 }
-type COMInput = {
-  defaultValue?: COMData[]
+type MenuCOMInput = {
+  defaultValue?: MenuCOMData[]
   data?: never
-  type: 'com'
+  type: 'menucom'
   attributes?: never
 }
 type CommoditiesInput = {
-  defaultValue?: never
-  data: number // category id
+  defaultValue?: number[]
+  data?: never
   type: 'commodities'
   attributes?: never
 }
@@ -105,6 +120,12 @@ type MenuTypeDateInput = {
   }
   data?: never
   type: 'menuTypeDate'
+  attributes?: never
+}
+type COMInput = {
+  defaultValue?: COMData[]
+  data?: never
+  type: 'com'
   attributes?: never
 }
 
@@ -124,12 +145,13 @@ export type FormInput = {
   | ImageInput
   | OptionSetsInput
   | CategoriesInput
-  | COMInput
+  | MenuCOMInput
   | CommoditiesInput
   | LabelInput
   | DateInput
   | MenuTypeDateInput
   | DatetimeInput
+  | COMInput
 )
 
 export type InferFormInputData<TFormInput extends FormInput> =
@@ -149,8 +171,8 @@ export type InferFormInputData<TFormInput extends FormInput> =
     ? OptionSet[]
     : TFormInput['type'] extends 'categories'
     ? number[]
-    : TFormInput['type'] extends 'com'
-    ? COMData[]
+    : TFormInput['type'] extends 'menucom'
+    ? MenuCOMData[]
     : TFormInput['type'] extends 'commodities'
     ? number[]
     : TFormInput['type'] extends 'date'
@@ -159,6 +181,8 @@ export type InferFormInputData<TFormInput extends FormInput> =
     ? { date: string | null; type: MenuType }
     : TFormInput['type'] extends 'datetime'
     ? string
+    : TFormInput['type'] extends 'com'
+    ? COMData[]
     : never
 
 export type FormInputsProps = { [key: string]: FormInput }

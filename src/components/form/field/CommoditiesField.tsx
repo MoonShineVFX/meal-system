@@ -10,40 +10,27 @@ import CheckBox from '../base/CheckBox'
 export default function CommoditiesField<T extends FieldValues>(
   props: InputFieldProps<'commodities', T>,
 ) {
-  const [defaultIds, setDefaultIds] = useState<number[] | undefined>(undefined)
-  const [commoditiesIds, setCommoditiesIds] = useState<number[]>([])
+  const [commoditiesIds, setCommoditiesIds] = useState<number[]>(
+    props.formInput.defaultValue ?? [],
+  )
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [onlyShowSelected, setOnlyShowSelected] = useState<boolean>(false)
   const { data, isError, isLoading } = trpc.commodity.get.useQuery({
-    hasCategories: [props.formInput.data],
+    includeIds: props.formInput.defaultValue ?? undefined,
   })
 
   // set rfh value
   useEffect(() => {
-    if (!defaultIds) return
     props.useFormReturns.setValue(
       props.formInput.name,
       commoditiesIds as Parameters<typeof props.useFormReturns.setValue>[1],
       {
-        shouldDirty: commoditiesIds !== defaultIds,
+        shouldDirty: props.formInput.defaultValue
+          ? commoditiesIds !== props.formInput.defaultValue
+          : commoditiesIds.length > 0,
       },
     )
-  }, [commoditiesIds, defaultIds])
-
-  // set commodities ids first time
-  useEffect(() => {
-    if (data) {
-      const ids = data
-        .filter((commodity) =>
-          commodity.categories.some(
-            (category) => category.id === props.formInput.data, // data is category id
-          ),
-        )
-        .map((commodity) => commodity.id)
-      setDefaultIds(ids)
-      setCommoditiesIds(ids)
-    }
-  }, [data])
+  }, [commoditiesIds])
 
   if (isError || isLoading) return <Spinner className='h-12 w-12' />
 

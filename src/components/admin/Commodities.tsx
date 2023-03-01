@@ -77,7 +77,7 @@ export default function Commodities() {
           menus: {
             label: '菜單',
             column: 2,
-            type: 'com',
+            type: 'menucom',
             defaultValue: commodity?.onMenus.map((com) => ({
               menuId: com.menu.id,
               limitPerUser: com.limitPerUser,
@@ -207,7 +207,7 @@ export default function Commodities() {
         },
         menus: {
           label: '共同菜單',
-          type: 'com',
+          type: 'menucom',
           defaultValue: sharedMenus,
           hide: property !== '菜單',
         },

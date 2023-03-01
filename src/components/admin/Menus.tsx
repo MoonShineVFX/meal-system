@@ -21,7 +21,7 @@ export default function Menus() {
   })
 
   const handleEditMenu = useCallback(
-    (menu?: NonNullable<typeof data>[number]) => {
+    (menu?: Extract<NonNullable<typeof data>[number], { _count: any }>) => {
       const title = menu ? '編輯菜單' : '新增菜單'
 
       showFormDialog({
@@ -70,6 +70,18 @@ export default function Menus() {
             options: {
               required: '請選擇類型 / 日期',
             },
+          },
+          coms: {
+            column: 3,
+            label: '餐點',
+            type: 'com',
+            defaultValue: menu
+              ? menu.commodities.map((com) => ({
+                  commodityId: com.commodity.id,
+                  limitPerUser: com.limitPerUser,
+                  stock: com.stock,
+                }))
+              : undefined,
           },
         },
         useMutation: trpc.commodity.create.useMutation,

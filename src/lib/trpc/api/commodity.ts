@@ -169,7 +169,7 @@ export const CommodityRouter = router({
     .input(
       z.object({
         includeMenus: z.boolean().optional(),
-        hasCategories: z.array(z.number()).optional(),
+        includeIds: z.array(z.number()).optional(),
       }),
     )
     .query(async ({ input }) => {

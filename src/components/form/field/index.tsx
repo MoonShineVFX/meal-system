@@ -10,11 +10,12 @@ import NumberField from './NumberField'
 import ImageField from './ImageField'
 import OptionSetsField from './OptionSetsField'
 import CategoriesField from './CategoriesField'
-import COMField from './COMField'
+import MenuCOMField from './MenuCOMField'
 import CommoditiesField from './CommoditiesField'
 import DateField from './DateField'
 import MenuTypeDateField from './MenuTypeDateField'
 import DatetimeField from './DatetimeField'
+import COMField from './COMField'
 
 export function FormField<TFieldValues extends FieldValues>(props: {
   formInput: FormInput & {
@@ -85,10 +86,10 @@ export function FormField<TFieldValues extends FieldValues>(props: {
         />
       )
       break
-    // COM
-    case 'com':
+    // COM to menu
+    case 'menucom':
       content = (
-        <COMField formInput={formInput} useFormReturns={useFormReturns} />
+        <MenuCOMField formInput={formInput} useFormReturns={useFormReturns} />
       )
       break
     // Commodities
@@ -123,6 +124,12 @@ export function FormField<TFieldValues extends FieldValues>(props: {
     case 'datetime':
       content = (
         <DatetimeField formInput={formInput} useFormReturns={useFormReturns} />
+      )
+      break
+    // COM
+    case 'com':
+      content = (
+        <COMField formInput={formInput} useFormReturns={useFormReturns} />
       )
       break
     default:
