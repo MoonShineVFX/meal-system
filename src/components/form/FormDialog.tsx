@@ -24,6 +24,7 @@ type FormDialogProps<
   onClose: () => void
   title: string
   className?: string
+  style?: React.CSSProperties | ((columns: number) => React.CSSProperties)
   inputs: U
   useMutation: T
   onSubmit: (
@@ -155,11 +156,17 @@ export default function FormDialog<
             leaveFrom='opacity-100 scale-100'
             leaveTo='opacity-0 scale-75'
           >
-            <Dialog.Panel className='ms-scroll max-h-full max-w-[47rem] overflow-y-auto rounded-2xl bg-white p-6 shadow-lg'>
+            <Dialog.Panel className='ms-scroll max-h-full max-w-[56rem] overflow-y-auto rounded-2xl bg-white p-6 shadow-lg'>
               <Dialog.Title className='text-lg font-bold'>
                 {props?.title}
               </Dialog.Title>
-              <form onSubmit={handleSubmit(handleEdit)}>
+              <form
+                onSubmit={(event) => {
+                  handleSubmit(handleEdit)(event)
+                  event.preventDefault()
+                  event.stopPropagation()
+                }}
+              >
                 {/* Inputs */}
                 <section
                   className={twMerge(
@@ -168,6 +175,9 @@ export default function FormDialog<
                   )}
                   style={{
                     gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                    ...(typeof props.style === 'function'
+                      ? props.style(columns)
+                      : props.style),
                   }}
                 >
                   {[...Array(columns).keys()].map((column) => (

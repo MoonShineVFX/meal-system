@@ -49,8 +49,7 @@ export default function Menus() {
             type: 'number',
           },
           typeDate: {
-            column: 2,
-            label: '類型 / 日期',
+            label: '類型',
             type: 'menuTypeDate',
             defaultValue: menu
               ? {
@@ -72,9 +71,10 @@ export default function Menus() {
             },
           },
           coms: {
-            column: 3,
+            column: 2,
             label: '餐點',
             type: 'com',
+            className: 'h-full',
             defaultValue: menu
               ? menu.commodities.map((com) => ({
                   commodityId: com.commodity.id,
@@ -84,9 +84,20 @@ export default function Menus() {
               : undefined,
           },
         },
+        style: {
+          gridTemplateColumns: '1fr 3fr',
+        },
         useMutation: trpc.commodity.create.useMutation,
         onSubmit(formData, mutation) {
           console.log(formData)
+        },
+        closeConfirm: {
+          title: `取消${title}`,
+          content: `確定要取消${title}嗎？`,
+          cancel: true,
+          cancelText: '繼續',
+          confirmText: '確定取消',
+          confirmButtonTheme: 'danger',
         },
       })
     },

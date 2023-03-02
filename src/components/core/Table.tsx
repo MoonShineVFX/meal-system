@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react'
-import { TableVirtuoso } from 'react-virtuoso'
+import { TableVirtuoso, FixedFooterContent } from 'react-virtuoso'
 import { twMerge } from 'tailwind-merge'
 import {
   ChevronUpDownIcon,
@@ -33,6 +33,8 @@ export default function Table<
   idField?: K
   onSelectedIdsChange?: (ids: T[number][K][]) => void
   onDataFilter?: (data: T[number][]) => T
+  footer?: FixedFooterContent
+  size?: 'sm'
 }) {
   const [selectedIds, setSelectedIds] = useState<T[number][K][]>([])
   const [tableData, setTableData] = useState<T[number][]>(props.data)
@@ -115,6 +117,7 @@ export default function Table<
         className='ms-scroll'
         data={tableData}
         increaseViewportBy={4}
+        fixedFooterContent={props.footer}
         fixedHeaderContent={() => (
           // Header
           <tr className='bg-stone-100 shadow' ref={tableHeaderRef}>
@@ -170,7 +173,10 @@ export default function Table<
                           selectedIds.length < props.data.length
                       }
                     }}
-                    className='peer/checkbox mr-1 h-5 w-5 disabled:opacity-50'
+                    className={twMerge(
+                      'peer/checkbox mr-1 h-5 w-5 disabled:opacity-50',
+                      props.size === 'sm' && 'h-4 w-4',
+                    )}
                     checked={
                       selectedIds.length === props.data.length &&
                       props.data.length > 0
@@ -188,7 +194,12 @@ export default function Table<
                       }
                     }}
                   />
-                  <span className='text-sm font-normal peer-disabled/checkbox:opacity-50'>
+                  <span
+                    className={twMerge(
+                      'text-sm font-normal peer-disabled/checkbox:opacity-50',
+                      props.size === 'sm' && 'hidden',
+                    )}
+                  >
                     全選
                   </span>
                 </label>
@@ -256,9 +267,18 @@ export default function Table<
             {/* Row */}
             {/* select */}
             {props.idField && (
-              <td key='select' className='p-4 text-center'>
+              <td
+                key='select'
+                className={twMerge(
+                  'p-4 text-center',
+                  props.size === 'sm' && 'p-1',
+                )}
+              >
                 <CheckBox
-                  className='h-6 w-6'
+                  className={twMerge(
+                    'h-6 w-6',
+                    props.size === 'sm' && 'h-4 w-4',
+                  )}
                   checked={selectedIds.includes(row[props.idField])}
                   onChange={(e) => {
                     if (e.target.checked) {

@@ -22,6 +22,7 @@ export type COMData =
       stock: number
     }
   | {
+      commodityId: number
       commodity: {
         name: string
         price: number
