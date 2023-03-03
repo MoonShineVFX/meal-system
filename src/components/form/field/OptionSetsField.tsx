@@ -29,6 +29,17 @@ export default function OptionSetsField<T extends FieldValues>(
 
   // set rfh value
   useEffect(() => {
+    if (
+      currentOptionSets.length > 0 &&
+      currentOptionSets.some((oss) => oss.options.length === 0)
+    ) {
+      props.useFormReturns.setError(props.formInput.name, {
+        type: 'custom',
+        message: '選項集內容不可為空',
+      })
+      return
+    }
+    props.useFormReturns.clearErrors(props.formInput.name)
     props.useFormReturns.setValue(
       props.formInput.name,
       currentOptionSets as Parameters<typeof props.useFormReturns.setValue>[1],
@@ -36,6 +47,7 @@ export default function OptionSetsField<T extends FieldValues>(
         shouldDirty: props.formInput.defaultValue
           ? currentOptionSets !== props.formInput.defaultValue
           : currentOptionSets.length > 0,
+        shouldValidate: true,
       },
     )
   }, [currentOptionSets])

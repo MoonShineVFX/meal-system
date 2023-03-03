@@ -92,6 +92,11 @@ export default function Table<
     }
   }, [selectedIds])
 
+  // clean selected ids when data changes
+  useEffect(() => {
+    setSelectedIds([])
+  }, [props.data])
+
   // Toggle sort column
   const handleSortColumn = useCallback(
     (columnName: string) => {

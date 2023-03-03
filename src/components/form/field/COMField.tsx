@@ -12,6 +12,7 @@ import Table from '@/components/core/Table'
 import { OptionSet } from '@/lib/common'
 import TextInput from '../base/TextInput'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import type { FormInput } from '@/components/form/field'
 
 type ExistCOMData = Extract<COMData, { commodityId: number }>
 type NewCOMData = Extract<COMData, { commodity: { name: string } }>
@@ -48,6 +49,7 @@ export default function COMField<T extends FieldValues>(
         shouldDirty: props.formInput.defaultValue
           ? comDatas !== props.formInput.defaultValue
           : comDatas.length > 0,
+        shouldValidate: true,
       },
     )
   }, [comDatas])
@@ -123,6 +125,165 @@ export default function COMField<T extends FieldValues>(
     [comDatas],
   )
 
+  const handleBatchEditCommodity = useCallback(
+    (property: typeof BatchEditProps[number]) => {
+      const newSelectedComDatas = comDatas.filter(
+        (comData) =>
+          selectedIds.includes(comData.commodityId) && 'commodity' in comData,
+      ) as NewCOMData[]
+      const prices = newSelectedComDatas
+        .map((c) => (c as NewCOMData).commodity.price)
+        .sort((a, b) => a - b)
+      const limitByUsers = comDatas
+        .map((c) => c.limitPerUser)
+        .sort((a, b) => a - b)
+      const stocks = comDatas.map((c) => c.stock).sort((a, b) => a - b)
+      const sharedOptionSets = newSelectedComDatas
+        .map((c) =>
+          c.commodity.optionSets.map((os) => ({
+            ...os,
+            key: `${os.name}-${os.options.join('-')}-${
+              os.multiSelect ? 'true' : 'false'
+            }`,
+          })),
+        )
+        .reduce((p, c) => p.filter((e) => c.some((ce) => ce.key === e.key)))
+
+      const inputs = {
+        price: {
+          defaultValue: 0,
+          label: `價錢 (所選: $${prices[0]} ~ $${prices[prices.length - 1]})`,
+          type: 'number',
+          options: {
+            min: { value: 0, message: '價錢不能小於 0' },
+            max: { value: 9999, message: '價錢不能大於 9999' },
+          },
+          hide: property !== '價錢',
+        },
+        limitByUser: {
+          defaultValue: 0,
+          label: `每人限購 (所選: ${limitByUsers[0]} ~ ${
+            limitByUsers[limitByUsers.length - 1]
+          })`,
+          type: 'number',
+          options: {
+            min: { value: 0, message: '數量不能小於 0' },
+            max: { value: 999, message: '數量不能大於 999' },
+          },
+          hide: property !== '每人限購',
+        },
+        stock: {
+          defaultValue: 0,
+          label: `總數 (所選: ${stocks[0]} ~ ${stocks[stocks.length - 1]})`,
+          type: 'number',
+          options: {
+            min: { value: 0, message: '數量不能小於 0' },
+            max: { value: 999, message: '數量不能大於 999' },
+          },
+          hide: property !== '總數',
+        },
+        removeUnshared: {
+          label: '移除非共同的選項',
+          type: 'checkbox',
+          defaultValue: false,
+          hide: property !== '選項',
+        },
+        optionSets: {
+          label: '共同選項',
+          type: 'optionSets',
+          defaultValue: sharedOptionSets,
+          hide: property !== '選項',
+        },
+      } as const satisfies Record<string, FormInput>
+
+      showFormDialog({
+        title: '批次編輯餐點',
+        inputs,
+        useMutation: undefined,
+        onSubmit: (formData) => {
+          if (property === '價錢') {
+            setComDatas((prev) =>
+              prev.map((comData) => {
+                if (!selectedIds.includes(comData.commodityId)) return comData
+                return {
+                  ...comData,
+                  commodity: {
+                    ...(comData as NewCOMData).commodity,
+                    price: formData.price,
+                  },
+                }
+              }),
+            )
+          } else if (property === '每人限購') {
+            setComDatas((prev) =>
+              prev.map((comData) => {
+                if (!selectedIds.includes(comData.commodityId)) return comData
+                return {
+                  ...comData,
+                  limitPerUser: formData.limitByUser,
+                }
+              }),
+            )
+          } else if (property === '總數') {
+            setComDatas((prev) =>
+              prev.map((comData) => {
+                if (!selectedIds.includes(comData.commodityId)) return comData
+                return {
+                  ...comData,
+                  stock: formData.stock,
+                }
+              }),
+            )
+          } else if (property === '選項') {
+            setComDatas((prev) =>
+              prev.map((comData) => {
+                if (!selectedIds.includes(comData.commodityId)) return comData
+                let newOptionSets: OptionSet[]
+                if (formData.removeUnshared) {
+                  newOptionSets = formData.optionSets
+                } else {
+                  newOptionSets = [
+                    ...(comData as NewCOMData).commodity.optionSets
+                      .map((os) => ({
+                        ...os,
+                        key: `${os.name}-${os.options.join('-')}-${
+                          os.multiSelect ? 'true' : 'false'
+                        }`,
+                      }))
+                      .filter(
+                        (os) =>
+                          !sharedOptionSets.some((sos) => sos.key === os.key) &&
+                          !formData.optionSets.some(
+                            (sos) => sos.name === os.name,
+                          ),
+                      ),
+                    ...formData.optionSets,
+                  ]
+                }
+                return {
+                  ...comData,
+                  commodity: {
+                    ...(comData as NewCOMData).commodity,
+                    optionSets: newOptionSets,
+                  },
+                }
+              }),
+            )
+          }
+        },
+        closeConfirm: {
+          title: `取消編輯`,
+          content: `確定要取消批次編輯嗎？`,
+          cancel: true,
+          cancelText: '繼續',
+          confirmText: '確定取消',
+          confirmButtonTheme: 'danger',
+        },
+      })
+    },
+    [comDatas, selectedIds, setComDatas],
+  )
+
   if (isError || isLoading) return <Spinner className='h-12 w-12' />
 
   return (
@@ -137,7 +298,7 @@ export default function COMField<T extends FieldValues>(
           從現有餐點選擇
           {existCOMIds.length > 0 && ` (${existCOMIds.length})`}
         </button>
-        {selectedIds.length > 0 && (
+        {selectedIds.length > 1 && (
           <DropdownMenu className='' label='批次編輯'>
             {BatchEditProps.map((p) => {
               const hasExist = selectedIds.some((id) => {
@@ -147,15 +308,22 @@ export default function COMField<T extends FieldValues>(
                 return comData && !('commodity' in comData)
               })
               if (['價錢', '選項'].includes(p) && hasExist) return null
-              return <DropdownMenuItem key={p} label={p} />
+              return (
+                <DropdownMenuItem
+                  key={p}
+                  label={p}
+                  onClick={() => handleBatchEditCommodity(p)}
+                />
+              )
             })}
             <DropdownMenuItem
               label={<span className='text-red-400'>刪除</span>}
               onClick={() => {
                 setComDatas(
-                  comDatas.filter((_, index) => !selectedIds.includes(index)),
+                  comDatas.filter(
+                    (comData) => !selectedIds.includes(comData.commodityId),
+                  ),
                 )
-                setSelectedIds([])
               }}
             />
           </DropdownMenu>
@@ -216,8 +384,9 @@ export default function COMField<T extends FieldValues>(
                     }}
                   >
                     <TextInput
-                      className='max-w-[10ch] text-sm'
+                      className='max-w-[10ch] overflow-hidden text-ellipsis text-sm'
                       defaultValue={row.commodity.name}
+                      title={row.commodity.name}
                     />
                   </EditableField>
                 )

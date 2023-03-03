@@ -123,7 +123,9 @@ export default function Menus() {
               checked={isIncludeClosed}
               onChange={(e) => setIsIncludeClosed(e.target.checked)}
             />
-            <span className='font-bold text-stone-500'>顯示已關閉菜單</span>
+            <span className='text-sm font-bold text-stone-500'>
+              顯示已關閉菜單
+            </span>
           </label>
           <Button
             label='新增菜單'

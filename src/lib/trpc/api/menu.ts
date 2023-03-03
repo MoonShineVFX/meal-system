@@ -1,7 +1,7 @@
 import z from 'zod'
 import { MenuType } from '@prisma/client'
 
-import { userProcedure, router } from '../trpc'
+import { userProcedure, staffProcedure, router } from '../trpc'
 import {
   getMenuWithComs,
   getReservationMenus,
@@ -9,6 +9,45 @@ import {
 } from '@/lib/server/database'
 
 export const MenuRouter = router({
+  create: staffProcedure
+    .input(
+      z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        limitPerUser: z.number().optional(),
+        type: z.nativeEnum(MenuType),
+        date: z.date().optional(),
+        publishedDate: z.date().optional(),
+        closedDate: z.date().optional(),
+        coms: z.array(
+          z.object({
+            commodityId: z.number(),
+            commodity: z.object({
+              name: z.string(),
+              price: z.number(),
+              optionSets: z.array(
+                z.object({
+                  name: z.string(),
+                  multiSelect: z.boolean(),
+                  options: z.array(z.string()),
+                  order: z.number(),
+                }),
+              ),
+            }),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const isReservation = ['LIVE', 'RETAIL'].includes(input.type)
+      if (
+        isReservation &&
+        (!input.date || !input.publishedDate || !input.closedDate)
+      ) {
+        throw new Error('預訂菜單需要日期參數')
+      }
+      // TODO: database function
+    }),
   get: userProcedure
     .input(
       z.object({
