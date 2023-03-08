@@ -23,6 +23,7 @@ type CreateMenuArgs = {
   publishedDate?: Date | null
   closedDate?: Date | null
   limitPerUser?: number
+  isUpsert?: boolean
   client?: Prisma.TransactionClient | PrismaClient
 } & (CommonCreateMenuArgs | ReserveCreateMenuArgs)
 /** Create menu, if type is not main, date required */
@@ -35,6 +36,7 @@ export async function createMenu({
   closedDate,
   limitPerUser,
   client,
+  isUpsert,
 }: CreateMenuArgs) {
   const thisPrisma = client ?? prisma
 
@@ -44,15 +46,18 @@ export async function createMenu({
   }
 
   // Check menu existence
-  const collisionCount = await thisPrisma.menu.count({
+  const existMenu = await thisPrisma.menu.findFirst({
     where: { type, date, isDeleted: false },
   })
-  if (collisionCount > 0) {
+  if (existMenu && !isUpsert) {
     throw new Error('已經有該設定的菜單')
   }
 
-  return await thisPrisma.menu.create({
-    data: {
+  return await thisPrisma.menu.upsert({
+    where: {
+      id: existMenu?.id,
+    },
+    create: {
       date,
       type,
       name,
@@ -61,18 +66,12 @@ export async function createMenu({
       closedDate,
       limitPerUser,
     },
-    include: {
-      commodities: {
-        select: {
-          commodity: {
-            select: {
-              id: true,
-            },
-          },
-          limitPerUser: true,
-          stock: true,
-        },
-      },
+    update: {
+      name,
+      description,
+      publishedDate,
+      closedDate,
+      limitPerUser,
     },
   })
 }
@@ -81,6 +80,9 @@ export async function createMenu({
 const GetActiveMenusDetailArgs = Prisma.validator<Prisma.MenuArgs>()({
   include: {
     commodities: {
+      where: {
+        isDeleted: false,
+      },
       select: {
         commodity: {
           select: {
@@ -538,6 +540,26 @@ export async function removeCommodityFromMenus(args: {
       menuId: {
         notIn: excludeMenuIds,
       },
+    },
+    data: {
+      isDeleted: true,
+    },
+  })
+}
+
+export async function removeCommoditiesFromMenu(args: {
+  excludeCommodityIds: number[]
+  menuId: number
+  client?: Prisma.TransactionClient | PrismaClient
+}) {
+  const { excludeCommodityIds, menuId, client } = args
+  const thisPrisma = client ?? prisma
+  return await thisPrisma.commodityOnMenu.updateMany({
+    where: {
+      commodityId: {
+        notIn: excludeCommodityIds,
+      },
+      menuId: menuId,
     },
     data: {
       isDeleted: true,

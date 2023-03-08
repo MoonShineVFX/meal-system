@@ -23,7 +23,6 @@ export default function Menus() {
   const handleEditMenu = useCallback(
     (menu?: Extract<NonNullable<typeof data>[number], { _count: any }>) => {
       const title = menu ? '編輯菜單' : '新增菜單'
-
       showFormDialog({
         title,
         inputs: {
@@ -80,14 +79,16 @@ export default function Menus() {
         style: {
           gridTemplateColumns: '1fr 3fr',
         },
-        useMutation: trpc.menu.create.useMutation,
+        useMutation: trpc.menu.createOrEdit.useMutation,
         onSubmit(formData, mutation) {
+          console.log(formData)
           mutation.mutate({
             ...formData,
             type: formData.typeDate.type,
             date: formData.typeDate.date,
             publishedDate: formData.typeDate.publishedDate,
             closedDate: formData.typeDate.closedDate,
+            isEdit: !!menu,
           })
         },
         closeConfirm: {
@@ -152,7 +153,10 @@ export default function Menus() {
               unhidable: true,
               hint: (row) => getMenuName(row) || '未命名',
               render: (row) => (
-                <button className='group/edit flex items-center rounded-2xl p-2 hover:bg-black/5 active:scale-90'>
+                <button
+                  className='group/edit flex items-center rounded-2xl p-2 hover:bg-black/5 active:scale-90'
+                  onClick={() => handleEditMenu(row)}
+                >
                   {getMenuName(row)}
                   <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
                 </button>

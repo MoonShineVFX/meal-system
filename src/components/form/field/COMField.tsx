@@ -560,8 +560,8 @@ export default function COMField<T extends FieldValues>(
               ),
             },
           ]}
-          footer={() => (
-            <div className='absolute inset-x-0 flex h-16 w-full items-center justify-center p-4'>
+          footer={
+            <td className='absolute inset-x-0 flex h-16 w-full items-center justify-center p-4'>
               <button
                 className='flex w-fit items-center rounded-2xl p-2 text-sm text-stone-400 hover:bg-stone-100 active:scale-95'
                 type='button'
@@ -590,8 +590,8 @@ export default function COMField<T extends FieldValues>(
                 <PlusIcon className='mr-2 h-4 w-4' />
                 新增
               </button>
-            </div>
-          )}
+            </td>
+          }
         />
         {formDialog}
       </section>

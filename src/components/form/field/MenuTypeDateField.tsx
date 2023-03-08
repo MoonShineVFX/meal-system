@@ -117,6 +117,7 @@ export default function MenuTypeDateField<T extends FieldValues>(
   return (
     <div className='flex flex-col gap-4'>
       <Select
+        defaultValue={value.type}
         data={Object.entries(MenuTypeName).map(([value, label]) => ({
           label,
           value,

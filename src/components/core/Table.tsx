@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react'
-import { TableVirtuoso, FixedFooterContent } from 'react-virtuoso'
+import { TableVirtuoso } from 'react-virtuoso'
 import { twMerge } from 'tailwind-merge'
 import {
   ChevronUpDownIcon,
@@ -33,7 +33,7 @@ export default function Table<
   idField?: K
   onSelectedIdsChange?: (ids: T[number][K][]) => void
   onDataFilter?: (data: T[number][]) => T
-  footer?: FixedFooterContent
+  footer?: JSX.Element
   size?: 'sm'
 }) {
   const [selectedIds, setSelectedIds] = useState<T[number][K][]>([])
@@ -122,7 +122,6 @@ export default function Table<
         className='ms-scroll'
         data={tableData}
         increaseViewportBy={4}
-        fixedFooterContent={props.footer}
         fixedHeaderContent={() => (
           // Header
           <tr className='bg-stone-100 shadow' ref={tableHeaderRef}>
@@ -341,26 +340,34 @@ export default function Table<
             />
           ),
           TableRow: ({ style, ...rest }) => (
-            <tr
-              {...rest}
-              className={twMerge(
-                'hover:bg-stone-100',
-                props.idField &&
-                  selectedIds.includes(
-                    tableData[rest['data-item-index']][props.idField!],
-                  ) &&
-                  'bg-yellow-50 hover:bg-yellow-100',
-              )}
-              style={style}
-            />
+            <>
+              <tr
+                {...rest}
+                className={twMerge(
+                  'hover:bg-stone-100',
+                  props.idField &&
+                    selectedIds.includes(
+                      tableData[rest['data-item-index']][props.idField!],
+                    ) &&
+                    'bg-yellow-50 hover:bg-yellow-100',
+                )}
+                style={style}
+              />
+            </>
           ),
           // Body
-          TableBody: React.forwardRef(({ style, ...props }, ref) => (
+          TableBody: React.forwardRef(({ style, children, ...rest }, ref) => (
             <tbody
               className='divide-y divide-stone-200'
-              {...props}
+              {...rest}
               ref={ref}
               style={style}
+              children={
+                <>
+                  {children}
+                  {props.footer && <tr>{props.footer}</tr>}
+                </>
+              }
             />
           )),
         }}

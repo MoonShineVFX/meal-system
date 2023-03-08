@@ -153,14 +153,26 @@ export async function getCommodities(props: {
 
 /* Delete Commodities */
 export async function deleteCommodities(props: { ids: number[] }) {
-  await prisma.commodity.updateMany({
-    where: {
-      id: {
-        in: props.ids,
+  await prisma.$transaction([
+    prisma.commodity.updateMany({
+      where: {
+        id: {
+          in: props.ids,
+        },
       },
-    },
-    data: {
-      isDeleted: true,
-    },
-  })
+      data: {
+        isDeleted: true,
+      },
+    }),
+    prisma.commodityOnMenu.updateMany({
+      where: {
+        commodityId: {
+          in: props.ids,
+        },
+      },
+      data: {
+        isDeleted: true,
+      },
+    }),
+  ])
 }

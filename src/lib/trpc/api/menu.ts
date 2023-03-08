@@ -10,14 +10,16 @@ import {
   createMenu,
   createCommodity,
   addCommodityToMenu,
+  removeCommoditiesFromMenu,
 } from '@/lib/server/database'
 import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const MenuRouter = router({
-  create: staffProcedure
+  createOrEdit: staffProcedure
     .input(
       z.object({
+        isEdit: z.boolean(),
         name: z.string().optional(),
         description: z.string().optional(),
         limitPerUser: z.number().optional(),
@@ -49,7 +51,7 @@ export const MenuRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const isReservation = ['LIVE', 'RETAIL'].includes(input.type)
+      const isReservation = !['LIVE', 'RETAIL'].includes(input.type)
       if (
         isReservation &&
         (!input.date || !input.publishedDate || !input.closedDate)
@@ -62,6 +64,7 @@ export const MenuRouter = router({
         const menu = await createMenu({
           client,
           ...(input as Parameters<typeof createMenu>[0]),
+          isUpsert: input.isEdit,
         })
 
         // create commodities and replace temp id with new id
@@ -100,18 +103,25 @@ export const MenuRouter = router({
           }),
         )
 
-        const hasCreateCommodity = input.coms.some((com) => 'commodity' in com)
-        if (hasCreateCommodity) {
-          eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-            type: SERVER_NOTIFY.COMMODITY_ADD,
-            skipNotify: true,
-          })
-        }
-
-        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-          type: SERVER_NOTIFY.MENU_ADD,
-          skipNotify: false,
+        // remove commodities from menu
+        await removeCommoditiesFromMenu({
+          client,
+          menuId: menu.id,
+          excludeCommodityIds: input.coms.map((com) => com.commodityId),
         })
+      })
+
+      const hasCreateCommodity = input.coms.some((com) => 'commodity' in com)
+      if (hasCreateCommodity) {
+        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+          type: SERVER_NOTIFY.COMMODITY_ADD,
+          skipNotify: true,
+        })
+      }
+
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: input.isEdit ? SERVER_NOTIFY.MENU_UPDATE : SERVER_NOTIFY.MENU_ADD,
+        skipNotify: false,
       })
     }),
   get: userProcedure
