@@ -11,6 +11,7 @@ import {
   createCommodity,
   addCommodityToMenu,
   removeCommoditiesFromMenu,
+  deleteMenu,
 } from '@/lib/server/database'
 import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
@@ -64,7 +65,7 @@ export const MenuRouter = router({
         const menu = await createMenu({
           client,
           ...(input as Parameters<typeof createMenu>[0]),
-          isUpsert: input.isEdit,
+          isEdit: input.isEdit,
         })
 
         // create commodities and replace temp id with new id
@@ -121,6 +122,23 @@ export const MenuRouter = router({
 
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: input.isEdit ? SERVER_NOTIFY.MENU_UPDATE : SERVER_NOTIFY.MENU_ADD,
+        skipNotify: false,
+      })
+    }),
+  deleteMany: staffProcedure
+    .input(
+      z.object({
+        ids: z.array(z.number()),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await Promise.all(
+        input.ids.map(async (id) => {
+          await deleteMenu({ menuId: id })
+        }),
+      )
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.MENU_DELETE,
         skipNotify: false,
       })
     }),

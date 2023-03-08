@@ -23,7 +23,7 @@ type CreateMenuArgs = {
   publishedDate?: Date | null
   closedDate?: Date | null
   limitPerUser?: number
-  isUpsert?: boolean
+  isEdit?: boolean
   client?: Prisma.TransactionClient | PrismaClient
 } & (CommonCreateMenuArgs | ReserveCreateMenuArgs)
 /** Create menu, if type is not main, date required */
@@ -36,7 +36,7 @@ export async function createMenu({
   closedDate,
   limitPerUser,
   client,
-  isUpsert,
+  isEdit,
 }: CreateMenuArgs) {
   const thisPrisma = client ?? prisma
 
@@ -49,31 +49,39 @@ export async function createMenu({
   const existMenu = await thisPrisma.menu.findFirst({
     where: { type, date, isDeleted: false },
   })
-  if (existMenu && !isUpsert) {
+  if (existMenu && !isEdit) {
     throw new Error('已經有該設定的菜單')
+  } else if (!existMenu && isEdit) {
+    throw new Error('找不到該菜單')
   }
 
-  return await thisPrisma.menu.upsert({
-    where: {
-      id: existMenu?.id,
-    },
-    create: {
-      date,
-      type,
-      name,
-      description,
-      publishedDate,
-      closedDate,
-      limitPerUser,
-    },
-    update: {
-      name,
-      description,
-      publishedDate,
-      closedDate,
-      limitPerUser,
-    },
-  })
+  if (isEdit) {
+    return await thisPrisma.menu.update({
+      where: {
+        id: existMenu?.id,
+      },
+      data: {
+        name,
+        description,
+        publishedDate,
+        closedDate,
+        limitPerUser,
+        isDeleted: false,
+      },
+    })
+  } else {
+    return await thisPrisma.menu.create({
+      data: {
+        name,
+        description,
+        publishedDate,
+        closedDate,
+        limitPerUser,
+        type,
+        date,
+      },
+    })
+  }
 }
 
 /* Get active menus */
@@ -456,9 +464,16 @@ export async function deleteMenu(args: { menuId: number }) {
         },
       },
     })
+    const cartCount = await client.cartItem.count({
+      where: {
+        menuId: menuId,
+      },
+    })
 
-    if (orderCount > 0) {
-      log('menu has been ordered, cannot be deleted, acrhived instead')
+    if (orderCount + cartCount > 0) {
+      log(
+        'menu has been ordered or added to cart, cannot be deleted, acrhived instead',
+      )
       // invalidate cart items
       await client.cartItem.updateMany({
         where: {
@@ -466,6 +481,15 @@ export async function deleteMenu(args: { menuId: number }) {
         },
         data: {
           invalid: true,
+        },
+      })
+
+      await client.commodityOnMenu.updateMany({
+        where: {
+          menuId: menuId,
+        },
+        data: {
+          isDeleted: true,
         },
       })
 

@@ -354,8 +354,12 @@ export default function Commodities() {
               onClick={() => handleCommoditiesDelete(selectedIds)}
             />
           )}
-          {selectedIds.length > 1 && (
-            <DropdownMenu className='py-3 text-base font-bold' label='批次編輯'>
+          {selectedIds.length > 0 && (
+            <DropdownMenu
+              className='py-3 text-base font-bold'
+              label='批次編輯'
+              disabled={selectedIds.length < 2}
+            >
               {BatchEditProps.map((p) => (
                 <DropdownMenuItem
                   key={p}
@@ -364,17 +368,6 @@ export default function Commodities() {
                 />
               ))}
             </DropdownMenu>
-          )}
-          {selectedIds.length === 1 && (
-            <Button
-              label='編輯'
-              className='py-3 px-2'
-              textClassName='font-bold'
-              theme='support'
-              onClick={() =>
-                handleEditCommodity(data.find((c) => c.id === selectedIds[0])!)
-              }
-            />
           )}
           <Button
             label='新增餐點'

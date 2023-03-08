@@ -10,8 +10,11 @@ import Button from '@/components/core/Button'
 import { getMenuName } from '@/lib/common'
 import { useFormDialog } from '@/components/form/FormDialog'
 import CheckBox from '@/components/form/base/CheckBox'
+import { useDialog } from '@/components/core/Dialog'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 
 export default function Menus() {
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
   const { showFormDialog, formDialog } = useFormDialog()
   const [isIncludeClosed, setIsIncludeClosed] = useState(false)
   const [searchKeyword, setSearchKeyword] = useState('')
@@ -19,10 +22,14 @@ export default function Menus() {
     includeClosed: isIncludeClosed,
     withDetails: true,
   })
+  const { showDialog, dialog } = useDialog()
 
   const handleEditMenu = useCallback(
-    (menu?: Extract<NonNullable<typeof data>[number], { _count: any }>) => {
-      const title = menu ? '編輯菜單' : '新增菜單'
+    (
+      menu?: Extract<NonNullable<typeof data>[number], { _count: any }>,
+      isEdit: boolean = false,
+    ) => {
+      const title = isEdit ? '編輯菜單' : '新增菜單'
       showFormDialog({
         title,
         inputs: {
@@ -50,14 +57,15 @@ export default function Menus() {
           typeDate: {
             label: '類型',
             type: 'menuTypeDate',
-            defaultValue: menu
-              ? {
-                  type: menu.type,
-                  date: menu.date,
-                  publishedDate: menu.publishedDate,
-                  closedDate: menu.closedDate,
-                }
-              : undefined,
+            defaultValue:
+              isEdit && menu
+                ? {
+                    type: menu.type,
+                    date: menu.date,
+                    publishedDate: menu.publishedDate,
+                    closedDate: menu.closedDate,
+                  }
+                : undefined,
             options: {
               required: '請選擇類型 / 日期',
             },
@@ -88,7 +96,7 @@ export default function Menus() {
             date: formData.typeDate.date,
             publishedDate: formData.typeDate.publishedDate,
             closedDate: formData.typeDate.closedDate,
-            isEdit: !!menu,
+            isEdit: isEdit,
           })
         },
         closeConfirm: {
@@ -102,6 +110,29 @@ export default function Menus() {
       })
     },
     [],
+  )
+
+  // Delete
+  const handleMenusDelete = useCallback(
+    (selectedIds: number[]) => {
+      if (!data) return
+      showDialog({
+        title: '刪除菜單',
+        content:
+          selectedIds.length > 1
+            ? `確定要刪除 ${selectedIds.length} 個菜單嗎？`
+            : `確定要刪除 ${
+                data.find((c) => c.id === selectedIds[0])!.name
+              } 嗎？`,
+        useMutation: trpc.menu.deleteMany.useMutation,
+        mutationOptions: {
+          ids: selectedIds,
+        },
+        cancel: true,
+        confirmButtonTheme: 'danger',
+      })
+    },
+    [data],
   )
 
   if (isError) return <Error description={error.message} />
@@ -127,6 +158,15 @@ export default function Menus() {
               顯示已關閉菜單
             </span>
           </label>
+          {selectedIds.length > 0 && (
+            <Button
+              label='刪除'
+              className='py-3 px-2'
+              textClassName='font-bold text-red-400'
+              theme='support'
+              onClick={() => handleMenusDelete(selectedIds)}
+            />
+          )}
           <Button
             label='新增菜單'
             className='py-3 px-4'
@@ -146,6 +186,7 @@ export default function Menus() {
             }) as Extract<typeof data[number], { _count: any }>[]
           }
           idField='id'
+          onSelectedIdsChange={setSelectedIds}
           columns={[
             {
               name: '名稱',
@@ -153,13 +194,28 @@ export default function Menus() {
               unhidable: true,
               hint: (row) => getMenuName(row) || '未命名',
               render: (row) => (
-                <button
-                  className='group/edit flex items-center rounded-2xl p-2 hover:bg-black/5 active:scale-90'
-                  onClick={() => handleEditMenu(row)}
+                <DropdownMenu
+                  className='group/edit flex items-center rounded-2xl p-2 text-base hover:bg-black/5 active:scale-90'
+                  label={
+                    <>
+                      {getMenuName(row) ?? '未命名'}
+                      <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
+                    </>
+                  }
                 >
-                  {getMenuName(row)}
-                  <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
-                </button>
+                  <DropdownMenuItem
+                    label='編輯'
+                    onClick={() => handleEditMenu(row, true)}
+                  />
+                  <DropdownMenuItem
+                    label='引用'
+                    onClick={() => handleEditMenu(row)}
+                  />
+                  <DropdownMenuItem
+                    label={<span className='text-red-400'>刪除</span>}
+                    onClick={() => handleMenusDelete([row.id])}
+                  />
+                </DropdownMenu>
               ),
               sort: true,
             },
@@ -255,6 +311,7 @@ export default function Menus() {
         />
       </div>
       {formDialog}
+      {dialog}
     </div>
   )
 }

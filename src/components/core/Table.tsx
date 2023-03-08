@@ -116,6 +116,11 @@ export default function Table<
     [sortColumn],
   )
 
+  const isAllTableDataSelected =
+    selectedIds.length === tableData.length &&
+    tableData.length > 0 &&
+    tableData.every((row) => selectedIds.includes(row[props.idField!]))
+
   return (
     <div className='h-full w-fit min-w-full overflow-hidden rounded-2xl border'>
       <TableVirtuoso
@@ -173,23 +178,19 @@ export default function Table<
                     ref={(input) => {
                       if (input) {
                         input.indeterminate =
-                          selectedIds.length > 0 &&
-                          selectedIds.length < props.data.length
+                          selectedIds.length > 0 && !isAllTableDataSelected
                       }
                     }}
                     className={twMerge(
                       'peer/checkbox mr-1 h-5 w-5 disabled:opacity-50',
                       props.size === 'sm' && 'h-4 w-4',
                     )}
-                    checked={
-                      selectedIds.length === props.data.length &&
-                      props.data.length > 0
-                    }
-                    disabled={props.data.length === 0}
+                    checked={isAllTableDataSelected}
+                    disabled={tableData.length === 0}
                     onChange={(e) => {
                       if (e.target.checked) {
                         setSelectedIds(
-                          props.data.map(
+                          tableData.map(
                             (row: T[number]) => row[props.idField!],
                           ),
                         )

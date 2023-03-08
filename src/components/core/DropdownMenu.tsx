@@ -207,10 +207,10 @@ export const MenuComponent = React.forwardRef<
           className: twMerge(
             // Menu button
             nested &&
-              'flex w-full min-w-[7rem] justify-between text-left p-2 hover:bg-stone-100 items-center active:scale-90',
+              'flex w-full min-w-[7rem] justify-between text-left p-2 hover:bg-stone-100 items-center active:scale-95',
             // Root button
             !nested &&
-              'py-1 px-2 rounded-2xl hover:bg-stone-100 text-sm flex items-center gap-1 w-fit active:scale-95',
+              'py-1 px-2 rounded-2xl hover:bg-stone-100 text-sm flex items-center gap-1 w-fit active:scale-95 disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-default disabled:active:scale-100',
             props.className,
           ),
           onClick(event) {
