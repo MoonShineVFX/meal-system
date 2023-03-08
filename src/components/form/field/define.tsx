@@ -23,14 +23,20 @@ export type COMData =
     }
   | {
       commodityId: number
+      limitPerUser: number
+      stock: number
       commodity: {
         name: string
         price: number
         optionSets: OptionSet[]
       }
-      limitPerUser: number
-      stock: number
     }
+export type MenuDateTypeData = {
+  type: MenuType
+  date: Date | null
+  publishedDate: Date | null
+  closedDate: Date | null
+}
 
 // Inputs
 type LabelInput = {
@@ -113,12 +119,7 @@ type CommoditiesInput = {
   attributes?: never
 }
 type MenuTypeDateInput = {
-  defaultValue?: {
-    date: string | null
-    type: MenuType
-    publishedDate: string | null
-    closedDate: string | null
-  }
+  defaultValue?: MenuDateTypeData
   data?: never
   type: 'menuTypeDate'
   attributes?: never
@@ -179,7 +180,7 @@ export type InferFormInputData<TFormInput extends FormInput> =
     : TFormInput['type'] extends 'date'
     ? string
     : TFormInput['type'] extends 'menuTypeDate'
-    ? { date: string | null; type: MenuType }
+    ? MenuDateTypeData
     : TFormInput['type'] extends 'datetime'
     ? string
     : TFormInput['type'] extends 'com'

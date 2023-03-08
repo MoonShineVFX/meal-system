@@ -1,3 +1,5 @@
+import { PrismaClient, Prisma } from '@prisma/client'
+
 import { prisma } from './define'
 import { OptionSet, ConvertPrismaJson } from '@/lib/common'
 
@@ -9,6 +11,7 @@ type CreateCommodityArgs = {
   optionSets?: OptionSet[]
   categoryIds?: number[]
   imageId?: string
+  client?: Prisma.TransactionClient | PrismaClient
 }
 export async function createCommodity({
   name,
@@ -17,8 +20,10 @@ export async function createCommodity({
   optionSets,
   categoryIds,
   imageId,
+  client,
 }: CreateCommodityArgs) {
-  const commodity = await prisma.commodity.create({
+  const thisPrisma = client ?? prisma
+  const commodity = await thisPrisma.commodity.create({
     data: {
       name,
       description,

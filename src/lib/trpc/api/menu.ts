@@ -6,7 +6,13 @@ import {
   getMenuWithComs,
   getReservationMenus,
   getActiveMenus,
+  prismaCient,
+  createMenu,
+  createCommodity,
+  addCommodityToMenu,
 } from '@/lib/server/database'
+import { SERVER_NOTIFY } from '@/lib/common'
+import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const MenuRouter = router({
   create: staffProcedure
@@ -16,24 +22,28 @@ export const MenuRouter = router({
         description: z.string().optional(),
         limitPerUser: z.number().optional(),
         type: z.nativeEnum(MenuType),
-        date: z.date().optional(),
-        publishedDate: z.date().optional(),
-        closedDate: z.date().optional(),
+        date: z.date().nullable().optional(),
+        publishedDate: z.date().nullable().optional(),
+        closedDate: z.date().nullable().optional(),
         coms: z.array(
           z.object({
             commodityId: z.number(),
-            commodity: z.object({
-              name: z.string(),
-              price: z.number(),
-              optionSets: z.array(
-                z.object({
-                  name: z.string(),
-                  multiSelect: z.boolean(),
-                  options: z.array(z.string()),
-                  order: z.number(),
-                }),
-              ),
-            }),
+            stock: z.number(),
+            limitPerUser: z.number(),
+            commodity: z
+              .object({
+                name: z.string(),
+                price: z.number(),
+                optionSets: z.array(
+                  z.object({
+                    name: z.string(),
+                    multiSelect: z.boolean(),
+                    options: z.array(z.string()),
+                    order: z.number(),
+                  }),
+                ),
+              })
+              .optional(),
           }),
         ),
       }),
@@ -46,7 +56,63 @@ export const MenuRouter = router({
       ) {
         throw new Error('預訂菜單需要日期參數')
       }
-      // TODO: database function
+
+      await prismaCient.$transaction(async (client) => {
+        // create menu
+        const menu = await createMenu({
+          client,
+          ...(input as Parameters<typeof createMenu>[0]),
+        })
+
+        // create commodities and replace temp id with new id
+        const coms = await Promise.all(
+          input.coms
+            .filter(
+              (com) =>
+                ('commodity' in com && com.commodity !== undefined) ||
+                !('commodity' in com),
+            )
+            .map(async (com) => {
+              if ('commodity' in com) {
+                const thisCommodity = await createCommodity({
+                  client,
+                  ...com.commodity!,
+                })
+                return {
+                  ...com,
+                  commodityId: thisCommodity.id,
+                }
+              }
+              return com
+            }),
+        )
+
+        // add commodities to menu
+        await Promise.all(
+          coms.map(async (com) => {
+            await addCommodityToMenu({
+              client,
+              menuId: menu.id,
+              commodityId: com.commodityId,
+              stock: com.stock,
+              limitPerUser: com.limitPerUser,
+            })
+          }),
+        )
+
+        const hasCreateCommodity = input.coms.some((com) => 'commodity' in com)
+        if (hasCreateCommodity) {
+          eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+            type: SERVER_NOTIFY.COMMODITY_ADD,
+            skipNotify: true,
+          })
+        }
+
+        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+          type: SERVER_NOTIFY.MENU_ADD,
+          skipNotify: false,
+        })
+      })
     }),
   get: userProcedure
     .input(

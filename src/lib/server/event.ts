@@ -7,6 +7,7 @@ type ServerEventEmitter = Omit<EventEmitter, 'emit'> & {
 }
 
 export const ServerChannelName = {
+  PUBLIC_NOTIFY: 'public-message',
   USER_NOTIFY: (userId: string) => `user-message-${userId}`,
   STAFF_NOTIFY: 'staff-message',
 }

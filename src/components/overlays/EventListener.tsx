@@ -130,6 +130,13 @@ export default function EventListener() {
         case SERVER_NOTIFY.OPTION_SETS_DELETE:
           trpcContext.optionSet.get.invalidate()
           break
+        case SERVER_NOTIFY.MENU_ADD:
+        case SERVER_NOTIFY.MENU_UPDATE:
+        case SERVER_NOTIFY.MENU_DELETE:
+          trpcContext.menu.get.invalidate()
+          trpcContext.menu.getActives.invalidate()
+          trpcContext.menu.getReservations.invalidate()
+          break
       }
     },
   })

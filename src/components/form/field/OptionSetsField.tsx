@@ -212,7 +212,11 @@ function OptionSetField(props: {
             onBlur={applyEdit}
             defaultValue={props.optionSet.name}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') applyEdit()
+              if (e.key === 'Enter') {
+                applyEdit()
+                e.preventDefault()
+                e.stopPropagation()
+              }
             }}
           />
         </div>
@@ -335,7 +339,11 @@ function OptionField(props: {
           onBlur={applyEdit}
           defaultValue={props.added ? '' : props.option}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') applyEdit()
+            if (e.key === 'Enter') {
+              applyEdit()
+              e.preventDefault()
+              e.stopPropagation()
+            }
           }}
         />
       </div>

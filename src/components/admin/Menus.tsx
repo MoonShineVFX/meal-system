@@ -54,16 +54,9 @@ export default function Menus() {
             defaultValue: menu
               ? {
                   type: menu.type,
-                  // date to input date value
-                  date: menu.date
-                    ? menu.date.toISOString().split('T')[0]
-                    : null,
-                  publishedDate: menu.publishedDate
-                    ? menu.publishedDate.toISOString()
-                    : null,
-                  closedDate: menu.closedDate
-                    ? menu.closedDate.toISOString()
-                    : null,
+                  date: menu.date,
+                  publishedDate: menu.publishedDate,
+                  closedDate: menu.closedDate,
                 }
               : undefined,
             options: {
@@ -87,9 +80,15 @@ export default function Menus() {
         style: {
           gridTemplateColumns: '1fr 3fr',
         },
-        useMutation: trpc.commodity.create.useMutation,
+        useMutation: trpc.menu.create.useMutation,
         onSubmit(formData, mutation) {
-          console.log(formData)
+          mutation.mutate({
+            ...formData,
+            type: formData.typeDate.type,
+            date: formData.typeDate.date,
+            publishedDate: formData.typeDate.publishedDate,
+            closedDate: formData.typeDate.closedDate,
+          })
         },
         closeConfirm: {
           title: `取消${title}`,

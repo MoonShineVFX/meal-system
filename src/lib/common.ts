@@ -39,6 +39,9 @@ export enum SERVER_NOTIFY {
   COMMODITY_ADD = '餐點已新增',
   COMMODITY_UPDATE = '餐點編輯成功',
   COMMODITY_DELETE = '餐點已刪除',
+  MENU_ADD = '菜單已新增',
+  MENU_UPDATE = '菜單編輯成功',
+  MENU_DELETE = '菜單已刪除',
 }
 
 export enum CurrencyType {
@@ -199,5 +202,5 @@ export function getMenuName(menu?: Pick<Menu, 'date' | 'name' | 'type'>) {
   return `${menu.date.toLocaleDateString('zh-TW', {
     month: 'long',
     day: 'numeric',
-  })} ${typeName}${menu.name !== '' ? ` -${menu.name}` : ''}`
+  })} ${typeName}${menu.name !== '' ? ` - ${menu.name}` : ''}`
 }

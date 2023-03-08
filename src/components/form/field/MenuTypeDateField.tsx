@@ -3,23 +3,37 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { MenuType } from '@prisma/client'
 import { twMerge } from 'tailwind-merge'
 
-import { InputFieldProps } from './define'
+import { InputFieldProps, MenuDateTypeData } from './define'
 import Select from '../base/Select'
 import DateInput from '../base/DateInput'
 import DatetimeInput from '../base/DatetimeInput'
 import { MenuTypeName } from '@/lib/common'
 
-type MenuTypeValue = {
-  type: MenuType | undefined
-  date: string | null
-  publishedDate: string | null
-  closedDate: string | null
+function convertInputDateValueToDate(value: string | null) {
+  if (!value) return null
+  if (value === '') return null
+  if (!value.includes('T')) value += 'T00:00:00'
+
+  return new Date(value)
 }
+
+function convertDateToInputDateValue(
+  date: Date | null | undefined,
+  dateTime: boolean = false,
+) {
+  if (!date) return ''
+  const offsetIsoDate = new Date(date.getTime() + 8 * 60 * 60000)
+  if (dateTime) return offsetIsoDate.toISOString().split('.')[0]
+  return offsetIsoDate.toISOString().split('T')[0]
+}
+
+type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+type MenuTypeDateInputState = PartialBy<MenuDateTypeData, 'type'>
 
 export default function MenuTypeDateField<T extends FieldValues>(
   props: InputFieldProps<'menuTypeDate', T>,
 ) {
-  const [value, setValue] = useState<MenuTypeValue>(
+  const [value, setValue] = useState<MenuTypeDateInputState>(
     props.formInput.defaultValue ?? {
       type: undefined,
       date: null,
@@ -71,28 +85,28 @@ export default function MenuTypeDateField<T extends FieldValues>(
 
   // handle date change
   const handleDateChange = useCallback(
-    (reservationDateValue: string) => {
+    (reservationDate: Date | null) => {
+      if (!reservationDate) return
+
       const isReservation =
         value.type && !['LIVE', 'RETAIL'].includes(value.type)
       if (!isReservation) return
-
-      const reservationDate = new Date(reservationDateValue)
 
       // set published date on reservation date's last week friday 12:00
       const publishedDate = new Date(reservationDate)
       publishedDate.setDate(
         reservationDate.getDate() - reservationDate.getDay() - 2,
       )
-      publishedDate.setHours(12 + 8, 0, 0, 0)
+      publishedDate.setHours(12, 0, 0, 0)
       // set closed date on one day before reservation date at 18:00
       const closedDate = new Date(reservationDate)
       closedDate.setDate(reservationDate.getDate() - 1)
-      closedDate.setHours(18 + 8, 0, 0, 0)
+      closedDate.setHours(18, 0, 0, 0)
 
       setValue((prev) => ({
         ...prev,
-        publishedDate: publishedDate.toISOString().split('.')[0],
-        closedDate: closedDate.toISOString().split('.')[0],
+        publishedDate: publishedDate,
+        closedDate: closedDate,
       }))
     },
     [value],
@@ -130,13 +144,14 @@ export default function MenuTypeDateField<T extends FieldValues>(
           ref={reservationDateRef}
           className='text-sm'
           disabled={!isReservation}
-          value={value?.date ?? ''}
+          value={convertDateToInputDateValue(value?.date)}
           onChange={(e) => {
+            const date = convertInputDateValueToDate(e.target.value)
             setValue({
               ...value,
-              date: e.target.value === '' ? null : e.target.value,
+              date,
             })
-            handleDateChange(e.target.value)
+            handleDateChange(date)
           }}
         />
       </div>
@@ -153,11 +168,11 @@ export default function MenuTypeDateField<T extends FieldValues>(
           ref={publishedDateRef}
           className='text-sm'
           disabled={!isReservation}
-          value={value?.publishedDate ?? ''}
+          value={convertDateToInputDateValue(value?.publishedDate, true)}
           onChange={(e) =>
             setValue({
               ...value,
-              publishedDate: e.target.value === '' ? null : e.target.value,
+              publishedDate: convertInputDateValueToDate(e.target.value),
             })
           }
         />
@@ -167,11 +182,11 @@ export default function MenuTypeDateField<T extends FieldValues>(
         <DatetimeInput
           ref={closedDateRef}
           className='text-sm'
-          value={value?.closedDate ?? ''}
+          value={convertDateToInputDateValue(value?.closedDate, true)}
           onChange={(e) =>
             setValue({
               ...value,
-              closedDate: e.target.value === '' ? null : e.target.value,
+              closedDate: convertInputDateValueToDate(e.target.value),
             })
           }
         />

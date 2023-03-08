@@ -20,9 +20,10 @@ type ReserveCreateMenuArgs = {
 type CreateMenuArgs = {
   name?: string
   description?: string
-  publishedDate?: Date
-  closedDate?: Date
+  publishedDate?: Date | null
+  closedDate?: Date | null
   limitPerUser?: number
+  client?: Prisma.TransactionClient | PrismaClient
 } & (CommonCreateMenuArgs | ReserveCreateMenuArgs)
 /** Create menu, if type is not main, date required */
 export async function createMenu({
@@ -33,21 +34,24 @@ export async function createMenu({
   publishedDate,
   closedDate,
   limitPerUser,
+  client,
 }: CreateMenuArgs) {
+  const thisPrisma = client ?? prisma
+
   // Validate date and type
   if (!date && !['LIVE', 'RETAIL'].includes(type)) {
     throw new Error('date is required for non-main menu')
   }
 
   // Check menu existence
-  const collisionCount = await prisma.menu.count({
+  const collisionCount = await thisPrisma.menu.count({
     where: { type, date, isDeleted: false },
   })
   if (collisionCount > 0) {
-    throw new Error('menu already exists')
+    throw new Error('已經有該設定的菜單')
   }
 
-  return await prisma.menu.create({
+  return await thisPrisma.menu.create({
     data: {
       date,
       type,
@@ -56,6 +60,19 @@ export async function createMenu({
       publishedDate,
       closedDate,
       limitPerUser,
+    },
+    include: {
+      commodities: {
+        select: {
+          commodity: {
+            select: {
+              id: true,
+            },
+          },
+          limitPerUser: true,
+          stock: true,
+        },
+      },
     },
   })
 }
@@ -477,18 +494,21 @@ type AddCommodityToMenuArgs = {
   menuId: number
   limitPerUser?: number
   stock?: number
+  client?: Prisma.TransactionClient | PrismaClient
 }
 export async function addCommodityToMenu({
   commodityId,
   menuId,
   limitPerUser,
   stock,
+  client,
 }: AddCommodityToMenuArgs) {
+  const thisPrisma = client ?? prisma
   const updateData = {
     limitPerUser,
     stock,
   } satisfies Prisma.CommodityOnMenuUpdateInput
-  return await prisma.commodityOnMenu.upsert({
+  return await thisPrisma.commodityOnMenu.upsert({
     where: {
       menuId_commodityId: {
         menuId,

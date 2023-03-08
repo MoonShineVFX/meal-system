@@ -54,7 +54,10 @@ export const UserRouter = router({
       }
 
       const channelNames: string[] = []
-      channelNames.push(ServerChannelName.USER_NOTIFY(ctx.userLite.id))
+      channelNames.push(
+        ServerChannelName.USER_NOTIFY(ctx.userLite.id),
+        ServerChannelName.PUBLIC_NOTIFY,
+      )
       if (ctx.userLite.role === 'STAFF' || ctx.userLite.role === 'ADMIN') {
         channelNames.push(ServerChannelName.STAFF_NOTIFY)
       }

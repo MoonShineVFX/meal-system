@@ -384,7 +384,7 @@ export default function COMField<T extends FieldValues>(
                     }}
                   >
                     <TextInput
-                      className='max-w-[10ch] overflow-hidden text-ellipsis text-sm'
+                      className='max-w-[12ch] overflow-hidden text-ellipsis text-sm'
                       defaultValue={row.commodity.name}
                       title={row.commodity.name}
                     />
@@ -638,7 +638,11 @@ function EditableField(props: {
         disabled: !isEdit,
         onBlur: applyEdit,
         onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-          if (e.key === 'Enter') applyEdit()
+          if (e.key === 'Enter') {
+            applyEdit()
+            e.preventDefault()
+            e.stopPropagation()
+          }
         },
       })}
     </div>

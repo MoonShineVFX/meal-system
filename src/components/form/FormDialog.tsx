@@ -6,12 +6,17 @@ import { useForm, SubmitHandler, Path, DeepPartial } from 'react-hook-form'
 import { useDialog } from '@/components/core/Dialog'
 import { UseMutationResult } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
+import { OptionSet } from '@/lib/common'
 
 import type { FormInput, FormInputsProps, FormData } from './field'
 import { FormField } from './field'
 
 type ExpandRecursively<T> = T extends object
-  ? T extends infer O
+  ? T extends Date
+    ? T
+    : T extends OptionSet[]
+    ? T
+    : T extends infer O
     ? { [K in keyof O]: ExpandRecursively<O[K]> }
     : never
   : T
