@@ -42,6 +42,8 @@ export enum SERVER_NOTIFY {
   MENU_ADD = '菜單已新增',
   MENU_UPDATE = '菜單編輯成功',
   MENU_DELETE = '菜單已刪除',
+  DEPOSIT_RECHARGE = '儲值成功',
+  DEPOSIT_REFUND = '退款成功',
 }
 
 export enum CurrencyType {
@@ -101,28 +103,30 @@ export const settings = {
   AUTH_API_URL: process.env.AUTH_API_URL!,
   COOKIE_TOKEN_NAME: 'meal_token',
   COOKIE_EXPIRE_DAYS: 14,
-  /* Events */
-  NOTIFICATION_DURATION_MS: 3500,
-  /* Database */
+
+  /* Server */
+  MENU_MAX_QUANTITY_PER_ORDER: 10,
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
   POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
     ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
     : 100,
-  /* Trade */
-  TRANSACTIONS_PER_QUERY: 20,
-  /* TWMP */
-  TWMP_API_URL: process.env.TWMP_API_URL!,
-  TWMP_ACQ_BANK: process.env.TWMP_ACQ_BANK!,
-  TWMP_MERCHANT_ID: process.env.TWMP_MERCHANT_ID!,
-  TWMP_TERMINAL_ID: process.env.TWMP_TERMINAL_ID!,
-  TWMP_3DES_IV: process.env.TWMP_3DES_IV!,
-  TWMP_3DES_KEY: process.env.TWMP_3DES_KEY!,
-  TWMP_FISC_KEY: process.env.TWMP_FISC_KEY!,
+  DEPOSIT_MIN_AMOUNT: 30,
+  DEPOSIT_MAX_AMOUNT: 10000,
+
+  /* NewebPay */
+  NEWEBPAY_API_URL: process.env.NEWEBPAY_API_URL!,
+  NEWEBPAY_MERCHANT_ID: process.env.NEWEBPAY_MERCHANT_ID!,
+  NEWEBPAY_HASH_KEY: process.env.NEWEBPAY_HASH_KEY!,
+  NEWEBPAY_HASH_IV: process.env.NEWEBPAY_HASH_IV!,
+  NEWEBPAY_NOTIFY_URL: process.env.NEWEBPAY_NOTIFY_URL!,
+  NEWEBPAY_RETURN_URL: process.env.NEWEBPAY_RETURN_URL!,
+
   /* Server */
   WEBSOCKET_DEV_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_DEV_PORT ?? '3001',
   WEBSOCKET_PROD_HOST: process.env.NEXT_PUBLIC_WEBSOCKET_PROD_HOST,
   HTTP_PORT: process.env.PORT ?? '3000',
+
   /* Blockchain */
   BLOCKCHAIN_URL: process.env.BLOCKCHAIN_URL!,
   BLOCKCHAIN_CREDIT_ADDRESS: process.env.BLOCKCHAIN_CREDIT_ADDRESS!,
@@ -131,26 +135,28 @@ export const settings = {
   BLOCKCHAIN_GAS_PRICE: 5,
   BLOCKCHAIN_GAS: 200000,
   BLOCKCHAIN_NONCE_MS: 1000 * 60,
+
   /* Log */
   LOG_BLOCKCHAIN: process.env.LOG_BLOCKCHAIN === 'true',
   LOG_DATABASE: process.env.LOG_DATABASE === 'true',
+
   /* Resource */
   RESOURCE_URL: process.env.NEXT_PUBLIC_RESOURCE_URL ?? '',
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
-  RESOURCE_TWPAY_LOGO: 'asset/twpay.png',
   RESOURCE_IMAGE_TYPES: ['image/png', 'image/jpeg', 'image/webp'],
   RESOURCE_UPLOAD_PATH: 'upload',
+
   /* Bunny */
   BUNNY_API_KEY: process.env.BUNNY_API_KEY!,
   BUNNY_UPLOAD_URL: process.env.BUNNY_UPLOAD_URL!,
-  /* Order */
+
+  /* UI */
   ORDER_TAKE_PER_QUERY: 20,
-  /* Menu */
+  TRANSACTIONS_PER_QUERY: 20,
+  NOTIFICATION_DURATION_MS: 3500,
   MENU_CATEGORY_NULL: '未分類',
-  MENU_MAX_QUANTITY_PER_ORDER: 10,
-  /* Misc */
   TITLE: '夢想餐飲',
 }
 

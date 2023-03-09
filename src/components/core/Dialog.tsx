@@ -20,6 +20,9 @@ type DialogProps<T extends UseMutationResult> = {
   useMutation?: () => T
   mutationOptions?: Parameters<T['mutate']>[0]
   onConfirm?: () => void
+  onCancel?: () => void
+  as?: 'form' | 'div'
+  panelProps?: Parameters<typeof Dialog.Panel>[0]
 }
 
 export default function DialogCore<T extends UseMutationResult>(
@@ -69,7 +72,11 @@ export default function DialogCore<T extends UseMutationResult>(
             leaveFrom='opacity-100 scale-100'
             leaveTo='opacity-0 scale-75'
           >
-            <Dialog.Panel className='mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-lg'>
+            <Dialog.Panel
+              as={props.as}
+              {...props.panelProps}
+              className='mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-lg'
+            >
               <section className='sm:flex sm:gap-4'>
                 <div
                   className={twMerge(
@@ -97,7 +104,10 @@ export default function DialogCore<T extends UseMutationResult>(
               <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-4'>
                 {props.cancel && (
                   <Button
-                    onClick={() => props.onClose()}
+                    onClick={() => {
+                      props.onCancel?.()
+                      props.onClose()
+                    }}
                     className='h-10 grow font-bold sm:max-w-[50%]'
                     label={props.cancelText ?? '取消'}
                     theme='support'
@@ -114,6 +124,7 @@ export default function DialogCore<T extends UseMutationResult>(
                   textClassName='fond-bold'
                   label={props.confirmText ?? '確認'}
                   theme={props.confirmButtonTheme ?? 'main'}
+                  type={props.as === 'form' ? 'submit' : 'button'}
                 ></Button>
               </div>
             </Dialog.Panel>

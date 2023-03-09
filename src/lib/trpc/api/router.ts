@@ -1,7 +1,6 @@
 import { router } from '../trpc'
 import { UserRouter } from './user'
 import { TransactionRouter } from './transaction'
-import { TwmpRouter } from './twmp'
 import { MenuRouter } from './menu'
 import { CartRouter } from './cart'
 import { OrderRouter } from './order'
@@ -10,11 +9,11 @@ import { CategoryRouter } from './category'
 import { CommodityRouter } from './commodity'
 import { OptionSetRouter } from './optionSet'
 import { ImageRouter } from './image'
+import { DepositRouter } from './deposit'
 
 export const appRouter = router({
   user: UserRouter,
   transaction: TransactionRouter,
-  twmp: TwmpRouter,
   menu: MenuRouter,
   cart: CartRouter,
   order: OrderRouter,
@@ -23,6 +22,7 @@ export const appRouter = router({
   commodity: CommodityRouter,
   optionSet: OptionSetRouter,
   image: ImageRouter,
+  deposit: DepositRouter,
 })
 
 export type AppRouter = typeof appRouter

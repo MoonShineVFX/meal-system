@@ -7,11 +7,12 @@ import {
   updateBlockchainByTransfer,
 } from './blockchain'
 
+/* Recharge */
 type RechargeUserBalanceBaseArgs = {
   userId: string
   pointAmount?: number
   creditAmount?: number
-  twmpResultId?: string
+  depositId?: string
   orderId?: number
   client?: Prisma.TransactionClient | PrismaClient
 }
@@ -19,18 +20,18 @@ export async function rechargeUserBalanceBase({
   userId,
   pointAmount,
   creditAmount,
-  twmpResultId,
+  depositId,
   orderId,
   client,
 }: RechargeUserBalanceBaseArgs) {
   if (!pointAmount && !creditAmount) throw new Error('Amount is required')
-  if (twmpResultId && orderId)
-    throw new Error('twmpResultId and orderId are exclusive')
+  if (depositId && orderId)
+    throw new Error('depositId and orderId are exclusive')
 
   const thisPrisma = client ?? prisma
   const type = orderId
     ? TransactionType.CANCELED
-    : twmpResultId
+    : depositId
     ? TransactionType.DEPOSIT
     : TransactionType.RECHARGE
 
@@ -49,10 +50,10 @@ export async function rechargeUserBalanceBase({
     data: {
       sourceUserId: settings.SERVER_USER_ID,
       targetUserId: userId,
-      pointAmount: pointAmount,
-      creditAmount: creditAmount,
+      pointAmount,
+      creditAmount,
       type,
-      twmpResultId,
+      depositId,
       orderForCanceled: orderId
         ? {
             connect: {
@@ -96,38 +97,65 @@ export async function rechargeUserBalance(
   }
 }
 
-export async function refundUserBalance(
-  userId: string,
-  amount: number,
-  twmpResultId?: string, // If excute from twmp update
-) {
-  // Burn target user balance even negative and create refund record
-  const [user, transaction] = await prisma.$transaction([
-    prisma.user.update({
-      where: { id: userId },
-      data: {
-        creditBalance: {
-          decrement: amount,
-        },
-      },
-    }),
-    prisma.transaction.create({
-      data: {
-        sourceUserId: settings.SERVER_USER_ID,
-        targetUserId: userId,
-        creditAmount: -amount,
-        type: TransactionType.REFUND,
-        twmpResultId: twmpResultId,
-      },
-      include: {
-        sourceUser: { select: { name: true } },
-        targetUser: { select: { name: true } },
-      },
-    }),
-  ])
+/* Refund */
+type RefundUserBalanceBaseArgs = {
+  userId: string
+  amount: number
+  depositId?: string // If excute from deposit update
+  client?: Prisma.TransactionClient | PrismaClient
+}
+export async function refundUserBalanceBase({
+  userId,
+  amount,
+  depositId,
+  client,
+}: RefundUserBalanceBaseArgs) {
+  const thisPrisma = client ?? prisma
 
-  // Update blockchain
-  updateBlockchainByMintBurn(transaction.id)
+  const user = await thisPrisma.user.update({
+    where: { id: userId },
+    data: {
+      creditBalance: {
+        decrement: amount,
+      },
+    },
+  })
+
+  const transaction = await thisPrisma.transaction.create({
+    data: {
+      sourceUserId: settings.SERVER_USER_ID,
+      targetUserId: userId,
+      creditAmount: -amount,
+      type: TransactionType.REFUND,
+      depositId: depositId,
+    },
+    include: {
+      sourceUser: { select: { name: true } },
+      targetUser: { select: { name: true } },
+    },
+  })
+
+  const callback = () => updateBlockchainByMintBurn(transaction.id)
+
+  return {
+    user,
+    transaction,
+    callback,
+  }
+}
+
+export async function refundUserBalance(
+  args: Omit<RefundUserBalanceBaseArgs, 'client'>,
+) {
+  const { user, transaction, callback } = await prisma.$transaction(
+    async (client) => {
+      return await refundUserBalanceBase({
+        ...args,
+        client,
+      })
+    },
+  )
+  callback()
 
   return {
     user,
@@ -247,22 +275,7 @@ export async function getTransaction({
           menu: { select: { name: true, type: true, date: true } },
         },
       },
-      twmpResult: {
-        select: {
-          txnUID: true,
-          createdAt: true,
-          updatedAt: true,
-          deposit: {
-            select: {
-              orderNo: true,
-              transAMT: true,
-              txnID: true,
-              createdAt: true,
-            },
-          },
-          status: true,
-        },
-      },
+      deposit: true,
     },
   })
   if (!transaction) throw new Error('Transaction not found')
@@ -285,11 +298,11 @@ export async function getTransactions({
       // Transaction ID
       const transactionId = parseInt(keyword.slice(1))
       whereInput = { id: transactionId }
-    } else if (keyword.match(/^\#\w+$/)) {
-      // TWMP Result ID or Deposit ID
+    } else if (keyword.match(/^\#\.+$/)) {
+      // Deposit ID
       const thisId = keyword.slice(1)
       whereInput = {
-        OR: [{ twmpResultId: thisId }, { twmpResult: { depositId: thisId } }],
+        depositId: thisId,
       }
     } else if (keyword.match(/^[1-9]\d*$/)) {
       // Price amount

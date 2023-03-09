@@ -135,75 +135,49 @@ export default function TransactionDetail(props: { transactionId: number }) {
               </dd>
             </dl>
           )}
-          {data && data.twmpResult && (
+          {data && data.deposit && (
             <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 last:border-none'>
               <dt className='flex items-center text-sm font-bold tracking-widest text-stone-400'>
                 <CreditCardIcon className='mr-2 inline-block h-4 w-4' />
-                台灣Pay
+                儲值明細
               </dt>
               <dd>
                 <ul className='divide-y rounded-md border'>
-                  <li className='bg-stone-100 py-1 px-2 text-sm text-stone-500'>
-                    儲值結果
-                  </li>
                   <li className='grid grid-cols-2 p-2 text-sm'>
-                    <span className='text-stone-400'>txnUID</span>
+                    <span className='text-stone-400'>編號</span>
                     <span
                       className='overflow-hidden overflow-ellipsis'
-                      title={data.twmpResult.txnUID}
+                      title={data.deposit.id}
                     >
-                      {data.twmpResult.txnUID}
-                    </span>
-                  </li>
-                  <li className='grid grid-cols-2 p-2 text-sm'>
-                    <span className='text-stone-400'>新增日期</span>
-                    <span>
-                      {data.twmpResult.createdAt.toLocaleString('zh-TW')}
-                    </span>
-                  </li>
-                  <li className='grid grid-cols-2 p-2 text-sm'>
-                    <span className='text-stone-400'>修改日期</span>
-                    <span>
-                      {data.twmpResult.createdAt.toLocaleString('zh-TW')}
+                      {data.deposit.id}
                     </span>
                   </li>
                   <li className='grid grid-cols-2 p-2 text-sm'>
                     <span className='text-stone-400'>狀態</span>
-                    <span>{data.twmpResult.status}</span>
-                  </li>
-
-                  <li className='bg-stone-100 py-1 px-2 text-sm text-stone-500'>
-                    儲值資訊
+                    <span>{data.deposit.status}</span>
                   </li>
                   <li className='grid grid-cols-2 p-2 text-sm'>
-                    <span className='text-stone-400'>orderNo</span>
-                    <span
-                      className='overflow-hidden overflow-ellipsis'
-                      title={data.twmpResult.deposit.orderNo}
-                    >
-                      {data.twmpResult.deposit.orderNo}
-                    </span>
-                  </li>
-                  <li className='grid grid-cols-2 p-2 text-sm'>
-                    <span className='text-stone-400'>txnID</span>
-                    <span
-                      className='overflow-hidden overflow-ellipsis'
-                      title={data.twmpResult.deposit.txnID ?? ''}
-                    >
-                      {data.twmpResult.deposit.txnID}
-                    </span>
-                  </li>
-                  <li className='grid grid-cols-2 p-2 text-sm'>
-                    <span className='text-stone-400'>新增日期</span>
+                    <span className='text-stone-400'>交易日期</span>
                     <span>
-                      {data.twmpResult.deposit.createdAt.toLocaleString(
-                        'zh-TW',
-                      )}
+                      {data.deposit.createdAt.toLocaleString('zh-TW')}
                     </span>
                   </li>
                   <li className='grid grid-cols-2 p-2 text-sm'>
-                    <span className='text-stone-400'>金額</span>
-                    <span>${data.twmpResult.deposit.transAMT}</span>
+                    <span className='text-stone-400'>付款日期</span>
+                    <span>
+                      {data.deposit.payTime
+                        ? data.deposit.payTime.toLocaleString('zh-TW')
+                        : '未付款'}
+                    </span>
+                  </li>
+                  <li className='grid grid-cols-2 p-2 text-sm'>
+                    <span className='text-stone-400'>付款方式</span>
+                    <span
+                      className='overflow-hidden overflow-ellipsis'
+                      title={data.deposit.paymentType ?? ''}
+                    >
+                      {data.deposit.paymentType ?? '未付款'}
+                    </span>
                   </li>
                 </ul>
               </dd>

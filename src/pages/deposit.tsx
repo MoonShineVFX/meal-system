@@ -4,31 +4,24 @@ import {
   PlusCircleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
-import { useRouter } from 'next/router'
 
 import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
 import Button from '@/components/core/Button'
-import Image from '@/components/core/Image'
-import { settings } from '@/lib/common'
 import Spinner from '@/components/core/Spinner'
 import NumberInput from '@/components/form/base/NumberInput'
+import { settings } from '@/lib/common'
+import { useDialog } from '@/components/core/Dialog'
 
-const DEPOSIT_AMOUNT_MIN = 1
-const DEPOSIT_AMOUNT_MAX = 9999
 const DEPOSIT_PRESET_AMOUNTS = [100, 300, 500, 1000]
 
 export default function DepositPage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const { data, isError, error, isLoading } = trpc.user.get.useQuery()
   const [depositAmount, setDepositAmount] = useState(0)
-  const [isMobile, setIsMobile] = useState(false)
-  const twmpMutation = trpc.twmp.createDeposit.useMutation()
-  const router = useRouter()
-
-  useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-  }, [])
+  const depositCreateMutation = trpc.deposit.create.useMutation()
+  const depositDeleteMutation = trpc.deposit.delete.useMutation()
+  const { dialog, showDialog } = useDialog()
 
   useEffect(() => {
     if (inputRef.current) inputRef.current.focus()
@@ -42,27 +35,74 @@ export default function DepositPage() {
 
     const value = parseInt(e.target.value)
     if (isNaN(value)) return
-    if (value > DEPOSIT_AMOUNT_MAX || value < DEPOSIT_AMOUNT_MIN) return
+    if (
+      value > settings.DEPOSIT_MAX_AMOUNT ||
+      value < settings.DEPOSIT_MIN_AMOUNT
+    )
+      return
     setDepositAmount(value)
   }, [])
 
   const handleClick = useCallback(() => {
-    twmpMutation.mutate(
+    if (depositCreateMutation.error) depositCreateMutation.reset()
+    depositCreateMutation.mutate(
       {
         amount: depositAmount,
-        isMobile,
       },
       {
         onSuccess: (data) => {
-          if (isMobile) {
-            window.location.href = data.callbackUrl!
-          } else {
-            router.push(`/twmp/${data.orderNo}`)
-          }
+          showDialog({
+            title: '儲值金額確認',
+            content: (
+              <>
+                <p>
+                  儲值{' '}
+                  <span className='font-bold text-stone-600'>
+                    {depositAmount}
+                  </span>{' '}
+                  元，將開啟付款頁面
+                </p>
+                <input
+                  className='sr-only'
+                  name='MerchantID'
+                  value={data.merchantId}
+                  readOnly
+                ></input>
+                <input
+                  className='sr-only'
+                  name='Version'
+                  value={data.version}
+                  readOnly
+                ></input>
+                <input
+                  className='sr-only'
+                  name='TradeInfo'
+                  value={data.tradeInfo}
+                  readOnly
+                ></input>
+                <input
+                  className='sr-only'
+                  name='TradeSha'
+                  value={data.tradeSha}
+                  readOnly
+                ></input>
+              </>
+            ),
+            as: 'form',
+            cancel: true,
+            onCancel: () => {
+              depositDeleteMutation.mutate({ id: data.depositId })
+              depositCreateMutation.reset()
+            },
+            panelProps: {
+              method: 'post',
+              action: data.action,
+            },
+          })
         },
       },
     )
-  }, [depositAmount, isMobile, twmpMutation])
+  }, [depositAmount, depositCreateMutation])
 
   if (isError) return <Error description={error.message} />
 
@@ -85,7 +125,9 @@ export default function DepositPage() {
       </section>
       {/* Input */}
       <section className='flex flex-col gap-2 rounded-2xl border p-4 shadow'>
-        <p className='text-xs text-stone-400'>最多可儲值 9999</p>
+        <p className='text-xs text-stone-400'>
+          最多可儲值 {settings.DEPOSIT_MAX_AMOUNT}
+        </p>
         {/* Field */}
         <div className='flex items-center gap-4 '>
           <div className='flex items-center gap-2'>
@@ -99,8 +141,8 @@ export default function DepositPage() {
               hideSpinner={true}
               className='h-12 w-full rounded-lg pr-10 text-right text-3xl font-bold text-yellow-500'
               value={depositAmount}
-              min={DEPOSIT_AMOUNT_MIN}
-              max={DEPOSIT_AMOUNT_MAX}
+              min={settings.DEPOSIT_MIN_AMOUNT}
+              max={settings.DEPOSIT_MAX_AMOUNT}
               onChange={handleInput}
             />
             {depositAmount > 0 && (
@@ -121,7 +163,7 @@ export default function DepositPage() {
               className='rounded-2xl bg-stone-100 p-2 text-lg font-bold text-stone-500 hover:bg-stone-200 active:scale-90 active:bg-stone-200'
               onClick={() =>
                 setDepositAmount((prevAmount) =>
-                  Math.min(prevAmount + amount, DEPOSIT_AMOUNT_MAX),
+                  Math.min(prevAmount + amount, settings.DEPOSIT_MAX_AMOUNT),
                 )
               }
             >
@@ -130,29 +172,21 @@ export default function DepositPage() {
           ))}
         </div>
       </section>
-      <div className='mt-auto flex items-center justify-center gap-2 text-sm'>
-        將移轉自
-        <div className='relative inline-block h-8 w-8'>
-          <Image
-            src={settings.RESOURCE_TWPAY_LOGO}
-            alt='台灣pay圖案'
-            sizes='64px'
-          />
-        </div>
-        <span className='font-bold'>台灣Pay</span>進行儲值
-      </div>
       <Button
         isDisabled={
-          depositAmount < DEPOSIT_AMOUNT_MIN ||
-          depositAmount > DEPOSIT_AMOUNT_MAX ||
+          depositAmount < settings.DEPOSIT_MIN_AMOUNT ||
+          depositAmount > settings.DEPOSIT_MAX_AMOUNT ||
           isLoading
         }
-        isLoading={twmpMutation.isLoading || twmpMutation.isSuccess}
-        className='h-12 w-full group-data-loading:skeleton'
+        isLoading={
+          depositCreateMutation.isLoading || depositCreateMutation.isSuccess
+        }
+        className='mt-auto h-12 w-full group-data-loading:skeleton'
         textClassName='font-bold text-lg'
-        label='儲值'
+        label='下一步'
         onClick={handleClick}
       />
+      {dialog}
     </div>
   )
 }
