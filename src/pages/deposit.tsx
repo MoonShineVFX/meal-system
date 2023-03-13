@@ -53,6 +53,8 @@ export default function DepositPage() {
         onSuccess: (data) => {
           showDialog({
             title: '儲值金額確認',
+            icon: 'question',
+            confirmText: '付款',
             content: (
               <>
                 <p>

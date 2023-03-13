@@ -1,6 +1,11 @@
 import { Fragment, useState, useCallback, useEffect } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import {
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  CheckCircleIcon,
+  QuestionMarkCircleIcon,
+} from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
 
 import Button from '@/components/core/Button'
@@ -16,7 +21,7 @@ type DialogProps<T extends UseMutationResult> = {
   confirmButtonTheme?: Parameters<typeof Button>[0]['theme']
   cancel?: boolean
   cancelText?: string
-  icon?: string | null
+  icon?: 'info' | 'warning' | 'success' | 'question' | null
   useMutation?: () => T
   mutationOptions?: Parameters<T['mutate']>[0]
   onConfirm?: () => void
@@ -80,11 +85,27 @@ export default function DialogCore<T extends UseMutationResult>(
               <section className='sm:flex sm:gap-4'>
                 <div
                   className={twMerge(
-                    'mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100',
+                    'mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full',
+                    (props.icon === 'warning' || props.icon === undefined) &&
+                      'bg-red-100',
+                    props.icon === 'info' && 'bg-blue-100',
+                    props.icon === 'success' && 'bg-green-100',
+                    props.icon === 'question' && 'bg-yellow-100',
                     props.icon === null && 'hidden',
                   )}
                 >
-                  <ExclamationTriangleIcon className='h-6 w-6 text-red-600' />
+                  {(props.icon === 'warning' || props.icon === undefined) && (
+                    <ExclamationTriangleIcon className='h-8 w-8 text-red-600' />
+                  )}
+                  {props.icon === 'info' && (
+                    <InformationCircleIcon className='h-8 w-8 text-blue-500' />
+                  )}
+                  {props.icon === 'success' && (
+                    <CheckCircleIcon className='h-8 w-8 text-green-500' />
+                  )}
+                  {props.icon === 'question' && (
+                    <QuestionMarkCircleIcon className='h-8 w-8 text-yellow-500' />
+                  )}
                 </div>
                 <div className='mt-2 flex flex-col items-center gap-2 sm:mt-0 sm:items-start'>
                   <Dialog.Title className='text-lg font-bold tracking-wider sm:indent-[0.05em]'>
