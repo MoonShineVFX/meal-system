@@ -1,5 +1,7 @@
 import { TransactionType, UserRole, Menu, MenuType } from '@prisma/client'
 
+import type { NotificationType } from '@/lib/client/store'
+
 /* Types */
 export type ConvertPrismaJson<T extends object> = {
   [key in keyof T]: key extends 'optionSets'
@@ -18,6 +20,7 @@ export type ServerNotifyPayload = {
   message?: string
   skipNotify?: boolean
   link?: string
+  notificationType?: NotificationType
 }
 
 export enum SERVER_NOTIFY {
@@ -44,6 +47,7 @@ export enum SERVER_NOTIFY {
   MENU_DELETE = '菜單已刪除',
   DEPOSIT_RECHARGE = '儲值成功',
   DEPOSIT_REFUND = '退款成功',
+  DEPOSIT_FAILED = '儲值失敗',
 }
 
 export enum CurrencyType {

@@ -27,7 +27,7 @@ export async function createDeposit(props: { userId: string; amount: number }) {
   const result = await createMPGRequest({
     depositId,
     amount: props.amount,
-    returnUrl: `${settings.NEWEBPAY_RETURN_URL}${depositId}`,
+    returnUrl: `${settings.NEWEBPAY_RETURN_URL}${depositId}?notify=true`,
   })
 
   return {
@@ -45,6 +45,9 @@ export async function updateDeposit(props: {
   return await prisma.$transaction(async (client) => {
     const deposit = await client.deposit.findUnique({
       where: { id: props.id },
+      include: {
+        transactions: true,
+      },
     })
 
     if (!deposit) {
@@ -53,7 +56,7 @@ export async function updateDeposit(props: {
 
     if (deposit.status === props.status) {
       log(`訂單 ${props.id} 狀態已更新過同狀態`)
-      return
+      return deposit
     }
 
     if (
@@ -91,7 +94,19 @@ export async function updateDeposit(props: {
         payTime: props.payTime,
         paymentType: props.paymentType,
       },
+      include: {
+        transactions: true,
+      },
     })
+  })
+}
+
+export async function getDeposit(id: string) {
+  return await prisma.deposit.findUnique({
+    where: { id },
+    include: {
+      transactions: true,
+    },
   })
 }
 

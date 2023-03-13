@@ -96,9 +96,9 @@ model Deposit {
   paymentType String?
   payTime     DateTime?
 
-  user        User          @relation(fields: [userId], references: [id])
-  userId      String
-  Transaction Transaction[]
+  user         User          @relation(fields: [userId], references: [id])
+  userId       String
+  transactions Transaction[]
 }
 
 // Blockchain

@@ -12,6 +12,7 @@ import Spinner from '@/components/core/Spinner'
 import NumberInput from '@/components/form/base/NumberInput'
 import { settings } from '@/lib/common'
 import { useDialog } from '@/components/core/Dialog'
+import Title from '@/components/core/Title'
 
 const DEPOSIT_PRESET_AMOUNTS = [100, 300, 500, 1000]
 
@@ -53,7 +54,7 @@ export default function DepositPage() {
         onSuccess: (data) => {
           showDialog({
             title: '儲值金額確認',
-            icon: 'question',
+            icon: 'info',
             confirmText: '付款',
             content: (
               <>
@@ -110,6 +111,7 @@ export default function DepositPage() {
 
   return (
     <div className='mx-auto flex h-full max-w-md flex-col gap-4 p-4 lg:p-8'>
+      <Title prefix='儲值' />
       <h1 className='text-xl font-bold tracking-wider'>儲值</h1>
       {/* Currency info */}
       <section className='mx-auto flex w-fit flex-col items-center gap-2'>

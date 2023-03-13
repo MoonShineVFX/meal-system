@@ -57,7 +57,7 @@ export async function createMPGRequest(props: {
   }
 }
 
-export async function getTradeInfo(props: {
+export async function getAndUpdateTradeInfo(props: {
   depositId: string
   amount: number
 }) {
@@ -92,6 +92,10 @@ export async function getTradeInfo(props: {
     await response.json()
 
   if (result.Status !== 'SUCCESS') {
+    // TRA10021: 查無交易資料，回傳null
+    if (result.Status === 'TRA10021') {
+      return null
+    }
     throw new Error(`查詢交易失敗 (${result.Status}): ${result.Message}`)
   }
 

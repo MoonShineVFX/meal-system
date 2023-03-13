@@ -4,7 +4,6 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   CheckCircleIcon,
-  QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
 
@@ -21,7 +20,7 @@ type DialogProps<T extends UseMutationResult> = {
   confirmButtonTheme?: Parameters<typeof Button>[0]['theme']
   cancel?: boolean
   cancelText?: string
-  icon?: 'info' | 'warning' | 'success' | 'question' | null
+  icon?: 'info' | 'warning' | 'success' | null
   useMutation?: () => T
   mutationOptions?: Parameters<T['mutate']>[0]
   onConfirm?: () => void
@@ -88,9 +87,8 @@ export default function DialogCore<T extends UseMutationResult>(
                     'mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full',
                     (props.icon === 'warning' || props.icon === undefined) &&
                       'bg-red-100',
-                    props.icon === 'info' && 'bg-blue-100',
+                    props.icon === 'info' && 'bg-yellow-100',
                     props.icon === 'success' && 'bg-green-100',
-                    props.icon === 'question' && 'bg-yellow-100',
                     props.icon === null && 'hidden',
                   )}
                 >
@@ -98,13 +96,10 @@ export default function DialogCore<T extends UseMutationResult>(
                     <ExclamationTriangleIcon className='h-8 w-8 text-red-600' />
                   )}
                   {props.icon === 'info' && (
-                    <InformationCircleIcon className='h-8 w-8 text-blue-500' />
+                    <InformationCircleIcon className='h-8 w-8 text-yellow-500' />
                   )}
                   {props.icon === 'success' && (
                     <CheckCircleIcon className='h-8 w-8 text-green-500' />
-                  )}
-                  {props.icon === 'question' && (
-                    <QuestionMarkCircleIcon className='h-8 w-8 text-yellow-500' />
                   )}
                 </div>
                 <div className='mt-2 flex flex-col items-center gap-2 sm:mt-0 sm:items-start'>
