@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import z from 'zod'
 
-import { handleTradeNotify } from '@/lib/server/payment/newebpay'
+import { handleTradeNotify } from '@/lib/server/deposit/newebpay'
 
 const requestBodySchema = z.object({
   Status: z.string().min(1),

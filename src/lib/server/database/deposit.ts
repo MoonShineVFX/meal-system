@@ -2,9 +2,8 @@ import * as crypto from 'crypto'
 import { DepositStatus } from '@prisma/client'
 
 import { rechargeUserBalanceBase, refundUserBalanceBase } from './transaction'
-import { createMPGRequest } from '@/lib/server/payment/newebpay'
+import { createMPGRequest } from '@/lib/server/deposit/newebpay'
 import { prisma, log } from './define'
-import { settings } from '@/lib/common'
 
 export async function createDeposit(props: { userId: string; amount: number }) {
   const timeStamp = Date.now().toString(36)
@@ -27,7 +26,6 @@ export async function createDeposit(props: { userId: string; amount: number }) {
   const result = await createMPGRequest({
     depositId,
     amount: props.amount,
-    returnUrl: `${settings.NEWEBPAY_RETURN_URL}${depositId}`,
   })
 
   return {
