@@ -1,5 +1,9 @@
 FROM node:18-alpine
 
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Taipei
+RUN cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime
+
 RUN apk add --no-cache libc6-compat
 RUN npm install -g pnpm
 

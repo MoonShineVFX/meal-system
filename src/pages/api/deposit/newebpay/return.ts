@@ -14,5 +14,5 @@ export default async function api(req: NextApiRequest, res: NextApiResponse) {
     return
   }
 
-  res.status(200).redirect(307, `/deposit/${depositId}?notify=true`)
+  res.status(200).redirect(303, `/deposit/${depositId}?notify=true`)
 }
