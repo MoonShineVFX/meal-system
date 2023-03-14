@@ -4,7 +4,7 @@ import { UserRole, DepositStatus } from '@prisma/client'
 import { userProcedure, router } from '../trpc'
 import { createDeposit, deleteDeposit, getDeposit } from '@/lib/server/database'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
-import { getAndUpdateTradeInfo } from '@/lib/server/payment/newebpay'
+import { getAndUpdateTradeInfo } from '@/lib/server/deposit/newebpay'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 import { NotificationType } from '@/lib/client/store'
 
