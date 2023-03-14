@@ -85,7 +85,7 @@ export default function TransactionList(props: {
     >
       {/* Search */}
       <SearchBar
-        className='p-4 lg:px-8 lg:pb-4  @xl:lg:pt-8'
+        className='mx-auto p-4 lg:px-8 lg:pb-4 @xl:lg:pt-8'
         placeholder='搜尋交易紀錄'
         isLoading={isLoading}
         searchKeyword={searchKeyword}

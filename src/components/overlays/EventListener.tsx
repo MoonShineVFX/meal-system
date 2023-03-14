@@ -73,7 +73,7 @@ export default function EventListener() {
     onData: async (notifyPayload) => {
       if (!notifyPayload.skipNotify) {
         addNotification({
-          type: NotificationType.SUCCESS,
+          type: notifyPayload.notificationType ?? NotificationType.SUCCESS,
           message: notifyPayload.message ?? notifyPayload.type,
           link: notifyPayload.link,
         })
@@ -104,6 +104,9 @@ export default function EventListener() {
           trpcContext.user.get.invalidate()
           trpcContext.order.getCount.invalidate()
           trpcContext.transaction.get.invalidate()
+          break
+        case SERVER_NOTIFY.DEPOSIT_RECHARGE:
+          trpcContext.user.get.invalidate()
           break
 
         // Staff

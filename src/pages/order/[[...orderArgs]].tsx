@@ -156,7 +156,7 @@ export default function PageOrder(props: {
                               setSearchKeyword={setSearchKeyword}
                               hint='拿鐵、#123、2023-01-01'
                               isLoading={isLoading}
-                              className='w-full max-w-md px-4 pt-[4.25rem] sm:pt-[4.5rem] lg:px-8 lg:pt-8'
+                              className='max-w-md px-4 pt-[4.25rem] sm:pt-[4.5rem] lg:px-8 lg:pt-8'
                             />
                           </div>
                         ) : (

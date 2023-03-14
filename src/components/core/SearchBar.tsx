@@ -1,5 +1,6 @@
 import { memo, ChangeEvent, useCallback, useRef, startTransition } from 'react'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { twMerge } from 'tailwind-merge'
 
 import Spinner from '@/components/core/Spinner'
 import TextInput from '@/components/form/base/TextInput'
@@ -34,7 +35,7 @@ function SearchBar(props: {
   }, [])
 
   return (
-    <div className={props.className}>
+    <div className={twMerge('w-fit', props.className)}>
       <div key='searchBar' className='flex flex-col items-center gap-2'>
         <div className='relative w-full'>
           <TextInput
