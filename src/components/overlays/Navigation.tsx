@@ -116,6 +116,10 @@ function ProfileButton(props: { className?: string }) {
     isError,
     error,
   } = trpc.user.get.useQuery(undefined)
+  const menuQuery = trpc.menu.get.useQuery({
+    type: 'LIVE',
+  })
+  const menuUpdateMutation = trpc.menu.createOrEdit.useMutation()
 
   const handleLogout = () => {
     const cookie = generateCookie(undefined)
@@ -123,8 +127,18 @@ function ProfileButton(props: { className?: string }) {
     window.location.href = '/login'
   }
 
-  if (isLoading) return <Spinner className='h-8 w-8' />
-  if (isError) return <Error description={error.message} />
+  if (isLoading || menuQuery.isLoading) return <Spinner className='h-8 w-8' />
+  if (isError || menuQuery.isError)
+    return (
+      <Error
+        description={
+          error?.message ?? menuQuery.error?.message ?? 'Unknown Error'
+        }
+      />
+    )
+
+  const isLiveMenuClose =
+    menuQuery.data.closedDate !== null && menuQuery.data.closedDate < new Date()
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`} as='ul'>
@@ -168,7 +182,6 @@ function ProfileButton(props: { className?: string }) {
               </div>
             </Link>
           </div>
-          {/* <ChevronDownIcon className='h-6 w-6 text-stone-300 transition-transform ui-open:rotate-180 ui-open:text-stone-400' /> */}
         </div>
       </Popover.Button>
       <Transition
@@ -183,12 +196,26 @@ function ProfileButton(props: { className?: string }) {
           {({ close }) => (
             <div onClick={() => close()}>
               {user && ['ADMIN', 'STAFF'].includes(user.role) && (
-                <Link
-                  href='/pos'
-                  className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
-                >
-                  處理訂單
-                </Link>
+                <>
+                  <Link
+                    href='/pos'
+                    className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+                  >
+                    處理訂單
+                  </Link>
+                  <div
+                    onClick={() =>
+                      menuUpdateMutation.mutate({
+                        isEdit: true,
+                        type: 'LIVE',
+                        closedDate: isLiveMenuClose ? null : new Date(),
+                      })
+                    }
+                    className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+                  >
+                    {isLiveMenuClose ? '開啟點餐' : '關閉點餐'}
+                  </div>
+                </>
               )}
               <Link
                 href='/transaction'

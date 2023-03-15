@@ -28,27 +28,29 @@ export const MenuRouter = router({
         date: z.date().nullable().optional(),
         publishedDate: z.date().nullable().optional(),
         closedDate: z.date().nullable().optional(),
-        coms: z.array(
-          z.object({
-            commodityId: z.number(),
-            stock: z.number(),
-            limitPerUser: z.number(),
-            commodity: z
-              .object({
-                name: z.string(),
-                price: z.number(),
-                optionSets: z.array(
-                  z.object({
-                    name: z.string(),
-                    multiSelect: z.boolean(),
-                    options: z.array(z.string()),
-                    order: z.number(),
-                  }),
-                ),
-              })
-              .optional(),
-          }),
-        ),
+        coms: z
+          .array(
+            z.object({
+              commodityId: z.number(),
+              stock: z.number(),
+              limitPerUser: z.number(),
+              commodity: z
+                .object({
+                  name: z.string(),
+                  price: z.number(),
+                  optionSets: z.array(
+                    z.object({
+                      name: z.string(),
+                      multiSelect: z.boolean(),
+                      options: z.array(z.string()),
+                      order: z.number(),
+                    }),
+                  ),
+                })
+                .optional(),
+            }),
+          )
+          .optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -68,51 +70,54 @@ export const MenuRouter = router({
           isEdit: input.isEdit,
         })
 
-        // create commodities and replace temp id with new id
-        const coms = await Promise.all(
-          input.coms
-            .filter(
-              (com) =>
-                ('commodity' in com && com.commodity !== undefined) ||
-                !('commodity' in com),
-            )
-            .map(async (com) => {
-              if ('commodity' in com) {
-                const thisCommodity = await createCommodity({
-                  client,
-                  ...com.commodity!,
-                })
-                return {
-                  ...com,
-                  commodityId: thisCommodity.id,
+        if (input.coms !== undefined) {
+          // create commodities and replace temp id with new id
+          const coms = await Promise.all(
+            input.coms
+              .filter(
+                (com) =>
+                  ('commodity' in com && com.commodity !== undefined) ||
+                  !('commodity' in com),
+              )
+              .map(async (com) => {
+                if ('commodity' in com) {
+                  const thisCommodity = await createCommodity({
+                    client,
+                    ...com.commodity!,
+                  })
+                  return {
+                    ...com,
+                    commodityId: thisCommodity.id,
+                  }
                 }
-              }
-              return com
+                return com
+              }),
+          )
+
+          // add commodities to menu
+          await Promise.all(
+            coms.map(async (com) => {
+              await addCommodityToMenu({
+                client,
+                menuId: menu.id,
+                commodityId: com.commodityId,
+                stock: com.stock,
+                limitPerUser: com.limitPerUser,
+              })
             }),
-        )
+          )
 
-        // add commodities to menu
-        await Promise.all(
-          coms.map(async (com) => {
-            await addCommodityToMenu({
-              client,
-              menuId: menu.id,
-              commodityId: com.commodityId,
-              stock: com.stock,
-              limitPerUser: com.limitPerUser,
-            })
-          }),
-        )
-
-        // remove commodities from menu
-        await removeCommoditiesFromMenu({
-          client,
-          menuId: menu.id,
-          excludeCommodityIds: input.coms.map((com) => com.commodityId),
-        })
+          // remove commodities from menu
+          await removeCommoditiesFromMenu({
+            client,
+            menuId: menu.id,
+            excludeCommodityIds: input.coms.map((com) => com.commodityId),
+          })
+        }
       })
 
-      const hasCreateCommodity = input.coms.some((com) => 'commodity' in com)
+      const hasCreateCommodity =
+        input.coms && input.coms.some((com) => 'commodity' in com)
       if (hasCreateCommodity) {
         eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
           type: SERVER_NOTIFY.COMMODITY_ADD,

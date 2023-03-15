@@ -24,6 +24,7 @@ export type UseMutationResult = UseTRPCMutationResult<any, any, any, any>
 
 export type UserInfo = RouterOutput['user']['get']
 export type MenuData = RouterOutput['menu']['get']
+export type MenuActiveDatas = RouterOutput['menu']['getActives']
 export type CommoditiesOnMenu = MenuData['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]
 export type CommoditiesOnMenuByCategory = Map<
