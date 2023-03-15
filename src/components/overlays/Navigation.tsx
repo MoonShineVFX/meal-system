@@ -137,7 +137,7 @@ function ProfileButton(props: { className?: string }) {
       />
     )
 
-  const isLiveMenuClose =
+  const isLiveMenuClosed =
     menuQuery.data.closedDate !== null && menuQuery.data.closedDate < new Date()
 
   return (
@@ -208,12 +208,12 @@ function ProfileButton(props: { className?: string }) {
                       menuUpdateMutation.mutate({
                         isEdit: true,
                         type: 'LIVE',
-                        closedDate: isLiveMenuClose ? null : new Date(),
+                        closedDate: isLiveMenuClosed ? null : new Date(),
                       })
                     }
                     className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
                   >
-                    {isLiveMenuClose ? '開啟點餐' : '關閉點餐'}
+                    {isLiveMenuClosed ? '開啟點餐' : '關閉點餐'}
                   </div>
                 </>
               )}

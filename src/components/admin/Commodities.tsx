@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import SearchBar from '@/components/core/SearchBar'
 import type { FormInput } from '@/components/form/field'
 import { useDialog } from '@/components/core/Dialog'
+import QRCode from 'qrcode'
 
 const BatchEditProps = ['價錢', '分類', '選項', '菜單'] as const
 
@@ -24,6 +25,7 @@ export default function Commodities() {
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const { showDialog, dialog } = useDialog()
+  const trpcContext = trpc.useContext()
 
   const handleEditCommodity = useCallback(
     (commodity?: NonNullable<typeof data>[number]) => {
@@ -309,25 +311,56 @@ export default function Commodities() {
 
   // Delete
   const handleCommoditiesDelete = useCallback(
-    (selectedIds: number[]) => {
+    (ids: number[]) => {
       if (!data) return
       showDialog({
         title: '刪除餐點',
         content:
-          selectedIds.length > 1
-            ? `確定要刪除 ${selectedIds.length} 個餐點嗎？`
-            : `確定要刪除 ${
-                data.find((c) => c.id === selectedIds[0])!.name
-              } 嗎？`,
+          ids.length > 1
+            ? `確定要刪除 ${ids.length} 個餐點嗎？`
+            : `確定要刪除 ${data.find((c) => c.id === ids[0])!.name} 嗎？`,
         useMutation: trpc.commodity.deleteMany.useMutation,
         mutationOptions: {
-          ids: selectedIds,
+          ids: ids,
         },
         cancel: true,
         confirmButtonTheme: 'danger',
       })
     },
     [data],
+  )
+
+  const handleQRCodeGenerate = useCallback(
+    async (commodity: NonNullable<typeof data>[number]) => {
+      const cipher = await trpcContext.menu.generateQRCodeCipher.fetch({
+        commodityId: commodity.id,
+        menuId: commodity.onMenus.find((m) => m.menu.type === 'RETAIL')!.menu
+          .id,
+      })
+
+      const url = `${window.location.origin}/qrcode/${cipher}`
+
+      let qrCodeUrl: string
+
+      try {
+        qrCodeUrl = await QRCode.toDataURL(url, { width: 640 })
+      } catch (error) {
+        console.error(error)
+        return
+      }
+
+      console.log('QR Code: ', url)
+      showDialog({
+        title: '付款碼',
+        icon: null,
+        content: (
+          <>
+            <img src={qrCodeUrl} />
+          </>
+        ),
+      })
+    },
+    [],
   )
 
   if (isError) return <Error description={error.message} />
@@ -417,13 +450,30 @@ export default function Commodities() {
               unhidable: true,
               hint: (row) => row.name,
               render: (row) => (
-                <button
-                  className='group/edit flex items-center rounded-2xl p-2 hover:bg-black/5 active:scale-90'
-                  onClick={() => handleEditCommodity(row)}
+                <DropdownMenu
+                  className='group/edit flex items-center rounded-2xl p-2 text-base hover:bg-black/5 active:scale-90'
+                  label={
+                    <>
+                      {row.name}
+                      <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
+                    </>
+                  }
                 >
-                  {row.name}
-                  <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
-                </button>
+                  <DropdownMenuItem
+                    label='編輯'
+                    onClick={() => handleEditCommodity(row)}
+                  />
+                  {row.onMenus.some((c) => c.menu.type === 'RETAIL') && (
+                    <DropdownMenuItem
+                      label='付款碼'
+                      onClick={() => handleQRCodeGenerate(row)}
+                    />
+                  )}
+                  <DropdownMenuItem
+                    label={<span className='text-red-400'>刪除</span>}
+                    onClick={() => handleCommoditiesDelete([row.id])}
+                  />
+                </DropdownMenu>
               ),
               sort: (a, b) => a.name.localeCompare(b.name),
             },

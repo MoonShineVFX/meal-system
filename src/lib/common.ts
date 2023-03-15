@@ -120,6 +120,7 @@ export const settings = {
     : 1.0,
   DEPOSIT_MIN_AMOUNT: 30,
   DEPOSIT_MAX_AMOUNT: 10000,
+  QRCODE_KEY: process.env.QRCODE_KEY!,
 
   /* NewebPay */
   NEWEBPAY_API_URL: process.env.NEWEBPAY_API_URL!,
