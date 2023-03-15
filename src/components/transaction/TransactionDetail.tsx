@@ -157,6 +157,10 @@ export default function TransactionDetail(props: { transactionId: number }) {
                     <span>{data.deposit.status}</span>
                   </li>
                   <li className='grid grid-cols-2 p-2 text-sm'>
+                    <span className='text-stone-400'>金額</span>
+                    <span>${data.deposit.amount}</span>
+                  </li>
+                  <li className='grid grid-cols-2 p-2 text-sm'>
                     <span className='text-stone-400'>交易日期</span>
                     <span>
                       {data.deposit.createdAt.toLocaleString('zh-TW')}

@@ -115,6 +115,9 @@ export const settings = {
   POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
     ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
     : 100,
+  DEPOSIT_RATIO: process.env.DEPOSIT_RATIO
+    ? parseFloat(process.env.DEPOSIT_RATIO)
+    : 1.0,
   DEPOSIT_MIN_AMOUNT: 30,
   DEPOSIT_MAX_AMOUNT: 10000,
 

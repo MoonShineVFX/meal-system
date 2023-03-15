@@ -147,24 +147,26 @@ function ProfileButton(props: { className?: string }) {
         <div className='hidden grow items-center px-2 sm:flex'>
           <div className='flex grow flex-col text-left'>
             <span className='tracking-widest'>{user?.name}</span>
-            <div className='flex gap-2'>
-              <span className='flex items-center gap-1'>
-                <CircleStackIcon className='h-3.5 w-3.5 text-yellow-500' />
-                <PriceNumber
-                  className='text-sm text-stone-400 '
-                  price={user?.pointBalance ?? 0}
-                  isCurrency
-                />
-              </span>
-              <span className='flex items-center gap-1'>
-                <CurrencyDollarIcon className='h-3.5 w-3.5 text-yellow-500' />
-                <PriceNumber
-                  className='text-sm text-stone-400 '
-                  price={user?.creditBalance ?? 0}
-                  isCurrency
-                />
-              </span>
-            </div>
+            <Link href='/deposit' className='pointer-events-auto'>
+              <div className='flex gap-2'>
+                <span className='flex items-center gap-1'>
+                  <CircleStackIcon className='h-3.5 w-3.5 text-yellow-500' />
+                  <PriceNumber
+                    className='text-sm text-stone-400 '
+                    price={user?.pointBalance ?? 0}
+                    isCurrency
+                  />
+                </span>
+                <span className='flex items-center gap-1'>
+                  <CurrencyDollarIcon className='h-3.5 w-3.5 text-yellow-500' />
+                  <PriceNumber
+                    className='text-sm text-stone-400 '
+                    price={user?.creditBalance ?? 0}
+                    isCurrency
+                  />
+                </span>
+              </div>
+            </Link>
           </div>
           {/* <ChevronDownIcon className='h-6 w-6 text-stone-300 transition-transform ui-open:rotate-180 ui-open:text-stone-400' /> */}
         </div>
@@ -193,6 +195,12 @@ function ProfileButton(props: { className?: string }) {
                 className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
               >
                 交易紀錄
+              </Link>
+              <Link
+                href='/deposit'
+                className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+              >
+                儲值
               </Link>
               <div
                 className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'

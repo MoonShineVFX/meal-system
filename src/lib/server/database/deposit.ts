@@ -4,6 +4,7 @@ import { DepositStatus } from '@prisma/client'
 import { rechargeUserBalanceBase, refundUserBalanceBase } from './transaction'
 import { createMPGRequest } from '@/lib/server/deposit/newebpay'
 import { prisma, log } from './define'
+import { settings } from '@/lib/common'
 
 export async function createDeposit(props: { userId: string; amount: number }) {
   const timeStamp = Date.now().toString(36)
@@ -64,7 +65,7 @@ export async function updateDeposit(props: {
     ) {
       await rechargeUserBalanceBase({
         userId: deposit.userId,
-        creditAmount: deposit.amount,
+        creditAmount: deposit.amount * settings.DEPOSIT_RATIO,
         depositId: deposit.id,
         client,
       })
@@ -73,9 +74,20 @@ export async function updateDeposit(props: {
       props.status === DepositStatus.REFUND &&
       deposit.status === DepositStatus.SUCCESS
     ) {
+      const chargeTransaction = await client.transaction.findFirst({
+        where: {
+          depositId: deposit.id,
+          type: 'DEPOSIT',
+        },
+      })
+
+      if (!chargeTransaction) {
+        throw new Error(`找不到訂單 ${props.id} 的儲值紀錄，無法退款`)
+      }
+
       await refundUserBalanceBase({
         userId: deposit.userId,
-        amount: deposit.amount,
+        amount: chargeTransaction.creditAmount,
         depositId: deposit.id,
         client,
       })
