@@ -1,69 +1,330 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity"]
+  previewFeatures = ["filteredRelationCount"]
 }
 
 datasource db {
-  provider     = "mysql"
+  provider     = "postgresql"
   url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  relationMode = "foreignKeys"
 }
 
-enum CurrencyType {
-  POINT
-  CREDIT
-}
-
-enum TransactionType {
-  RECHARGE
-  ORDER
-  RESERVE
-  REFUND
-}
-
-enum Role {
-  SERVER
+// User
+enum UserRole {
   ADMIN
   STAFF
   USER
 }
 
-model AuthToken {
+model UserToken {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
   createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 }
 
 model User {
-  id                String        @id
-  name              String        @db.VarChar(255)
-  role              Role          @default(USER)
-  createdAt         DateTime      @default(now())
-  points            Int           @default(500)
-  credits           Int           @default(0)
-  sourceTransaction Transaction[] @relation("Source")
-  targetTransaction Transaction[] @relation("Target")
-  authTokens        AuthToken[]
+  id        String   @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name                  String
+  role                  UserRole  @default(USER)
+  pointBalance          Int       @default(0)
+  creditBalance         Int       @default(0)
+  password              String?
+  lastPointRechargeTime DateTime?
+
+  profileImage       Image?        @relation(fields: [profileImageId], references: [id])
+  profileImageId     String?       @unique
+  cartItems          CartItem[]
+  tokens             UserToken[]
+  orders             Order[]
+  Deposit            Deposit[]
+  sourceTransactions Transaction[] @relation("source")
+  targetTransactions Transaction[] @relation("target")
+  ethWallet          EthWallet?
+}
+
+// Transaction
+enum TransactionType {
+  RECHARGE // Server modify balance
+  PAYMENT // User pay/order for something
+  CANCELED // Staff cancel order
+  TRANSFER // User transfer balance to another user
+  REFUND // User ask for refund (not implemented)
+  DEPOSIT // User deposit from 3rd party
 }
 
 model Transaction {
-  id           Int             @id @default(autoincrement())
-  createdAt    DateTime        @default(now())
-  sourceUser   User            @relation("Source", fields: [sourceUserId], references: [id])
-  sourceUserId String
-  targetUser   User            @relation("Target", fields: [targetUserId], references: [id])
-  targetUserId String
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
   type         TransactionType
-  amount       Int
-  currency     CurrencyType
+  pointAmount  Int             @default(0)
+  creditAmount Int             @default(0)
 
-  @@index(sourceUserId)
-  @@index(targetUserId)
+  sourceUser   User     @relation("source", fields: [sourceUserId], references: [id])
+  sourceUserId String
+  targetUser   User     @relation("target", fields: [targetUserId], references: [id])
+  targetUserId String
+  ethHashes    String[]
+
+  deposit          Deposit? @relation(fields: [depositId], references: [id])
+  depositId        String?
+  ordersForPayment Order[]  @relation("orderPayment")
+  orderForCanceled Order?   @relation("canceledPayment")
+
+  @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
 }
 
-model Setting {
-  id            Int      @id @default(autoincrement())
-  lastTopUpDate DateTime @default(now())
-  topUpValue    Int      @default(500)
+// Deposit
+enum DepositStatus {
+  PENDING
+  SUCCESS
+  FAILED // include cancel
+  REFUND
 }
+
+model Deposit {
+  id        String   @id
+  createdAt DateTime @default(now())
+
+  amount      Int
+  status      DepositStatus @default(PENDING)
+  paymentType String?
+  payTime     DateTime?
+
+  user         User          @relation(fields: [userId], references: [id])
+  userId       String
+  transactions Transaction[]
+}
+
+// Blockchain
+model EthWallet {
+  address String @id
+
+  privateKey String? @unique
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  timePreparing DateTime?
+  timeDishedUp  DateTime?
+  timeCompleted DateTime?
+  timeCanceled  DateTime?
+
+  user   User        @relation(fields: [userId], references: [id])
+  userId String
+  menu   Menu        @relation(fields: [menuId], references: [id])
+  menuId Int
+  items  OrderItem[]
+
+  paymentTransaction    Transaction? @relation("orderPayment", fields: [paymentTransactionId], references: [id])
+  paymentTransactionId  Int?
+  canceledTransaction   Transaction? @relation("canceledPayment", fields: [canceledTransactionId], references: [id])
+  canceledTransactionId Int?         @unique
+
+  @@index([userId, menuId, timePreparing(sort: Desc), createdAt(sort: Desc)])
+  @@index([menuId, timeCompleted, timeCanceled, createdAt(sort: Desc)])
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  name     String
+  price    Int
+  quantity Int
+  options  Json   @db.Json // { "optionName": string | string[]}
+
+  order           Order           @relation(fields: [orderId], references: [id])
+  orderId         Int
+  commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId])
+  menuId          Int
+  commodityId     Int
+  image           Image?          @relation(fields: [imageId], references: [id])
+  imageId         String?
+
+  @@index([orderId, menuId, commodityId])
+}
+
+model CartItem {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quantity   Int
+  options    Json    @db.Json // { "optionName": string | string[]}
+  optionsKey String
+  invalid    Boolean @default(false)
+
+  user            User            @relation(fields: [userId], references: [id])
+  userId          String
+  commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId], onDelete: Cascade)
+  menuId          Int
+  commodityId     Int
+
+  @@id([userId, menuId, commodityId, optionsKey])
+  @@index([userId, menuId, commodityId, invalid])
+}
+
+// Menu
+model CommodityRootCategory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name  String @unique
+  order Int    @default(99)
+
+  childCategories CommodityCategory[]
+}
+
+model CommodityCategory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name     String
+  order    Int    @default(99)
+  subOrder Int    @default(99)
+
+  rootCategory   CommodityRootCategory @relation(fields: [rootCategoryId], references: [id], onDelete: Cascade)
+  rootCategoryId Int
+  commodities    Commodity[]
+
+  @@unique([rootCategoryId, name])
+}
+
+model CommodityOptionSetsTemplate {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name       String @unique
+  order      Int    @default(99)
+  optionSets Json   @db.Json // { "name": string, "multiSelect": boolean, "options": string[], "order": number }[]
+}
+
+model Commodity {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String @default("")
+  price       Int
+
+  optionSets Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[], "order": number }[]
+  isDeleted  Boolean @default(false)
+
+  categories CommodityCategory[]
+  image      Image?              @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  imageId    String?
+  onMenus    CommodityOnMenu[]
+
+  @@index([id, isDeleted])
+}
+
+// Menu
+model CommodityOnMenu {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  limitPerUser Int     @default(0)
+  stock        Int     @default(0)
+  isDeleted    Boolean @default(false)
+
+  commodity   Commodity   @relation(fields: [commodityId], references: [id])
+  commodityId Int
+  menu        Menu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  menuId      Int
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@id([menuId, commodityId])
+  @@index([menuId, commodityId, isDeleted])
+}
+
+enum MenuType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  TEA
+  LIVE
+  RETAIL
+}
+
+model Menu {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  date          DateTime?
+  type          MenuType
+  name          String    @default("")
+  description   String    @default("")
+  publishedDate DateTime?
+  closedDate    DateTime?
+  limitPerUser  Int       @default(0)
+  isDeleted     Boolean   @default(false)
+
+  commodities CommodityOnMenu[]
+  orders      Order[]
+
+  @@index([date, type, isDeleted, createdAt(sort: Desc)])
+  @@index([id, isDeleted, createdAt(sort: Desc)])
+}
+
+// Resource
+model Image {
+  id        String   @id @default(cuid()) // SHA256 hash
+  createdAt DateTime @default(now())
+
+  path   String
+  width  Int?
+  height Int?
+
+  Commodity Commodity[]
+  OrderItem OrderItem[]
+  User      User?
+}
+
+// TWMP
+// enum TwmpResultStatus {
+//   SUCCESS
+//   FAILED
+//   CANCELED
+// }
+
+// model TwmpResult {
+//   txnUID    String   @id
+//   createdAt DateTime
+//   updatedAt DateTime @updatedAt
+
+//   status TwmpResultStatus
+
+//   transactions Transaction[]
+//   deposit      TwmpDeposit   @relation(fields: [depositId], references: [orderNo])
+//   depositId    String
+// }
+
+// model TwmpDeposit {
+//   orderNo   String   @id @default(cuid())
+//   createdAt DateTime @default(now())
+
+//   transAMT    Int
+//   txnID       String? @unique
+//   callbackUrl String?
+//   qrcode      String?
+
+//   results TwmpResult[]
+//   user    User         @relation(fields: [userId], references: [id])
+//   userId  String
+// }

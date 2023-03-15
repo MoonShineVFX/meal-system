@@ -1,55 +1,148 @@
-import trpc from '@/utils/trpc'
-import { useRouter } from 'next/router'
-import { FormEvent } from 'react'
+import { useEffect } from 'react'
+import {
+  useForm,
+  SubmitHandler,
+  UseFormRegister,
+  Path,
+  FieldErrorsImpl,
+} from 'react-hook-form'
+import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
-interface LoginFormElements extends HTMLFormControlsCollection {
-  username: HTMLInputElement
-  password: HTMLInputElement
-}
+import Image from '@/components/core/Image'
+import Title from '@/components/core/Title'
+import trpc from '@/lib/client/trpc'
+import { generateCookie, settings, twData } from '@/lib/common'
+import Logo from '@/components/core/Logo'
+import Button from '@/components/core/Button'
+import TextInput from '@/components/form/base/TextInput'
 
-interface LoginFormElement extends HTMLFormElement {
-  readonly elements: LoginFormElements
+type FormInputs = {
+  username: string
+  password: string
 }
 
 export default function PageLogin() {
   const loginMutation = trpc.user.login.useMutation()
   const trpcContext = trpc.useContext()
-  const router = useRouter()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormInputs>()
 
-  const handleLogin = async (event: FormEvent<LoginFormElement>) => {
-    event.preventDefault()
+  useEffect(() => {
+    // Logout the user when enter the page
+    document.cookie = generateCookie(undefined) // Remove the cookie
+    trpcContext.user.get.invalidate()
+  }, [])
+
+  const handleLogin: SubmitHandler<FormInputs> = async (formData) => {
     loginMutation.mutate(
       {
-        username: event.currentTarget.elements.username.value,
-        password: event.currentTarget.elements.password.value,
+        username: formData.username,
+        password: formData.password,
       },
       {
-        // If the login is successful, redirect to the home page
-        onSuccess: async () => {
-          await trpcContext.user.info.invalidate()
-          router.push('/')
-        },
-      }
+        // If the login is successful, reload to the home page at @/lib/client/trpc.ts [authLink]
+      },
     )
   }
 
-  return (
-    <div className="w-full flex flex-col items-center p-8">
-      <form className="flex flex-col gap-8" onSubmit={handleLogin}>
-        <input type="text" name="username" placeholder="username" />
-        <input type="password" name="password" placeholder="password" />
-        <button
-          disabled={loginMutation.isLoading}
-          className="border-2 p-1 rounded-md"
-          type="submit"
-        >
-          login
-        </button>
-      </form>
+  const isBusy = loginMutation.isLoading || loginMutation.isSuccess
 
-      {loginMutation.isLoading && <div>Loading...</div>}
-      {loginMutation.isSuccess && <div>Success!</div>}
-      {loginMutation.isError && <div>Error: {loginMutation.error.message}</div>}
+  return (
+    <div className='fixed inset-0 flex'>
+      <Title prefix='登入' />
+      <section className='flex w-full shrink-0 flex-col justify-center bg-white md:max-w-md'>
+        <form
+          className='group relative mx-auto flex w-full max-w-sm flex-col gap-8 py-8 px-10'
+          onSubmit={handleSubmit(handleLogin)}
+          {...twData({ loading: isBusy })}
+        >
+          <Logo className='w-40 text-yellow-500' />
+          <h3 className='text-xl font-bold tracking-wider'>
+            請登入夢想 AD 帳號
+          </h3>
+          <InputField
+            disabled={isBusy}
+            label='帳號'
+            type='text'
+            placeholder=''
+            autoComplete='username'
+            name='username'
+            register={register}
+            errors={errors}
+          />
+          <InputField
+            disabled={isBusy}
+            label='密碼'
+            type='password'
+            placeholder=''
+            autoComplete='password'
+            name='password'
+            register={register}
+            errors={errors}
+          />
+          <Button
+            className='h-12'
+            textClassName='text-lg font-bold'
+            isBusy={isBusy}
+            isLoading={loginMutation.isLoading}
+            isSuccess={loginMutation.isSuccess}
+            type='submit'
+            label='登入'
+            labelOnSuccess='登入成功'
+          />
+          {loginMutation.isError && (
+            <div className='absolute bottom-0 flex items-center gap-2 text-sm font-normal text-red-400'>
+              <ExclamationTriangleIcon className='h-5 w-5' />
+              {loginMutation.error.message}
+            </div>
+          )}
+        </form>
+      </section>
+      <div className='relative hidden grow md:block'>
+        <Image
+          className='object-cover'
+          fill
+          src={settings.RESOURCE_LOGIN_COVER}
+          sizes='100vw'
+          alt='Cover Image'
+          priority
+        />
+      </div>
+    </div>
+  )
+}
+
+interface InputFieldProps extends React.HTMLProps<HTMLInputElement> {
+  label: string
+  register: UseFormRegister<FormInputs>
+  name: Path<FormInputs>
+  errors: FieldErrorsImpl<FormInputs>
+}
+const InputField: React.FC<InputFieldProps> = ({
+  label,
+  name,
+  register,
+  ...props
+}) => {
+  const error = props.errors[name]
+  return (
+    <div className='flex flex-col gap-2'>
+      <p className='text-sm'>
+        {label}
+        <span className='ml-[1ch] text-red-400'>{error && error.message}</span>
+      </p>
+      <TextInput
+        {...props}
+        {...register(name, {
+          required: '此欄位為必填',
+        })}
+        autoCapitalize='none'
+        autoCorrect='off'
+        className='px-4 text-lg font-bold'
+      />
     </div>
   )
 }

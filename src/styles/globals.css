@@ -3,6 +3,45 @@
 @tailwind utilities;
 
 html,
+body,
+#__next {
+  @apply h-full w-full select-none text-stone-600 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
 body {
-  @apply bg-gray-500;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#nprogress .bar {
+  @apply h-[0.1875rem] bg-yellow-500 lg:h-1;
+  box-shadow: 0 0 0.5rem theme('colors.transparent'),
+    0 0 0.3125rem theme('colors.transparent');
+}
+#nprogress .peg {
+  display: none;
+}
+
+@layer base {
+  input {
+    @apply caret-yellow-500;
+  }
+
+  input.no-spin::-webkit-outer-spin-button,
+  input.no-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'].no-spin {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  .ms-scroll {
+    @apply overscroll-y-contain scrollbar-thin scrollbar-thumb-stone-200 scrollbar-thumb-rounded-md;
+  }
 }

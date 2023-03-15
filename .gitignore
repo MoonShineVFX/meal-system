@@ -175,3 +175,9 @@ dist
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# Cloud SQL certification
+*.pem
+*.p12
+
+prisma/dbml/
