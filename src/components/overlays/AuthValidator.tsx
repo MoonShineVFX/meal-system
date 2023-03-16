@@ -13,8 +13,8 @@ export default function AuthValidator() {
   /* Validate user and redirect to logout */
   const userInfoQuery = trpc.user.get.useQuery(undefined, {
     onError() {
-      if (router.asPath !== '/login') {
-        router.push('/login')
+      if (router.pathname !== '/login') {
+        router.push(`/login?redirect=${encodeURIComponent(router.asPath)}`)
       }
     },
   })
@@ -33,7 +33,7 @@ export default function AuthValidator() {
     }
   }, [userInfoQuery.isSuccess])
 
-  if (userInfoQuery.status !== 'success' && router.asPath !== '/login')
+  if (userInfoQuery.status !== 'success' && router.pathname !== '/login')
     return (
       <div
         className='fixed inset-0 z-50 grid place-items-center bg-white'

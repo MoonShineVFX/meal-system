@@ -18,7 +18,7 @@ const FULLSCREEN_COMPONENT_PATHS = ['/login']
 const PageApp: AppType = ({ Component, pageProps }) => {
   const router = useRouter()
   const isComponentFullscreen = FULLSCREEN_COMPONENT_PATHS.includes(
-    router.asPath,
+    router.pathname,
   )
 
   // Register service worker
