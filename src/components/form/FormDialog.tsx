@@ -175,7 +175,7 @@ export default function FormDialog<
                 {/* Inputs */}
                 <section
                   className={twMerge(
-                    'ms-scroll grid gap-4 gap-x-8 py-6',
+                    'grid gap-4 gap-x-8 py-6',
                     props.className,
                   )}
                   style={{
