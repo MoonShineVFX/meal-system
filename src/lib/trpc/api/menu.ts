@@ -1,6 +1,6 @@
 import z from 'zod'
 import { MenuType } from '@prisma/client'
-import CryptoJS from 'crypto-js'
+import lzString from 'lz-string'
 
 import { userProcedure, staffProcedure, router } from '../trpc'
 import {
@@ -13,8 +13,9 @@ import {
   addCommodityToMenu,
   removeCommoditiesFromMenu,
   deleteMenu,
+  getRetailCOM,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY, settings } from '@/lib/common'
+import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const MenuRouter = router({
@@ -194,24 +195,30 @@ export const MenuRouter = router({
     .query(async ({ input }) => {
       return await getActiveMenus(input)
     }),
-  generateQRCodeCipher: staffProcedure
+  getQRCodeCipher: staffProcedure
     .input(
       z.object({
         commodityId: z.number(),
         menuId: z.number(),
+        options: z
+          .record(z.union([z.string(), z.array(z.string())]))
+          .optional(),
       }),
     )
     .query(async ({ input }) => {
       const jsonString = JSON.stringify(input)
-      const cipher = CryptoJS.AES.encrypt(
-        jsonString,
-        CryptoJS.enc.Utf8.parse(settings.QRCODE_KEY),
-        {
-          mode: CryptoJS.mode.ECB,
-          format: CryptoJS.format.OpenSSL,
-          padding: CryptoJS.pad.Pkcs7,
-        },
-      )
-      return cipher.toString(CryptoJS.format.Hex)
+      return lzString.compressToEncodedURIComponent(jsonString)
+    }),
+  getCOMFromQRCodeCipher: userProcedure
+    .input(
+      z.object({
+        cipher: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      return await getRetailCOM({
+        userId: ctx.userLite.id,
+        cipher: input.cipher,
+      })
     }),
 })

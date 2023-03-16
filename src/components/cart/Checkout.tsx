@@ -8,10 +8,11 @@ import Error from '@/components/core/Error'
 import { useRouter } from 'next/router'
 import PriceNumber from '@/components/core/PriceNumber'
 
-export function Checkout(props: {
+export default function Checkout(props: {
   className?: string
   totalPrice: number
   isLoading: boolean
+  retailCipher?: string
 }) {
   const {
     data: userData,
@@ -20,20 +21,35 @@ export function Checkout(props: {
     error: userError,
   } = trpc.user.get.useQuery(undefined)
   const router = useRouter()
-  const createOrderMutation = trpc.order.add.useMutation()
+  const createOrderFromCartMutation = trpc.order.addFromCart.useMutation()
+  const createOrderFromRetailMutation = trpc.order.addFromRetail.useMutation()
+  const currentMutation = props.retailCipher
+    ? createOrderFromRetailMutation
+    : createOrderFromCartMutation
 
   const handleCheckout = () => {
-    createOrderMutation.mutate(undefined, {
-      onSuccess: (orders) => {
-        if (orders.length === 0) return
-        const referenceOrder = orders[0]
-        if (referenceOrder.menu.type === 'LIVE') {
-          router.push('/order/live')
-        } else {
-          router.push('/order/reservation')
-        }
-      },
-    })
+    if (props.retailCipher) {
+      createOrderFromRetailMutation.mutate(
+        { cipher: props.retailCipher },
+        {
+          onSuccess: () => {
+            router.push('/order/archived')
+          },
+        },
+      )
+    } else {
+      createOrderFromCartMutation.mutate(undefined, {
+        onSuccess: (orders) => {
+          if (orders.length === 0) return
+          const referenceOrder = orders[0]
+          if (referenceOrder.menu.type === 'LIVE') {
+            router.push('/order/live')
+          } else {
+            router.push('/order/reservation')
+          }
+        },
+      })
+    }
   }
 
   if (userIsError) return <Error description={userError.message} />
@@ -53,12 +69,14 @@ export function Checkout(props: {
       )}
       {...twData({ loading: props.isLoading || userIsLoading })}
     >
-      <header className='flex justify-between'>
-        <h2 className='rounded-xl text-lg font-bold tracking-widest group-data-loading:skeleton'>
-          結帳
-        </h2>
-        <PriceNumber className='text-lg' price={props.totalPrice} />
-      </header>
+      {!props.retailCipher && (
+        <header className='flex justify-between'>
+          <h2 className='rounded-xl text-lg font-bold tracking-widest group-data-loading:skeleton'>
+            結帳
+          </h2>
+          <PriceNumber className='text-lg' price={props.totalPrice} />
+        </header>
+      )}
       <section className='flex flex-col text-stone-500'>
         {/* Point balance */}
         {
@@ -90,12 +108,8 @@ export function Checkout(props: {
       {/* Checkout button */}
       <div className='grid grid-rows-2 gap-4 @xs/checkout:grid-cols-2 @xs/checkout:grid-rows-none'>
         <Button
-          isLoading={
-            createOrderMutation.isLoading || createOrderMutation.isSuccess
-          }
-          isBusy={
-            createOrderMutation.isLoading || createOrderMutation.isSuccess
-          }
+          isLoading={currentMutation.isLoading || currentMutation.isSuccess}
+          isBusy={currentMutation.isLoading || currentMutation.isSuccess}
           isDisabled={isNotEnough || props.totalPrice === 0}
           label={isNotEnough ? '餘額不足' : '確認付款'}
           className=' h-12 grow text-lg font-bold group-data-loading:skeleton @xs/checkout:order-1'

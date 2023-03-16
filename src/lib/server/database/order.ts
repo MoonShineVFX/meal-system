@@ -11,11 +11,12 @@ import {
   ORDER_STATUS,
 } from '@/lib/common'
 import { getCartItemsBase } from './cart'
+import { getRetailCOM } from './menu'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
 
 /* Validate and create orders by menu with transaction */
-export async function createOrder({ userId }: { userId: string }) {
+export async function createOrderFromCart({ userId }: { userId: string }) {
   return await prisma.$transaction(async (client) => {
     // Get valid cart items
     const getCartItemsResult = await getCartItemsBase({ userId, client })
@@ -140,6 +141,67 @@ export async function createOrder({ userId }: { userId: string }) {
     })
 
     return orders
+  })
+}
+
+export async function createOrderFromRetail(args: {
+  userId: string
+  cipher: string
+}) {
+  const { userId, cipher } = args
+
+  return await prisma.$transaction(async (client) => {
+    const com = await getRetailCOM({ cipher, userId, client: client })
+
+    if (!com) {
+      throw new Error('Invalid cipher')
+    }
+
+    const { transaction } = await chargeUserBalanceBase({
+      userId,
+      amount: com.commodity.price,
+      client,
+    })
+
+    const now = new Date()
+
+    const order = await client.order.create({
+      data: {
+        userId: userId,
+        paymentTransactionId: transaction.id,
+        items: {
+          create: {
+            name: com.commodity.name,
+            price: com.commodity.price,
+            quantity: 1,
+            options: com.options,
+            menuId: com.menuId,
+            commodityId: com.commodityId,
+            imageId: com.commodity.imageId,
+          },
+        },
+        menuId: com.menuId,
+        timePreparing: now,
+        timeDishedUp: now,
+        timeCompleted: now,
+      },
+      select: {
+        id: true,
+        menu: {
+          select: {
+            type: true,
+            date: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    })
+
+    return order
   })
 }
 

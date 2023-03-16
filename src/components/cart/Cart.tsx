@@ -4,7 +4,7 @@ import { ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { AnimatePresence, motion } from 'framer-motion'
 import { MenuType } from '@prisma/client'
 
-import { Checkout } from './Checkout'
+import Checkout from './Checkout'
 import trpc from '@/lib/client/trpc'
 import type { CartItemsByMenu, CartItemsAndMenus } from '@/lib/client/trpc'
 import { getMenuName, twData } from '@/lib/common'

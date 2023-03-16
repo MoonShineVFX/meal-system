@@ -2,17 +2,18 @@ import { z } from 'zod'
 
 import { userProcedure, router } from '../trpc'
 import {
-  createOrder,
+  createOrderFromCart,
   getOrders,
   getOrdersCount,
   updateOrderStatus,
+  createOrderFromRetail,
 } from '@/lib/server/database'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const OrderRouter = router({
-  add: userProcedure.mutation(async ({ ctx }) => {
-    const orders = await createOrder({ userId: ctx.userLite.id })
+  addFromCart: userProcedure.mutation(async ({ ctx }) => {
+    const orders = await createOrderFromCart({ userId: ctx.userLite.id })
 
     eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
       type: SERVER_NOTIFY.ORDER_ADD,
@@ -37,6 +38,21 @@ export const OrderRouter = router({
 
     return orders
   }),
+  addFromRetail: userProcedure
+    .input(z.object({ cipher: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const order = await createOrderFromRetail({
+        userId: ctx.userLite.id,
+        cipher: input.cipher,
+      })
+
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.ORDER_ADD,
+        link: `/order/id/${order.id}`,
+      })
+
+      return order
+    }),
   get: userProcedure
     .input(
       z.object({

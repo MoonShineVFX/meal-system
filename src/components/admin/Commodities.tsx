@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
 import QRCode from 'qrcode'
 
@@ -6,15 +6,17 @@ import TabHeader from '@/components/core/TabHeader'
 import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
 import Table from '@/components/core/Table'
-import trpc from '@/lib/client/trpc'
+import trpc, { CommodityDatas } from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
-import { settings, getMenuName } from '@/lib/common'
+import { settings, getMenuName, OrderOptions } from '@/lib/common'
 import { useFormDialog } from '@/components/form/FormDialog'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import SearchBar from '@/components/core/SearchBar'
 import type { FormInput } from '@/components/form/field'
 import { useDialog } from '@/components/core/Dialog'
+import { OptionSetForm } from '@/components/menu/COMDialogContent'
+import { useForm } from 'react-hook-form'
 
 const BatchEditProps = ['價錢', '分類', '選項', '菜單'] as const
 const TabNames = ['全部', '即時', '自助', '預訂'] as const
@@ -27,7 +29,6 @@ export default function Commodities() {
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const { showDialog, dialog } = useDialog()
-  const trpcContext = trpc.useContext()
   const [tabName, setTabName] = useState<typeof TabNames[number]>('全部')
 
   const handleEditCommodity = useCallback(
@@ -335,30 +336,12 @@ export default function Commodities() {
 
   const handleQRCodeGenerate = useCallback(
     async (commodity: NonNullable<typeof data>[number]) => {
-      const cipher = await trpcContext.menu.generateQRCodeCipher.fetch({
-        commodityId: commodity.id,
-        menuId: commodity.onMenus.find((m) => m.menu.type === 'RETAIL')!.menu
-          .id,
-      })
-
-      const url = `${window.location.origin}/qrcode/${cipher}`
-
-      let qrCodeUrl: string
-
-      try {
-        qrCodeUrl = await QRCode.toDataURL(url, { width: 640 })
-      } catch (error) {
-        console.error(error)
-        return
-      }
-
-      console.log('QR Code: ', url)
       showDialog({
         title: '付款碼',
         icon: null,
         content: (
           <>
-            <img src={qrCodeUrl} />
+            <QRCodeGenerator commodity={commodity} />
           </>
         ),
       })
@@ -569,6 +552,82 @@ export default function Commodities() {
       </div>
       {formDialog}
       {dialog}
+    </div>
+  )
+}
+
+function QRCodeGenerator(props: {
+  commodity: CommodityDatas[number]
+  width?: number
+}) {
+  const {
+    register,
+    formState: { errors },
+    watch,
+  } = useForm<{ options: OrderOptions }>({
+    defaultValues: {
+      options: props.commodity.optionSets.reduce((acc, os) => {
+        acc[os.name] = os.multiSelect ? [] : os.options[0]
+        return acc
+      }, {} as OrderOptions),
+    },
+  })
+  const formValue = watch()
+  const trpcContext = trpc.useContext()
+  const qrCodeWidth = props.width ?? 640
+
+  const [options, setOptions] = useState<OrderOptions>({})
+  const [qrCodeUrl, setQRCodeUrl] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    const thisOptions = formValue.options
+    if (JSON.stringify(thisOptions) !== JSON.stringify(options)) {
+      setOptions({ ...thisOptions })
+    }
+  }, [formValue])
+
+  useEffect(() => {
+    async function getQRCode() {
+      const cipher = await trpcContext.menu.getQRCodeCipher.fetch({
+        commodityId: props.commodity.id,
+        menuId: props.commodity.onMenus.find((m) => m.menu.type === 'RETAIL')!
+          .menu.id,
+        options: options,
+      })
+
+      const url = `${window.location.origin}/qrcode?key=${cipher}`
+      console.log('QR Code: ', url)
+
+      try {
+        const qrCodeUrl = await QRCode.toDataURL(url, { width: qrCodeWidth })
+        setQRCodeUrl(qrCodeUrl)
+      } catch (error) {
+        console.error(error)
+        return undefined
+      }
+    }
+    getQRCode()
+  }, [options])
+
+  return (
+    <div className='flex gap-4'>
+      <div style={{ width: 160 }}>
+        <div className='aspect-square w-full'>
+          {qrCodeUrl ? <img src={qrCodeUrl} /> : <SpinnerBlock />}
+        </div>
+      </div>
+      <div className='flex flex-col gap-4'>
+        {props.commodity.optionSets
+          .sort((a, b) => a.order - b.order)
+          .map((optionSet) => (
+            <OptionSetForm
+              key={optionSet.name}
+              optionSet={optionSet}
+              register={register}
+              errors={errors}
+            />
+          ))}
+      </div>
     </div>
   )
 }
