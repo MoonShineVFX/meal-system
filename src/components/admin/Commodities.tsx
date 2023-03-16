@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
+import QRCode from 'qrcode'
 
+import TabHeader from '@/components/core/TabHeader'
 import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
 import Table from '@/components/core/Table'
@@ -13,9 +15,9 @@ import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import SearchBar from '@/components/core/SearchBar'
 import type { FormInput } from '@/components/form/field'
 import { useDialog } from '@/components/core/Dialog'
-import QRCode from 'qrcode'
 
 const BatchEditProps = ['價錢', '分類', '選項', '菜單'] as const
+const TabNames = ['全部', '即時', '自助', '預訂'] as const
 
 export default function Commodities() {
   const { showFormDialog, formDialog } = useFormDialog()
@@ -26,6 +28,7 @@ export default function Commodities() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const { showDialog, dialog } = useDialog()
   const trpcContext = trpc.useContext()
+  const [tabName, setTabName] = useState<typeof TabNames[number]>('全部')
 
   const handleEditCommodity = useCallback(
     (commodity?: NonNullable<typeof data>[number]) => {
@@ -372,11 +375,15 @@ export default function Commodities() {
         {/* Top */}
         <div className='flex items-center gap-4'>
           <SearchBar
-            className='mr-auto'
             placeholder='搜尋餐點'
             isLoading={false}
             searchKeyword={searchKeyword}
             setSearchKeyword={setSearchKeyword}
+          />
+          <TabHeader
+            className='mr-auto'
+            tabNames={TabNames}
+            onChange={setTabName}
           />
           {selectedIds.length > 0 && (
             <Button
@@ -413,22 +420,34 @@ export default function Commodities() {
         <Table
           data={data}
           onDataFilter={
-            searchKeyword === ''
+            searchKeyword === '' && tabName === '全部'
               ? undefined
               : (data) =>
-                  data.filter(
-                    (c) =>
-                      c.name.includes(searchKeyword) ||
-                      c.description.includes(searchKeyword) ||
-                      c.categories.some((c) =>
-                        c.name.includes(searchKeyword),
-                      ) ||
-                      c.optionSets.some(
-                        (os) =>
-                          os.name.includes(searchKeyword) ||
-                          os.options.some((o) => o.includes(searchKeyword)),
-                      ),
-                  )
+                  data
+                    .filter((c) => {
+                      if (tabName === '全部') return true
+                      if (tabName === '即時')
+                        return c.onMenus.some((m) => m.menu.type === 'LIVE')
+                      if (tabName === '自助')
+                        return c.onMenus.some((m) => m.menu.type === 'RETAIL')
+                      if (tabName === '預訂')
+                        return c.onMenus.some((m) => m.menu.date !== null)
+                    })
+                    .filter((c) => {
+                      if (searchKeyword === '') return true
+                      return (
+                        c.name.includes(searchKeyword) ||
+                        c.description.includes(searchKeyword) ||
+                        c.categories.some((c) =>
+                          c.name.includes(searchKeyword),
+                        ) ||
+                        c.optionSets.some(
+                          (os) =>
+                            os.name.includes(searchKeyword) ||
+                            os.options.some((o) => o.includes(searchKeyword)),
+                        )
+                      )
+                    })
           }
           columns={[
             {

@@ -83,26 +83,27 @@ export const MenuComponent = React.forwardRef<
   const parentId = useFloatingParentNodeId()
   const nested = parentId != null
 
-  const { x, y, strategy, refs, context } = useFloating<HTMLButtonElement>({
-    open,
-    nodeId,
-    onOpenChange: setOpen,
-    placement: nested ? 'right-start' : 'bottom-start',
-    middleware: [
-      offset({ mainAxis: 6, alignmentAxis: nested ? -8 : 0 }),
-      size({
-        apply({ rects, elements }) {
-          Object.assign(elements.floating.style, {
-            minWidth: `${rects.reference.width}px`,
-          })
-        },
-      }),
-      flip(),
-      shift(),
-    ],
-    whileElementsMounted: autoUpdate,
-    ...props.floating,
-  })
+  const { x, y, strategy, refs, context, placement } =
+    useFloating<HTMLButtonElement>({
+      open,
+      nodeId,
+      onOpenChange: setOpen,
+      placement: nested ? 'right-start' : 'bottom-start',
+      middleware: [
+        offset({ mainAxis: 6, alignmentAxis: nested ? -8 : 0 }),
+        size({
+          apply({ rects, elements }) {
+            Object.assign(elements.floating.style, {
+              minWidth: `${rects.reference.width}px`,
+            })
+          },
+        }),
+        flip(),
+        shift(),
+      ],
+      whileElementsMounted: autoUpdate,
+      ...props.floating,
+    })
 
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions(
     [
@@ -278,6 +279,8 @@ export const MenuComponent = React.forwardRef<
                 className={twMerge(
                   'relative z-[1000] flex w-max origin-top-right flex-col overflow-hidden rounded-2xl border bg-white py-2 shadow-lg',
                   nested && 'origin-top-left',
+                  placement === 'top-start' && 'origin-bottom-right',
+                  placement === 'top-start' && nested && 'origin-bottom-left',
                 )}
                 style={{
                   position: strategy,
