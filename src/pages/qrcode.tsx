@@ -38,8 +38,10 @@ export default function PageQRCode() {
   return (
     <div className='relative mx-auto h-full w-full max-w-lg'>
       <Title prefix='QRCode 付款' />
-      <div className='absolute inset-0 p-4'>
-        <h1 className='mb-4 text-xl font-bold tracking-wider'>QRCode 付款</h1>
+      <div className='absolute inset-0 p-4 lg:p-8'>
+        <h1 className='mb-4 text-xl font-bold tracking-wider lg:mb-8'>
+          QRCode 付款
+        </h1>
         <div className='flex gap-6'>
           <div className='w-24'>
             <div className='relative aspect-square w-full overflow-hidden rounded-2xl'>
