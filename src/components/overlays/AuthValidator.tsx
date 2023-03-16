@@ -14,7 +14,8 @@ export default function AuthValidator() {
   const userInfoQuery = trpc.user.get.useQuery(undefined, {
     onError() {
       if (router.pathname !== '/login') {
-        router.push(`/login?redirect=${encodeURIComponent(router.asPath)}`)
+        sessionStorage.setItem('login-redirect', router.asPath)
+        router.push(`/login`)
       }
     },
   })

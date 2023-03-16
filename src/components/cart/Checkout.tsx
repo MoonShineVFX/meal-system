@@ -115,7 +115,7 @@ export default function Checkout(props: {
           className=' h-12 grow text-lg font-bold group-data-loading:skeleton @xs/checkout:order-1'
           onClick={handleCheckout}
         />
-        <Link href='/deposit' className='w-full'>
+        <Link href={`/deposit`} className='w-full'>
           <Button
             label='儲值'
             className='h-12 w-full grow text-lg font-bold group-data-loading:skeleton'

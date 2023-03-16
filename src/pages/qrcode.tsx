@@ -8,11 +8,13 @@ import Image from '@/components/core/Image'
 import { settings } from '@/lib/common'
 import Checkout from '@/components/cart/Checkout'
 import Title from '@/components/core/Title'
+import { useStore } from '@/lib/client/store'
 
 export default function PageQRCode() {
   const router = useRouter()
   const userQuery = trpc.user.get.useQuery()
   const [cipher, setCipher] = useState<string | null>(null)
+  const addToHistory = useStore((state) => state.addToHistory)
   const { data, error, isLoading } = trpc.menu.getCOMFromQRCodeCipher.useQuery(
     {
       cipher: cipher as string,
@@ -25,9 +27,12 @@ export default function PageQRCode() {
     if (router.query.key !== undefined) {
       setCipher(router.query.key as string)
       router.replace('/qrcode', undefined, { shallow: true })
-    } else if (cipher === null && userQuery.data) {
-      router.replace('/live')
-      return
+    } else if (userQuery.data) {
+      if (cipher === null) {
+        router.replace('/live')
+        return
+      }
+      addToHistory(`/qrcode?key=${cipher}`)
     }
   }, [router.query.key, userQuery.isSuccess])
 

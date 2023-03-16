@@ -58,6 +58,7 @@ export type TransactionDatas =
 export type CategoryDatas = RouterOutput['category']['get']
 export type CommodityDatas = RouterOutput['commodity']['get']
 export type OptionSetsTemplateDatas = RouterOutput['optionSet']['get']
+export type DepositData = RouterOutput['deposit']['get']
 
 /* WebSocket Client */
 declare global {
@@ -122,13 +123,13 @@ const authLink: TRPCLink<AppRouter> = () => {
             sessionStorage.setItem('login-success-notify', 'true')
             document.cookie = cookie
 
-            // get redirect query, if empty, redirect to /live
-            const redirect = new URLSearchParams(window.location.search).get(
-              'redirect',
-            )
+            const loginRedirect = sessionStorage.getItem('login-redirect')
+            if (loginRedirect !== null) {
+              sessionStorage.removeItem('login-redirect')
+            }
 
             window.location.href =
-              redirect === null ? '/live' : decodeURIComponent(redirect)
+              loginRedirect === null ? '/live' : loginRedirect
           }
           observer.next(value)
         },

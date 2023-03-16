@@ -9,6 +9,7 @@ const API_VERSION = '2.0'
 export async function createMPGRequest(props: {
   depositId: string
   amount: number
+  email?: string
 }) {
   const tradeInfo = {
     MerchantID: settings.NEWEBPAY_MERCHANT_ID,
@@ -21,7 +22,7 @@ export async function createMPGRequest(props: {
     ItemDesc: `夢想幣 ${props.amount} 元`,
     ReturnURL: `${settings.NEWEBPAY_RETURN_URL}?depositId=${props.depositId}`,
     NotifyURL: settings.NEWEBPAY_NOTIFY_URL,
-    Email: '',
+    Email: props.email ?? '',
     LoginType: 0,
     CREDIT: 1,
     ANDROIDPAY: 1,
