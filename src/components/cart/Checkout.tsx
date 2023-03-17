@@ -1,5 +1,4 @@
 import { twMerge } from 'tailwind-merge'
-import Link from 'next/link'
 
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
@@ -13,6 +12,7 @@ export default function Checkout(props: {
   totalPrice: number
   isLoading: boolean
   retailCipher?: string
+  onDeposit?: () => void
 }) {
   const {
     data: userData,
@@ -115,13 +115,15 @@ export default function Checkout(props: {
           className=' h-12 grow text-lg font-bold group-data-loading:skeleton @xs/checkout:order-1'
           onClick={handleCheckout}
         />
-        <Link href={`/deposit`} className='w-full'>
-          <Button
-            label='儲值'
-            className='h-12 w-full grow text-lg font-bold group-data-loading:skeleton'
-            theme='secondary'
-          />
-        </Link>
+        <Button
+          label='儲值'
+          className='h-12 w-full grow text-lg font-bold group-data-loading:skeleton'
+          theme='secondary'
+          onClick={() => {
+            props.onDeposit?.()
+            router.push('/deposit')
+          }}
+        />
       </div>
     </div>
   )

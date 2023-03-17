@@ -27,12 +27,8 @@ export default function PageQRCode() {
     if (router.query.key !== undefined) {
       setCipher(router.query.key as string)
       router.replace('/qrcode', undefined, { shallow: true })
-    } else if (userQuery.data) {
-      if (cipher === null) {
-        router.replace('/live')
-        return
-      }
-      addToHistory(`/qrcode?key=${cipher}`)
+    } else if (userQuery.data && cipher === null) {
+      router.replace('/live')
     }
   }, [router.query.key, userQuery.isSuccess])
 
@@ -89,6 +85,7 @@ export default function PageQRCode() {
             isLoading={false}
             totalPrice={data.commodity.price}
             retailCipher={cipher}
+            onDeposit={() => addToHistory(`/qrcode?key=${cipher}`)}
           />
         </div>
       </div>
