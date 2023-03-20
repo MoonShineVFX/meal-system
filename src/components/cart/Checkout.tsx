@@ -1,4 +1,5 @@
 import { twMerge } from 'tailwind-merge'
+import { useState } from 'react'
 
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
@@ -6,6 +7,7 @@ import { twData } from '@/lib/common'
 import Error from '@/components/core/Error'
 import { useRouter } from 'next/router'
 import PriceNumber from '@/components/core/PriceNumber'
+import { useEffect } from 'react'
 
 export default function Checkout(props: {
   className?: string
@@ -13,7 +15,11 @@ export default function Checkout(props: {
   isLoading: boolean
   retailCipher?: string
   onDeposit?: () => void
+  autoCheckout?: boolean
 }) {
+  const [isAutoCheckoutInitial, setIsAutoCheckoutInitial] = useState<
+    boolean | undefined
+  >(undefined)
   const {
     data: userData,
     isLoading: userIsLoading,
@@ -52,14 +58,32 @@ export default function Checkout(props: {
     }
   }
 
-  if (userIsError) return <Error description={userError.message} />
-
   const pointBalance = userData?.pointBalance ?? 0
   const creditBalance = userData?.creditBalance ?? 0
 
   const pointBalnceToPay = Math.min(pointBalance, props.totalPrice)
   const creditBalanceToPay = props.totalPrice - pointBalnceToPay
   const isNotEnough = creditBalanceToPay > creditBalance
+
+  useEffect(() => {
+    if (isAutoCheckoutInitial === undefined) {
+      setIsAutoCheckoutInitial(props.autoCheckout ?? false)
+    }
+  }, [props.autoCheckout])
+
+  useEffect(() => {
+    if (
+      isAutoCheckoutInitial &&
+      userData &&
+      !isNotEnough &&
+      currentMutation.isIdle &&
+      props.totalPrice !== 0
+    ) {
+      handleCheckout()
+    }
+  }, [userData, isNotEnough, isAutoCheckoutInitial])
+
+  if (userIsError) return <Error description={userError.message} />
 
   return (
     <div
