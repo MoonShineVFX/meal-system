@@ -4,6 +4,7 @@ import {
   PlusCircleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
+import { useRouter } from 'next/router'
 
 import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
@@ -13,16 +14,19 @@ import NumberInput from '@/components/form/base/NumberInput'
 import { settings } from '@/lib/common'
 import { useDialog } from '@/components/core/Dialog'
 import Title from '@/components/core/Title'
+import { useStore } from '@/lib/client/store'
 
 const DEPOSIT_PRESET_AMOUNTS = [100, 300, 500, 1000]
 
 export default function DepositPage() {
+  const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const { data, isError, error, isLoading } = trpc.user.get.useQuery()
   const [depositAmount, setDepositAmount] = useState(0)
   const depositCreateMutation = trpc.deposit.create.useMutation()
   const depositDeleteMutation = trpc.deposit.delete.useMutation()
   const { dialog, showDialog } = useDialog()
+  const routeHistory = useStore((state) => state.history)
 
   useEffect(() => {
     if (inputRef.current) inputRef.current.focus()
@@ -46,12 +50,25 @@ export default function DepositPage() {
 
   const handleClick = useCallback(() => {
     if (depositCreateMutation.error) depositCreateMutation.reset()
+
     depositCreateMutation.mutate(
       {
         amount: depositAmount,
       },
       {
         onSuccess: (data) => {
+          // save redirect metadata
+          const url = routeHistory[routeHistory.length - 2]
+          if (url) {
+            localStorage.setItem(
+              'deposit-redirect',
+              JSON.stringify({
+                id: data.depositId,
+                url: url,
+              }),
+            )
+          }
+
           showDialog({
             title: '儲值金額確認',
             icon: 'info',
@@ -94,6 +111,7 @@ export default function DepositPage() {
             as: 'form',
             cancel: true,
             onCancel: () => {
+              localStorage.removeItem('deposit-redirect')
               depositDeleteMutation.mutate({ id: data.depositId })
               depositCreateMutation.reset()
             },
@@ -105,7 +123,7 @@ export default function DepositPage() {
         },
       },
     )
-  }, [depositAmount, depositCreateMutation])
+  }, [depositAmount, depositCreateMutation, router.query])
 
   if (isError) return <Error description={error.message} />
 

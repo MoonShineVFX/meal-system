@@ -16,6 +16,13 @@ export async function createDeposit(props: { userId: string; amount: number }) {
   const randomString = Math.random().toString(36).substring(2, 6)
   const depositId = `${timeStamp}${userHash}${randomString}`.toUpperCase()
 
+  const user = await prisma.user.findUnique({
+    where: { id: props.userId },
+  })
+  if (!user) {
+    throw new Error(`找不到使用者 ${props.userId}`)
+  }
+
   await prisma.deposit.create({
     data: {
       id: depositId,
@@ -27,6 +34,7 @@ export async function createDeposit(props: { userId: string; amount: number }) {
   const result = await createMPGRequest({
     depositId,
     amount: props.amount,
+    email: user.email !== null ? user.email : undefined,
   })
 
   return {

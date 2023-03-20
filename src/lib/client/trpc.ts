@@ -24,6 +24,7 @@ export type UseMutationResult = UseTRPCMutationResult<any, any, any, any>
 
 export type UserInfo = RouterOutput['user']['get']
 export type MenuData = RouterOutput['menu']['get']
+export type MenuActiveDatas = RouterOutput['menu']['getActives']
 export type CommoditiesOnMenu = MenuData['commodities']
 export type CommodityOnMenu = CommoditiesOnMenu[0]
 export type CommoditiesOnMenuByCategory = Map<
@@ -57,6 +58,7 @@ export type TransactionDatas =
 export type CategoryDatas = RouterOutput['category']['get']
 export type CommodityDatas = RouterOutput['commodity']['get']
 export type OptionSetsTemplateDatas = RouterOutput['optionSet']['get']
+export type DepositData = RouterOutput['deposit']['get']
 
 /* WebSocket Client */
 declare global {
@@ -120,7 +122,14 @@ const authLink: TRPCLink<AppRouter> = () => {
             )
             sessionStorage.setItem('login-success-notify', 'true')
             document.cookie = cookie
-            window.location.href = '/live' // Redirect to live index page
+
+            const loginRedirect = sessionStorage.getItem('login-redirect')
+            if (loginRedirect !== null) {
+              sessionStorage.removeItem('login-redirect')
+            }
+
+            window.location.href =
+              loginRedirect === null ? '/live' : loginRedirect
           }
           observer.next(value)
         },

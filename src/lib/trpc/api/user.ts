@@ -136,6 +136,7 @@ export const UserRouter = router({
             userId: input.username,
             name: userAdData.truename,
             password: input.password,
+            email: userAdData.mail,
           })
         }
       }

@@ -1,5 +1,6 @@
 import z from 'zod'
 import { MenuType } from '@prisma/client'
+import lzString from 'lz-string'
 
 import { userProcedure, staffProcedure, router } from '../trpc'
 import {
@@ -12,6 +13,7 @@ import {
   addCommodityToMenu,
   removeCommoditiesFromMenu,
   deleteMenu,
+  getRetailCOM,
 } from '@/lib/server/database'
 import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
@@ -28,27 +30,29 @@ export const MenuRouter = router({
         date: z.date().nullable().optional(),
         publishedDate: z.date().nullable().optional(),
         closedDate: z.date().nullable().optional(),
-        coms: z.array(
-          z.object({
-            commodityId: z.number(),
-            stock: z.number(),
-            limitPerUser: z.number(),
-            commodity: z
-              .object({
-                name: z.string(),
-                price: z.number(),
-                optionSets: z.array(
-                  z.object({
-                    name: z.string(),
-                    multiSelect: z.boolean(),
-                    options: z.array(z.string()),
-                    order: z.number(),
-                  }),
-                ),
-              })
-              .optional(),
-          }),
-        ),
+        coms: z
+          .array(
+            z.object({
+              commodityId: z.number(),
+              stock: z.number(),
+              limitPerUser: z.number(),
+              commodity: z
+                .object({
+                  name: z.string(),
+                  price: z.number(),
+                  optionSets: z.array(
+                    z.object({
+                      name: z.string(),
+                      multiSelect: z.boolean(),
+                      options: z.array(z.string()),
+                      order: z.number(),
+                    }),
+                  ),
+                })
+                .optional(),
+            }),
+          )
+          .optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -68,51 +72,54 @@ export const MenuRouter = router({
           isEdit: input.isEdit,
         })
 
-        // create commodities and replace temp id with new id
-        const coms = await Promise.all(
-          input.coms
-            .filter(
-              (com) =>
-                ('commodity' in com && com.commodity !== undefined) ||
-                !('commodity' in com),
-            )
-            .map(async (com) => {
-              if ('commodity' in com) {
-                const thisCommodity = await createCommodity({
-                  client,
-                  ...com.commodity!,
-                })
-                return {
-                  ...com,
-                  commodityId: thisCommodity.id,
+        if (input.coms !== undefined) {
+          // create commodities and replace temp id with new id
+          const coms = await Promise.all(
+            input.coms
+              .filter(
+                (com) =>
+                  ('commodity' in com && com.commodity !== undefined) ||
+                  !('commodity' in com),
+              )
+              .map(async (com) => {
+                if ('commodity' in com) {
+                  const thisCommodity = await createCommodity({
+                    client,
+                    ...com.commodity!,
+                  })
+                  return {
+                    ...com,
+                    commodityId: thisCommodity.id,
+                  }
                 }
-              }
-              return com
+                return com
+              }),
+          )
+
+          // add commodities to menu
+          await Promise.all(
+            coms.map(async (com) => {
+              await addCommodityToMenu({
+                client,
+                menuId: menu.id,
+                commodityId: com.commodityId,
+                stock: com.stock,
+                limitPerUser: com.limitPerUser,
+              })
             }),
-        )
+          )
 
-        // add commodities to menu
-        await Promise.all(
-          coms.map(async (com) => {
-            await addCommodityToMenu({
-              client,
-              menuId: menu.id,
-              commodityId: com.commodityId,
-              stock: com.stock,
-              limitPerUser: com.limitPerUser,
-            })
-          }),
-        )
-
-        // remove commodities from menu
-        await removeCommoditiesFromMenu({
-          client,
-          menuId: menu.id,
-          excludeCommodityIds: input.coms.map((com) => com.commodityId),
-        })
+          // remove commodities from menu
+          await removeCommoditiesFromMenu({
+            client,
+            menuId: menu.id,
+            excludeCommodityIds: input.coms.map((com) => com.commodityId),
+          })
+        }
       })
 
-      const hasCreateCommodity = input.coms.some((com) => 'commodity' in com)
+      const hasCreateCommodity =
+        input.coms && input.coms.some((com) => 'commodity' in com)
       if (hasCreateCommodity) {
         eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
           type: SERVER_NOTIFY.COMMODITY_ADD,
@@ -187,5 +194,31 @@ export const MenuRouter = router({
     )
     .query(async ({ input }) => {
       return await getActiveMenus(input)
+    }),
+  getQRCodeCipher: staffProcedure
+    .input(
+      z.object({
+        commodityId: z.number(),
+        menuId: z.number(),
+        options: z
+          .record(z.union([z.string(), z.array(z.string())]))
+          .optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const jsonString = JSON.stringify(input)
+      return lzString.compressToEncodedURIComponent(jsonString)
+    }),
+  getCOMFromQRCodeCipher: userProcedure
+    .input(
+      z.object({
+        cipher: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      return await getRetailCOM({
+        userId: ctx.userLite.id,
+        cipher: input.cipher,
+      })
     }),
 })

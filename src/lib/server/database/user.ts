@@ -14,6 +14,7 @@ type EnsureUserArgs = {
   role?: UserRole
   pointBalance?: number
   creditBalance?: number
+  email?: string
 }
 export async function ensureUser({
   userId,
@@ -22,6 +23,7 @@ export async function ensureUser({
   role,
   pointBalance,
   creditBalance,
+  email,
 }: EnsureUserArgs) {
   const updateData = {
     name: name,
@@ -29,6 +31,7 @@ export async function ensureUser({
     pointBalance: pointBalance,
     creditBalance: creditBalance,
     password: password ? CryptoJS.SHA256(password).toString() : undefined,
+    email: email,
   }
 
   const user = await prisma.user.upsert({

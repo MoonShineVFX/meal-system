@@ -1,20 +1,25 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
+import QRCode from 'qrcode'
 
+import TabHeader from '@/components/core/TabHeader'
 import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
 import Table from '@/components/core/Table'
-import trpc from '@/lib/client/trpc'
+import trpc, { CommodityDatas } from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
-import { settings, getMenuName } from '@/lib/common'
+import { settings, getMenuName, OrderOptions } from '@/lib/common'
 import { useFormDialog } from '@/components/form/FormDialog'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import SearchBar from '@/components/core/SearchBar'
 import type { FormInput } from '@/components/form/field'
 import { useDialog } from '@/components/core/Dialog'
+import { OptionSetForm } from '@/components/menu/COMDialogContent'
+import { useForm } from 'react-hook-form'
 
 const BatchEditProps = ['價錢', '分類', '選項', '菜單'] as const
+const TabNames = ['全部', '即時', '自助', '預訂'] as const
 
 export default function Commodities() {
   const { showFormDialog, formDialog } = useFormDialog()
@@ -24,6 +29,7 @@ export default function Commodities() {
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const { showDialog, dialog } = useDialog()
+  const [tabName, setTabName] = useState<typeof TabNames[number]>('全部')
 
   const handleEditCommodity = useCallback(
     (commodity?: NonNullable<typeof data>[number]) => {
@@ -309,25 +315,38 @@ export default function Commodities() {
 
   // Delete
   const handleCommoditiesDelete = useCallback(
-    (selectedIds: number[]) => {
+    (ids: number[]) => {
       if (!data) return
       showDialog({
         title: '刪除餐點',
         content:
-          selectedIds.length > 1
-            ? `確定要刪除 ${selectedIds.length} 個餐點嗎？`
-            : `確定要刪除 ${
-                data.find((c) => c.id === selectedIds[0])!.name
-              } 嗎？`,
+          ids.length > 1
+            ? `確定要刪除 ${ids.length} 個餐點嗎？`
+            : `確定要刪除 ${data.find((c) => c.id === ids[0])!.name} 嗎？`,
         useMutation: trpc.commodity.deleteMany.useMutation,
         mutationOptions: {
-          ids: selectedIds,
+          ids: ids,
         },
         cancel: true,
         confirmButtonTheme: 'danger',
       })
     },
     [data],
+  )
+
+  const handleQRCodeGenerate = useCallback(
+    async (commodity: NonNullable<typeof data>[number]) => {
+      showDialog({
+        title: '付款碼',
+        icon: null,
+        content: (
+          <>
+            <QRCodeGenerator commodity={commodity} />
+          </>
+        ),
+      })
+    },
+    [],
   )
 
   if (isError) return <Error description={error.message} />
@@ -339,11 +358,15 @@ export default function Commodities() {
         {/* Top */}
         <div className='flex items-center gap-4'>
           <SearchBar
-            className='mr-auto'
             placeholder='搜尋餐點'
             isLoading={false}
             searchKeyword={searchKeyword}
             setSearchKeyword={setSearchKeyword}
+          />
+          <TabHeader
+            className='mr-auto'
+            tabNames={TabNames}
+            onChange={setTabName}
           />
           {selectedIds.length > 0 && (
             <Button
@@ -380,22 +403,34 @@ export default function Commodities() {
         <Table
           data={data}
           onDataFilter={
-            searchKeyword === ''
+            searchKeyword === '' && tabName === '全部'
               ? undefined
               : (data) =>
-                  data.filter(
-                    (c) =>
-                      c.name.includes(searchKeyword) ||
-                      c.description.includes(searchKeyword) ||
-                      c.categories.some((c) =>
-                        c.name.includes(searchKeyword),
-                      ) ||
-                      c.optionSets.some(
-                        (os) =>
-                          os.name.includes(searchKeyword) ||
-                          os.options.some((o) => o.includes(searchKeyword)),
-                      ),
-                  )
+                  data
+                    .filter((c) => {
+                      if (tabName === '全部') return true
+                      if (tabName === '即時')
+                        return c.onMenus.some((m) => m.menu.type === 'LIVE')
+                      if (tabName === '自助')
+                        return c.onMenus.some((m) => m.menu.type === 'RETAIL')
+                      if (tabName === '預訂')
+                        return c.onMenus.some((m) => m.menu.date !== null)
+                    })
+                    .filter((c) => {
+                      if (searchKeyword === '') return true
+                      return (
+                        c.name.includes(searchKeyword) ||
+                        c.description.includes(searchKeyword) ||
+                        c.categories.some((c) =>
+                          c.name.includes(searchKeyword),
+                        ) ||
+                        c.optionSets.some(
+                          (os) =>
+                            os.name.includes(searchKeyword) ||
+                            os.options.some((o) => o.includes(searchKeyword)),
+                        )
+                      )
+                    })
           }
           columns={[
             {
@@ -417,13 +452,30 @@ export default function Commodities() {
               unhidable: true,
               hint: (row) => row.name,
               render: (row) => (
-                <button
-                  className='group/edit flex items-center rounded-2xl p-2 hover:bg-black/5 active:scale-90'
-                  onClick={() => handleEditCommodity(row)}
+                <DropdownMenu
+                  className='group/edit flex items-center rounded-2xl p-2 text-base hover:bg-black/5 active:scale-90'
+                  label={
+                    <>
+                      {row.name}
+                      <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
+                    </>
+                  }
                 >
-                  {row.name}
-                  <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
-                </button>
+                  <DropdownMenuItem
+                    label='編輯'
+                    onClick={() => handleEditCommodity(row)}
+                  />
+                  {row.onMenus.some((c) => c.menu.type === 'RETAIL') && (
+                    <DropdownMenuItem
+                      label='付款碼'
+                      onClick={() => handleQRCodeGenerate(row)}
+                    />
+                  )}
+                  <DropdownMenuItem
+                    label={<span className='text-red-400'>刪除</span>}
+                    onClick={() => handleCommoditiesDelete([row.id])}
+                  />
+                </DropdownMenu>
               ),
               sort: (a, b) => a.name.localeCompare(b.name),
             },
@@ -500,6 +552,82 @@ export default function Commodities() {
       </div>
       {formDialog}
       {dialog}
+    </div>
+  )
+}
+
+function QRCodeGenerator(props: {
+  commodity: CommodityDatas[number]
+  width?: number
+}) {
+  const {
+    register,
+    formState: { errors },
+    watch,
+  } = useForm<{ options: OrderOptions }>({
+    defaultValues: {
+      options: props.commodity.optionSets.reduce((acc, os) => {
+        acc[os.name] = os.multiSelect ? [] : os.options[0]
+        return acc
+      }, {} as OrderOptions),
+    },
+  })
+  const formValue = watch()
+  const trpcContext = trpc.useContext()
+  const qrCodeWidth = props.width ?? 640
+
+  const [options, setOptions] = useState<OrderOptions>({})
+  const [qrCodeUrl, setQRCodeUrl] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    const thisOptions = formValue.options
+    if (JSON.stringify(thisOptions) !== JSON.stringify(options)) {
+      setOptions({ ...thisOptions })
+    }
+  }, [formValue])
+
+  useEffect(() => {
+    async function getQRCode() {
+      const cipher = await trpcContext.menu.getQRCodeCipher.fetch({
+        commodityId: props.commodity.id,
+        menuId: props.commodity.onMenus.find((m) => m.menu.type === 'RETAIL')!
+          .menu.id,
+        options: options,
+      })
+
+      const url = `${window.location.origin}/qrcode?key=${cipher}`
+      console.log('QR Code: ', url)
+
+      try {
+        const qrCodeUrl = await QRCode.toDataURL(url, { width: qrCodeWidth })
+        setQRCodeUrl(qrCodeUrl)
+      } catch (error) {
+        console.error(error)
+        return undefined
+      }
+    }
+    getQRCode()
+  }, [options])
+
+  return (
+    <div className='flex gap-4'>
+      <div style={{ width: 160 }}>
+        <div className='aspect-square w-full'>
+          {qrCodeUrl ? <img src={qrCodeUrl} /> : <SpinnerBlock />}
+        </div>
+      </div>
+      <div className='flex flex-col gap-4'>
+        {props.commodity.optionSets
+          .sort((a, b) => a.order - b.order)
+          .map((optionSet) => (
+            <OptionSetForm
+              key={optionSet.name}
+              optionSet={optionSet}
+              register={register}
+              errors={errors}
+            />
+          ))}
+      </div>
     </div>
   )
 }

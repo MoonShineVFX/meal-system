@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
 
-import trpc from '@/lib/client/trpc'
+import trpc, { MenuActiveDatas } from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
 import SearchBar from '@/components/core/SearchBar'
@@ -13,6 +13,35 @@ import CheckBox from '@/components/form/base/CheckBox'
 import { useDialog } from '@/components/core/Dialog'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 
+function getSortWeight(menu: MenuActiveDatas[number]) {
+  let weight = 0
+  switch (menu.type) {
+    case 'LIVE':
+      weight = 4133910600000
+      break
+    case 'RETAIL':
+      weight = 4133910500000
+      break
+    case 'BREAKFAST':
+      weight = 0.9
+      break
+    case 'LUNCH':
+      weight = 0.8
+      break
+    case 'TEA':
+      weight = 0.7
+      break
+    case 'DINNER':
+      weight = 0.6
+      break
+  }
+  if (menu.date) {
+    weight += menu.date.getTime()
+  }
+
+  return weight
+}
+
 export default function Menus() {
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const { showFormDialog, formDialog } = useFormDialog()
@@ -23,6 +52,7 @@ export default function Menus() {
     withDetails: true,
   })
   const { showDialog, dialog } = useDialog()
+  const menuUpdateMutation = trpc.menu.createOrEdit.useMutation()
 
   const handleEditMenu = useCallback(
     (
@@ -178,11 +208,7 @@ export default function Menus() {
         <Table
           data={
             data.sort((a, b) => {
-              const isAReserved = !['live', 'retail'].includes(a.type)
-              const isBReserved = !['live', 'retail'].includes(b.type)
-              if (isAReserved && !isBReserved) return 1
-              if (!isAReserved && isBReserved) return -1
-              return b.id - a.id
+              return getSortWeight(b) - getSortWeight(a)
             }) as Extract<typeof data[number], { _count: any }>[]
           }
           idField='id'
@@ -193,30 +219,46 @@ export default function Menus() {
               align: 'left',
               unhidable: true,
               hint: (row) => getMenuName(row) || '未命名',
-              render: (row) => (
-                <DropdownMenu
-                  className='group/edit flex items-center rounded-2xl p-2 text-base hover:bg-black/5 active:scale-90'
-                  label={
-                    <>
-                      {getMenuName(row) ?? '未命名'}
-                      <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
-                    </>
-                  }
-                >
-                  <DropdownMenuItem
-                    label='編輯'
-                    onClick={() => handleEditMenu(row, true)}
-                  />
-                  <DropdownMenuItem
-                    label='引用'
-                    onClick={() => handleEditMenu(row)}
-                  />
-                  <DropdownMenuItem
-                    label={<span className='text-red-400'>刪除</span>}
-                    onClick={() => handleMenusDelete([row.id])}
-                  />
-                </DropdownMenu>
-              ),
+              render: (row) => {
+                const isMenuClosed =
+                  row.closedDate !== null && row.closedDate < new Date()
+                return (
+                  <DropdownMenu
+                    className='group/edit flex items-center rounded-2xl p-2 text-base hover:bg-black/5 active:scale-90'
+                    label={
+                      <>
+                        {getMenuName(row) ?? '未命名'}
+                        <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
+                      </>
+                    }
+                  >
+                    <DropdownMenuItem
+                      label='編輯'
+                      onClick={() => handleEditMenu(row, true)}
+                    />
+                    <DropdownMenuItem
+                      label='引用'
+                      onClick={() => handleEditMenu(row)}
+                    />
+                    {['LIVE', 'RETAIL'].includes(row.type) && (
+                      <DropdownMenuItem
+                        label={isMenuClosed ? '開啟' : '關閉'}
+                        onClick={() =>
+                          menuUpdateMutation.mutate({
+                            isEdit: true,
+                            type: row.type,
+                            closedDate: isMenuClosed ? null : new Date(),
+                          })
+                        }
+                      />
+                    )}
+                    <DropdownMenuItem
+                      label={<span className='text-red-400'>刪除</span>}
+                      onClick={() => handleMenusDelete([row.id])}
+                    />
+                  </DropdownMenu>
+                )
+              },
               sort: true,
             },
             {

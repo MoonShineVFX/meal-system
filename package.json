@@ -42,6 +42,7 @@
     "cross-env": "^7.0.3",
     "crypto-js": "^4.1.1",
     "framer-motion": "^7.10.2",
+    "lz-string": "^1.5.0",
     "next": "^13.0.6",
     "next-superjson-plugin": "^0.4.8",
     "node-fetch": "^3.3.0",

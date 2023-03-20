@@ -1,6 +1,8 @@
 import { MenuType, Prisma, PrismaClient, Menu } from '@prisma/client'
+import lzString from 'lz-string'
 
-import { ConvertPrismaJson } from '@/lib/common'
+import { validateCartItemCreatable } from './cart'
+import { ConvertPrismaJson, OrderOptions } from '@/lib/common'
 import {
   MenuUnavailableReason,
   ComUnavailableReason,
@@ -549,6 +551,77 @@ export async function addCommodityToMenu({
       ...updateData,
       menuId,
       commodityId,
+    },
+  })
+}
+
+export async function getRetailCOM(args: {
+  userId: string
+  cipher: string
+  client?: Prisma.TransactionClient | PrismaClient
+}) {
+  const thisClient = args.client ?? prisma
+
+  const jsonString = lzString.decompressFromEncodedURIComponent(args.cipher)
+
+  const result: {
+    commodityId: number
+    menuId: number
+    options?: OrderOptions
+  } = JSON.parse(jsonString)
+
+  const com = await getCommodityOnMenu({
+    commodityId: result.commodityId,
+    menuId: result.menuId,
+    client: thisClient,
+  })
+
+  if (!com) {
+    throw new Error('Commodity not found')
+  }
+
+  const sortedOptions = await validateCartItemCreatable({
+    commodityId: result.commodityId,
+    menuId: result.menuId,
+    options: result.options ?? {},
+    quantity: 1,
+    userId: args.userId,
+    client: thisClient,
+  })
+
+  return {
+    ...com,
+    options: sortedOptions,
+  }
+}
+
+export async function getCommodityOnMenu(args: {
+  commodityId: number
+  menuId: number
+  client?: Prisma.TransactionClient | PrismaClient
+}) {
+  const thisClient = args.client ?? prisma
+  const { commodityId, menuId } = args
+
+  return await thisClient.commodityOnMenu.findFirst({
+    where: {
+      menuId,
+      commodityId,
+      isDeleted: false,
+      commodity: {
+        isDeleted: false,
+      },
+      menu: {
+        isDeleted: false,
+      },
+    },
+    include: {
+      menu: true,
+      commodity: {
+        include: {
+          image: true,
+        },
+      },
     },
   })
 }

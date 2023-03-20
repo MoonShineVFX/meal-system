@@ -24,6 +24,7 @@ specifiers:
   cross-env: ^7.0.3
   crypto-js: ^4.1.1
   framer-motion: ^7.10.2
+  lz-string: ^1.5.0
   next: ^13.0.6
   next-superjson-plugin: ^0.4.8
   node-fetch: ^3.3.0
@@ -78,6 +79,7 @@ dependencies:
   cross-env: 7.0.3
   crypto-js: 4.1.1
   framer-motion: 7.10.2_biqbaboplfbrettd7655fr4n2y
+  lz-string: 1.5.0
   next: 13.0.7_biqbaboplfbrettd7655fr4n2y
   next-superjson-plugin: 0.4.9_u5ec6n5jdwa3qfxuliowe35vz4
   node-fetch: 3.3.0
@@ -2602,6 +2604,11 @@ packages:
   /lowercase-keys/3.0.0:
     resolution: {integrity: sha512-ozCC6gdQ+glXOQsveKD0YsDy8DSQFjDTz4zyzEHNV5+JP5D62LmfDZ6o1cycFx9ouG940M5dE8C8CTewdj2YWQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dev: false
+
+  /lz-string/1.5.0:
+    resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
+    hasBin: true
     dev: false
 
   /make-error/1.3.6:

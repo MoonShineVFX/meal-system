@@ -23,12 +23,14 @@ export default function Spinner(props: { className: string }) {
   )
 }
 
-export function SpinnerBlock() {
+export function SpinnerBlock(props: { text?: string }) {
   return (
     <div className='grid h-full w-full place-content-center'>
       <div className='flex flex-col items-center gap-2'>
         <Spinner className='h-10 w-10' />
-        <p className='indent-[0.1em] tracking-widest'>讀取中</p>
+        <p className='indent-[0.1em] tracking-widest'>
+          {props.text ?? '讀取中'}
+        </p>
       </div>
     </div>
   )

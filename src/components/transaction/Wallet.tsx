@@ -44,7 +44,7 @@ export default function Wallet() {
       </div>
       {/* Action */}
       <div className='grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] place-content-evenly justify-center gap-4'>
-        <Link href='/deposit' className='w-full'>
+        <Link href={`/deposit`} className='w-full'>
           <Button
             className='h-12 w-full group-data-loading:skeleton'
             textClassName='font-bold text-lg'
