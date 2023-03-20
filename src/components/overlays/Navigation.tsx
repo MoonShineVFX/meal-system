@@ -104,6 +104,10 @@ function Navigation() {
         }}
       />
 
+      <div className='mx-auto -mt-2 hidden rounded-2xl p-2 text-xs text-stone-400/50 hover:bg-stone-200 active:scale-95 sm:block'>
+        <a href={`mailto:${settings.EMAIL}`}>信箱: {settings.EMAIL}</a>
+      </div>
+
       <ProfileButton className='sm:-order-1' />
     </div>
   )

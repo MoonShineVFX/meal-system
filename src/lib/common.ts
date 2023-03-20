@@ -129,7 +129,7 @@ export const settings = {
   NEWEBPAY_NOTIFY_URL: process.env.NEWEBPAY_NOTIFY_URL!,
   NEWEBPAY_RETURN_URL: process.env.NEWEBPAY_RETURN_URL!,
 
-  /* Server */
+  /* Connection */
   WEBSOCKET_DEV_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_DEV_PORT ?? '3001',
   WEBSOCKET_PROD_HOST: process.env.NEXT_PUBLIC_WEBSOCKET_PROD_HOST,
   HTTP_PORT: process.env.PORT ?? '3000',
@@ -165,6 +165,7 @@ export const settings = {
   NOTIFICATION_DURATION_MS: 3500,
   MENU_CATEGORY_NULL: '未分類',
   TITLE: '夢想餐飲',
+  EMAIL: 'rd@moonshine.tw',
 }
 
 /* Functions */
