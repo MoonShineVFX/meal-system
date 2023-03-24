@@ -1,5 +1,6 @@
 import { twMerge } from 'tailwind-merge'
 import { useState } from 'react'
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
@@ -8,6 +9,8 @@ import Error from '@/components/core/Error'
 import { useRouter } from 'next/router'
 import PriceNumber from '@/components/core/PriceNumber'
 import { useEffect } from 'react'
+import { useDialog } from '@/components/core/Dialog'
+import DepositExplanation from '@/components/deposit/DepositExplanation'
 
 export default function Checkout(props: {
   className?: string
@@ -26,6 +29,7 @@ export default function Checkout(props: {
     isError: userIsError,
     error: userError,
   } = trpc.user.get.useQuery(undefined)
+  const { showDialog, dialog } = useDialog()
   const router = useRouter()
   const createOrderFromCartMutation = trpc.order.addFromCart.useMutation()
   const createOrderFromRetailMutation = trpc.order.addFromRetail.useMutation()
@@ -129,6 +133,19 @@ export default function Checkout(props: {
           <PriceNumber price={creditBalanceToPay} isPayment />
         </div>
       </section>
+      <button
+        className='mx-auto w-fit rounded-2xl px-2 py-1 text-sm text-stone-400 hover:bg-stone-200 active:scale-95 active:bg-stone-200'
+        onClick={() =>
+          showDialog({
+            title: '點數 與 夢想幣 說明與注意事項',
+            content: <DepositExplanation />,
+            icon: 'info',
+          })
+        }
+      >
+        <ExclamationCircleIcon className='mr-1 inline-block h-4 w-4' />
+        點數 與 夢想幣 說明與注意事項
+      </button>
       {/* Checkout button */}
       <div className='grid grid-rows-2 gap-4 @xs/checkout:grid-cols-2 @xs/checkout:grid-rows-none'>
         <Button
@@ -149,6 +166,7 @@ export default function Checkout(props: {
           }}
         />
       </div>
+      {dialog}
     </div>
   )
 }

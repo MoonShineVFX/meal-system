@@ -78,4 +78,10 @@ export const DepositRouter = router({
 
       return result === null ? deposit : result
     }),
+  getMeta: userProcedure.query(async () => {
+    return {
+      ratio: settings.DEPOSIT_RATIO,
+      point: settings.POINT_DAILY_RECHARGE_AMOUNT,
+    }
+  }),
 })

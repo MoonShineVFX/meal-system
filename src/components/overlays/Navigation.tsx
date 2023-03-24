@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { memo, useEffect, useState } from 'react'
+import { memo, useEffect, useState, MouseEventHandler } from 'react'
 import { useRouter } from 'next/router'
 import { motion, useAnimationControls } from 'framer-motion'
 import { Popover, Transition } from '@headlessui/react'
@@ -22,6 +22,11 @@ import { ArrowRightOnRectangleIcon as ArrowRightOnRectangleIconSolid } from '@he
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 import { Cog6ToothIcon } from '@heroicons/react/24/outline'
 import { Cog6ToothIcon as Cog6ToothIconSolid } from '@heroicons/react/24/solid'
+import {
+  PhoneIcon,
+  EnvelopeIcon,
+  ChatBubbleBottomCenterIcon,
+} from '@heroicons/react/24/outline'
 
 import PriceNumber from '@/components/core/PriceNumber'
 import Error from '@/components/core/Error'
@@ -32,6 +37,7 @@ import Logo from '@/components/core/Logo'
 import { twMerge } from 'tailwind-merge'
 import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
+import { DropdownMenu, DropdownMenuItem } from '../core/DropdownMenu'
 
 function Navigation() {
   const { data } = trpc.user.get.useQuery(undefined)
@@ -94,8 +100,44 @@ function Navigation() {
         </>
       )}
 
+      <div className='mt-auto hidden w-full sm:block'>
+        <DropdownMenu
+          className='flex w-full items-center justify-start gap-0 rounded-2xl py-2 px-3 text-base font-bold tracking-widest text-stone-500 hover:cursor-pointer hover:bg-stone-200 active:scale-95'
+          label={
+            <>
+              <PhoneIcon className='h-5 w-5' />
+              <span className='ml-4'>問題回報</span>
+            </>
+          }
+        >
+          <DropdownMenuItem
+            className='text-sm'
+            label={
+              <div className='flex items-center gap-2'>
+                <ChatBubbleBottomCenterIcon className='h-5 w-5' />
+                Zulip 公會頻道
+              </div>
+            }
+            onClick={() => {
+              window.open(settings.ZULIP, '_blank')
+            }}
+          />
+          <DropdownMenuItem
+            className='text-sm'
+            label={
+              <div className='flex items-center gap-2'>
+                <EnvelopeIcon className='h-5 w-5' />
+                {settings.EMAIL}
+              </div>
+            }
+            onClick={() => {
+              window.open(`mailto:${settings.EMAIL}`, '_blank')
+            }}
+          />
+        </DropdownMenu>
+      </div>
       <NavButton
-        className='hidden sm:mt-auto sm:block'
+        className='hidden sm:block'
         label='登出'
         path='/login'
         icons={[ArrowRightOnRectangleIcon, ArrowRightOnRectangleIconSolid]}
@@ -103,10 +145,6 @@ function Navigation() {
           document.cookie = generateCookie(undefined)
         }}
       />
-
-      <div className='mx-auto -mt-2 hidden rounded-2xl p-2 text-xs text-stone-400/50 hover:bg-stone-200 active:scale-95 sm:block'>
-        <a href={`mailto:${settings.EMAIL}`}>信箱: {settings.EMAIL}</a>
-      </div>
 
       <ProfileButton className='sm:-order-1' />
     </div>
@@ -262,7 +300,7 @@ function NavButton(props: {
   rememberSubpath?: boolean
   className?: string
   numberBadge?: JSX.Element
-  onClick?: () => void
+  onClick?: MouseEventHandler<HTMLDivElement>
 }) {
   const [subpath, setSubpath] = useState<string | undefined>(undefined)
   const router = useRouter()
@@ -295,7 +333,7 @@ function NavButton(props: {
           numberBadge={props.numberBadge}
         />
         {/* Desktop label */}
-        <div className='group-data-not-selected:active: relative hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:scale-95 sm:flex'>
+        <div className='relative hidden grow items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 group-data-selected:text-white group-data-not-selected:hover:bg-stone-200 group-data-not-selected:active:scale-95 sm:flex'>
           {isSelected && (
             <motion.div
               layoutId='nav-selected'
