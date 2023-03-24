@@ -279,6 +279,7 @@ export async function getOrders({
   if (type === 'search' && !keyword) return []
 
   let whereInput: Prisma.OrderWhereInput
+  let orderBys: Prisma.OrderOrderByWithRelationInput[] | undefined = undefined
   switch (type) {
     case 'live':
       whereInput = {
@@ -299,6 +300,18 @@ export async function getOrders({
           type: { not: 'LIVE' },
         },
       }
+      orderBys = [
+        {
+          menu: {
+            date: 'asc',
+          },
+        },
+        {
+          menu: {
+            type: 'asc',
+          },
+        },
+      ]
       break
     case 'archived':
       whereInput = {
@@ -452,7 +465,7 @@ export async function getOrders({
     },
     cursor: cursor ? { id: cursor } : undefined,
     take: settings.ORDER_TAKE_PER_QUERY + 1,
-    orderBy: {
+    orderBy: orderBys ?? {
       createdAt: 'desc',
     },
   })
