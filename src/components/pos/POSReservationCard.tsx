@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useMemo } from 'react'
 
 import { OrderStatus, settings } from '@/lib/common'
 import POSCard from './POSCard'
@@ -17,6 +17,52 @@ export default function POSReservationCard(props: {
   >(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const updateOrdersMutation = trpc.pos.updateReservation.useMutation()
+  const printProps = useMemo(() => {
+    if (
+      props.isFuture ||
+      com === undefined ||
+      com.orderTimes.timePreparing.value === null
+    )
+      return undefined
+
+    const printItemByOrderId: Record<
+      number,
+      Omit<
+        NonNullable<Parameters<typeof POSCard>[0]['print']>['items'][number],
+        'index'
+      >[]
+    > = {}
+    for (const orderItem of com.orderItems) {
+      for (let qidx = 0; qidx < orderItem.quantity; qidx++) {
+        if (!(orderItem.order.id in printItemByOrderId)) {
+          printItemByOrderId[orderItem.order.id] = []
+        }
+        printItemByOrderId[orderItem.order.id].push({
+          orderId: orderItem.order.id,
+          name: com.name,
+          user: orderItem.order.user.name,
+          options: Object.values(orderItem.options).flat(),
+        })
+      }
+    }
+
+    return {
+      date: com.orderTimes.timePreparing.value,
+      items: Object.values(printItemByOrderId)
+        .flatMap((items) =>
+          items.map((item, i) => ({
+            index: [i + 1, items.length] as [number, number],
+            ...item,
+          })),
+        )
+        .sort((a, b) =>
+          (a.options?.join('_') ?? '').localeCompare(
+            b.options?.join('_') ?? '',
+          ),
+        ),
+    }
+  }, [com, props.isFuture, com?.orderTimes.timePreparing.value])
+  console.log(printProps)
 
   const handleStatusModify = useCallback(
     (status: OrderStatus) => {
@@ -51,6 +97,7 @@ export default function POSReservationCard(props: {
       isLoading={updateOrdersMutation.isLoading}
       disableAnimation={true}
       disableStatusButton={props.isFuture}
+      print={printProps}
     >
       {/* Options */}
       <div className='flex grow flex-col gap-3'>

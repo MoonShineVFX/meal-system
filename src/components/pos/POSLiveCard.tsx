@@ -50,15 +50,23 @@ export default function POSLiveCard(props: {
       print={
         order && order.timePreparing !== null
           ? {
-              orderId: order.id,
               date: order.timePreparing,
-              user: order.user.name,
-              items: order.items.flatMap((item) =>
-                [...Array(item.quantity).keys()].map(() => ({
-                  name: item.name,
-                  options: Object.values(item.options).flat(),
+              items: order.items
+                .flatMap((item) =>
+                  [...Array(item.quantity).keys()].map(() => ({
+                    orderId: order.id,
+                    name: item.name,
+                    user: order.user.name,
+                    options: Object.values(item.options).flat(),
+                  })),
+                )
+                .map((item, i) => ({
+                  ...item,
+                  index: [
+                    i + 1,
+                    order.items.reduce((a, b) => a + b.quantity, 0),
+                  ],
                 })),
-              ),
             }
           : undefined
       }

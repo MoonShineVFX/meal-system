@@ -1,15 +1,16 @@
 import { settings } from '@/lib/common'
 
 type PrintItem = {
+  orderId: number
   name: string
   options?: string[]
+  user: string
+  index: [number, number]
 }
 
 export async function print(props: {
-  orderId: number
   date: Date
   items: PrintItem[]
-  user: string
   onSuccess: () => void
   onError: (error: Error) => void
 }) {
@@ -18,13 +19,13 @@ export async function print(props: {
       throw new Error('No items to print')
     }
 
-    const bodyData = props.items.map((item, index) => ({
-      order_id: props.orderId,
+    const bodyData = props.items.map((item) => ({
+      order_id: item.orderId,
       date: props.date,
-      index: [index + 1, props.items.length],
+      index: item.index,
       name: item.name,
       options: item.options ?? [],
-      user: props.user,
+      user: item.user,
     }))
     const response = await fetch(`${settings.PRINTER_API_URL}/api/print`, {
       method: 'POST',

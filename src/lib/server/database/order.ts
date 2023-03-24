@@ -311,6 +311,9 @@ export async function getOrders({
             type: 'asc',
           },
         },
+        {
+          id: 'desc',
+        },
       ]
       break
     case 'archived':
@@ -692,6 +695,7 @@ export async function getReservationOrdersForPOS({
             orders: [],
           }
         }
+        // Add quantity per options
         optionsWithOrdersMap[optionsKey].quantity += item.quantity
         const userOrder = optionsWithOrdersMap[optionsKey].orders.find(
           (order) => order.user.id === item.order.user.id,
@@ -754,6 +758,7 @@ export async function getReservationOrdersForPOS({
         optionsWithOrders: Object.keys(optionsWithOrdersMap)
           .sort()
           .map((key) => optionsWithOrdersMap[key]),
+        orderItems: com.orderItems as ConvertPrismaJson<typeof com.orderItems>,
       }
     })
 
