@@ -120,6 +120,7 @@ export const settings = {
     : 1.0,
   DEPOSIT_MIN_AMOUNT: 30,
   DEPOSIT_MAX_AMOUNT: 10000,
+  PRINTER_API_URL: process.env.NEXT_PUBLIC_PRINTER_API_URL!,
 
   /* NewebPay */
   NEWEBPAY_API_URL: process.env.NEWEBPAY_API_URL!,

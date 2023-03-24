@@ -47,6 +47,21 @@ export default function POSLiveCard(props: {
       disableInteraction={props.isArchived}
       onStatusModify={handleStatusModify}
       isLoading={updateOrderMutation.isLoading}
+      print={
+        order && order.timePreparing !== null
+          ? {
+              orderId: order.id,
+              date: order.timePreparing,
+              user: order.user.name,
+              items: order.items.flatMap((item) =>
+                [...Array(item.quantity).keys()].map(() => ({
+                  name: item.name,
+                  options: Object.values(item.options).flat(),
+                })),
+              ),
+            }
+          : undefined
+      }
     >
       {/* Items */}
       <section className='flex grow flex-col gap-4'>
