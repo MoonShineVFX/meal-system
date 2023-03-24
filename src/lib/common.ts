@@ -166,6 +166,7 @@ export const settings = {
   MENU_CATEGORY_NULL: '未分類',
   TITLE: '夢想餐飲',
   EMAIL: 'rd@moonshine.tw',
+  ZULIP: process.env.NEXT_PUBLIC_ZULIP_URL!,
 }
 
 /* Functions */

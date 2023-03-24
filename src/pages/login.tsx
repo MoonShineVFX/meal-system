@@ -93,6 +93,25 @@ export default function PageLogin() {
             label='登入'
             labelOnSuccess='登入成功'
           />
+          <p className='mt-2 text-sm text-stone-400/80'>
+            有任何問題請使用下列管道：
+            <a
+              className='rounded-2xl p-1 font-bold text-stone-400 hover:bg-stone-100'
+              href={settings.ZULIP}
+              target='_blank'
+            >
+              Zulip 公會頻道
+            </a>
+            、營運部、或來信
+            <a
+              className='rounded-2xl p-1 font-bold text-stone-400 hover:bg-stone-100'
+              href={`mailto:${settings.EMAIL}`}
+              target='_blank'
+            >
+              {settings.EMAIL}
+            </a>
+            詢問。
+          </p>
           {loginMutation.isError && (
             <div className='absolute bottom-0 flex items-center gap-2 text-sm font-normal text-red-400'>
               <ExclamationTriangleIcon className='h-5 w-5' />
