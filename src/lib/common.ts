@@ -30,7 +30,7 @@ export enum SERVER_NOTIFY {
   ORDER_ADD = '結帳完成',
   ORDER_UPDATE = '訂單狀態更新',
   ORDER_CANCEL = '訂單取消',
-  DAILY_RECHARGE = '今日點數已發放',
+  DAILY_RECHARGE = '點數已更新',
   POS_ADD = '待處理點餐新增',
   POS_UPDATE = '待處理點餐更新',
   CATEGORY_ADD = '分類新增',
@@ -95,7 +95,7 @@ export const MenuTypeName: Record<MenuType, string> = {
 export const TransactionName: Record<TransactionType, string> = {
   [TransactionType.PAYMENT]: '付款',
   [TransactionType.REFUND]: '退款',
-  [TransactionType.RECHARGE]: '獎勵',
+  [TransactionType.RECHARGE]: '贈點/回收',
   [TransactionType.CANCELED]: '取消訂單',
   [TransactionType.TRANSFER]: '轉帳',
   [TransactionType.DEPOSIT]: '儲值',
@@ -114,7 +114,7 @@ export const settings = {
   SERVER_USER_ID: '_server',
   POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
     ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
-    : 100,
+    : 50,
   DEPOSIT_RATIO: process.env.DEPOSIT_RATIO
     ? parseFloat(process.env.DEPOSIT_RATIO)
     : 1.0,

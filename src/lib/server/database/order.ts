@@ -780,7 +780,7 @@ export async function getReservationOrdersForPOS({
   return reservationMenus
 }
 
-/* Update order, and process refund if canceled, if userId provided, valid userId owned */
+/* Update order, and process refund if canceled, if userId provided, validate user if owned order */
 export async function updateOrderStatus({
   orderId,
   status,
@@ -876,13 +876,15 @@ export async function updateOrderStatus({
       throw new Error('Payment transaction not found for refund')
     }
 
-    // Calculate refund amount, bypass pointAmount
+    // Calculate refund amount, bypass pointAmount if canceled by user
     let creditAmountRemain = detailedOrder.paymentTransaction.creditAmount
+    let pointAmountRemain = detailedOrder.paymentTransaction.pointAmount
 
     for (const orderForPayment of detailedOrder.paymentTransaction
       .ordersForPayment) {
       if (orderForPayment.canceledTransaction) {
         creditAmountRemain -= orderForPayment.canceledTransaction.creditAmount
+        pointAmountRemain -= orderForPayment.canceledTransaction.pointAmount
       }
     }
 
@@ -890,12 +892,17 @@ export async function updateOrderStatus({
       return acc + item.price * item.quantity
     }, 0)
     const creditAmountToRefund = Math.min(creditAmountRemain, thisOrderPrice)
+    const pointAmountToRefund = userId
+      ? 0
+      : Math.min(pointAmountRemain, thisOrderPrice - creditAmountToRefund)
+    // If canceled by user, no need to refund point
 
     // Create refund transaction
-    if (creditAmountToRefund > 0) {
+    if (creditAmountToRefund > 0 || pointAmountToRefund > 0) {
       const { callback } = await rechargeUserBalanceBase({
         userId: order.userId,
         creditAmount: creditAmountToRefund,
+        pointAmount: pointAmountToRefund,
         orderId,
         client,
       })
