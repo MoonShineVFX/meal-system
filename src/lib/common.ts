@@ -123,7 +123,7 @@ export const settings = {
   PRINTER_API_URL: process.env.NEXT_PUBLIC_PRINTER_API_URL!,
   MAKE_UP_DAYS: process.env.MAKE_UP_DAYS
     ? process.env.MAKE_UP_DAYS.split(',').map(
-        (dateString) => new Date(dateString),
+        (dateString) => new Date(dateString + 'T00:00:00+08:00'),
       )
     : [],
 

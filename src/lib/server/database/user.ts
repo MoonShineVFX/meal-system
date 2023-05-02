@@ -163,12 +163,12 @@ export async function getUserInfo(userId: string) {
       lastRechargeTime.setDate(lastRechargeTime.getDate() + 1)
       let currentDay = new Date(
         lastRechargeTime.getFullYear(),
-        lastRechargeTime.getMonth(),
+        lastRechargeTime.getMonth() - 1,
         lastRechargeTime.getDate(),
       )
       const targetDay = new Date(
         now.getFullYear(),
-        now.getMonth(),
+        now.getMonth() - 1,
         now.getDate(),
       )
 
@@ -181,7 +181,7 @@ export async function getUserInfo(userId: string) {
           rechargeAmount = 0
           currentDay = new Date(
             currentDay.getFullYear(),
-            currentDay.getMonth() + 1,
+            currentDay.getMonth(),
             1,
           )
           continue
