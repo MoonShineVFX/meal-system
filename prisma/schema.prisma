@@ -296,36 +296,3 @@ model Image {
   OrderItem OrderItem[]
   User      User?
 }
-
-// TWMP
-// enum TwmpResultStatus {
-//   SUCCESS
-//   FAILED
-//   CANCELED
-// }
-
-// model TwmpResult {
-//   txnUID    String   @id
-//   createdAt DateTime
-//   updatedAt DateTime @updatedAt
-
-//   status TwmpResultStatus
-
-//   transactions Transaction[]
-//   deposit      TwmpDeposit   @relation(fields: [depositId], references: [orderNo])
-//   depositId    String
-// }
-
-// model TwmpDeposit {
-//   orderNo   String   @id @default(cuid())
-//   createdAt DateTime @default(now())
-
-//   transAMT    Int
-//   txnID       String? @unique
-//   callbackUrl String?
-//   qrcode      String?
-
-//   results TwmpResult[]
-//   user    User         @relation(fields: [userId], references: [id])
-//   userId  String
-// }

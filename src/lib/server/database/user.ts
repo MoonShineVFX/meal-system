@@ -186,8 +186,12 @@ export async function getUserInfo(userId: string) {
           )
           continue
         }
-        // If day is weekday, recharge
-        if (currentDay.getDay() > 0 && currentDay.getDay() < 6) {
+        // If day is weekday and not make-up day, recharge
+        const isWeekDay = currentDay.getDay() > 0 && currentDay.getDay() < 6
+        const isMakuUpDay = settings.MAKE_UP_DAYS.map((d) =>
+          d.getTime(),
+        ).includes(currentDay.getTime())
+        if (isMakuUpDay || isWeekDay) {
           rechargeAmount += settings.POINT_DAILY_RECHARGE_AMOUNT
         }
         currentDay = new Date(currentDay.getTime() + 24 * 60 * 60 * 1000)
