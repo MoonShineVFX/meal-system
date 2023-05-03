@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import { DepositStatus } from '@prisma/client'
+import { DepositStatus, Prisma } from '@prisma/client'
 
 import { rechargeUserBalanceBase, refundUserBalanceBase } from './transaction'
 import { createMPGRequest } from '@/lib/server/deposit/newebpay'
@@ -126,6 +126,32 @@ export async function getDeposit(id: string) {
       transactions: true,
     },
   })
+}
+
+export async function getDeposits({
+  keyword,
+  cursor,
+}: {
+  keyword?: string
+  cursor?: string
+}) {
+  let whereInput: Prisma.DepositWhereInput = {}
+  const deposits = await prisma.deposit.findMany({
+    where: whereInput,
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: settings.DEPOSITS_PER_QUERY,
+    cursor: cursor ? { id: cursor } : undefined,
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  })
+  return deposits
 }
 
 export async function deleteDeposit(id: string) {

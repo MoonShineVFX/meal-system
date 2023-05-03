@@ -7,8 +7,17 @@ import Categories from '@/components/admin/Categories'
 import OptionSets from '@/components/admin/OptionSets'
 import Commodities from '@/components/admin/Commodities'
 import Menus from '@/components/admin/Menus'
+import Deposits from '@/components/admin/Deposits'
 
-const TAB_NAMES = ['餐點', '菜單', '分類', '選項', '訂單', '交易'] as const
+const TAB_NAMES = [
+  '餐點',
+  '菜單',
+  '分類',
+  '選項',
+  '訂單',
+  '交易',
+  '儲值',
+] as const
 // type TabName = typeof TAB_NAMES[number]
 const TAB_PATHS = [
   'commodities',
@@ -17,6 +26,7 @@ const TAB_PATHS = [
   'optionsets',
   'orders',
   'transactions',
+  'deposits',
 ] as const
 type TabPath = typeof TAB_PATHS[number]
 const TAB_LINKS = TAB_PATHS.map((path) => `/admin/${path}`)
@@ -62,10 +72,11 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
         />
         <div className='relative h-full grow'>
           <div className='absolute inset-0'>
-            {tabName === '分類' && <Categories />}
-            {tabName === '選項' && <OptionSets />}
             {tabName === '餐點' && <Commodities />}
             {tabName === '菜單' && <Menus />}
+            {tabName === '分類' && <Categories />}
+            {tabName === '選項' && <OptionSets />}
+            {tabName === '儲值' && <Deposits />}
           </div>
         </div>
       </div>

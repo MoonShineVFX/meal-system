@@ -1,8 +1,13 @@
 import { z } from 'zod'
 import { UserRole, DepositStatus } from '@prisma/client'
 
-import { userProcedure, router } from '../trpc'
-import { createDeposit, deleteDeposit, getDeposit } from '@/lib/server/database'
+import { userProcedure, staffProcedure, router } from '../trpc'
+import {
+  createDeposit,
+  deleteDeposit,
+  getDeposit,
+  getDeposits,
+} from '@/lib/server/database'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { getAndUpdateTradeInfo } from '@/lib/server/deposit/newebpay'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
@@ -77,6 +82,28 @@ export const DepositRouter = router({
       }
 
       return result === null ? deposit : result
+    }),
+  getList: staffProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        keyword: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const deposits = await getDeposits({
+        cursor: input.cursor,
+        keyword: input.keyword ? input.keyword.trim() : undefined,
+      })
+
+      let nextCursor: string | undefined = undefined
+      if (deposits.length > settings.DEPOSITS_PER_QUERY) {
+        nextCursor = deposits.pop()!.id
+      }
+      return {
+        deposits,
+        nextCursor,
+      }
     }),
   getMeta: userProcedure.query(async () => {
     return {
