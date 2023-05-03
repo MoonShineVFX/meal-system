@@ -163,17 +163,18 @@ export async function getUserInfo(userId: string) {
       lastRechargeTime.setDate(lastRechargeTime.getDate() + 1)
       let currentDay = new Date(
         lastRechargeTime.getFullYear(),
-        lastRechargeTime.getMonth() - 1,
+        lastRechargeTime.getMonth(),
         lastRechargeTime.getDate(),
       )
       const targetDay = new Date(
         now.getFullYear(),
-        now.getMonth() - 1,
+        now.getMonth(),
         now.getDate(),
       )
 
       let rechargeAmount = 0
       let isNewMonth = false
+
       while (currentDay.getTime() <= targetDay.getTime()) {
         // If month changed, reset recharge amount
         if (currentDay.getMonth() !== targetDay.getMonth()) {
@@ -181,16 +182,17 @@ export async function getUserInfo(userId: string) {
           rechargeAmount = 0
           currentDay = new Date(
             currentDay.getFullYear(),
-            currentDay.getMonth(),
+            currentDay.getMonth() + 1,
             1,
           )
           continue
         }
         // If day is weekday and not make-up day, recharge
-        const isWeekDay = currentDay.getDay() > 0 && currentDay.getDay() < 6
-        const isMakuUpDay = settings.MAKE_UP_DAYS.map((d) =>
-          d.getTime(),
-        ).includes(currentDay.getTime())
+        const isHoliday = settings.HOLIDAYS.includes(currentDay.getTime())
+        const isWeekDay =
+          !isHoliday && currentDay.getDay() > 0 && currentDay.getDay() < 6
+        const isMakuUpDay = settings.MAKE_UP_DAYS.includes(currentDay.getTime())
+
         if (isMakuUpDay || isWeekDay) {
           rechargeAmount += settings.POINT_DAILY_RECHARGE_AMOUNT
         }
@@ -206,6 +208,7 @@ export async function getUserInfo(userId: string) {
       })
 
       if (rechargeAmount === 0 && !isNewMonth) return null
+
       // Recharge points
       const { callback, user: newUser } = await rechargeUserBalanceBase({
         userId: user.id,

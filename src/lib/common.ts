@@ -122,8 +122,13 @@ export const settings = {
   DEPOSIT_MAX_AMOUNT: 10000,
   PRINTER_API_URL: process.env.NEXT_PUBLIC_PRINTER_API_URL!,
   MAKE_UP_DAYS: process.env.MAKE_UP_DAYS
-    ? process.env.MAKE_UP_DAYS.split(',').map(
-        (dateString) => new Date(dateString + 'T00:00:00+08:00'),
+    ? process.env.MAKE_UP_DAYS.split(',').map((dateString) =>
+        new Date(dateString + 'T00:00:00+08:00').getTime(),
+      )
+    : [],
+  HOLIDAYS: process.env.HOLIDAYS
+    ? process.env.HOLIDAYS.split(',').map((dateString) =>
+        new Date(dateString + 'T00:00:00+08:00').getTime(),
       )
     : [],
 
