@@ -213,6 +213,14 @@ export default function Menus() {
           }
           idField='id'
           onSelectedIdsChange={setSelectedIds}
+          onDataFilter={
+            searchKeyword === ''
+              ? undefined
+              : (rows) =>
+                  rows.filter((row) =>
+                    getMenuName(row)?.includes(searchKeyword),
+                  )
+          }
           columns={[
             {
               name: '名稱',
