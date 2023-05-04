@@ -1,17 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DepositStatus } from '@prisma/client'
+import { InView } from 'react-intersection-observer'
 
-import trpc from '@/lib/client/trpc'
-import { SpinnerBlock } from '@/components/core/Spinner'
+import trpc, { DepositDatas } from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
 import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
 import Button from '@/components/core/Button'
+import Spinner from '@/components/core/Spinner'
 
 export default function Deposits() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
-  // fetchNextPage, hasNextPage
-  const { data, isError, error, isLoading } =
+  const [deposits, setDeposits] = useState<DepositDatas>([])
+
+  const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.deposit.getList.useInfiniteQuery(
       { keyword: searchKeyword },
       {
@@ -19,10 +21,13 @@ export default function Deposits() {
       },
     )
 
-  if (isError) return <Error description={error.message} />
-  if (isLoading) return <SpinnerBlock />
+  useEffect(() => {
+    if (data) {
+      setDeposits(data.pages.flatMap((page) => page.deposits))
+    }
+  }, [data])
 
-  const deposits = data.pages.flatMap((page) => page.deposits)
+  if (isError) return <Error description={error.message} />
 
   return (
     <div className='relative h-full min-h-full w-full'>
@@ -31,7 +36,7 @@ export default function Deposits() {
         <div className='flex items-center gap-4'>
           <SearchBar
             placeholder='搜尋儲值紀錄'
-            isLoading={false}
+            isLoading={isLoading}
             searchKeyword={searchKeyword}
             setSearchKeyword={setSearchKeyword}
           />
@@ -76,12 +81,31 @@ export default function Deposits() {
               name: '動作',
               render: (deposit) => (
                 <div className='flex items-center gap-2'>
-                  <Button textClassName='p-1 text-sm' label='更新' />
-                  <Button textClassName='p-1 text-sm' label='詳細' />
+                  <Button
+                    textClassName='px-2 py-1 text-sm'
+                    label='更新/詳細'
+                    theme='secondary'
+                  />
                 </div>
               ),
             },
           ]}
+          footer={
+            hasNextPage ? (
+              <InView
+                as='td'
+                onChange={(inView) => {
+                  if (inView && hasNextPage) {
+                    fetchNextPage()
+                  }
+                }}
+                className='flex items-center gap-2 p-4'
+              >
+                <Spinner className='h-4 w-4' />
+                <p className='tracking-wider text-stone-400'>讀取更多</p>
+              </InView>
+            ) : undefined
+          }
         />
       </div>
     </div>

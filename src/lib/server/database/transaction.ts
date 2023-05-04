@@ -293,7 +293,7 @@ export async function getTransactions({
   cursor?: number
 }) {
   let whereInput: Prisma.TransactionWhereInput = {}
-  if (keyword) {
+  if (keyword && keyword !== '') {
     if (keyword.match(/^\#\d+$/)) {
       // Transaction ID
       const transactionId = parseInt(keyword.slice(1))
