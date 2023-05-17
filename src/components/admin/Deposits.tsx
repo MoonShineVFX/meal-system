@@ -40,6 +40,7 @@ export default function Deposits() {
         id: depositId,
         notification: false,
       })
+      setFetchingDepositId(null)
 
       if (result.response !== null) {
         showDialog({
@@ -49,19 +50,20 @@ export default function Deposits() {
             <div>
               {Object.entries(result.response.Result).map(([key, value]) =>
                 key === 'CheckCode' ? null : (
-                  <p key={key}>{`${key}: ${value}`}</p>
+                  <p key={key}>
+                    <span className='font-bold'>{`${key}:  `}</span>
+                    <span className='font-mono'>{`${value}`}</span>
+                  </p>
                 ),
               )}
             </div>
           ),
-          onClose: () => setFetchingDepositId(null),
         })
       } else {
         showDialog({
           icon: 'warning',
           title: `${depositId}`,
           content: <p>查無資料</p>,
-          onClose: () => setFetchingDepositId(null),
         })
       }
     },
