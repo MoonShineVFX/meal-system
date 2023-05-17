@@ -81,7 +81,10 @@ export const DepositRouter = router({
         }
       }
 
-      return result === null ? deposit : result
+      return {
+        ...deposit,
+        response: result ? result.response : null,
+      }
     }),
   getList: staffProcedure
     .input(

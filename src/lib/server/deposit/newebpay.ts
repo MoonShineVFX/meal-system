@@ -122,7 +122,7 @@ export async function getAndUpdateTradeInfo(props: {
   return {
     ...deposit,
     response: result,
-  }
+  } as typeof deposit & { response: typeof result }
 }
 
 export async function handleTradeNotify(notify: {

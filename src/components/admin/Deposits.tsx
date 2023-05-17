@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { DepositStatus } from '@prisma/client'
 import { InView } from 'react-intersection-observer'
 
@@ -8,10 +8,16 @@ import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
 import Button from '@/components/core/Button'
 import Spinner from '@/components/core/Spinner'
+import { useDialog } from '@/components/core/Dialog'
 
 export default function Deposits() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [deposits, setDeposits] = useState<DepositDatas>([])
+  const [fetchingDepositId, setFetchingDepositId] = useState<string | null>(
+    null,
+  )
+  const context = trpc.useContext()
+  const { dialog, showDialog } = useDialog()
 
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.deposit.getList.useInfiniteQuery(
@@ -26,6 +32,41 @@ export default function Deposits() {
       setDeposits(data.pages.flatMap((page) => page.deposits))
     }
   }, [data])
+
+  const handleUpdateDeposit = useCallback(
+    async (depositId: string) => {
+      setFetchingDepositId(depositId)
+      const result = await context.deposit.get.fetch({
+        id: depositId,
+        notification: false,
+      })
+
+      if (result.response !== null) {
+        showDialog({
+          icon: 'info',
+          title: `${depositId}`,
+          content: (
+            <div>
+              {Object.entries(result.response.Result).map(([key, value]) =>
+                key === 'CheckCode' ? null : (
+                  <p key={key}>{`${key}: ${value}`}</p>
+                ),
+              )}
+            </div>
+          ),
+          onClose: () => setFetchingDepositId(null),
+        })
+      } else {
+        showDialog({
+          icon: 'warning',
+          title: `${depositId}`,
+          content: <p>查無資料</p>,
+          onClose: () => setFetchingDepositId(null),
+        })
+      }
+    },
+    [fetchingDepositId],
+  )
 
   if (isError) return <Error description={error.message} />
 
@@ -55,7 +96,7 @@ export default function Deposits() {
             {
               name: '編號',
               align: 'left',
-              cellClassName: 'text-sm',
+              cellClassName: 'text-sm font-mono',
               render: (deposit) => deposit.id,
             },
             {
@@ -80,11 +121,18 @@ export default function Deposits() {
             {
               name: '動作',
               render: (deposit) => (
-                <div className='flex items-center gap-2'>
+                <div className='itemshandleUpdateDeposit-center flex gap-2'>
                   <Button
                     textClassName='px-2 py-1 text-sm'
+                    className='disabled:opacity-50'
                     label='更新/詳細'
                     theme='secondary'
+                    isLoading={fetchingDepositId === deposit.id}
+                    isDisabled={
+                      fetchingDepositId !== deposit.id &&
+                      fetchingDepositId !== null
+                    }
+                    onClick={() => handleUpdateDeposit(deposit.id)}
                   />
                 </div>
               ),
@@ -108,6 +156,7 @@ export default function Deposits() {
           }
         />
       </div>
+      {dialog}
     </div>
   )
 }

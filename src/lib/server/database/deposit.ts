@@ -128,6 +128,7 @@ export async function getDeposit(id: string) {
   })
 }
 
+const depositStatusStrings = Object.values(DepositStatus) as string[]
 export async function getDeposits({
   keyword,
   cursor,
@@ -146,6 +147,11 @@ export async function getDeposits({
           contains: thisId,
         },
       }
+      // if match deposit status
+    } else if (depositStatusStrings.includes(keyword.toUpperCase())) {
+      whereInput = {
+        status: keyword.toUpperCase() as DepositStatus,
+      }
     } else if (keyword.match(/^[1-9]\d*$/)) {
       // Price amount
       const amount = parseInt(keyword)
@@ -153,7 +159,6 @@ export async function getDeposits({
         amount,
       }
     } else {
-      console.log('else')
       // Check datetime format
       let keywordForDate = keyword
       if (keyword.match(/^\d{1,2}[\ \/\-]\d{1,2}$/)) {

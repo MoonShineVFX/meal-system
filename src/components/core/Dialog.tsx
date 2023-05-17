@@ -154,7 +154,8 @@ export default function DialogCore<T extends UseMutationResult>(
 type ShowDialogProps<T extends UseMutationResult> = Omit<
   DialogProps<T>,
   'open' | 'onClose'
->
+> &
+  Partial<Pick<DialogProps<T>, 'onClose'>>
 
 export function useDialog() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
@@ -174,7 +175,10 @@ export function useDialog() {
     <DialogCore
       {...props}
       open={isOpenDialog}
-      onClose={() => setIsOpenDialog(false)}
+      onClose={() => {
+        props.onClose?.()
+        setIsOpenDialog(false)
+      }}
     />
   ) : null
 
