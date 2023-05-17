@@ -48,6 +48,7 @@ export enum SERVER_NOTIFY {
   DEPOSIT_RECHARGE = '儲值成功',
   DEPOSIT_REFUND = '退款成功',
   DEPOSIT_FAILED = '儲值失敗',
+  DEPOSIT_UPDATE = '儲值狀態更新',
 }
 
 export enum CurrencyType {

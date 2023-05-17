@@ -140,6 +140,9 @@ export default function EventListener() {
           trpcContext.menu.getActives.invalidate()
           trpcContext.menu.getReservations.invalidate()
           break
+        case SERVER_NOTIFY.DEPOSIT_UPDATE:
+          trpcContext.deposit.getList.invalidate()
+          break
       }
     },
   })

@@ -65,6 +65,13 @@ export const DepositRouter = router({
         amount: deposit.amount,
       })
 
+      if (result && result.status !== deposit.status) {
+        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+          type: SERVER_NOTIFY.DEPOSIT_UPDATE,
+          skipNotify: true,
+        })
+      }
+
       if (result && input.notification) {
         if (result.status === DepositStatus.SUCCESS) {
           eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
