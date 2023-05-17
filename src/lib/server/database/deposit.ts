@@ -138,11 +138,13 @@ export async function getDeposits({
   let whereInput: Prisma.DepositWhereInput = {}
 
   if (keyword && keyword !== '') {
-    if (keyword.match(/^\#\.+$/)) {
+    if (keyword.match(/^\#.+$/)) {
       // Deposit ID
       const thisId = keyword.slice(1)
       whereInput = {
-        id: thisId,
+        id: {
+          contains: thisId,
+        },
       }
     } else if (keyword.match(/^[1-9]\d*$/)) {
       // Price amount
@@ -151,6 +153,7 @@ export async function getDeposits({
         amount,
       }
     } else {
+      console.log('else')
       // Check datetime format
       let keywordForDate = keyword
       if (keyword.match(/^\d{1,2}[\ \/\-]\d{1,2}$/)) {

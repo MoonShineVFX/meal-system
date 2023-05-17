@@ -298,7 +298,7 @@ export async function getTransactions({
       // Transaction ID
       const transactionId = parseInt(keyword.slice(1))
       whereInput = { id: transactionId }
-    } else if (keyword.match(/^\#\.+$/)) {
+    } else if (keyword.match(/^\#.+$/)) {
       // Deposit ID
       const thisId = keyword.slice(1)
       whereInput = {
