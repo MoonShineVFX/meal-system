@@ -84,7 +84,10 @@ export default function PageOrder(props: {
         keyword: props.tabName === '搜尋' ? searchKeyword : undefined,
       },
       {
-        getNextPageParam: (lastPage) => lastPage?.nextCursor,
+        getNextPageParam: (lastPage) =>
+          lastPage && 'nextCursor' in lastPage
+            ? lastPage.nextCursor
+            : undefined,
       },
     )
 
