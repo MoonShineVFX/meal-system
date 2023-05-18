@@ -44,8 +44,8 @@ export default function Deposits() {
 
       if (result.response !== null) {
         showDialog({
-          icon: 'info',
-          title: `${depositId}`,
+          icon: null,
+          title: '儲值紀錄',
           content: (
             <div>
               {Object.entries(result.response.Result).map(([key, value]) =>
@@ -62,8 +62,8 @@ export default function Deposits() {
       } else {
         showDialog({
           icon: 'warning',
-          title: `${depositId}`,
-          content: <p>查無資料</p>,
+          title: '儲值紀錄',
+          content: <p>查無資料: {depositId}</p>,
         })
       }
     },
@@ -116,18 +116,22 @@ export default function Deposits() {
               align: 'left',
               cellClassName: 'text-sm font-bold',
               render: (deposit) =>
-                deposit.status === DepositStatus.SUCCESS
-                  ? `${deposit.status} (${deposit.paymentType})`
-                  : deposit.status,
+                deposit.status === DepositStatus.SUCCESS ? (
+                  <span className='text-green-500'>{`${deposit.status}`}</span>
+                ) : (
+                  deposit.status
+                ),
             },
             {
               name: '動作',
               render: (deposit) => (
                 <div className='itemshandleUpdateDeposit-center flex gap-2'>
                   <Button
-                    textClassName='px-2 py-1 text-sm'
-                    className='disabled:opacity-50'
-                    label='更新/詳細'
+                    textClassName='px-3 py-1 text-sm'
+                    className='disabled:opacity-50 hover:bg-stone-200'
+                    label={
+                      deposit.status === DepositStatus.SUCCESS ? '詳細' : '更新'
+                    }
                     theme='secondary'
                     isLoading={fetchingDepositId === deposit.id}
                     isDisabled={
