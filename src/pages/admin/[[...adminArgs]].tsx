@@ -8,6 +8,7 @@ import OptionSets from '@/components/admin/OptionSets'
 import Commodities from '@/components/admin/Commodities'
 import Menus from '@/components/admin/Menus'
 import Deposits from '@/components/admin/Deposits'
+import Transactions from '@/components/admin/Transactions'
 
 const TAB_NAMES = [
   '餐點',
@@ -76,6 +77,7 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
             {tabName === '菜單' && <Menus />}
             {tabName === '分類' && <Categories />}
             {tabName === '選項' && <OptionSets />}
+            {tabName === '交易' && <Transactions />}
             {tabName === '儲值' && <Deposits />}
           </div>
         </div>

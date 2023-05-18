@@ -89,17 +89,16 @@ export default function Deposits() {
           data={deposits}
           columns={[
             {
-              name: '日期',
-              align: 'left',
-              unhidable: true,
-              cellClassName: 'text-sm',
-              render: (deposit) => deposit.createdAt.toLocaleString(),
-            },
-            {
               name: '編號',
               align: 'left',
-              cellClassName: 'text-sm font-mono',
+              cellClassName: 'text-sm font-mono font-bold',
               render: (deposit) => deposit.id,
+            },
+            {
+              name: '日期',
+              align: 'left',
+              cellClassName: 'text-sm',
+              render: (deposit) => deposit.createdAt.toLocaleString(),
             },
             {
               name: '使用者',
@@ -114,7 +113,7 @@ export default function Deposits() {
             {
               name: '狀態',
               align: 'left',
-              cellClassName: 'text-sm font-bold',
+              cellClassName: 'text-xs font-bold',
               render: (deposit) =>
                 deposit.status === DepositStatus.SUCCESS ? (
                   <span className='text-green-500'>{`${deposit.status}`}</span>
