@@ -288,7 +288,7 @@ export async function getTransactions({
   keyword,
   cursor,
 }: {
-  userId: string
+  userId?: string
   keyword?: string
   cursor?: number
 }) {

@@ -270,13 +270,14 @@ export async function getOrders({
   type,
   keyword,
 }: {
-  userId: string
+  userId?: string
   cursor?: number
 } & (
   | { type: 'live' | 'reservation' | 'archived'; keyword?: never }
   | { type: 'search'; keyword: string }
 )) {
-  if (type === 'search' && !keyword) return []
+  // Check if keyword is empty and search by user UI and return empty
+  if (type === 'search' && !keyword && userId) return []
 
   let whereInput: Prisma.OrderWhereInput
   let orderBys: Prisma.OrderOrderByWithRelationInput[] | undefined = undefined
@@ -323,6 +324,12 @@ export async function getOrders({
       }
       break
     case 'search':
+      // Check if empty keyword and from staff, than return all
+      if (!keyword && !userId) {
+        whereInput = {}
+        break
+      }
+
       // check if keyword is a order id
       if (keyword.match(/^\#\d+$/)) {
         whereInput = {
@@ -428,6 +435,7 @@ export async function getOrders({
         OR: [
           { menu: { name: { contains: keyword } } },
           { items: { some: { name: { contains: keyword } } } },
+          { user: { name: { contains: keyword } } },
         ],
       }
       break
@@ -463,6 +471,11 @@ export async function getOrders({
         select: {
           pointAmount: true,
           creditAmount: true,
+        },
+      },
+      user: {
+        select: {
+          name: true,
         },
       },
     },

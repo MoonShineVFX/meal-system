@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getTransaction, getTransactions } from '@/lib/server/database'
 import { settings } from '@/lib/common'
 
-import { userProcedure, router } from '../trpc'
+import { userProcedure, staffProcedure, router } from '../trpc'
 
 export const TransactionRouter = router({
   // Get transaction records, use until arg to update new records
@@ -15,20 +15,24 @@ export const TransactionRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      const transactions = await getTransactions({
+      return await await getTransactionsWithCursor({
         userId: ctx.userLite.id,
         cursor: input.cursor,
         keyword: input.keyword ? input.keyword.trim() : undefined,
       })
-
-      let nextCursor: number | undefined = undefined
-      if (transactions.length > settings.TRANSACTIONS_PER_QUERY) {
-        nextCursor = transactions.pop()!.id
-      }
-      return {
-        transactions,
-        nextCursor,
-      }
+    }),
+  getList: staffProcedure
+    .input(
+      z.object({
+        cursor: z.number().int().positive().optional(),
+        keyword: z.string().optional(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      return await getTransactionsWithCursor({
+        cursor: input.cursor,
+        keyword: input.keyword ? input.keyword.trim() : undefined,
+      })
     }),
   getDetail: userProcedure
     .input(
@@ -49,3 +53,18 @@ export const TransactionRouter = router({
       return transaction
     }),
 })
+
+async function getTransactionsWithCursor(
+  props: Parameters<typeof getTransactions>[0],
+) {
+  const transactions = await getTransactions(props)
+
+  let nextCursor: number | undefined = undefined
+  if (transactions.length > settings.TRANSACTIONS_PER_QUERY) {
+    nextCursor = transactions.pop()!.id
+  }
+  return {
+    transactions,
+    nextCursor,
+  }
+}

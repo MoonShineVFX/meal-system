@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react'
 import { InView } from 'react-intersection-observer'
 
-import trpc, { TransactionDatas } from '@/lib/client/trpc'
+import trpc, { OrderDatas } from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
 import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
 import Spinner from '@/components/core/Spinner'
-import { TransactionName } from '@/lib/common'
+import { getMenuName } from '@/lib/common'
 
-export default function Transactions() {
+export default function Orders() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
-  const [transactions, setTransactions] = useState<TransactionDatas>([])
+  const [orders, setOrders] = useState<OrderDatas>([])
 
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
-    trpc.transaction.getList.useInfiniteQuery(
+    trpc.order.getList.useInfiniteQuery(
       { keyword: searchKeyword },
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
@@ -22,7 +22,7 @@ export default function Transactions() {
 
   useEffect(() => {
     if (data) {
-      setTransactions(data.pages.flatMap((page) => page.transactions))
+      setOrders(data.pages.flatMap((page) => page.orders))
     }
   }, [data])
 
@@ -34,7 +34,7 @@ export default function Transactions() {
         {/* Top */}
         <div className='flex items-center gap-4'>
           <SearchBar
-            placeholder='搜尋交易紀錄'
+            placeholder='搜尋訂單紀錄'
             isLoading={isLoading}
             searchKeyword={searchKeyword}
             setSearchKeyword={setSearchKeyword}
@@ -42,45 +42,72 @@ export default function Transactions() {
         </div>
         {/* Table */}
         <Table
-          data={transactions}
+          data={orders}
           columns={[
             {
               name: '編號',
               align: 'left',
               cellClassName: 'text-sm font-mono font-bold',
-              render: (transaction) => transaction.id,
+              render: (order) => order.id,
             },
             {
               name: '日期',
               align: 'left',
               cellClassName: 'text-sm',
-              render: (transaction) => transaction.createdAt.toLocaleString(),
+              render: (order) => order.createdAt.toLocaleString(),
+            },
+            {
+              name: '使用者',
+              align: 'left',
+              render: (order) => order.user.name,
             },
             {
               name: '夢想幣',
               align: 'right',
-              render: (transaction) => transaction.creditAmount,
+              render: (order) => order.paymentTransaction?.creditAmount ?? 0,
             },
             {
               name: '點數',
               align: 'right',
-              render: (transaction) => transaction.pointAmount,
+              render: (order) => order.paymentTransaction?.pointAmount ?? 0,
             },
             {
-              name: '來源',
+              name: '菜單',
               align: 'left',
-              render: (transaction) => transaction.sourceUser.name,
+              render: (order) => getMenuName(order.menu) ?? '未知菜單',
             },
             {
-              name: '對象',
+              name: '餐點',
               align: 'left',
-              render: (transaction) => transaction.targetUser.name,
+              cellClassName: 'text-xs',
+              render: (order) => {
+                const orderItems = order.items.reduce((acc, item) => {
+                  if (!(item.name in acc)) {
+                    acc[item.name] = 0
+                  }
+                  acc[item.name] += item.quantity
+                  return acc
+                }, {} as Record<string, number>)
+                return Object.entries(orderItems)
+                  .map(([name, quantity]) => `${name} x${quantity}`)
+                  .join(', ')
+              },
             },
             {
-              name: '類型',
+              name: '狀態',
               align: 'left',
-              cellClassName: 'text-sm font-bold',
-              render: (transaction) => TransactionName[transaction.type],
+              render: (order) => {
+                if (order.timeCanceled !== null) {
+                  return '已取消'
+                } else if (order.timeCompleted !== null) {
+                  return '已完成'
+                } else if (order.timeDishedUp !== null) {
+                  return '已出餐'
+                } else if (order.timePreparing !== null) {
+                  return '準備中'
+                }
+                return '已下單'
+              },
             },
           ]}
           footer={
