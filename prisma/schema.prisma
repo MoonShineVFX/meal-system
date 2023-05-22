@@ -112,6 +112,7 @@ model EthWallet {
   userId String @unique
 }
 
+// Order
 model Order {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -175,7 +176,7 @@ model CartItem {
   @@index([userId, menuId, commodityId, invalid])
 }
 
-// Menu
+// Commodity
 model CommodityRootCategory {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -229,6 +230,8 @@ model Commodity {
   image      Image?              @relation(fields: [imageId], references: [id], onDelete: SetNull)
   imageId    String?
   onMenus    CommodityOnMenu[]
+  supplier   Supplier?           @relation(fields: [supplierId], references: [id])
+  supplierId Int?
 
   @@index([id, isDeleted])
 }
@@ -278,9 +281,26 @@ model Menu {
 
   commodities CommodityOnMenu[]
   orders      Order[]
+  supplier    Supplier?         @relation(fields: [supplierId], references: [id])
+  supplierId  Int?
 
   @@index([date, type, isDeleted, createdAt(sort: Desc)])
   @@index([id, isDeleted, createdAt(sort: Desc)])
+}
+
+model Supplier {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String  @default("")
+  isDeleted   Boolean @default(false)
+
+  commodities Commodity[]
+  menus       Menu[]
+
+  @@index([id, isDeleted])
 }
 
 // Resource
