@@ -14,6 +14,7 @@ import {
   removeCommoditiesFromMenu,
   deleteMenu,
   getRetailCOM,
+  createSupplier,
 } from '@/lib/server/database'
 import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
@@ -53,6 +54,7 @@ export const MenuRouter = router({
             }),
           )
           .optional(),
+        createSupplier: z.boolean().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -64,11 +66,30 @@ export const MenuRouter = router({
         throw new Error('預訂菜單需要日期參數')
       }
 
+      if (input.isEdit && input.createSupplier) {
+        throw new Error('編輯菜單時不可新增店家')
+      }
+
       await prismaCient.$transaction(async (client) => {
+        let supplierId: number | undefined = undefined
+        // create supplier
+        if (input.createSupplier) {
+          if (!input.name) {
+            throw new Error('請輸入店家名稱')
+          }
+          const supplier = await createSupplier({
+            client,
+            name: input.name,
+            description: input.description,
+          })
+          supplierId = supplier.id
+        }
+
         // create menu
         const menu = await createMenu({
           client,
           ...(input as Parameters<typeof createMenu>[0]),
+          supplierId,
           isEdit: input.isEdit,
         })
 
@@ -86,6 +107,7 @@ export const MenuRouter = router({
                   const thisCommodity = await createCommodity({
                     client,
                     ...com.commodity!,
+                    supplierId,
                   })
                   return {
                     ...com,
@@ -113,7 +135,7 @@ export const MenuRouter = router({
           await removeCommoditiesFromMenu({
             client,
             menuId: menu.id,
-            excludeCommodityIds: input.coms.map((com) => com.commodityId),
+            excludeCommodityIds: coms.map((com) => com.commodityId),
           })
         }
       })

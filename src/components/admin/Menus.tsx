@@ -60,24 +60,23 @@ export default function Menus() {
       isEdit: boolean = false,
     ) => {
       const title = isEdit ? '編輯菜單' : '新增菜單'
+
       showFormDialog({
         title,
         inputs: {
-          name: {
-            label: '名稱',
-            type: 'text',
-            defaultValue: menu?.name,
-            attributes: {
-              placeholder: '菜單名稱 (可選)',
+          intro: {
+            defaultValue: {
+              name: menu?.name,
+              description: menu?.description,
+              createSupplier: false,
             },
-          },
-          description: {
-            defaultValue: menu?.description,
-            label: '描述',
-            type: 'textarea',
-            attributes: {
-              style: { minHeight: '9rem' },
-            },
+            data: isEdit
+              ? {
+                  disableCreateSupplier: true,
+                }
+              : undefined,
+            label: '基本資料',
+            type: 'menuIntro',
           },
           limitPerUser: {
             defaultValue: menu?.limitPerUser ?? 0,
@@ -122,10 +121,13 @@ export default function Menus() {
           console.log(formData)
           mutation.mutate({
             ...formData,
+            name: formData.intro.name,
+            description: formData.intro.description,
             type: formData.typeDate.type,
             date: formData.typeDate.date,
             publishedDate: formData.typeDate.publishedDate,
             closedDate: formData.typeDate.closedDate,
+            createSupplier: formData.intro.createSupplier,
             isEdit: isEdit,
           })
         },

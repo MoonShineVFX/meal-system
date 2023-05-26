@@ -40,6 +40,7 @@ export const CommodityRouter = router({
             }),
           )
           .optional(),
+        supplierId: z.number().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -84,6 +85,7 @@ export const CommodityRouter = router({
             }),
           )
           .optional(),
+        supplierId: z.number().optional(),
       }),
     )
     .mutation(async ({ input }) => {

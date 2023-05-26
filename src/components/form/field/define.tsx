@@ -37,6 +37,11 @@ export type MenuDateTypeData = {
   publishedDate: Date | null
   closedDate: Date | null
 }
+export type MenuIntroData = {
+  name: string | undefined
+  description: string | undefined
+  createSupplier: boolean
+}
 
 // Inputs
 type LabelInput = {
@@ -130,6 +135,14 @@ type COMInput = {
   type: 'com'
   attributes?: never
 }
+type MenuIntroInput = {
+  defaultValue?: MenuIntroData
+  data?: {
+    disableCreateSupplier: boolean
+  }
+  type: 'menuIntro'
+  attributes?: never
+}
 
 export type FormInput = {
   label: string
@@ -154,6 +167,7 @@ export type FormInput = {
   | MenuTypeDateInput
   | DatetimeInput
   | COMInput
+  | MenuIntroInput
 )
 
 export type InferFormInputData<TFormInput extends FormInput> =
@@ -185,6 +199,8 @@ export type InferFormInputData<TFormInput extends FormInput> =
     ? string
     : TFormInput['type'] extends 'com'
     ? COMData[]
+    : TFormInput['type'] extends 'menuIntro'
+    ? MenuIntroData
     : never
 
 export type FormInputsProps = { [key: string]: FormInput }

@@ -26,13 +26,14 @@ export default function Commodities() {
   const { data, error, isError, isLoading } = trpc.commodity.get.useQuery({
     includeMenus: true,
   })
+  const supplierQuery = trpc.supplier.getList.useQuery()
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const { showDialog, dialog } = useDialog()
   const [tabName, setTabName] = useState<typeof TabNames[number]>('全部')
 
   const handleEditCommodity = useCallback(
-    (commodity?: NonNullable<typeof data>[number]) => {
+    async (commodity?: NonNullable<typeof data>[number]) => {
       const title = commodity ? '編輯餐點' : '新增餐點'
       // show
       showFormDialog({
@@ -74,6 +75,35 @@ export default function Commodities() {
               max: { value: 9999, message: '價錢不能大於 9999' },
             },
           },
+          supplier: {
+            defaultValue: commodity?.supplierId
+              ? commodity.supplierId.toString()
+              : undefined,
+            data: [
+              ...(commodity?.supplier
+                ? [
+                    {
+                      value: commodity.supplierId!.toString(),
+                      label: commodity.supplier.name,
+                    },
+                  ]
+                : []),
+              { value: '', label: '無' },
+              ...supplierQuery
+                .data!.filter((s) => s.id !== commodity?.supplierId)
+                .map((s) => ({
+                  value: s.id.toString(),
+                  label: s.name,
+                })),
+            ],
+            attributes: {
+              defaultValue: commodity?.supplierId
+                ? commodity.supplierId.toString()
+                : undefined,
+            },
+            label: '店家',
+            type: 'select',
+          },
           categories: {
             label: '分類',
             column: 2,
@@ -113,6 +143,10 @@ export default function Commodities() {
               categoryIds: formData.categories,
               imageId: formData.image,
               menus: formData.menus,
+              supplierId:
+                formData.supplier === ''
+                  ? undefined
+                  : parseInt(formData.supplier),
             })
           } else {
             ;(
@@ -125,6 +159,10 @@ export default function Commodities() {
               categoryIds: formData.categories,
               imageId: formData.image,
               menus: formData.menus,
+              supplierId:
+                formData.supplier === ''
+                  ? undefined
+                  : parseInt(formData.supplier),
             })
           }
         },
@@ -349,8 +387,15 @@ export default function Commodities() {
     [],
   )
 
-  if (isError) return <Error description={error.message} />
-  if (isLoading) return <SpinnerBlock />
+  if (isError || supplierQuery.isError)
+    return (
+      <Error
+        description={
+          error?.message ?? supplierQuery.error?.message ?? '未知錯誤'
+        }
+      />
+    )
+  if (isLoading || supplierQuery.isLoading) return <SpinnerBlock />
 
   return (
     <div className='relative h-full min-h-full w-full'>

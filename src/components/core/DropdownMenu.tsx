@@ -279,8 +279,11 @@ export const MenuComponent = React.forwardRef<
                 className={twMerge(
                   'relative z-[1000] flex w-max origin-top-right flex-col overflow-hidden rounded-2xl border bg-white py-2 shadow-lg',
                   nested && 'origin-top-left',
-                  placement === 'top-start' && 'origin-bottom-right',
-                  placement === 'top-start' && nested && 'origin-bottom-left',
+                  (placement === 'top-start' || placement === 'top') &&
+                    'origin-bottom-right',
+                  (placement === 'top-start' || placement === 'top') &&
+                    nested &&
+                    'origin-bottom-left',
                 )}
                 style={{
                   position: strategy,

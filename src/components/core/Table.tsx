@@ -132,12 +132,12 @@ export default function Table<
           <tr className='bg-stone-100 shadow' ref={tableHeaderRef}>
             {/* ContextMenu */}
             <ContextMenu parentRef={tableHeaderRef}>
-              {props.columns.map((col) => {
+              {props.columns.map((col, index) => {
                 if (col.unhidable) return null
                 const isFiltered = filterColumns.includes(col.name)
                 return (
                   <ContextMenuItem
-                    key={col.name}
+                    key={col.name + index}
                     label={
                       <span
                         className={twMerge(
@@ -212,7 +212,7 @@ export default function Table<
             )}
             {props.columns
               .filter((col) => !filterColumns.includes(col.name))
-              .map((col) => {
+              .map((col, index) => {
                 const renderType = tableData[0]
                   ? typeof col.render(tableData[0])
                   : 'string'
@@ -229,7 +229,7 @@ export default function Table<
 
                 return (
                   <th
-                    key={col.name}
+                    key={col.name + index}
                     role='col'
                     className={twMerge(
                       'whitespace-nowrap p-4 hover:bg-stone-200',
@@ -300,7 +300,7 @@ export default function Table<
             {/* content */}
             {props.columns
               .filter((col) => !filterColumns.includes(col.name))
-              .map((col) => {
+              .map((col, index) => {
                 const content = col.render(row)
                 const hint = col.hint
                   ? col.hint(row)
@@ -311,7 +311,7 @@ export default function Table<
                   : undefined
                 return (
                   <td
-                    key={col.name}
+                    key={col.name + index}
                     className={twMerge(
                       'whitespace-nowrap p-4',
                       typeof content === 'string' && 'text-left',

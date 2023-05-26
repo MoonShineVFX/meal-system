@@ -25,6 +25,7 @@ type CreateMenuArgs = {
   publishedDate?: Date | null
   closedDate?: Date | null
   limitPerUser?: number
+  supplierId?: number
   isEdit?: boolean
   client?: Prisma.TransactionClient | PrismaClient
 } & (CommonCreateMenuArgs | ReserveCreateMenuArgs)
@@ -39,6 +40,7 @@ export async function createMenu({
   limitPerUser,
   client,
   isEdit,
+  supplierId,
 }: CreateMenuArgs) {
   const thisPrisma = client ?? prisma
 
@@ -68,6 +70,7 @@ export async function createMenu({
         publishedDate,
         closedDate,
         limitPerUser,
+        supplierId,
         isDeleted: false,
       },
     })
@@ -651,6 +654,7 @@ export async function removeCommoditiesFromMenu(args: {
 }) {
   const { excludeCommodityIds, menuId, client } = args
   const thisPrisma = client ?? prisma
+
   return await thisPrisma.commodityOnMenu.updateMany({
     where: {
       commodityId: {
