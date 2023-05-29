@@ -15,8 +15,9 @@ export default function CommoditiesField<T extends FieldValues>(
   )
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [onlyShowSelected, setOnlyShowSelected] = useState<boolean>(false)
-  const { data, isError, isLoading } = trpc.commodity.get.useQuery({
+  const { data, isError, isLoading } = trpc.commodity.getList.useQuery({
     includeIds: props.formInput.defaultValue ?? undefined,
+    onlyFromSupplierId: props.formInput.data?.onlyFromSupplierId,
   })
 
   // set rfh value

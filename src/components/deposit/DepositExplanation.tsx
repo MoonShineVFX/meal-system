@@ -14,11 +14,7 @@ export default function DepositExplanation() {
         ，離職時可提領回薪資帳戶。
       </p>
       <p className='mt-2 text-sm text-stone-400'>
-        - 點數為每日進公司打卡後發放的獎勵，最多補至
-        <span className='mx-1 text-base font-bold text-yellow-500'>
-          {metaQuery.data?.point ?? '?'}
-        </span>
-        點，結帳時優先折抵，不夠才會扣除夢想幣，
+        - 點數為每工作日發放，每月一日歸零。結帳時優先折抵，不夠才會扣除夢想幣，
         <span className='font-bold'>取消訂單不會退還</span>。
       </p>
       <p className='mt-2 text-sm text-stone-400'>

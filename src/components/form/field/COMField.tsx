@@ -28,7 +28,8 @@ const BatchEditProps = ['價錢', '選項', '每人限購', '總數'] as const
 export default function COMField<T extends FieldValues>(
   props: InputFieldProps<'com', T>,
 ) {
-  const isSupplier = useStore((state) => state.formMenuCreateSupplier)
+  const supplier = useStore((state) => state.formMenuSupplier)
+  const isCreateSupplier = useStore((state) => state.formMenuCreateSupplier)
   const [comDatas, setComDatas] = useState<COMData[]>(
     props.formInput.defaultValue ?? [],
   )
@@ -38,11 +39,12 @@ export default function COMField<T extends FieldValues>(
       .filter((comData) => !('commodity' in comData))
       .map((comData) => (comData as ExistCOMData).commodityId)
   }, [comDatas])
-  const { data, isError, isLoading } = trpc.commodity.get.useQuery({
+  const { data, isError, isLoading } = trpc.commodity.getList.useQuery({
     includeIds:
       props.formInput.defaultValue
         ?.filter((comData) => 'commodityId' in comData)
         .map((comData) => (comData as ExistCOMData).commodityId) ?? undefined,
+    onlyFromSupplierId: supplier?.id,
   })
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [newComDataId, setNewComDataId] = useState(Number.MAX_SAFE_INTEGER)
@@ -63,14 +65,30 @@ export default function COMField<T extends FieldValues>(
 
   // clean exist com data if isSupplier is true
   useEffect(() => {
-    if (isSupplier) {
+    if (isCreateSupplier) {
       setComDatas((prev) => prev.filter((comData) => 'commodity' in comData))
     }
-  }, [isSupplier])
+  }, [isCreateSupplier])
+
+  // set default value if supplier is changed
+  useEffect(() => {
+    if (!data) return
+    if (!supplier) {
+      setComDatas([])
+      return
+    }
+    setComDatas(
+      data.map((com) => ({
+        commodityId: com.id,
+        limitPerUser: 0,
+        stock: 0,
+      })),
+    )
+  }, [data])
 
   const handleSelectFromExist = useCallback(() => {
     showFormDialog({
-      title: '從現有餐點選擇',
+      title: supplier ? '從店家餐點選擇' : '從現有餐點選擇',
       className: 'h-[70vh]',
       inputs: {
         commodityIds: {
@@ -78,6 +96,9 @@ export default function COMField<T extends FieldValues>(
           type: 'commodities',
           defaultValue: existCOMIds,
           className: 'h-full',
+          data: {
+            onlyFromSupplierId: supplier?.id,
+          },
         },
       },
       useMutation: undefined,
@@ -101,7 +122,7 @@ export default function COMField<T extends FieldValues>(
         ])
       },
     })
-  }, [comDatas, existCOMIds])
+  }, [comDatas, existCOMIds, supplier])
 
   const handleEditOptionSets = useCallback(
     (commodityId: number) => {
@@ -307,10 +328,10 @@ export default function COMField<T extends FieldValues>(
           className='flex w-fit items-center rounded-2xl p-2 text-sm text-stone-400 disabled:pointer-events-none disabled:opacity-50 hover:bg-stone-100 active:scale-95'
           type='button'
           onClick={handleSelectFromExist}
-          disabled={isSupplier}
+          disabled={isCreateSupplier}
         >
           <LinkIcon className='mr-2 h-4 w-4' />
-          從現有餐點選擇
+          {supplier ? '從店家餐點選擇' : '從現有餐點選擇'}
           {existCOMIds.length > 0 && ` (${existCOMIds.length})`}
         </button>
 
@@ -353,6 +374,7 @@ export default function COMField<T extends FieldValues>(
           idField='commodityId'
           size='sm'
           onSelectedIdsChange={setSelectedIds}
+          emptyIndicator={<></>}
           columns={[
             {
               name: '名稱',
@@ -402,7 +424,7 @@ export default function COMField<T extends FieldValues>(
                     }}
                   >
                     <TextInput
-                      className='max-w-[12ch] overflow-hidden text-ellipsis text-sm'
+                      className='max-w-[12ch] overflow-hidden text-ellipsis text-sm disabled:pointer-events-auto disabled:opacity-100'
                       defaultValue={row.commodity.name}
                       title={row.commodity.name}
                     />
@@ -419,7 +441,9 @@ export default function COMField<T extends FieldValues>(
               render: (row) => {
                 const isExist = !('commodity' in row)
                 if (isExist) {
-                  return data.find((com) => com.id === row.commodityId)!.price
+                  return (
+                    data.find((com) => com.id === row.commodityId)?.price ?? -1
+                  )
                 }
                 return (
                   <EditableField
@@ -464,7 +488,7 @@ export default function COMField<T extends FieldValues>(
                 if (isExist) {
                   optionSets = data.find(
                     (com) => com.id === row.commodityId,
-                  )!.optionSets
+                  )?.optionSets
                 } else {
                   optionSets = row.commodity.optionSets
                 }

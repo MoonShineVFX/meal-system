@@ -10,10 +10,12 @@ import Menus from '@/components/admin/Menus'
 import Deposits from '@/components/admin/Deposits'
 import Transactions from '@/components/admin/Transactions'
 import Orders from '@/components/admin/Orders'
+import Suppliers from '@/components/admin/Suppliers'
 
 const TAB_NAMES = [
   '餐點',
   '菜單',
+  '店家',
   '分類',
   '選項',
   '訂單',
@@ -24,6 +26,7 @@ const TAB_NAMES = [
 const TAB_PATHS = [
   'commodities',
   'menus',
+  'suppliers',
   'categories',
   'optionsets',
   'orders',
@@ -76,6 +79,7 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
           <div className='absolute inset-0'>
             {tabName === '餐點' && <Commodities />}
             {tabName === '菜單' && <Menus />}
+            {tabName === '店家' && <Suppliers />}
             {tabName === '分類' && <Categories />}
             {tabName === '選項' && <OptionSets />}
             {tabName === '訂單' && <Orders />}

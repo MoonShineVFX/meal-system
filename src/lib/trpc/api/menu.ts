@@ -14,7 +14,7 @@ import {
   removeCommoditiesFromMenu,
   deleteMenu,
   getRetailCOM,
-  createSupplier,
+  createOrUpdateSupplier,
 } from '@/lib/server/database'
 import { SERVER_NOTIFY } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
@@ -77,7 +77,7 @@ export const MenuRouter = router({
           if (!input.name) {
             throw new Error('請輸入店家名稱')
           }
-          const supplier = await createSupplier({
+          const supplier = await createOrUpdateSupplier({
             client,
             name: input.name,
             description: input.description,

@@ -17,16 +17,19 @@ import type { FormInput } from '@/components/form/field'
 import { useDialog } from '@/components/core/Dialog'
 import { OptionSetForm } from '@/components/menu/COMDialogContent'
 import { useForm } from 'react-hook-form'
+import Select from '@/components/form/base/Select'
 
 const BatchEditProps = ['價錢', '分類', '選項', '菜單'] as const
 const TabNames = ['全部', '即時', '自助', '預訂'] as const
 
 export default function Commodities() {
   const { showFormDialog, formDialog } = useFormDialog()
-  const { data, error, isError, isLoading } = trpc.commodity.get.useQuery({
+  const [supplierId, setSupplierId] = useState<number | undefined>(undefined)
+  const { data, error, isError, isLoading } = trpc.commodity.getList.useQuery({
     includeMenus: true,
+    onlyFromSupplierId: supplierId,
   })
-  const supplierQuery = trpc.supplier.getList.useQuery()
+  const supplierQuery = trpc.supplier.getList.useQuery({})
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const { showDialog, dialog } = useDialog()
@@ -34,7 +37,10 @@ export default function Commodities() {
 
   const handleEditCommodity = useCallback(
     async (commodity?: NonNullable<typeof data>[number]) => {
+      if (!supplierQuery.data) return
+      const isEdit = !!commodity
       const title = commodity ? '編輯餐點' : '新增餐點'
+
       // show
       showFormDialog({
         title,
@@ -78,7 +84,10 @@ export default function Commodities() {
           supplier: {
             defaultValue: commodity?.supplierId
               ? commodity.supplierId.toString()
+              : !isEdit && supplierId
+              ? supplierId.toString()
               : undefined,
+            disabled: isEdit,
             data: [
               ...(commodity?.supplier
                 ? [
@@ -99,7 +108,10 @@ export default function Commodities() {
             attributes: {
               defaultValue: commodity?.supplierId
                 ? commodity.supplierId.toString()
+                : !isEdit && supplierId
+                ? supplierId.toString()
                 : undefined,
+              disabled: isEdit,
             },
             label: '店家',
             type: 'select',
@@ -176,7 +188,7 @@ export default function Commodities() {
         },
       })
     },
-    [],
+    [supplierQuery.data, supplierId],
   )
 
   const handleBatchEditCommodity = useCallback(
@@ -351,7 +363,6 @@ export default function Commodities() {
     [data],
   )
 
-  // Delete
   const handleCommoditiesDelete = useCallback(
     (ids: number[]) => {
       if (!data) return
@@ -395,7 +406,7 @@ export default function Commodities() {
         }
       />
     )
-  if (isLoading || supplierQuery.isLoading) return <SpinnerBlock />
+  if (supplierQuery.isLoading) return <SpinnerBlock />
 
   return (
     <div className='relative h-full min-h-full w-full'>
@@ -409,9 +420,29 @@ export default function Commodities() {
             setSearchKeyword={setSearchKeyword}
           />
           <TabHeader
-            className='mr-auto'
             tabNames={TabNames}
-            onChange={setTabName}
+            onChange={(tabName) => {
+              setSupplierId(undefined)
+              setTabName(tabName)
+            }}
+            clear={supplierId !== undefined}
+          />
+          <Select
+            className='mr-auto w-40'
+            value={supplierId ? supplierId.toString() : ''}
+            data={[
+              { label: '無指定店家', value: '' },
+              ...supplierQuery.data.map((s) => ({
+                label: s.name,
+                value: s.id.toString(),
+              })),
+            ]}
+            selectedClassName='bg-yellow-100'
+            onChange={async (e) => {
+              setSupplierId(
+                e.target.value === '' ? undefined : parseInt(e.target.value),
+              )
+            }}
           />
           {selectedIds.length > 0 && (
             <Button
@@ -445,155 +476,161 @@ export default function Commodities() {
           />
         </div>
         {/* Table */}
-        <Table
-          data={data}
-          onDataFilter={
-            searchKeyword === '' && tabName === '全部'
-              ? undefined
-              : (data) =>
-                  data
-                    .filter((c) => {
-                      if (tabName === '全部') return true
-                      if (tabName === '即時')
-                        return c.onMenus.some((m) => m.menu.type === 'LIVE')
-                      if (tabName === '自助')
-                        return c.onMenus.some((m) => m.menu.type === 'RETAIL')
-                      if (tabName === '預訂')
-                        return c.onMenus.some((m) => m.menu.date !== null)
-                    })
-                    .filter((c) => {
-                      if (searchKeyword === '') return true
-                      return (
-                        c.name.includes(searchKeyword) ||
-                        c.description.includes(searchKeyword) ||
-                        c.categories.some((c) =>
-                          c.name.includes(searchKeyword),
-                        ) ||
-                        c.optionSets.some(
-                          (os) =>
-                            os.name.includes(searchKeyword) ||
-                            os.options.some((o) => o.includes(searchKeyword)),
+        {isLoading ? (
+          <SpinnerBlock />
+        ) : (
+          <Table
+            data={data}
+            onDataFilter={
+              searchKeyword === '' && tabName === '全部'
+                ? undefined
+                : (data) =>
+                    data
+                      .filter((c) => {
+                        if (tabName === '全部') return true
+                        if (tabName === '即時')
+                          return c.onMenus.some((m) => m.menu.type === 'LIVE')
+                        if (tabName === '自助')
+                          return c.onMenus.some((m) => m.menu.type === 'RETAIL')
+                        if (tabName === '預訂')
+                          return c.onMenus.some((m) => m.menu.date !== null)
+                      })
+                      .filter((c) => {
+                        if (searchKeyword === '') return true
+                        return (
+                          c.name.includes(searchKeyword) ||
+                          c.description.includes(searchKeyword) ||
+                          c.categories.some((c) =>
+                            c.name.includes(searchKeyword),
+                          ) ||
+                          c.optionSets.some(
+                            (os) =>
+                              os.name.includes(searchKeyword) ||
+                              os.options.some((o) => o.includes(searchKeyword)),
+                          )
                         )
-                      )
-                    })
-          }
-          columns={[
-            {
-              name: '圖片',
-              render: (row) => (
-                <div className='relative aspect-square h-16 overflow-hidden rounded-2xl'>
-                  <Image
-                    className='object-cover'
-                    src={row.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER}
-                    sizes='64px'
-                    alt={row.name}
-                  />
-                </div>
-              ),
-            },
-            {
-              name: '名稱',
-              align: 'left',
-              unhidable: true,
-              hint: (row) => row.name,
-              render: (row) => (
-                <DropdownMenu
-                  className='group/edit flex items-center rounded-2xl p-2 text-base hover:bg-black/5 active:scale-90'
-                  label={
-                    <>
-                      {row.name}
-                      <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
-                    </>
-                  }
-                >
-                  <DropdownMenuItem
-                    label='編輯'
-                    onClick={() => handleEditCommodity(row)}
-                  />
-                  {row.onMenus.some((c) => c.menu.type === 'RETAIL') && (
-                    <DropdownMenuItem
-                      label='付款碼'
-                      onClick={() => handleQRCodeGenerate(row)}
+                      })
+            }
+            columns={[
+              {
+                name: '圖片',
+                render: (row) => (
+                  <div className='relative aspect-square h-16 overflow-hidden rounded-2xl'>
+                    <Image
+                      className='object-cover'
+                      src={
+                        row.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
+                      }
+                      sizes='64px'
+                      alt={row.name}
                     />
-                  )}
-                  <DropdownMenuItem
-                    label={<span className='text-red-400'>刪除</span>}
-                    onClick={() => handleCommoditiesDelete([row.id])}
-                  />
-                </DropdownMenu>
-              ),
-              sort: (a, b) => a.name.localeCompare(b.name),
-            },
-            {
-              name: '價錢',
-              sort: true,
-              render: (row) => row.price,
-            },
-            {
-              name: '描述',
-              hideByDefault: true,
-              cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
-              sort: true,
-              render: (row) => row.description,
-            },
-            {
-              name: '分類',
-              sort: true,
-              render: (row) => row.categories.map((c) => c.name).join(', '),
-            },
-            {
-              name: '選項',
-              sort: true,
-              hint: (row) =>
-                row.optionSets
-                  ? row.optionSets
-                      .map((o) => `${o.name}: ${o.options.join(', ')}`)
-                      .join('\n')
-                  : '無選項',
-              render: (row) =>
-                row.optionSets
-                  ? row.optionSets
-                      .map((o) => `${o.name}(${o.options.length})`)
-                      .join(', ')
-                  : '無選項',
-            },
-            {
-              name: '菜單',
-              cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
-              sort: true,
-              hint: (row) =>
-                row.onMenus.length > 0
-                  ? [...row.onMenus]
-                      .reverse()
-                      .map((com) => getMenuName(com.menu))
-                      .join('\n')
-                  : '無菜單',
-              render: (row) =>
-                row.onMenus.length > 0
-                  ? [...row.onMenus]
-                      .reverse()
-                      .map((com) => getMenuName(com.menu))
-                      .join(', ')
-                  : '無菜單',
-            },
-            {
-              name: '創建日期',
-              render: (row) => row.createdAt.toLocaleDateString(),
-              hint: (row) => row.createdAt.toLocaleString(),
-              sort: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-              hideByDefault: true,
-            },
-            {
-              name: '修改日期',
-              render: (row) => row.updatedAt.toLocaleDateString(),
-              hint: (row) => row.updatedAt.toLocaleString(),
-              sort: (a, b) => a.updatedAt.getTime() - b.updatedAt.getTime(),
-              hideByDefault: true,
-            },
-          ]}
-          idField='id'
-          onSelectedIdsChange={setSelectedIds}
-        />
+                  </div>
+                ),
+              },
+              {
+                name: '名稱',
+                align: 'left',
+                unhidable: true,
+                hint: (row) => row.name,
+                render: (row) => (
+                  <DropdownMenu
+                    className='group/edit flex items-center rounded-2xl p-2 text-base hover:bg-black/5 active:scale-90'
+                    label={
+                      <>
+                        {row.name}
+                        <PencilIcon className='ml-1 inline h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/edit:rotate-45' />
+                      </>
+                    }
+                  >
+                    <DropdownMenuItem
+                      label='編輯'
+                      onClick={() => handleEditCommodity(row)}
+                    />
+                    {row.onMenus.some((c) => c.menu.type === 'RETAIL') && (
+                      <DropdownMenuItem
+                        label='付款碼'
+                        onClick={() => handleQRCodeGenerate(row)}
+                      />
+                    )}
+                    <DropdownMenuItem
+                      label={<span className='text-red-400'>刪除</span>}
+                      onClick={() => handleCommoditiesDelete([row.id])}
+                    />
+                  </DropdownMenu>
+                ),
+                sort: (a, b) => a.name.localeCompare(b.name),
+              },
+              {
+                name: '價錢',
+                sort: true,
+                render: (row) => row.price,
+              },
+              {
+                name: '描述',
+                hideByDefault: true,
+                cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
+                sort: true,
+                render: (row) => row.description,
+              },
+              {
+                name: '分類',
+                sort: true,
+                render: (row) => row.categories.map((c) => c.name).join(', '),
+              },
+              {
+                name: '選項',
+                sort: true,
+                hint: (row) =>
+                  row.optionSets
+                    ? row.optionSets
+                        .map((o) => `${o.name}: ${o.options.join(', ')}`)
+                        .join('\n')
+                    : '無選項',
+                render: (row) =>
+                  row.optionSets
+                    ? row.optionSets
+                        .map((o) => `${o.name}(${o.options.length})`)
+                        .join(', ')
+                    : '無選項',
+              },
+              {
+                name: '菜單',
+                cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
+                sort: true,
+                hint: (row) =>
+                  row.onMenus.length > 0
+                    ? [...row.onMenus]
+                        .reverse()
+                        .map((com) => getMenuName(com.menu))
+                        .join('\n')
+                    : '無菜單',
+                render: (row) =>
+                  row.onMenus.length > 0
+                    ? [...row.onMenus]
+                        .reverse()
+                        .map((com) => getMenuName(com.menu))
+                        .join(', ')
+                    : '無菜單',
+              },
+              {
+                name: '創建日期',
+                render: (row) => row.createdAt.toLocaleDateString(),
+                hint: (row) => row.createdAt.toLocaleString(),
+                sort: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+                hideByDefault: true,
+              },
+              {
+                name: '修改日期',
+                render: (row) => row.updatedAt.toLocaleDateString(),
+                hint: (row) => row.updatedAt.toLocaleString(),
+                sort: (a, b) => a.updatedAt.getTime() - b.updatedAt.getTime(),
+                hideByDefault: true,
+              },
+            ]}
+            idField='id'
+            onSelectedIdsChange={setSelectedIds}
+          />
+        )}
       </div>
       {formDialog}
       {dialog}

@@ -35,6 +35,7 @@ export default function Table<
   onDataFilter?: (data: T[number][]) => T
   footer?: JSX.Element
   size?: 'sm'
+  emptyIndicator?: JSX.Element
 }) {
   const [selectedIds, setSelectedIds] = useState<T[number][K][]>([])
   const [tableData, setTableData] = useState<T[number][]>(props.data)
@@ -365,7 +366,18 @@ export default function Table<
               style={style}
               children={
                 <>
+                  {/* Content */}
                   {children}
+                  {/* Empty */}
+                  {tableData.length === 0 &&
+                    (props.emptyIndicator ?? (
+                      <tr className='relative w-full'>
+                        <td className='absolute inset-x-0 py-8 text-center tracking-widest text-stone-400'>
+                          沒有資料
+                        </td>
+                      </tr>
+                    ))}
+                  {/* Footer */}
                   {props.footer && <tr>{props.footer}</tr>}
                 </>
               }

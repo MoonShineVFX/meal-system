@@ -1,16 +1,30 @@
 import { Tab } from '@headlessui/react'
-import { Fragment } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 export default function TabHeader<TTabNames extends readonly string[]>(props: {
   tabNames: TTabNames
   onChange?: (tabName: TTabNames[number]) => void
   className?: string
+  clear?: boolean
 }) {
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  useEffect(() => {
+    if (props.clear) {
+      setSelectedIndex(props.tabNames.length)
+    } else if (selectedIndex === props.tabNames.length) {
+      setSelectedIndex(0)
+    }
+  }, [props.clear])
+
   return (
     <Tab.Group
+      selectedIndex={selectedIndex}
       onChange={(index) => {
-        props.onChange?.(props.tabNames[index])
+        setSelectedIndex(index)
+        if (index < props.tabNames.length)
+          props.onChange?.(props.tabNames[index])
       }}
     >
       <Tab.List
@@ -34,6 +48,7 @@ export default function TabHeader<TTabNames extends readonly string[]>(props: {
             )}
           </Tab>
         ))}
+        <Tab key={`tab-${props.tabNames.length}`}></Tab>
       </Tab.List>
     </Tab.Group>
   )

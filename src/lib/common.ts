@@ -49,6 +49,9 @@ export enum SERVER_NOTIFY {
   DEPOSIT_REFUND = '退款成功',
   DEPOSIT_FAILED = '儲值失敗',
   DEPOSIT_UPDATE = '儲值狀態更新',
+  SUPPLIER_ADD = '店家新增',
+  SUPPLIER_UPDATE = '店家更新',
+  SUPPLIER_DELETE = '店家刪除',
 }
 
 export enum CurrencyType {

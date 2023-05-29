@@ -41,6 +41,7 @@ export type MenuIntroData = {
   name: string | undefined
   description: string | undefined
   createSupplier: boolean
+  supplierId?: number
 }
 
 // Inputs
@@ -119,7 +120,9 @@ type MenuCOMInput = {
 }
 type CommoditiesInput = {
   defaultValue?: number[]
-  data?: never
+  data?: {
+    onlyFromSupplierId?: number
+  }
   type: 'commodities'
   attributes?: never
 }
