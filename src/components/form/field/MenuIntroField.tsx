@@ -23,6 +23,7 @@ export default function MenuIntroField<T extends FieldValues>(
       name: undefined,
       description: undefined,
       createSupplier: false,
+      supplierId: undefined,
     },
   )
 
@@ -35,7 +36,7 @@ export default function MenuIntroField<T extends FieldValues>(
         supplierQuery.data.find((s) => s.id === introData.supplierId) ?? null,
       )
     }
-  }, [supplierQuery])
+  }, [supplierQuery.data])
 
   // set rfh value
   useEffect(() => {

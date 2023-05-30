@@ -94,7 +94,7 @@ export default function Suppliers() {
             />
           )}
           <Button
-            label='新增餐點'
+            label='新增店家'
             className='py-3 px-4'
             textClassName='font-bold'
             onClick={handleSupplierCreateOrEdit}

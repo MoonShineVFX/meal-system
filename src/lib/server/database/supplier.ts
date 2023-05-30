@@ -20,8 +20,16 @@ export async function getSuppliers(props: { countCOMs?: boolean }) {
       ? {
           _count: {
             select: {
-              menus: true,
-              commodities: true,
+              menus: {
+                where: {
+                  isDeleted: false,
+                },
+              },
+              commodities: {
+                where: {
+                  isDeleted: false,
+                },
+              },
             },
           },
         }

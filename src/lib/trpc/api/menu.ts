@@ -55,6 +55,7 @@ export const MenuRouter = router({
           )
           .optional(),
         createSupplier: z.boolean().optional(),
+        supplierId: z.number().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -70,8 +71,12 @@ export const MenuRouter = router({
         throw new Error('編輯菜單時不可新增店家')
       }
 
+      if (input.supplierId && input.createSupplier) {
+        throw new Error('不可同時指定店家與新增店家')
+      }
+
       await prismaCient.$transaction(async (client) => {
-        let supplierId: number | undefined = undefined
+        let supplierId: number | undefined = input.supplierId
         // create supplier
         if (input.createSupplier) {
           if (!input.name) {
