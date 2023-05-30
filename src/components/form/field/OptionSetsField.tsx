@@ -203,7 +203,7 @@ function OptionSetField(props: {
           <TextInput
             ref={inputRef}
             className={twMerge(
-              'ml-1 max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300',
+              'ml-1 max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300 disabled:pointer-events-auto disabled:opacity-100',
               !isEdit && 'cursor-text hover:bg-stone-100',
               isEdit && 'bg-stone-100',
             )}
@@ -330,7 +330,7 @@ function OptionField(props: {
         <TextInput
           ref={inputRef}
           className={twMerge(
-            'ml-1 max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300',
+            'ml-1 max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300 disabled:pointer-events-auto disabled:opacity-100',
             !isEdit && 'cursor-text hover:bg-stone-100',
             isEdit && 'bg-stone-100',
           )}

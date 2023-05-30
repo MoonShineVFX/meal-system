@@ -65,6 +65,7 @@ export default function COMField<T extends FieldValues>(
 
   // clean exist com data if isSupplier is true
   useEffect(() => {
+    if (props.formInput.data?.isEdit) return
     if (isCreateSupplier) {
       setComDatas((prev) => prev.filter((comData) => 'commodity' in comData))
     }
@@ -75,6 +76,12 @@ export default function COMField<T extends FieldValues>(
     if (!data) return
     if (!supplier) {
       setComDatas([])
+      return
+    }
+
+    // set comdatas to default value if isEdit
+    if (props.formInput.data?.isEdit) {
+      setComDatas(props.formInput.defaultValue ?? [])
       return
     }
     setComDatas(

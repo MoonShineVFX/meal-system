@@ -49,7 +49,11 @@ export default function Cart() {
     isError: cartIsError,
     error: cartError,
   } = trpc.cart.get.useQuery()
-  const deleteCartMutation = trpc.cart.delete.useMutation()
+  const deleteCartMutation = trpc.cart.delete.useMutation({
+    onSuccess: () => {
+      deleteCartMutation.reset()
+    },
+  })
   const [modifiedNotify, setModifiedNotify] = useState(false)
   const [cartItemInOptionsDialog, setCartItemInOptionsDialog] =
     useState<CartItems[0]>()

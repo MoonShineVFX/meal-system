@@ -128,13 +128,17 @@ type CommoditiesInput = {
 }
 type MenuTypeDateInput = {
   defaultValue?: MenuDateTypeData
-  data?: never
+  data?: {
+    isEdit?: boolean
+  }
   type: 'menuTypeDate'
   attributes?: never
 }
 type COMInput = {
   defaultValue?: COMData[]
-  data?: never
+  data?: {
+    isEdit?: boolean
+  }
   type: 'com'
   attributes?: never
 }

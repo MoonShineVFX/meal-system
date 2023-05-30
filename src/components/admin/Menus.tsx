@@ -69,6 +69,8 @@ export default function Menus() {
               name: menu?.name,
               description: menu?.description,
               createSupplier: false,
+              supplierId:
+                menu?.supplierId === null ? undefined : menu?.supplierId,
             },
             data: isEdit
               ? {
@@ -86,6 +88,9 @@ export default function Menus() {
           typeDate: {
             label: '類型',
             type: 'menuTypeDate',
+            data: {
+              isEdit: isEdit,
+            },
             defaultValue:
               isEdit && menu
                 ? {
@@ -104,6 +109,9 @@ export default function Menus() {
             label: '餐點',
             type: 'com',
             className: 'h-full',
+            data: {
+              isEdit: isEdit,
+            },
             defaultValue: menu
               ? menu.commodities.map((com) => ({
                   commodityId: com.commodity.id,
@@ -128,6 +136,7 @@ export default function Menus() {
             publishedDate: formData.typeDate.publishedDate,
             closedDate: formData.typeDate.closedDate,
             createSupplier: formData.intro.createSupplier,
+            supplierId: formData.intro.supplierId,
             isEdit: isEdit,
           })
         },

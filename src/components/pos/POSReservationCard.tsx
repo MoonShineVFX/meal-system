@@ -62,7 +62,6 @@ export default function POSReservationCard(props: {
         ),
     }
   }, [com, props.isFuture, com?.orderTimes.timePreparing.value])
-  console.log(printProps)
 
   const handleStatusModify = useCallback(
     (status: OrderStatus) => {

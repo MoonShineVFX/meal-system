@@ -68,7 +68,11 @@ function COMDialogContent(props: {
   // Reset selected option sets when commodity changes
   useEffect(() => {
     if (com) {
-      setIsLimited(com.limitPerUser > 0 || com.stock > 0)
+      setIsLimited(
+        com.limitPerUser > 0 ||
+          com.stock > 0 ||
+          (menu?.limitPerUser !== undefined && menu.limitPerUser > 0),
+      )
       reset()
     }
   }, [com])
@@ -152,13 +156,13 @@ function COMDialogContent(props: {
               {com.stock > 0 && (
                 <div className='flex items-center gap-2'>
                   <Square3Stack3DIcon className='h-4 w-4 text-stone-300' />
-                  <p className='tracking-wider text-stone-500'>{`限量 ${com.stock} 份`}</p>
+                  <p className='tracking-wider text-stone-500'>{`此餐點限量 ${com.stock} 份`}</p>
                 </div>
               )}
               {com.limitPerUser > 0 && (
                 <div className='flex items-center gap-2'>
                   <UserPlusIcon className='h-4 w-4 text-stone-300' />
-                  <p className='tracking-wider text-stone-500'>{`每人限點 ${com.limitPerUser} 份`}</p>
+                  <p className='tracking-wider text-stone-500'>{`此餐點每人限點 ${com.limitPerUser} 份`}</p>
                 </div>
               )}
             </div>

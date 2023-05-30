@@ -3,7 +3,10 @@ import type { MenuType } from '@prisma/client'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { twMerge } from 'tailwind-merge'
-import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
+import {
+  ExclamationTriangleIcon,
+  DocumentArrowUpIcon,
+} from '@heroicons/react/20/solid'
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
 
 import Tab from '@/components/core/Tab'
@@ -250,6 +253,20 @@ export default function Menu(props: {
                   </h1>
                 </div>
               )}
+              {/* description */}
+              {data?.description && props.fromReserve && (
+                <h3 className='mb-4 rounded-2xl bg-stone-100 p-4 text-sm text-stone-400'>
+                  {data.description}
+                </h3>
+              )}
+              {data?.limitPerUser && data.limitPerUser > 0 ? (
+                <div className='mb-4 flex items-center gap-2'>
+                  <DocumentArrowUpIcon className='h-4 w-4 text-stone-300' />
+                  <p className='text-sm tracking-wider text-stone-500'>
+                    <span>{`每人總共限點 ${data.limitPerUser} 份，您還能點 ${data.maxQuantity} 份`}</span>
+                  </p>
+                </div>
+              ) : null}
               {/* Warning */}
               {data && data.unavailableReasons.length > 0 && (
                 <section className='mb-4 flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-stone-500'>

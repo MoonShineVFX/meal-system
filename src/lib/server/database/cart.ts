@@ -79,7 +79,9 @@ export async function createCartItem(args: CreateCartItemArgs) {
       },
       update: {
         invalid: false,
-        quantity: 1,
+        quantity: {
+          increment: quantity,
+        },
       },
       create: {
         userId,
