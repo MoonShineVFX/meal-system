@@ -195,6 +195,7 @@ export default function Reservations(props: { activeMenuId?: number }) {
                         </div>
                         {/* Date close */}
                         <p className='w-fit whitespace-nowrap rounded-xl text-xs tracking-wider text-stone-400 group-data-loading:skeleton'>
+                          {menu?.name && menu.name + ' ‧ '}
                           {(menu
                             ?.closedDate!.toLocaleString('zh-TW', {
                               month: 'short',
