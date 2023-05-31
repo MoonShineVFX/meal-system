@@ -463,6 +463,7 @@ export async function getCartItemsBase({
           date: thisMenu.date,
           type: thisMenu.type,
           maxQuantity: thisMenu.maxQuantity,
+          limitPerUser: thisMenu.limitPerUser,
         },
         commodity: {
           name: thisCOM.commodity.name,

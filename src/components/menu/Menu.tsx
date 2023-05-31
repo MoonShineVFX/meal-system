@@ -255,7 +255,7 @@ export default function Menu(props: {
               )}
               {/* description */}
               {data?.description && props.fromReserve && (
-                <h3 className='mb-4 rounded-2xl bg-stone-100 p-4 text-sm text-stone-400'>
+                <h3 className='mb-4 rounded-2xl text-sm text-stone-400'>
                   {data.description}
                 </h3>
               )}

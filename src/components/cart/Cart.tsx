@@ -60,7 +60,7 @@ export default function Cart() {
   const cartItemsAndMenus = useMemo(() => {
     if (!cartData) return []
 
-    // Separate cart items by menu
+    // Separate cart items by menu and calculate correct menu maxQuantity
     let cartItemsByMenu: CartItemsByMenu = new Map()
     for (const cartItem of cartData.cartItems) {
       const menu = cartItem.commodityOnMenu.menu
@@ -68,20 +68,28 @@ export default function Cart() {
         cartItemsByMenu.set(cartItem.menuId, {
           ...menu,
           cartItems: [cartItem],
+          maxQuantity: menu.limitPerUser - cartItem.quantity,
         })
       } else {
         cartItemsByMenu.get(cartItem.menuId)!.cartItems.push(cartItem)
+        cartItemsByMenu.get(cartItem.menuId)!.maxQuantity -= cartItem.quantity
       }
     }
 
     // Sort cart items and flatten to array
     cartItemsByMenu = new Map([...cartItemsByMenu.entries()].sort())
     const cartItemsAndMenus: CartItemsAndMenus = []
+    console.log(cartItemsByMenu)
     for (const [menuId, menu] of cartItemsByMenu) {
       const { cartItems, ...menuWithoutCartItems } = menu
       cartItemsAndMenus.push(
         { ...menuWithoutCartItems, id: menuId },
-        ...cartItems.sort((a, b) => a.commodityId - b.commodityId),
+        ...cartItems
+          .sort((a, b) => a.commodityId - b.commodityId)
+          .map((c) => {
+            c.commodityOnMenu.menu.maxQuantity = menu.maxQuantity
+            return c
+          }),
       )
     }
 

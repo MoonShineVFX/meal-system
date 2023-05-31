@@ -23,7 +23,7 @@ const STATUS_BACKGROUND_COLOR = [
 ]
 const STATUS_NAME_TEXT = [
   '已付款',
-  '製作中',
+  '處理中',
   '已出餐',
   '完成',
   '已取消',
