@@ -74,6 +74,8 @@ export default function POSReservationCard(props: {
     [com],
   )
 
+  console.log('>', com?.optionsWithOrders)
+
   return (
     <POSCard
       order={
@@ -114,7 +116,7 @@ export default function POSReservationCard(props: {
             >
               <div className='flex flex-wrap gap-2 gap-y-0'>
                 {(optionWithOrders &&
-                  Object.keys(optionWithOrders).length === 0) ||
+                  Object.keys(optionWithOrders.option).length === 0) ||
                 !optionWithOrders ? (
                   <p className='rounded-xl group-data-loading:skeleton'>
                     無細項
@@ -141,7 +143,7 @@ export default function POSReservationCard(props: {
         icon={null}
         title={
           activeOptionsWithOrders &&
-          Object.keys(activeOptionsWithOrders).length > 0
+          Object.keys(activeOptionsWithOrders.option).length > 0
             ? Object.entries(activeOptionsWithOrders.option)
                 .filter(
                   ([, value]) => !Array.isArray(value) || value.length > 0,
