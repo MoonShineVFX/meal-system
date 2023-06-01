@@ -1,11 +1,16 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TrashIcon } from '@heroicons/react/24/outline'
-import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
+import {
+  TrashIcon,
+  ArrowUturnLeftIcon,
+  PrinterIcon,
+} from '@heroicons/react/24/outline'
 
 import Spinner from '@/components/core/Spinner'
 import { OrderStatus } from '@/lib/common'
+import { print } from '@/lib/client/printer'
+import { useStore, NotificationType } from '@/lib/client/store'
 
 const STATUS_BUTTON_TEXT = ['製作', '出餐', '完成', '', '', '取消']
 const STATUS_BACKGROUND_COLOR = [
@@ -18,7 +23,7 @@ const STATUS_BACKGROUND_COLOR = [
 ]
 const STATUS_NAME_TEXT = [
   '已付款',
-  '製作中',
+  '處理中',
   '已出餐',
   '完成',
   '已取消',
@@ -46,12 +51,16 @@ export default function POSCard(props: {
   disableStatusButton?: boolean
   onStatusModify: (status: OrderStatus) => void
   isLoading?: boolean
+  print?: Omit<Parameters<typeof print>[0], 'onSuccess' | 'onError'>
 }) {
+  const [isPrinting, setIsPrinting] = useState(false)
+  const [isPreparingPressed, setIsPreparingPressed] = useState(false)
   const motionProperties = useMemo(() => {
     if (props.disableAnimation) return {}
     return POSMotionProperties
   }, [props.disableAnimation])
   const [isCanceling, setIsCanceling] = useState(false)
+  const addNotification = useStore((state) => state.addNotification)
   const { order } = props
   const { step, date } = useMemo(() => {
     let result: { step: number; date?: Date } | undefined = undefined
@@ -79,6 +88,7 @@ export default function POSCard(props: {
 
     switch (step) {
       case 0:
+        setIsPreparingPressed(true)
         props.onStatusModify('timePreparing')
         break
       case 1:
@@ -94,6 +104,33 @@ export default function POSCard(props: {
     }
   }, [step])
 
+  const handlePrintClick = useCallback(() => {
+    if (!props.print) return
+    setIsPrinting(true)
+
+    print({
+      ...props.print!,
+      onSuccess: () => {
+        console.debug('Printed')
+        setIsPrinting(false)
+      },
+      onError: (error) => {
+        addNotification({
+          type: NotificationType.ERROR,
+          message: `列印失敗: ${error.message}`,
+        })
+        setIsPrinting(false)
+      },
+    })
+  }, [props.print])
+
+  useEffect(() => {
+    if (isPreparingPressed && order?.timePreparing !== null && props.print) {
+      handlePrintClick()
+      setIsPreparingPressed(false)
+    }
+  }, [order?.timePreparing])
+
   return (
     <motion.div
       className='relative flex h-max flex-col gap-4 overflow-hidden rounded-2xl border bg-white p-4 shadow-lg sm:min-h-[26rem] lg:p-6'
@@ -107,10 +144,27 @@ export default function POSCard(props: {
         )}
       </AnimatePresence>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <h1 className='rounded-xl font-bold tracking-wider group-data-loading:skeleton'>
+      <div className='flex items-center'>
+        <h1 className='mr-auto rounded-xl font-bold tracking-wider group-data-loading:skeleton'>
           {props.header}
         </h1>
+        {/* Printer Button */}
+        {props.print && step < 3 && (
+          <button
+            className={twMerge(
+              '-m-2 mr-2 rounded-full p-2 group-data-loading:hidden hover:bg-stone-600/10 active:scale-90 active:bg-stone-600/10',
+              isPrinting && 'pointer-events-none',
+            )}
+            onClick={handlePrintClick}
+            title={'列印'}
+          >
+            {isPrinting ? (
+              <Spinner className='h-6 w-6 p-0.5' />
+            ) : (
+              <PrinterIcon className='h-6 w-6 p-0.5 text-stone-600/60' />
+            )}
+          </button>
+        )}
         {/* Cancel Button */}
         {!props.disableInteraction && step !== 3 && (
           <button

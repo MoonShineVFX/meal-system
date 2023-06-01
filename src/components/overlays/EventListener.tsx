@@ -126,7 +126,7 @@ export default function EventListener() {
         case SERVER_NOTIFY.COMMODITY_ADD:
         case SERVER_NOTIFY.COMMODITY_UPDATE:
         case SERVER_NOTIFY.COMMODITY_DELETE:
-          trpcContext.commodity.get.invalidate()
+          trpcContext.commodity.getList.invalidate()
           break
         case SERVER_NOTIFY.OPTION_SETS_ADD:
         case SERVER_NOTIFY.OPTION_SETS_UPDATE:
@@ -139,6 +139,15 @@ export default function EventListener() {
           trpcContext.menu.get.invalidate()
           trpcContext.menu.getActives.invalidate()
           trpcContext.menu.getReservations.invalidate()
+          break
+        case SERVER_NOTIFY.DEPOSIT_UPDATE:
+          trpcContext.deposit.getList.invalidate()
+          break
+        case SERVER_NOTIFY.SUPPLIER_ADD:
+        case SERVER_NOTIFY.SUPPLIER_UPDATE:
+        case SERVER_NOTIFY.SUPPLIER_DELETE:
+          trpcContext.supplier.getList.invalidate()
+          trpcContext.commodity.getList.invalidate()
           break
       }
     },

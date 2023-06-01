@@ -25,6 +25,7 @@ type CreateMenuArgs = {
   publishedDate?: Date | null
   closedDate?: Date | null
   limitPerUser?: number
+  supplierId?: number
   isEdit?: boolean
   client?: Prisma.TransactionClient | PrismaClient
 } & (CommonCreateMenuArgs | ReserveCreateMenuArgs)
@@ -39,6 +40,7 @@ export async function createMenu({
   limitPerUser,
   client,
   isEdit,
+  supplierId,
 }: CreateMenuArgs) {
   const thisPrisma = client ?? prisma
 
@@ -51,6 +53,7 @@ export async function createMenu({
   const existMenu = await thisPrisma.menu.findFirst({
     where: { type, date, isDeleted: false },
   })
+
   if (existMenu && !isEdit) {
     throw new Error('已經有該設定的菜單')
   } else if (!existMenu && isEdit) {
@@ -79,6 +82,7 @@ export async function createMenu({
         publishedDate,
         closedDate,
         limitPerUser,
+        supplierId,
         type,
         date,
       },
@@ -177,6 +181,9 @@ export async function getReservationMenus({ userId }: { userId: string }) {
         take: 6, // take 6 commodities for reservation ui width
         orderBy: {
           createdAt: 'asc',
+        },
+        where: {
+          isDeleted: false,
         },
         select: {
           commodity: {
@@ -352,20 +359,16 @@ export async function getMenuWithComs({
   const menu = rawMenu as ConvertPrismaJson<typeof rawMenu>
 
   // Validate menu and coms status
-  let menuOrderedCount = {
-    total: 0,
-    user: 0,
-  }
+  let menuOrderedCount = 0
 
   // coms
   const validatedComs = menu.commodities?.map((com) => {
     const orderedCount = com.orderItems.reduce(
       (acc, cur) => {
         if (cur.order.userId === userId) {
-          menuOrderedCount.user += cur.quantity
+          menuOrderedCount += cur.quantity
           acc.user += cur.quantity
         }
-        menuOrderedCount.total += cur.quantity
         acc.total += cur.quantity
         return acc
       },
@@ -378,7 +381,7 @@ export async function getMenuWithComs({
 
     if (!excludeCartItems) {
       for (const cartItem of com.cartItems) {
-        menuOrderedCount.user += cartItem.quantity
+        menuOrderedCount += cartItem.quantity
         orderedCount.user += cartItem.quantity
         orderedCount.cart += cartItem.quantity
       }
@@ -429,15 +432,13 @@ export async function getMenuWithComs({
   if (menu.closedDate && menu.closedDate < now) {
     menuUnavailableReasons.push(MenuUnavailableReason.CLOSED)
   }
-  if (menu.limitPerUser !== 0 && menuOrderedCount.total >= menu.limitPerUser) {
+  if (menu.limitPerUser !== 0 && menuOrderedCount >= menu.limitPerUser) {
     menuUnavailableReasons.push(
       MenuUnavailableReason.MENU_LIMIT_PER_USER_EXCEEDED,
     )
   }
   const maxQuantity = Math.min(
-    menu.limitPerUser !== 0
-      ? menu.limitPerUser - menuOrderedCount.total
-      : Infinity,
+    menu.limitPerUser !== 0 ? menu.limitPerUser - menuOrderedCount : Infinity,
   )
 
   // lower coms max quantity if menu max quantity is lower
@@ -651,6 +652,7 @@ export async function removeCommoditiesFromMenu(args: {
 }) {
   const { excludeCommodityIds, menuId, client } = args
   const thisPrisma = client ?? prisma
+
   return await thisPrisma.commodityOnMenu.updateMany({
     where: {
       commodityId: {

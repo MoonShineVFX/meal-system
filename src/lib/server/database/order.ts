@@ -270,15 +270,17 @@ export async function getOrders({
   type,
   keyword,
 }: {
-  userId: string
+  userId?: string
   cursor?: number
 } & (
   | { type: 'live' | 'reservation' | 'archived'; keyword?: never }
   | { type: 'search'; keyword: string }
 )) {
-  if (type === 'search' && !keyword) return []
+  // Check if keyword is empty and search by user UI and return empty
+  if (type === 'search' && !keyword && userId) return []
 
   let whereInput: Prisma.OrderWhereInput
+  let orderBys: Prisma.OrderOrderByWithRelationInput[] | undefined = undefined
   switch (type) {
     case 'live':
       whereInput = {
@@ -299,6 +301,21 @@ export async function getOrders({
           type: { not: 'LIVE' },
         },
       }
+      orderBys = [
+        {
+          menu: {
+            date: 'asc',
+          },
+        },
+        {
+          menu: {
+            type: 'asc',
+          },
+        },
+        {
+          id: 'desc',
+        },
+      ]
       break
     case 'archived':
       whereInput = {
@@ -307,6 +324,12 @@ export async function getOrders({
       }
       break
     case 'search':
+      // Check if empty keyword and from staff, than return all
+      if (!keyword && !userId) {
+        whereInput = {}
+        break
+      }
+
       // check if keyword is a order id
       if (keyword.match(/^\#\d+$/)) {
         whereInput = {
@@ -412,6 +435,7 @@ export async function getOrders({
         OR: [
           { menu: { name: { contains: keyword } } },
           { items: { some: { name: { contains: keyword } } } },
+          { user: { name: { contains: keyword } } },
         ],
       }
       break
@@ -449,10 +473,15 @@ export async function getOrders({
           creditAmount: true,
         },
       },
+      user: {
+        select: {
+          name: true,
+        },
+      },
     },
     cursor: cursor ? { id: cursor } : undefined,
     take: settings.ORDER_TAKE_PER_QUERY + 1,
-    orderBy: {
+    orderBy: orderBys ?? {
       createdAt: 'desc',
     },
   })
@@ -679,6 +708,7 @@ export async function getReservationOrdersForPOS({
             orders: [],
           }
         }
+        // Add quantity per options
         optionsWithOrdersMap[optionsKey].quantity += item.quantity
         const userOrder = optionsWithOrdersMap[optionsKey].orders.find(
           (order) => order.user.id === item.order.user.id,
@@ -741,6 +771,7 @@ export async function getReservationOrdersForPOS({
         optionsWithOrders: Object.keys(optionsWithOrdersMap)
           .sort()
           .map((key) => optionsWithOrdersMap[key]),
+        orderItems: com.orderItems as ConvertPrismaJson<typeof com.orderItems>,
       }
     })
 
@@ -762,7 +793,7 @@ export async function getReservationOrdersForPOS({
   return reservationMenus
 }
 
-/* Update order, and process refund if canceled, if userId provided, valid userId owned */
+/* Update order, and process refund if canceled, if userId provided, validate user if owned order */
 export async function updateOrderStatus({
   orderId,
   status,
@@ -858,13 +889,15 @@ export async function updateOrderStatus({
       throw new Error('Payment transaction not found for refund')
     }
 
-    // Calculate refund amount, bypass pointAmount
+    // Calculate refund amount, bypass pointAmount if canceled by user
     let creditAmountRemain = detailedOrder.paymentTransaction.creditAmount
+    let pointAmountRemain = detailedOrder.paymentTransaction.pointAmount
 
     for (const orderForPayment of detailedOrder.paymentTransaction
       .ordersForPayment) {
       if (orderForPayment.canceledTransaction) {
         creditAmountRemain -= orderForPayment.canceledTransaction.creditAmount
+        pointAmountRemain -= orderForPayment.canceledTransaction.pointAmount
       }
     }
 
@@ -872,12 +905,17 @@ export async function updateOrderStatus({
       return acc + item.price * item.quantity
     }, 0)
     const creditAmountToRefund = Math.min(creditAmountRemain, thisOrderPrice)
+    const pointAmountToRefund = userId
+      ? 0
+      : Math.min(pointAmountRemain, thisOrderPrice - creditAmountToRefund)
+    // If canceled by user, no need to refund point
 
     // Create refund transaction
-    if (creditAmountToRefund > 0) {
+    if (creditAmountToRefund > 0 || pointAmountToRefund > 0) {
       const { callback } = await rechargeUserBalanceBase({
         userId: order.userId,
         creditAmount: creditAmountToRefund,
+        pointAmount: pointAmountToRefund,
         orderId,
         client,
       })

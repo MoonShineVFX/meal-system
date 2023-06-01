@@ -16,6 +16,7 @@ import DateField from './DateField'
 import MenuTypeDateField from './MenuTypeDateField'
 import DatetimeField from './DatetimeField'
 import COMField from './COMField'
+import MenuIntroField from './MenuIntroField'
 
 export function FormField<TFieldValues extends FieldValues>(props: {
   formInput: FormInput & {
@@ -130,6 +131,12 @@ export function FormField<TFieldValues extends FieldValues>(props: {
     case 'com':
       content = (
         <COMField formInput={formInput} useFormReturns={useFormReturns} />
+      )
+      break
+    // MenuIntro
+    case 'menuIntro':
+      content = (
+        <MenuIntroField formInput={formInput} useFormReturns={useFormReturns} />
       )
       break
     default:

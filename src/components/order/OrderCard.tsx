@@ -10,7 +10,7 @@ import Tooltip from '@/components/core/Tooltip'
 import Button from '@/components/core/Button'
 import Dialog from '@/components/core/Dialog'
 
-const ORDER_STEPS = ['付款', '製作中', '可取餐', '完成']
+const ORDER_STEPS = ['付款', '處理中', '可取餐', '完成']
 const CANCEL_STEPS = ['付款', '已取消', '']
 
 const SELECT_STEP_DATE = ({

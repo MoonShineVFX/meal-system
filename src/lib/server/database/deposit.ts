@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import { DepositStatus } from '@prisma/client'
+import { DepositStatus, Prisma } from '@prisma/client'
 
 import { rechargeUserBalanceBase, refundUserBalanceBase } from './transaction'
 import { createMPGRequest } from '@/lib/server/deposit/newebpay'
@@ -126,6 +126,91 @@ export async function getDeposit(id: string) {
       transactions: true,
     },
   })
+}
+
+const depositStatusStrings = Object.values(DepositStatus) as string[]
+export async function getDeposits({
+  keyword,
+  cursor,
+}: {
+  keyword?: string
+  cursor?: string
+}) {
+  let whereInput: Prisma.DepositWhereInput = {}
+
+  if (keyword && keyword !== '') {
+    if (keyword.match(/^\#.+$/)) {
+      // Deposit ID
+      const thisId = keyword.slice(1)
+      whereInput = {
+        id: {
+          contains: thisId,
+        },
+      }
+      // if match deposit status
+    } else if (depositStatusStrings.includes(keyword.toUpperCase())) {
+      whereInput = {
+        status: keyword.toUpperCase() as DepositStatus,
+      }
+    } else if (keyword.match(/^[1-9]\d*$/)) {
+      // Price amount
+      const amount = parseInt(keyword)
+      whereInput = {
+        amount,
+      }
+    } else {
+      // Check datetime format
+      let keywordForDate = keyword
+      if (keyword.match(/^\d{1,2}[\ \/\-]\d{1,2}$/)) {
+        keywordForDate = `${new Date().getFullYear()} ${keyword}`
+      } else if (keyword.match(/^\d{4}$/)) {
+        keywordForDate = `${new Date().getFullYear()} ${keyword.slice(
+          0,
+          2,
+        )}-${keyword.slice(2, 4)}`
+      }
+      const searchDate = new Date(keywordForDate)
+      if (
+        !isNaN(searchDate.getTime()) &&
+        searchDate.getFullYear() > 2020 &&
+        searchDate.getFullYear() < 2100
+      ) {
+        const searchDateStart = new Date(searchDate.setHours(0, 0, 0, 0))
+        const searchDateEnd = new Date(searchDate.setHours(23, 59, 59, 999))
+        whereInput = {
+          createdAt: {
+            gte: searchDateStart,
+            lte: searchDateEnd,
+          },
+        }
+      } else {
+        whereInput = {
+          user: {
+            name: {
+              contains: keyword,
+            },
+          },
+        }
+      }
+    }
+  }
+
+  const deposits = await prisma.deposit.findMany({
+    where: whereInput,
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: settings.DEPOSITS_PER_QUERY + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  })
+  return deposits
 }
 
 export async function deleteDeposit(id: string) {

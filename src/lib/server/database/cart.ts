@@ -79,7 +79,9 @@ export async function createCartItem(args: CreateCartItemArgs) {
       },
       update: {
         invalid: false,
-        quantity: 1,
+        quantity: {
+          increment: quantity,
+        },
       },
       create: {
         userId,
@@ -461,6 +463,7 @@ export async function getCartItemsBase({
           date: thisMenu.date,
           type: thisMenu.type,
           maxQuantity: thisMenu.maxQuantity,
+          limitPerUser: thisMenu.limitPerUser,
         },
         commodity: {
           name: thisCOM.commodity.name,

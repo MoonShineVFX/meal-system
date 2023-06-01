@@ -145,8 +145,10 @@ function CartItemCard(props: {
     ? [cartItem.quantity - 1]
     : [
         ...Array(
-          (cartItem as CartItems[0]).commodityOnMenu.maxQuantity +
-            cartItem.quantity,
+          Math.min(
+            (cartItem as CartItems[0]).commodityOnMenu.maxQuantity,
+            (cartItem as CartItems[0]).commodityOnMenu.menu.maxQuantity,
+          ) + cartItem.quantity,
         ).keys(),
       ]
 

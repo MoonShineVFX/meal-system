@@ -122,6 +122,7 @@ export default function MenuTypeDateField<T extends FieldValues>(
           label,
           value,
         }))}
+        disabled={props.formInput.data?.isEdit}
         onChange={(e) => {
           const menuType = e.target.value as MenuType
           const isReservation = !['LIVE', 'RETAIL'].includes(menuType)
@@ -144,7 +145,7 @@ export default function MenuTypeDateField<T extends FieldValues>(
         <DateInput
           ref={reservationDateRef}
           className='text-sm'
-          disabled={!isReservation}
+          disabled={!isReservation || props.formInput.data?.isEdit}
           value={convertDateToInputDateValue(value?.date)}
           onChange={(e) => {
             const date = convertInputDateValueToDate(e.target.value)

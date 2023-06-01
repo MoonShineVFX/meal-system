@@ -130,7 +130,7 @@ export async function getUserLite({ token }: { token: string }) {
 
 export async function getUserInfo(userId: string) {
   const result = await prisma.$transaction(async (client) => {
-    const user = await client.user.findUnique({
+    let user = await client.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -153,19 +153,50 @@ export async function getUserInfo(userId: string) {
     let isRecharged = false
     let thisCallback: (() => Promise<Transaction>) | undefined = undefined
     const now = new Date()
-    const lastRechargeTime = user.lastPointRechargeTime ?? new Date(0)
-    if (now.toLocaleDateString() !== lastRechargeTime.toLocaleDateString()) {
-      // Recharge points
-      if (user.pointBalance < settings.POINT_DAILY_RECHARGE_AMOUNT) {
-        const { callback } = await rechargeUserBalanceBase({
-          userId: user.id,
-          pointAmount: settings.POINT_DAILY_RECHARGE_AMOUNT - user.pointBalance,
-          client,
-        })
-        thisCallback = callback
+    // if no last recharge time, set yesterday
+    const lastRechargeTime =
+      user.lastPointRechargeTime ??
+      new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
-        user.pointBalance = settings.POINT_DAILY_RECHARGE_AMOUNT
-        isRecharged = true
+    // If last recharge time is not today, recharge
+    if (now.toLocaleDateString() !== lastRechargeTime.toLocaleDateString()) {
+      lastRechargeTime.setDate(lastRechargeTime.getDate() + 1)
+      let currentDay = new Date(
+        lastRechargeTime.getFullYear(),
+        lastRechargeTime.getMonth(),
+        lastRechargeTime.getDate(),
+      )
+      const targetDay = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+      )
+
+      let rechargeAmount = 0
+      let isNewMonth = false
+
+      while (currentDay.getTime() <= targetDay.getTime()) {
+        // If month changed, reset recharge amount
+        if (currentDay.getMonth() !== targetDay.getMonth()) {
+          isNewMonth = true
+          rechargeAmount = 0
+          currentDay = new Date(
+            currentDay.getFullYear(),
+            currentDay.getMonth() + 1,
+            1,
+          )
+          continue
+        }
+        // If day is weekday and not make-up day, recharge
+        const isHoliday = settings.HOLIDAYS.includes(currentDay.getTime())
+        const isWeekDay =
+          !isHoliday && currentDay.getDay() > 0 && currentDay.getDay() < 6
+        const isMakuUpDay = settings.MAKE_UP_DAYS.includes(currentDay.getTime())
+
+        if (isMakuUpDay || isWeekDay) {
+          rechargeAmount += settings.POINT_DAILY_RECHARGE_AMOUNT
+        }
+        currentDay = new Date(currentDay.getTime() + 24 * 60 * 60 * 1000)
       }
 
       // Update last recharge time
@@ -175,6 +206,21 @@ export async function getUserInfo(userId: string) {
           lastPointRechargeTime: now,
         },
       })
+
+      if (rechargeAmount === 0 && !isNewMonth) return null
+
+      // Recharge points
+      const { callback, user: newUser } = await rechargeUserBalanceBase({
+        userId: user.id,
+        pointAmount: isNewMonth
+          ? rechargeAmount - user.pointBalance
+          : rechargeAmount,
+        client,
+      })
+      thisCallback = callback
+
+      user.pointBalance = newUser.pointBalance
+      isRecharged = true
     }
 
     const { lastPointRechargeTime, ...resultUser } = user

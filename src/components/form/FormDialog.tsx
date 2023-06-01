@@ -26,7 +26,7 @@ type FormDialogProps<
   U extends FormInputsProps,
 > = {
   open: boolean
-  onClose: () => void
+  onClose?: () => void
   title: string
   className?: string
   style?: React.CSSProperties | ((columns: number) => React.CSSProperties)
@@ -99,7 +99,7 @@ export default function FormDialog<
   // Close the dialog when the mutation is successful
   useEffect(() => {
     if (mutation && mutation.isSuccess && props.open) {
-      props.onClose()
+      props.onClose?.()
       mutation.reset()
     }
   }, [mutation])
@@ -117,7 +117,7 @@ export default function FormDialog<
         formData as ExpandRecursively<FormData<U>>,
         undefined as Parameters<typeof props.onSubmit>[1],
       )
-      props.onClose()
+      props.onClose?.()
     }
   }
 
@@ -127,11 +127,11 @@ export default function FormDialog<
       showClosingDialog({
         ...props.closeConfirm,
         onConfirm: () => {
-          props.onClose()
+          props.onClose?.()
         },
       })
     } else {
-      props.onClose()
+      props.onClose?.()
     }
   }, [isDirty, props.closeConfirm, props.onClose])
 
@@ -194,7 +194,9 @@ export default function FormDialog<
                         return (
                           <FormField
                             key={formInput.name}
+                            // @ts-ignore
                             formInput={formInput}
+                            // @ts-ignore
                             useFormReturns={useFormReturns}
                           />
                         )
@@ -238,7 +240,7 @@ export default function FormDialog<
 type ShowFormDialogProps<
   T extends (() => UseMutationResult) | undefined,
   U extends FormInputsProps,
-> = Omit<FormDialogProps<T, U>, 'open' | 'onClose'>
+> = Omit<FormDialogProps<T, U>, 'open'>
 
 export function useFormDialog<
   T extends (() => UseMutationResult) | undefined,
@@ -264,7 +266,10 @@ export function useFormDialog<
       key={iterCount}
       {...props}
       open={isOpenDialog}
-      onClose={() => setIsOpenDialog(false)}
+      onClose={() => {
+        props.onClose?.()
+        setIsOpenDialog(false)
+      }}
     />
   ) : null
 

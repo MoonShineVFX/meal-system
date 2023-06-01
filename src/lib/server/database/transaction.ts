@@ -288,17 +288,17 @@ export async function getTransactions({
   keyword,
   cursor,
 }: {
-  userId: string
+  userId?: string
   keyword?: string
   cursor?: number
 }) {
   let whereInput: Prisma.TransactionWhereInput = {}
-  if (keyword) {
+  if (keyword && keyword !== '') {
     if (keyword.match(/^\#\d+$/)) {
       // Transaction ID
       const transactionId = parseInt(keyword.slice(1))
       whereInput = { id: transactionId }
-    } else if (keyword.match(/^\#\.+$/)) {
+    } else if (keyword.match(/^\#.+$/)) {
       // Deposit ID
       const thisId = keyword.slice(1)
       whereInput = {
@@ -336,15 +336,53 @@ export async function getTransactions({
           },
         }
       } else {
-        // Transaction Type
+        // Transaction Type and User Name
         const filteredTypes = Object.entries(TransactionName)
           .filter(([, v]) => v.includes(keyword))
           .map(([k]) => k as TransactionType)
-        console.log(filteredTypes)
         if (filteredTypes) {
-          whereInput = { type: { in: filteredTypes } }
+          whereInput = {
+            OR: [
+              {
+                sourceUser: {
+                  name: {
+                    contains: keyword,
+                  },
+                },
+              },
+              {
+                targetUser: {
+                  name: {
+                    contains: keyword,
+                  },
+                },
+              },
+              {
+                type: {
+                  in: filteredTypes,
+                },
+              },
+            ],
+          }
         } else {
-          return []
+          whereInput = {
+            OR: [
+              {
+                sourceUser: {
+                  name: {
+                    contains: keyword,
+                  },
+                },
+              },
+              {
+                targetUser: {
+                  name: {
+                    contains: keyword,
+                  },
+                },
+              },
+            ],
+          }
         }
       }
     }
@@ -381,6 +419,10 @@ export async function getTransactions({
     },
     take: settings.TRANSACTIONS_PER_QUERY + 1,
     cursor: cursor ? { id: cursor } : undefined,
+    include: {
+      sourceUser: { select: { name: true } },
+      targetUser: { select: { name: true } },
+    },
   })
   return transactions
 }

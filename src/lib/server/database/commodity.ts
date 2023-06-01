@@ -11,6 +11,7 @@ type CreateCommodityArgs = {
   optionSets?: OptionSet[]
   categoryIds?: number[]
   imageId?: string
+  supplierId?: number
   client?: Prisma.TransactionClient | PrismaClient
 }
 export async function createCommodity({
@@ -21,6 +22,7 @@ export async function createCommodity({
   categoryIds,
   imageId,
   client,
+  supplierId,
 }: CreateCommodityArgs) {
   const thisPrisma = client ?? prisma
   const commodity = await thisPrisma.commodity.create({
@@ -33,6 +35,7 @@ export async function createCommodity({
       categories: {
         connect: categoryIds?.map((id) => ({ id })) ?? [],
       },
+      supplierId,
     },
   })
 
@@ -51,6 +54,7 @@ export async function editCommodity({
   optionSets,
   categoryIds,
   imageId,
+  supplierId,
 }: EditCommodityArgs) {
   const originCommodity = await prisma.commodity.findUnique({
     where: {
@@ -85,6 +89,7 @@ export async function editCommodity({
               .map((cat) => ({ id: cat.id })),
           }
         : undefined,
+      supplierId,
     },
     include: {
       onMenus: {
@@ -102,27 +107,34 @@ export async function editCommodity({
 export async function getCommodities(props: {
   includeMenus?: boolean
   includeIds?: number[]
+  onlyFromSupplierId?: number
 }) {
   const commodities = await prisma.commodity.findMany({
-    where: props.includeIds
-      ? {
-          OR: [
-            {
-              isDeleted: false,
-            },
-            {
-              id: {
-                in: props.includeIds,
-              },
-            },
-          ],
-        }
-      : {
+    where: {
+      OR: [
+        {
           isDeleted: false,
         },
+        ...(props.includeIds
+          ? [
+              {
+                id: {
+                  in: props.includeIds,
+                },
+              },
+            ]
+          : []),
+      ],
+      supplierId: props.onlyFromSupplierId ?? null,
+    },
     include: {
       categories: true,
       image: true,
+      supplier: {
+        select: {
+          name: true,
+        },
+      },
       onMenus: props.includeMenus
         ? {
             select: {

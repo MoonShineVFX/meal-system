@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { FieldValues } from 'react-hook-form'
-import { XMarkIcon, PlusIcon, LinkIcon } from '@heroicons/react/24/outline'
+import {
+  XMarkIcon,
+  PlusIcon,
+  LinkIcon,
+  DocumentDuplicateIcon,
+} from '@heroicons/react/24/outline'
 import { twMerge } from 'tailwind-merge'
 
 import { InputFieldProps, COMData } from './define'
@@ -13,6 +18,7 @@ import { OptionSet } from '@/lib/common'
 import TextInput from '../base/TextInput'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import type { FormInput } from '@/components/form/field'
+import { useStore } from '@/lib/client/store'
 
 type ExistCOMData = Extract<COMData, { commodityId: number }>
 type NewCOMData = Extract<COMData, { commodity: { name: string } }>
@@ -22,6 +28,8 @@ const BatchEditProps = ['價錢', '選項', '每人限購', '總數'] as const
 export default function COMField<T extends FieldValues>(
   props: InputFieldProps<'com', T>,
 ) {
+  const supplier = useStore((state) => state.formMenuSupplier)
+  const isCreateSupplier = useStore((state) => state.formMenuCreateSupplier)
   const [comDatas, setComDatas] = useState<COMData[]>(
     props.formInput.defaultValue ?? [],
   )
@@ -31,11 +39,12 @@ export default function COMField<T extends FieldValues>(
       .filter((comData) => !('commodity' in comData))
       .map((comData) => (comData as ExistCOMData).commodityId)
   }, [comDatas])
-  const { data, isError, isLoading } = trpc.commodity.get.useQuery({
+  const { data, isError, isLoading } = trpc.commodity.getList.useQuery({
     includeIds:
       props.formInput.defaultValue
         ?.filter((comData) => 'commodityId' in comData)
         .map((comData) => (comData as ExistCOMData).commodityId) ?? undefined,
+    onlyFromSupplierId: supplier?.id,
   })
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [newComDataId, setNewComDataId] = useState(Number.MAX_SAFE_INTEGER)
@@ -54,9 +63,39 @@ export default function COMField<T extends FieldValues>(
     )
   }, [comDatas])
 
+  // clean exist com data if isSupplier is true
+  useEffect(() => {
+    if (props.formInput.data?.isEdit) return
+    if (isCreateSupplier) {
+      setComDatas((prev) => prev.filter((comData) => 'commodity' in comData))
+    }
+  }, [isCreateSupplier])
+
+  // set default value if supplier is changed
+  useEffect(() => {
+    if (!data) return
+    if (!supplier) {
+      setComDatas([])
+      return
+    }
+
+    // set comdatas to default value if isEdit
+    if (props.formInput.data?.isEdit) {
+      setComDatas(props.formInput.defaultValue ?? [])
+      return
+    }
+    setComDatas(
+      data.map((com) => ({
+        commodityId: com.id,
+        limitPerUser: 0,
+        stock: 0,
+      })),
+    )
+  }, [data])
+
   const handleSelectFromExist = useCallback(() => {
     showFormDialog({
-      title: '從現有餐點選擇',
+      title: supplier ? '從店家餐點選擇' : '從現有餐點選擇',
       className: 'h-[70vh]',
       inputs: {
         commodityIds: {
@@ -64,6 +103,9 @@ export default function COMField<T extends FieldValues>(
           type: 'commodities',
           defaultValue: existCOMIds,
           className: 'h-full',
+          data: {
+            onlyFromSupplierId: supplier?.id,
+          },
         },
       },
       useMutation: undefined,
@@ -87,7 +129,7 @@ export default function COMField<T extends FieldValues>(
         ])
       },
     })
-  }, [comDatas, existCOMIds])
+  }, [comDatas, existCOMIds, supplier])
 
   const handleEditOptionSets = useCallback(
     (commodityId: number) => {
@@ -98,7 +140,7 @@ export default function COMField<T extends FieldValues>(
         title: '選項設定',
         inputs: {
           optionSets: {
-            label: '選項',
+            label: '',
             type: 'optionSets',
             defaultValue: comData.commodity.optionSets,
           },
@@ -288,46 +330,50 @@ export default function COMField<T extends FieldValues>(
 
   return (
     <>
-      <section className='flex items-center justify-between'>
+      <section className='flex items-center'>
         <button
-          className='flex w-fit items-center rounded-2xl p-2 text-sm text-stone-400 hover:bg-stone-100 active:scale-95'
+          className='flex w-fit items-center rounded-2xl p-2 text-sm text-stone-400 disabled:pointer-events-none disabled:opacity-50 hover:bg-stone-100 active:scale-95'
           type='button'
           onClick={handleSelectFromExist}
+          disabled={isCreateSupplier}
         >
           <LinkIcon className='mr-2 h-4 w-4' />
-          從現有餐點選擇
+          {supplier ? '從店家餐點選擇' : '從現有餐點選擇'}
           {existCOMIds.length > 0 && ` (${existCOMIds.length})`}
         </button>
-        {selectedIds.length > 1 && (
-          <DropdownMenu className='' label='批次編輯'>
-            {BatchEditProps.map((p) => {
-              const hasExist = selectedIds.some((id) => {
-                const comData = comDatas.find(
-                  (comData) => comData.commodityId === id,
-                )
-                return comData && !('commodity' in comData)
-              })
-              if (['價錢', '選項'].includes(p) && hasExist) return null
-              return (
-                <DropdownMenuItem
-                  key={p}
-                  label={p}
-                  onClick={() => handleBatchEditCommodity(p)}
-                />
+
+        <DropdownMenu
+          className='ml-auto'
+          label='批次編輯'
+          disabled={selectedIds.length < 2}
+        >
+          {BatchEditProps.map((p) => {
+            const hasExist = selectedIds.some((id) => {
+              const comData = comDatas.find(
+                (comData) => comData.commodityId === id,
               )
-            })}
-            <DropdownMenuItem
-              label={<span className='text-red-400'>刪除</span>}
-              onClick={() => {
-                setComDatas(
-                  comDatas.filter(
-                    (comData) => !selectedIds.includes(comData.commodityId),
-                  ),
-                )
-              }}
-            />
-          </DropdownMenu>
-        )}
+              return comData && !('commodity' in comData)
+            })
+            if (['價錢', '選項'].includes(p) && hasExist) return null
+            return (
+              <DropdownMenuItem
+                key={p}
+                label={p}
+                onClick={() => handleBatchEditCommodity(p)}
+              />
+            )
+          })}
+          <DropdownMenuItem
+            label={<span className='text-red-400'>刪除</span>}
+            onClick={() => {
+              setComDatas(
+                comDatas.filter(
+                  (comData) => !selectedIds.includes(comData.commodityId),
+                ),
+              )
+            }}
+          />
+        </DropdownMenu>
       </section>
       <section className='flex h-full grow flex-col gap-2'>
         <Table
@@ -335,6 +381,7 @@ export default function COMField<T extends FieldValues>(
           idField='commodityId'
           size='sm'
           onSelectedIdsChange={setSelectedIds}
+          emptyIndicator={<></>}
           columns={[
             {
               name: '名稱',
@@ -384,7 +431,7 @@ export default function COMField<T extends FieldValues>(
                     }}
                   >
                     <TextInput
-                      className='max-w-[12ch] overflow-hidden text-ellipsis text-sm'
+                      className='max-w-[12ch] overflow-hidden text-ellipsis text-sm disabled:pointer-events-auto disabled:opacity-100'
                       defaultValue={row.commodity.name}
                       title={row.commodity.name}
                     />
@@ -401,7 +448,9 @@ export default function COMField<T extends FieldValues>(
               render: (row) => {
                 const isExist = !('commodity' in row)
                 if (isExist) {
-                  return data.find((com) => com.id === row.commodityId)!.price
+                  return (
+                    data.find((com) => com.id === row.commodityId)?.price ?? -1
+                  )
                 }
                 return (
                   <EditableField
@@ -446,7 +495,7 @@ export default function COMField<T extends FieldValues>(
                 if (isExist) {
                   optionSets = data.find(
                     (com) => com.id === row.commodityId,
-                  )!.optionSets
+                  )?.optionSets
                 } else {
                   optionSets = row.commodity.optionSets
                 }
@@ -540,7 +589,45 @@ export default function COMField<T extends FieldValues>(
               ),
             },
             {
-              name: '',
+              name: '', // duplicate button
+              unhidable: true,
+              colClassName: 'text-sm p-3',
+              cellClassName: 'text-sm p-3',
+              render: (row) => (
+                <button
+                  className='rounded-full p-1 hover:bg-stone-200 active:scale-90'
+                  onClick={() => {
+                    const isExist = !('commodity' in row)
+                    let commodity: NewCOMData['commodity']
+                    if (isExist) {
+                      commodity = data.find(
+                        (com) => com.id === row.commodityId,
+                      )!
+                    } else {
+                      commodity = row.commodity
+                    }
+                    setComDatas([
+                      ...comDatas,
+                      {
+                        commodityId: newComDataId,
+                        commodity: {
+                          name: commodity.name + '-複製',
+                          price: commodity.price,
+                          optionSets: commodity.optionSets,
+                        },
+                        limitPerUser: row.limitPerUser,
+                        stock: row.stock,
+                      },
+                    ])
+                    setNewComDataId(newComDataId - 1)
+                  }}
+                >
+                  <DocumentDuplicateIcon className='h-4 w-4 text-stone-400' />
+                </button>
+              ),
+            },
+            {
+              name: '', // delete button
               unhidable: true,
               colClassName: 'text-sm p-3',
               cellClassName: 'text-sm p-3',

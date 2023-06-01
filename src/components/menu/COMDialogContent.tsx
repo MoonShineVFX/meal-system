@@ -36,6 +36,10 @@ type FormInputs = {
   options: OrderOptions
 }
 
+function generateCOMKey(com: CommodityOnMenu) {
+  return `com-opt-${com.commodity.id}`
+}
+
 function COMDialogContent(props: {
   onClose: () => void
   com: CommodityOnMenu
@@ -49,6 +53,8 @@ function COMDialogContent(props: {
     handleSubmit,
     control,
     reset,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormInputs>({
     defaultValues: {
@@ -68,10 +74,35 @@ function COMDialogContent(props: {
   // Reset selected option sets when commodity changes
   useEffect(() => {
     if (com) {
-      setIsLimited(com.limitPerUser > 0 || com.stock > 0)
+      setIsLimited(
+        com.limitPerUser > 0 ||
+          com.stock > 0 ||
+          (menu?.limitPerUser !== undefined && menu.limitPerUser > 0),
+      )
       reset()
     }
   }, [com])
+
+  // Load options from local storage
+  useEffect(() => {
+    if (com) {
+      Object.entries(localStorage).forEach(([key, value]) => {
+        if (key.startsWith('com-opt-')) {
+          const data = JSON.parse(value) as {
+            expireTime: number
+            options: OrderOptions
+          }
+          if (data.expireTime < Date.now()) {
+            localStorage.removeItem(key)
+          } else {
+            if (key === generateCOMKey(com)) {
+              setValue('options', data.options)
+            }
+          }
+        }
+      })
+    }
+  }, [com?.commodity.id])
 
   const handleCreateCartItem: SubmitHandler<FormInputs> = useCallback(
     async (formData) => {
@@ -90,6 +121,20 @@ function COMDialogContent(props: {
       )
     },
     [],
+  )
+
+  // save options to local storage
+  const handleOnOptionsChange = useCallback(
+    (options: OrderOptions) => {
+      localStorage.setItem(
+        generateCOMKey(com),
+        JSON.stringify({
+          options,
+          expireTime: Date.now() + 1000 * 60 * 60 * 24 * 30, // 30 days
+        }),
+      )
+    },
+    [menu?.id, com.commodity.id],
   )
 
   const isUnavailable =
@@ -129,6 +174,11 @@ function COMDialogContent(props: {
       <form
         className='group flex shrink-0 grow flex-col p-4 pb-0 @container/detail sm:p-0'
         onSubmit={handleSubmit(handleCreateCartItem)}
+        onChange={(e) => {
+          if (e.type === 'change' && e.target instanceof HTMLInputElement) {
+            handleOnOptionsChange(getValues().options)
+          }
+        }}
         {...twData({ available: !isUnavailable })}
       >
         {/* Info */}
@@ -152,13 +202,13 @@ function COMDialogContent(props: {
               {com.stock > 0 && (
                 <div className='flex items-center gap-2'>
                   <Square3Stack3DIcon className='h-4 w-4 text-stone-300' />
-                  <p className='tracking-wider text-stone-500'>{`限量 ${com.stock} 份`}</p>
+                  <p className='tracking-wider text-stone-500'>{`此餐點限量 ${com.stock} 份`}</p>
                 </div>
               )}
               {com.limitPerUser > 0 && (
                 <div className='flex items-center gap-2'>
                   <UserPlusIcon className='h-4 w-4 text-stone-300' />
-                  <p className='tracking-wider text-stone-500'>{`每人限點 ${com.limitPerUser} 份`}</p>
+                  <p className='tracking-wider text-stone-500'>{`此餐點每人限點 ${com.limitPerUser} 份`}</p>
                 </div>
               )}
             </div>

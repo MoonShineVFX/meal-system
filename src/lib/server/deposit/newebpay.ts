@@ -105,7 +105,7 @@ export async function getAndUpdateTradeInfo(props: {
     throw new Error('查詢交易失敗: CheckCode 驗證失敗')
   }
 
-  return await updateDeposit({
+  const deposit = await updateDeposit({
     id: props.depositId,
     status:
       result.Result['TradeStatus'] === '0'
@@ -118,6 +118,11 @@ export async function getAndUpdateTradeInfo(props: {
     payTime: new Date(result.Result['PayTime']),
     paymentType: result.Result['PaymentType'],
   })
+
+  return {
+    ...deposit,
+    response: result,
+  } as typeof deposit & { response: typeof result }
 }
 
 export async function handleTradeNotify(notify: {

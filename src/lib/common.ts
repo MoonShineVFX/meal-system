@@ -30,7 +30,7 @@ export enum SERVER_NOTIFY {
   ORDER_ADD = '結帳完成',
   ORDER_UPDATE = '訂單狀態更新',
   ORDER_CANCEL = '訂單取消',
-  DAILY_RECHARGE = '今日點數已發放',
+  DAILY_RECHARGE = '點數已更新',
   POS_ADD = '待處理點餐新增',
   POS_UPDATE = '待處理點餐更新',
   CATEGORY_ADD = '分類新增',
@@ -48,6 +48,10 @@ export enum SERVER_NOTIFY {
   DEPOSIT_RECHARGE = '儲值成功',
   DEPOSIT_REFUND = '退款成功',
   DEPOSIT_FAILED = '儲值失敗',
+  DEPOSIT_UPDATE = '儲值狀態更新',
+  SUPPLIER_ADD = '店家新增',
+  SUPPLIER_UPDATE = '店家更新',
+  SUPPLIER_DELETE = '店家刪除',
 }
 
 export enum CurrencyType {
@@ -95,7 +99,7 @@ export const MenuTypeName: Record<MenuType, string> = {
 export const TransactionName: Record<TransactionType, string> = {
   [TransactionType.PAYMENT]: '付款',
   [TransactionType.REFUND]: '退款',
-  [TransactionType.RECHARGE]: '獎勵',
+  [TransactionType.RECHARGE]: '贈點/回收',
   [TransactionType.CANCELED]: '取消訂單',
   [TransactionType.TRANSFER]: '轉帳',
   [TransactionType.DEPOSIT]: '儲值',
@@ -114,12 +118,23 @@ export const settings = {
   SERVER_USER_ID: '_server',
   POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
     ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
-    : 100,
+    : 50,
   DEPOSIT_RATIO: process.env.DEPOSIT_RATIO
     ? parseFloat(process.env.DEPOSIT_RATIO)
     : 1.0,
   DEPOSIT_MIN_AMOUNT: 30,
   DEPOSIT_MAX_AMOUNT: 10000,
+  PRINTER_API_URL: process.env.NEXT_PUBLIC_PRINTER_API_URL!,
+  MAKE_UP_DAYS: process.env.MAKE_UP_DAYS
+    ? process.env.MAKE_UP_DAYS.split(',').map((dateString) =>
+        new Date(dateString + 'T00:00:00+08:00').getTime(),
+      )
+    : [],
+  HOLIDAYS: process.env.HOLIDAYS
+    ? process.env.HOLIDAYS.split(',').map((dateString) =>
+        new Date(dateString + 'T00:00:00+08:00').getTime(),
+      )
+    : [],
 
   /* NewebPay */
   NEWEBPAY_API_URL: process.env.NEWEBPAY_API_URL!,
@@ -162,6 +177,7 @@ export const settings = {
   /* UI */
   ORDER_TAKE_PER_QUERY: 20,
   TRANSACTIONS_PER_QUERY: 20,
+  DEPOSITS_PER_QUERY: 40,
   NOTIFICATION_DURATION_MS: 3500,
   MENU_CATEGORY_NULL: '未分類',
   TITLE: '夢想餐飲',

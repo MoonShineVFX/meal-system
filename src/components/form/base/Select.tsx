@@ -7,9 +7,10 @@ const Select = forwardRef<
   HTMLSelectElement,
   React.InputHTMLAttributes<HTMLSelectElement> & {
     data: { label: string; value: string }[]
+    selectedClassName?: string
   }
 >((props, ref) => {
-  const { className, data, ...rest } = props
+  const { className, data, value, selectedClassName, ...rest } = props
   const selectRef = useRef<HTMLSelectElement>(null)
   const [selectedValue, setSelectedValue] = useState<
     string | number | readonly string[] | undefined
@@ -36,6 +37,13 @@ const Select = forwardRef<
     }
   }, [selectRef.current])
 
+  // watch for changes to props.value
+  useEffect(() => {
+    if (props.value !== undefined) {
+      setSelectedValue(props.value)
+    }
+  }, [props.value])
+
   const handleSetValue = useCallback(
     (value: string) => {
       if (!selectRef.current) return
@@ -59,9 +67,12 @@ const Select = forwardRef<
         ))}
       </select>
       <DropdownMenu
+        disabled={rest.disabled}
         className={twMerge(
           'flex w-full justify-center border border-stone-300 bg-stone-50 p-2 text-base hover:bg-stone-200',
           className,
+          selectedValue && selectedClassName,
+          rest.disabled && 'pointer-events-none',
         )}
         label={
           <span className='relative w-full'>
@@ -80,6 +91,9 @@ const Select = forwardRef<
             key={option.value}
             label={option.label}
             onClick={() => handleSetValue(option.value)}
+            className={twMerge(
+              option.value === selectedValue && 'bg-yellow-100',
+            )}
           />
         ))}
       </DropdownMenu>

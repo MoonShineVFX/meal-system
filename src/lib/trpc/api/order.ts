@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { userProcedure, router } from '../trpc'
+import { userProcedure, router, staffProcedure } from '../trpc'
 import {
   createOrderFromCart,
   getOrders,
@@ -69,22 +69,25 @@ export const OrderRouter = router({
           ? { keyword: input.keyword!.trim(), type: input.type }
           : { type: input.type }
 
-      const orders = await getOrders({
+      return getOrdersWithCursor({
         userId: ctx.userLite.id,
         cursor: input.cursor,
         ...args,
       })
-
-      let nextCursor: number | undefined = undefined
-      if (orders.length > settings.ORDER_TAKE_PER_QUERY) {
-        const lastOrder = orders.pop()
-        nextCursor = lastOrder!.id
-      }
-
-      return {
-        orders,
-        nextCursor,
-      }
+    }),
+  getList: staffProcedure
+    .input(
+      z.object({
+        cursor: z.number().int().positive().optional(),
+        keyword: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return getOrdersWithCursor({
+        cursor: input.cursor,
+        keyword: input.keyword ? input.keyword.trim() : '',
+        type: 'search',
+      })
     }),
   update: userProcedure
     .input(
@@ -119,3 +122,18 @@ export const OrderRouter = router({
     return await getOrdersCount({ userId: ctx.userLite.id })
   }),
 })
+
+async function getOrdersWithCursor(props: Parameters<typeof getOrders>[0]) {
+  const orders = await getOrders(props)
+
+  let nextCursor: number | undefined = undefined
+  if (orders.length > settings.ORDER_TAKE_PER_QUERY) {
+    const lastOrder = orders.pop()
+    nextCursor = lastOrder!.id
+  }
+
+  return {
+    orders,
+    nextCursor,
+  }
+}

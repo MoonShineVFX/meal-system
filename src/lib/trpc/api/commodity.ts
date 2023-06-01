@@ -40,6 +40,7 @@ export const CommodityRouter = router({
             }),
           )
           .optional(),
+        supplierId: z.number().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -84,6 +85,7 @@ export const CommodityRouter = router({
             }),
           )
           .optional(),
+        supplierId: z.number().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -165,11 +167,12 @@ export const CommodityRouter = router({
         skipNotify: false,
       })
     }),
-  get: staffProcedure
+  getList: staffProcedure
     .input(
       z.object({
         includeMenus: z.boolean().optional(),
         includeIds: z.array(z.number()).optional(),
+        onlyFromSupplierId: z.number().optional(),
       }),
     )
     .query(async ({ input }) => {
