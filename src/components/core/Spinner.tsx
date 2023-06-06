@@ -1,3 +1,5 @@
+import { twMerge } from 'tailwind-merge'
+
 export default function Spinner(props: { className: string }) {
   return (
     <svg
@@ -23,11 +25,11 @@ export default function Spinner(props: { className: string }) {
   )
 }
 
-export function SpinnerBlock(props: { text?: string }) {
+export function SpinnerBlock(props: { text?: string; className?: string }) {
   return (
     <div className='grid h-full w-full place-content-center'>
       <div className='flex flex-col items-center gap-2'>
-        <Spinner className='h-10 w-10' />
+        <Spinner className={twMerge('h-10 w-10', props.className)} />
         <p className='indent-[0.1em] tracking-widest'>
           {props.text ?? '讀取中'}
         </p>

@@ -7,6 +7,7 @@ import {
   ensureUser,
   getUserInfo,
   validateUserPassword,
+  updateUserSettings,
 } from '@/lib/server/database'
 import {
   settings,
@@ -149,5 +150,18 @@ export const UserRouter = router({
       }
 
       return { token }
+    }),
+  updateSettings: userProcedure
+    .input(
+      z.object({
+        qrcodeAutoCheckout: z.boolean().optional(),
+        notificationSound: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await updateUserSettings({ userId: ctx.userLite.id, ...input })
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
+      })
     }),
 })

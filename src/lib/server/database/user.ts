@@ -1,4 +1,4 @@
-import { UserRole, Transaction } from '@prisma/client'
+import { UserRole, Transaction, UserSettings } from '@prisma/client'
 import CryptoJS from 'crypto-js'
 
 import { prisma, log } from './define'
@@ -45,9 +45,19 @@ export async function ensureUser({
       name: name ?? userId,
     },
     include: {
+      settings: true,
       ethWallet: true,
     },
   })
+
+  // If user does not have a user settings, create one
+  if (!user.settings) {
+    await prisma.userSettings.create({
+      data: {
+        userId: user.id,
+      },
+    })
+  }
 
   // If user does not have a blockchain, create one
   if (!user.ethWallet) {
@@ -144,6 +154,7 @@ export async function getUserInfo(userId: string) {
             path: true,
           },
         },
+        settings: true,
       },
     })
 
@@ -233,4 +244,16 @@ export async function getUserInfo(userId: string) {
   if (callback) callback()
 
   return { user, isRecharged }
+}
+
+export async function updateUserSettings(
+  props: { userId: string } & Partial<UserSettings>,
+) {
+  const { userId, ...data } = props
+  await prisma.userSettings.update({
+    where: {
+      userId,
+    },
+    data,
+  })
 }

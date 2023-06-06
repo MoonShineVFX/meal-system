@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { UserRole } from '@prisma/client'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
@@ -114,10 +113,16 @@ export default function EventListener() {
         case SERVER_NOTIFY.POS_ADD:
           trpcContext.pos.getLive.invalidate()
           trpcContext.pos.getReservation.invalidate()
-          const audio = new Audio(
-            `${settings.RESOURCE_URL}/${settings.RESOURCE_NOTIFICATION_SOUND}`,
-          )
-          audio.play()
+          // Check if order is live, 這判斷有點勉強，之後可能需要改
+          if (
+            notifyPayload.link &&
+            notifyPayload.link.startsWith('/pos/live')
+          ) {
+            const audio = new Audio(
+              `${settings.RESOURCE_URL}/${settings.RESOURCE_NOTIFICATION_SOUND}`,
+            )
+            audio.play()
+          }
           break
         case SERVER_NOTIFY.POS_UPDATE:
           trpcContext.pos.getLive.invalidate()
@@ -153,6 +158,9 @@ export default function EventListener() {
         case SERVER_NOTIFY.SUPPLIER_DELETE:
           trpcContext.supplier.getList.invalidate()
           trpcContext.commodity.getList.invalidate()
+          break
+        case SERVER_NOTIFY.USER_SETTINGS_UPDATE:
+          trpcContext.user.get.invalidate()
           break
       }
     },

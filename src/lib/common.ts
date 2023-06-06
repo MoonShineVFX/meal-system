@@ -52,6 +52,7 @@ export enum SERVER_NOTIFY {
   SUPPLIER_ADD = '店家新增',
   SUPPLIER_UPDATE = '店家更新',
   SUPPLIER_DELETE = '店家刪除',
+  USER_SETTINGS_UPDATE = '用戶設定已更改',
 }
 
 export enum CurrencyType {
