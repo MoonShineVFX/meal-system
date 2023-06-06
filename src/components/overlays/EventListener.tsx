@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { UserRole } from '@prisma/client'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
@@ -6,7 +7,7 @@ import trpc, {
   onSocketCloseCallbacks,
   onQueryMutationErrorCallbacks,
 } from '@/lib/client/trpc'
-import { SERVER_NOTIFY } from '@/lib/common'
+import { SERVER_NOTIFY, settings } from '@/lib/common'
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
@@ -109,10 +110,14 @@ export default function EventListener() {
           trpcContext.user.get.invalidate()
           break
 
-        // Staff
+        // Staff & Admin
         case SERVER_NOTIFY.POS_ADD:
           trpcContext.pos.getLive.invalidate()
           trpcContext.pos.getReservation.invalidate()
+          const audio = new Audio(
+            `${settings.RESOURCE_URL}/${settings.RESOURCE_NOTIFICATION_SOUND}`,
+          )
+          audio.play()
           break
         case SERVER_NOTIFY.POS_UPDATE:
           trpcContext.pos.getLive.invalidate()

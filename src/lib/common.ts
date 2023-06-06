@@ -164,11 +164,14 @@ export const settings = {
 
   /* Resource */
   RESOURCE_URL: process.env.NEXT_PUBLIC_RESOURCE_URL ?? '',
+  // prefix with image
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
   RESOURCE_IMAGE_TYPES: ['image/png', 'image/jpeg', 'image/webp'],
   RESOURCE_UPLOAD_PATH: 'upload',
+  // asset
+  RESOURCE_NOTIFICATION_SOUND: 'audio/notification.mp3',
 
   /* Bunny */
   BUNNY_API_KEY: process.env.BUNNY_API_KEY!,
