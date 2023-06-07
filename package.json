@@ -45,7 +45,6 @@
     "lz-string": "^1.5.0",
     "next": "^13.0.6",
     "next-superjson-plugin": "^0.4.8",
-    "node-fetch": "^3.3.0",
     "nprogress": "^0.2.0",
     "postcss": "^8.4.18",
     "prisma": "^4.8.0",

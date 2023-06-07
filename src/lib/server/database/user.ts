@@ -1,6 +1,5 @@
 import { UserRole, Transaction, UserSettings } from '@prisma/client'
 import CryptoJS from 'crypto-js'
-import fetch from 'node-fetch'
 
 import { prisma, log } from './define'
 import { settings } from '@/lib/common'

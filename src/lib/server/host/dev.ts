@@ -1,5 +1,3 @@
-import fetch from 'node-fetch'
-
 import { createWebSocketServer } from '@/lib/trpc'
 
 if (!global.fetch) {
