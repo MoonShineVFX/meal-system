@@ -1,5 +1,6 @@
 import { UserRole, Transaction, UserSettings } from '@prisma/client'
 import CryptoJS from 'crypto-js'
+import fetch from 'node-fetch'
 
 import { prisma, log } from './define'
 import { settings } from '@/lib/common'
@@ -78,6 +79,34 @@ export async function ensureUser({
     })
   }
   forceSyncBlockchainWallet(user.id)
+
+  // If user profile image exists, create one
+  if (!user.profileImageId) {
+    try {
+      const response = await fetch(
+        `${settings.RESOURCE_URL}/image/profile/${userId}.jpg`,
+        {
+          method: 'HEAD',
+        },
+      )
+      if (response.ok) {
+        await prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            profileImage: {
+              create: {
+                path: `profile/${userId}.jpg`,
+              },
+            },
+          },
+        })
+      }
+    } catch (e) {
+      log(e)
+    }
+  }
 }
 
 export async function createUserToken(userId: string) {
@@ -91,7 +120,11 @@ export async function createUserToken(userId: string) {
           id: true,
           name: true,
           role: true,
-          tokens: true,
+          tokens: {
+            orderBy: {
+              createdAt: 'asc',
+            },
+          },
         },
       },
     },
