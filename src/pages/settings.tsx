@@ -31,9 +31,9 @@ export default function Settings() {
   return (
     <div className='relative h-full w-full'>
       <div className='ms-scroll absolute inset-0 flex justify-center overflow-y-auto overflow-x-hidden'>
-        <div className='h-min min-h-full max-w-5xl grow p-4 lg:p-8'>
-          <h1 className='mb-4 text-xl font-bold'>設定</h1>
-          <div className='flex flex-col gap-4'>
+        <div className='h-min min-h-full max-w-lg grow p-4 lg:p-8'>
+          <h1 className='mb-4 text-xl font-bold lg:mb-8'>設定</h1>
+          <div className='flex flex-col gap-4 lg:gap-6'>
             {/* 自動結帳 */}
             <OptionField
               title='QRCode 自動結帳'
@@ -68,6 +68,7 @@ export default function Settings() {
                       })
                     }
                   />
+                  <div className='my-4 h-[2px] bg-stone-200'></div>
                   {/* 標籤機設定 */}
                   <OptionField
                     title='自訂標籤機 API 網址'
@@ -85,17 +86,19 @@ export default function Settings() {
                     }
                   >
                     {customPrinterApi.enabled ? (
-                      <TextInput
-                        className='mt-2 w-full'
-                        placeholder='http://localhost:5000'
-                        value={customPrinterApi.url}
-                        onChange={(event) =>
-                          setCustomPrinterApi((prev) => ({
-                            ...prev,
-                            url: event.target.value,
-                          }))
-                        }
-                      />
+                      <div className='flex w-full justify-end'>
+                        <TextInput
+                          className='mt-2 w-full max-w-md'
+                          placeholder='http://localhost:5000'
+                          value={customPrinterApi.url}
+                          onChange={(event) =>
+                            setCustomPrinterApi((prev) => ({
+                              ...prev,
+                              url: event.target.value,
+                            }))
+                          }
+                        />
+                      </div>
                     ) : null}
                   </OptionField>
                 </>
