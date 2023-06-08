@@ -1,4 +1,11 @@
-import { TransactionType, UserRole, Menu, MenuType } from '@prisma/client'
+import {
+  TransactionType,
+  UserRole,
+  Menu,
+  MenuType,
+  UserAuthority,
+  User,
+} from '@prisma/client'
 
 import type { NotificationType } from '@/lib/client/store'
 
@@ -117,6 +124,7 @@ export const settings = {
   MENU_MAX_QUANTITY_PER_ORDER: 10,
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
+  SERVER_CLIENTORDER_ID: '_client',
   POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
     ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
     : 50,
@@ -213,6 +221,18 @@ export function validateRole(sourceRole: UserRole, targetRole: UserRole) {
   }
 
   return roleWeight[sourceRole] >= roleWeight[targetRole]
+}
+
+export function validateAuthority(
+  user: Pick<User, 'role' | 'authorities'>,
+  authority: UserAuthority,
+) {
+  if (
+    user.authorities.includes(authority) ||
+    validateRole(user.role, UserRole.ADMIN)
+  ) {
+    return true
+  }
 }
 
 type TwDataKeys = 'selected' | 'loading' | 'busy' | 'available'

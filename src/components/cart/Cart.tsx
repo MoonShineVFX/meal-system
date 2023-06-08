@@ -79,7 +79,6 @@ export default function Cart() {
     // Sort cart items and flatten to array
     cartItemsByMenu = new Map([...cartItemsByMenu.entries()].sort())
     const cartItemsAndMenus: CartItemsAndMenus = []
-    console.log(cartItemsByMenu)
     for (const [menuId, menu] of cartItemsByMenu) {
       const { cartItems, ...menuWithoutCartItems } = menu
       cartItemsAndMenus.push(

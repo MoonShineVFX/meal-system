@@ -1,16 +1,19 @@
+import { UserAuthority } from '@prisma/client'
 import { twMerge } from 'tailwind-merge'
 import { useState } from 'react'
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 
 import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
-import { twData } from '@/lib/common'
+import { twData, validateAuthority } from '@/lib/common'
 import Error from '@/components/core/Error'
 import { useRouter } from 'next/router'
 import PriceNumber from '@/components/core/PriceNumber'
 import { useEffect } from 'react'
 import { useDialog } from '@/components/core/Dialog'
 import DepositExplanation from '@/components/deposit/DepositExplanation'
+import Toggle from '@/components/form/base/Toggle'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 
 export default function Checkout(props: {
   className?: string
@@ -20,6 +23,7 @@ export default function Checkout(props: {
   onDeposit?: () => void
   autoCheckout?: boolean
 }) {
+  const [isClientOrder, setIsClientOrder] = useState<boolean>(false)
   const [isAutoCheckoutInitial, setIsAutoCheckoutInitial] = useState<
     boolean | undefined
   >(undefined)
@@ -48,17 +52,20 @@ export default function Checkout(props: {
         },
       )
     } else {
-      createOrderFromCartMutation.mutate(undefined, {
-        onSuccess: (orders) => {
-          if (orders.length === 0) return
-          const referenceOrder = orders[0]
-          if (referenceOrder.menu.type === 'LIVE') {
-            router.push('/order/live')
-          } else {
-            router.push('/order/reservation')
-          }
+      createOrderFromCartMutation.mutate(
+        { clientOrder: isClientOrder },
+        {
+          onSuccess: (orders) => {
+            if (orders.length === 0) return
+            const referenceOrder = orders[0]
+            if (referenceOrder.menu.type === 'LIVE') {
+              router.push('/order/live')
+            } else {
+              router.push('/order/reservation')
+            }
+          },
         },
-      })
+      )
     }
   }
 
@@ -67,7 +74,7 @@ export default function Checkout(props: {
 
   const pointBalnceToPay = Math.min(pointBalance, props.totalPrice)
   const creditBalanceToPay = props.totalPrice - pointBalnceToPay
-  const isNotEnough = creditBalanceToPay > creditBalance
+  const isNotEnough = creditBalanceToPay > creditBalance && !isClientOrder
 
   useEffect(() => {
     if (isAutoCheckoutInitial === undefined) {
@@ -89,6 +96,11 @@ export default function Checkout(props: {
 
   if (userIsError) return <Error description={userError.message} />
 
+  const canClientOrder =
+    !props.retailCipher &&
+    userData! &&
+    validateAuthority(userData, UserAuthority.CLIENT_ORDER)
+
   return (
     <div
       className={twMerge(
@@ -97,42 +109,78 @@ export default function Checkout(props: {
       )}
       {...twData({ loading: props.isLoading || userIsLoading })}
     >
-      {!props.retailCipher && (
+      {/* Client order */}
+      {isClientOrder && canClientOrder && (
+        <label className='mb-4 flex w-full cursor-pointer items-center justify-between'>
+          <h2 className='rounded-xl text-lg font-bold tracking-widest group-data-loading:skeleton'>
+            客戶招待
+          </h2>
+          <div className='mr-1 flex items-center'>
+            <Toggle
+              checked={isClientOrder}
+              onChange={(event) => setIsClientOrder(event.target.checked)}
+            />
+          </div>
+        </label>
+      )}
+      {/* Header */}
+      {!props.retailCipher && !isClientOrder && (
         <header className='flex justify-between'>
           <h2 className='rounded-xl text-lg font-bold tracking-widest group-data-loading:skeleton'>
             結帳
           </h2>
-          <PriceNumber className='text-lg' price={props.totalPrice} />
+          {!canClientOrder ? (
+            <PriceNumber className='text-lg' price={props.totalPrice} />
+          ) : (
+            <DropdownMenu
+              label={
+                <PriceNumber className='text-lg' price={props.totalPrice} />
+              }
+              className='py-0 px-0'
+            >
+              <DropdownMenuItem
+                label='客戶招待'
+                onClick={() => {
+                  setIsClientOrder(true)
+                }}
+              />
+            </DropdownMenu>
+          )}
         </header>
       )}
-      <section className='flex flex-col text-stone-500'>
-        {/* Point balance */}
-        {
-          <div className='flex justify-between border-b border-stone-200 py-2 sm:py-4'>
+      {!isClientOrder && (
+        <section className='flex flex-col text-stone-500'>
+          {/* Point balance */}
+          {
+            <div className='flex justify-between border-b border-stone-200 py-2 sm:py-4'>
+              <div className='flex items-center gap-1'>
+                <p className='rounded-xl tracking-widest group-data-loading:skeleton'>
+                  點數
+                </p>
+                <PriceNumber
+                  price={pointBalance - pointBalnceToPay}
+                  isCurrency
+                />
+              </div>
+              <PriceNumber price={pointBalnceToPay} isPayment />
+            </div>
+          }
+          {/* Credit balance */}
+          <div className='flex justify-between border-stone-200 py-2 sm:py-4'>
             <div className='flex items-center gap-1'>
               <p className='rounded-xl tracking-widest group-data-loading:skeleton'>
-                點數
+                夢想幣
               </p>
-              <PriceNumber price={pointBalance - pointBalnceToPay} isCurrency />
+              <PriceNumber
+                price={creditBalance - creditBalanceToPay}
+                isNotEnough={isNotEnough}
+                isCurrency
+              />
             </div>
-            <PriceNumber price={pointBalnceToPay} isPayment />
+            <PriceNumber price={creditBalanceToPay} isPayment />
           </div>
-        }
-        {/* Credit balance */}
-        <div className='flex justify-between border-stone-200 py-2 sm:py-4'>
-          <div className='flex items-center gap-1'>
-            <p className='rounded-xl tracking-widest group-data-loading:skeleton'>
-              夢想幣
-            </p>
-            <PriceNumber
-              price={creditBalance - creditBalanceToPay}
-              isNotEnough={isNotEnough}
-              isCurrency
-            />
-          </div>
-          <PriceNumber price={creditBalanceToPay} isPayment />
-        </div>
-      </section>
+        </section>
+      )}
       <button
         className='mx-auto w-fit rounded-2xl px-2 py-1 text-sm text-stone-400 hover:bg-stone-200 active:scale-95 active:bg-stone-200'
         onClick={() =>
@@ -151,19 +199,22 @@ export default function Checkout(props: {
         <Button
           isLoading={currentMutation.isLoading || currentMutation.isSuccess}
           isBusy={currentMutation.isLoading || currentMutation.isSuccess}
-          isDisabled={isNotEnough || props.totalPrice === 0}
-          label={isNotEnough ? '餘額不足' : '確認付款'}
+          isDisabled={(isNotEnough || props.totalPrice === 0) && !isClientOrder}
+          label={
+            isNotEnough ? '餘額不足' : isClientOrder ? '確認下單' : '確認付款'
+          }
           className=' h-12 grow text-lg font-bold group-data-loading:skeleton @xs/checkout:order-1'
           onClick={handleCheckout}
         />
         <Button
           label='儲值'
-          className='h-12 w-full grow text-lg font-bold group-data-loading:skeleton'
+          className='h-12 w-full grow text-lg font-bold disabled:opacity-50 group-data-loading:skeleton'
           theme='secondary'
           onClick={() => {
             props.onDeposit?.()
             router.push('/deposit')
           }}
+          isDisabled={isClientOrder}
         />
       </div>
       {dialog}

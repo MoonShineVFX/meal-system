@@ -176,6 +176,8 @@ export async function chargeUserBalanceBase({
   client: Prisma.TransactionClient | PrismaClient
 }) {
   const thisPrisma = client ?? prisma
+  const isClientOrder = userId === settings.SERVER_CLIENTORDER_ID
+
   /* Validate */
   // Check user has enough balance
   const user = await thisPrisma.user.findUnique({
@@ -190,7 +192,7 @@ export async function chargeUserBalanceBase({
   pointAmountToPay = Math.min(amount, user.pointBalance)
   creditAmountToPay = amount - pointAmountToPay
 
-  if (creditAmountToPay > user.creditBalance)
+  if (creditAmountToPay > user.creditBalance && !isClientOrder)
     throw new Error('Not enough credits')
 
   /* Operation */

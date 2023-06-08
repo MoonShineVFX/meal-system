@@ -149,6 +149,7 @@ export async function getUserInfo(userId: string) {
         pointBalance: true,
         creditBalance: true,
         lastPointRechargeTime: true,
+        authorities: true,
         profileImage: {
           select: {
             path: true,

@@ -409,6 +409,13 @@ export const userMockData = [
     creditBalance: 2000,
   },
   {
+    id: settings.SERVER_CLIENTORDER_ID,
+    name: '客戶',
+    role: UserRole.USER,
+    pointBalance: 0,
+    creditBalance: 0,
+  },
+  {
     id: '_admin',
     name: '管理員',
     role: UserRole.ADMIN,
