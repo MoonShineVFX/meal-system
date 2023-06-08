@@ -109,6 +109,11 @@ export default function Orders() {
                 return '已下單'
               },
             },
+            {
+              name: '備註',
+              align: 'left',
+              render: (order) => (order.forClient ? '客戶招待' : ''),
+            },
           ]}
           footer={
             hasNextPage ? (
