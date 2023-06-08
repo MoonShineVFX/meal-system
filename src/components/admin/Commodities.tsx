@@ -678,7 +678,7 @@ function QRCodeGenerator(props: {
       })
 
       const url = `${window.location.origin}/qrcode?key=${cipher}`
-      console.log('QR Code: ', url)
+      console.debug('QR Code: ', url)
 
       try {
         const qrCodeUrl = await QRCode.toDataURL(url, { width: qrCodeWidth })
