@@ -132,6 +132,7 @@ export async function createOrderFromCart({
               },
             },
             menuId: menuId,
+            forClient: clientOrder,
           },
           select: {
             id: true,

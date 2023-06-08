@@ -103,6 +103,12 @@ export default function OrderCard(props: {
               )
             : 100
         }`}</div>
+        {/* Client Order */}
+        {order?.forClient && (
+          <span className='rounded-xl bg-stone-100 py-1 px-2 text-sm font-bold tracking-wider text-stone-400 group-data-loading:skeleton'>
+            客戶
+          </span>
+        )}
         {/* Buttons */}
         <div className='flex grow justify-end gap-2 text-sm text-stone-400'>
           {order?.canCancel && (
@@ -117,14 +123,16 @@ export default function OrderCard(props: {
               onClick={() => setIsCancelDialogOpen(true)}
             />
           )}
-          <Link href={`/transaction/${order?.paymentTransactionId ?? 123}`}>
-            <Button
-              label='付款紀錄'
-              className='p-2 group-data-loading:skeleton'
-              title='前往付款的交易紀錄'
-              theme='support'
-            />
-          </Link>
+          {order?.paymentTransactionId && !order?.forClient && (
+            <Link href={`/transaction/${order?.paymentTransactionId ?? 123}`}>
+              <Button
+                label='付款紀錄'
+                className='p-2 group-data-loading:skeleton'
+                title='前往付款的交易紀錄'
+                theme='support'
+              />
+            </Link>
+          )}
           {order?.canceledTransactionId && (
             <Link href={`/transaction/${order?.canceledTransactionId ?? 123}`}>
               <Button
