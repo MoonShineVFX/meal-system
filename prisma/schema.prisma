@@ -64,7 +64,6 @@ model User {
   Deposit            Deposit[]
   sourceTransactions Transaction[] @relation("source")
   targetTransactions Transaction[] @relation("target")
-  ethWallet          EthWallet?
 }
 
 // Transaction
@@ -85,11 +84,10 @@ model Transaction {
   pointAmount  Int             @default(0)
   creditAmount Int             @default(0)
 
-  sourceUser   User     @relation("source", fields: [sourceUserId], references: [id])
+  sourceUser   User   @relation("source", fields: [sourceUserId], references: [id])
   sourceUserId String
-  targetUser   User     @relation("target", fields: [targetUserId], references: [id])
+  targetUser   User   @relation("target", fields: [targetUserId], references: [id])
   targetUserId String
-  ethHashes    String[]
 
   deposit          Deposit? @relation(fields: [depositId], references: [id])
   depositId        String?
@@ -119,16 +117,6 @@ model Deposit {
   user         User          @relation(fields: [userId], references: [id])
   userId       String
   transactions Transaction[]
-}
-
-// Blockchain
-model EthWallet {
-  address String @id
-
-  privateKey String? @unique
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @unique
 }
 
 // Order

@@ -61,10 +61,6 @@
     "tsconfig-paths": "^4.1.0",
     "typescript": "^4.9.4",
     "usehooks-ts": "^2.9.1",
-    "web3": "^1.8.1",
-    "web3-core": "^1.8.1",
-    "web3-eth-contract": "^1.8.1",
-    "web3-utils": "^1.8.1",
     "ws": "^8.11.0",
     "zod": "^3.19.1",
     "zustand": "^4.1.4"

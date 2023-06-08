@@ -2,10 +2,6 @@ import { TransactionType, Prisma, PrismaClient } from '@prisma/client'
 
 import { prisma } from './define'
 import { settings, TransactionName } from '@/lib/common'
-import {
-  updateBlockchainByMintBurn,
-  updateBlockchainByTransfer,
-} from './blockchain'
 
 /* Recharge */
 type RechargeUserBalanceBaseArgs = {
@@ -68,7 +64,7 @@ export async function rechargeUserBalanceBase({
     },
   })
 
-  const callback = () => updateBlockchainByMintBurn(transaction.id)
+  const callback = () => {}
 
   return {
     user,
@@ -135,7 +131,7 @@ export async function refundUserBalanceBase({
     },
   })
 
-  const callback = () => updateBlockchainByMintBurn(transaction.id)
+  const callback = () => {}
 
   return {
     user,
@@ -243,9 +239,6 @@ export async function chargeUserBalance({
       client,
     })
   })
-
-  // Update blockchain
-  updateBlockchainByTransfer(transaction.id)
 
   return {
     user,

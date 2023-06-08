@@ -14,7 +14,6 @@ import { getCartItemsBase } from './cart'
 import { getRetailCOM } from './menu'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
-import { updateBlockchainByTransfer } from './blockchain'
 
 /* Validate and create orders by menu with transaction */
 export async function createOrderFromCart({
@@ -24,7 +23,7 @@ export async function createOrderFromCart({
   userId: string
   clientOrder?: boolean
 }) {
-  const { orders, transaction } = await prisma.$transaction(async (client) => {
+  const { orders } = await prisma.$transaction(async (client) => {
     // Get valid cart items
     const getCartItemsResult = await getCartItemsBase({ userId, client })
     const totalPrice = getCartItemsResult.cartItems.reduce(
@@ -160,8 +159,6 @@ export async function createOrderFromCart({
     return { orders, transaction }
   })
 
-  updateBlockchainByTransfer(transaction.id)
-
   return orders
 }
 
@@ -171,7 +168,7 @@ export async function createOrderFromRetail(args: {
 }) {
   const { userId, cipher } = args
 
-  const { order, transaction } = await prisma.$transaction(async (client) => {
+  const { order } = await prisma.$transaction(async (client) => {
     const com = await getRetailCOM({ cipher, userId, client: client })
 
     if (!com) {
@@ -227,8 +224,6 @@ export async function createOrderFromRetail(args: {
       transaction,
     }
   })
-
-  updateBlockchainByTransfer(transaction.id)
 
   return order
 }
