@@ -148,7 +148,7 @@ export default function EventListener() {
         case SERVER_NOTIFY.MENU_DELETE:
           trpcContext.menu.get.invalidate()
           trpcContext.menu.getActives.invalidate()
-          trpcContext.menu.getReservations.invalidate()
+          trpcContext.menu.getReservationsForUser.invalidate()
           break
         case SERVER_NOTIFY.DEPOSIT_UPDATE:
           trpcContext.deposit.getList.invalidate()

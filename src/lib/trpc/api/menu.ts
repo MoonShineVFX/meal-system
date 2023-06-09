@@ -5,7 +5,8 @@ import lzString from 'lz-string'
 import { userProcedure, staffProcedure, router } from '../trpc'
 import {
   getMenuWithComs,
-  getReservationMenus,
+  getReservationMenusForUser,
+  getReservationMenusFromMonth,
   getActiveMenus,
   prismaCient,
   createMenu,
@@ -208,9 +209,21 @@ export const MenuRouter = router({
         userId: ctx.userLite.id,
       })
     }),
-  getReservations: userProcedure.query(async ({ ctx }) => {
-    return await getReservationMenus({ userId: ctx.userLite.id })
+  getReservationsForUser: userProcedure.query(async ({ ctx }) => {
+    return await getReservationMenusForUser({ userId: ctx.userLite.id })
   }),
+  getReservationsFromMonth: staffProcedure
+    .input(
+      z.object({
+        date: z.date(),
+      }),
+    )
+    .query(async ({ input }) => {
+      return await getReservationMenusFromMonth({
+        year: input.date.getFullYear(),
+        month: input.date.getMonth() + 1,
+      })
+    }),
   getActives: userProcedure
     .input(
       z.object({

@@ -24,7 +24,7 @@ const MENU_TYPE_ORDER = [
 export default function Reservations(props: { activeMenuId?: number }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const { data, isLoading, isError, error } =
-    trpc.menu.getReservations.useQuery()
+    trpc.menu.getReservationsForUser.useQuery()
 
   const reservationMenusByDate = useMemo(() => {
     if (!data)

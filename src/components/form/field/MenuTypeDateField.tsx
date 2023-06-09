@@ -7,6 +7,7 @@ import { InputFieldProps, MenuDateTypeData } from './define'
 import Select from '../base/Select'
 import DateInput from '../base/DateInput'
 import DatetimeInput from '../base/DatetimeInput'
+import NewDateInput from '../base/NewDatetimeInput'
 import { MenuTypeName } from '@/lib/common'
 
 function convertInputDateValueToDate(value: string | null) {
@@ -193,6 +194,7 @@ export default function MenuTypeDateField<T extends FieldValues>(
           }
         />
       </div>
+      <NewDateInput />
     </div>
   )
 }
