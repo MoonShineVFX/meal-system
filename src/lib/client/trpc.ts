@@ -52,7 +52,7 @@ export type OrderDatas = RouterOutput['order']['get']['orders']
 export type OrderItems = OrderDatas[0]['items']
 export type POSLiveDatas = RouterOutput['pos']['getLive']
 export type POSReservationDatas = RouterOutput['pos']['getReservation']
-export type ReservationDatas = RouterOutput['menu']['getReservations']
+export type ReservationDatas = RouterOutput['menu']['getReservationsForUser']
 export type TransactionDatas =
   RouterOutput['transaction']['get']['transactions']
 export type CategoryDatas = RouterOutput['category']['get']
