@@ -6,8 +6,6 @@ import { twMerge } from 'tailwind-merge'
 import { InputFieldProps, MenuDateTypeData } from './define'
 import Select from '../base/Select'
 import DateInput from '../base/DateInput'
-import DatetimeInput from '../base/DatetimeInput'
-import NewDateInput from '../base/NewDatetimeInput'
 import { MenuTypeName } from '@/lib/common'
 
 function convertInputDateValueToDate(value: string | null) {
@@ -167,9 +165,10 @@ export default function MenuTypeDateField<T extends FieldValues>(
         >
           發佈時間
         </label>
-        <DatetimeInput
+        <DateInput
           ref={publishedDateRef}
           className='text-sm'
+          includeTime={true}
           disabled={!isReservation}
           value={convertDateToInputDateValue(value?.publishedDate, true)}
           onChange={(e) =>
@@ -182,9 +181,10 @@ export default function MenuTypeDateField<T extends FieldValues>(
       </div>
       <div className='flex flex-col gap-1'>
         <label className='text-sm font-bold text-stone-500'>關閉時間</label>
-        <DatetimeInput
+        <DateInput
           ref={closedDateRef}
           className='text-sm'
+          includeTime={true}
           value={convertDateToInputDateValue(value?.closedDate, true)}
           onChange={(e) =>
             setValue({
@@ -194,7 +194,6 @@ export default function MenuTypeDateField<T extends FieldValues>(
           }
         />
       </div>
-      <NewDateInput />
     </div>
   )
 }

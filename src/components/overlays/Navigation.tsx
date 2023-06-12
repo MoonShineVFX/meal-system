@@ -112,7 +112,8 @@ function Navigation() {
         </>
       )}
 
-      <div className='mt-auto hidden w-full sm:block'>
+      {/* 如果需要使用 sm-block 顯示 */}
+      <div className='mt-auto hidden w-full'>
         <DropdownMenu
           className='flex w-full items-center justify-start gap-0 rounded-2xl py-2 px-3 text-base font-bold tracking-widest text-stone-500 hover:cursor-pointer hover:bg-stone-200 active:scale-95'
           label={
@@ -149,7 +150,7 @@ function Navigation() {
         </DropdownMenu>
       </div>
       <NavButton
-        className='hidden sm:block'
+        className='mt-auto hidden sm:block'
         label='登出'
         path='/login'
         icons={[ArrowRightOnRectangleIcon, ArrowRightOnRectangleIconSolid]}
