@@ -51,9 +51,9 @@ interface Props {
 }
 
 export const ContextMenu = forwardRef<
-  HTMLButtonElement,
-  Props & React.HTMLProps<HTMLButtonElement>
->(({ children, parentRef }) => {
+  HTMLDivElement,
+  Props & React.HTMLProps<HTMLDivElement>
+>(({ children, parentRef }, ref) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [isOpen, setIsOpen] = useState(false)
 
@@ -167,7 +167,16 @@ export const ContextMenu = forwardRef<
             >
               <div
                 className='flex flex-col rounded-2xl border bg-white py-2 shadow-md'
-                ref={refs.setFloating}
+                ref={(r) => {
+                  refs.setFloating(r)
+                  if (ref && r) {
+                    if (typeof ref === 'function') {
+                      ref(r)
+                    } else {
+                      ref.current = r
+                    }
+                  }
+                }}
                 style={{
                   position: strategy,
                   left: x ?? 0,
