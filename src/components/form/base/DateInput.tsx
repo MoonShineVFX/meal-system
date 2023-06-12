@@ -22,11 +22,12 @@ import {
 
 const DateInput = forwardRef<
   HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement> & {
-    includeTime?: boolean
-  }
+  React.InputHTMLAttributes<HTMLInputElement> &
+    Pick<Parameters<typeof DatePicker>[0], 'includeTime'> & {
+      invalidDates?: Date[]
+    }
 >((props, ref) => {
-  const { className, value, includeTime, ...rest } = props
+  const { className, value, includeTime, invalidDates, ...rest } = props
   const [isOpenPicker, setIsOpenPicker] = useState<boolean>(false)
   const [dateValue, setDateValue] = useState<Date | undefined>(undefined)
   const textRef = useRef<HTMLInputElement | null>(null)
@@ -51,6 +52,24 @@ const DateInput = forwardRef<
       .toString()
       .padStart(2, '0')}`
   }, [dateValue, includeTime])
+  const invalidTimes = useMemo(() => {
+    if (!invalidDates) return []
+    return invalidDates.map((date) => date.getTime())
+  }, [invalidDates])
+  const minTime = useMemo(() => {
+    if (!rest.min) return undefined
+    const date = new Date(rest.min)
+    if (isNaN(date.getTime())) return undefined
+    date.setHours(0, 0, 0, 0)
+    return date.getTime()
+  }, [rest.min])
+  const maxTime = useMemo(() => {
+    if (!rest.max) return undefined
+    const date = new Date(rest.max)
+    if (isNaN(date.getTime())) return undefined
+    date.setHours(23, 59, 59, 999)
+    return date.getTime()
+  }, [rest.max])
 
   // Detect Value Change
   useEffect(() => {
@@ -131,7 +150,13 @@ const DateInput = forwardRef<
   const handleTextChanged = useCallback(
     (text: string) => {
       const date = new Date(text)
-      if (date.toString() === 'Invalid Date') {
+      const time = date.getTime()
+      if (
+        isNaN(time) ||
+        (minTime && time < minTime) ||
+        (maxTime && time > maxTime) ||
+        invalidTimes.includes(new Date(date).setHours(0, 0, 0, 0))
+      ) {
         updateTextInputValue()
         return
       }
@@ -184,6 +209,8 @@ const DateInput = forwardRef<
           onKeyDown: (event) => {
             if (event.key === 'Enter') {
               handleTextChanged(textRef.current?.value || '')
+              event.preventDefault()
+              event.stopPropagation()
             }
           },
           placeholder: includeTime ? '選擇日期與時間' : '選擇日期',
@@ -197,6 +224,7 @@ const DateInput = forwardRef<
             date={dateValue}
             onDateChange={setDateValue}
             includeTime={includeTime}
+            invalidTimes={invalidTimes}
             {...getFloatingProps({
               ref: refs.setFloating,
               className:
@@ -220,20 +248,33 @@ const DatePicker = forwardRef<
     date?: Date
     onDateChange?: (date: Date | undefined) => void
     includeTime?: boolean
+    invalidTimes?: number[]
+    minTime?: number
+    maxTime?: number
   }
 >((props, ref) => {
   const isFirst = useIsFirstRender()
-  const { date: propDate, onDateChange, includeTime, ...rest } = props
-  const [pickRange, setPickRange] = useState<'year' | 'month' | 'day'>('day')
+  const {
+    date: propDate,
+    onDateChange,
+    includeTime,
+    invalidTimes,
+    minTime,
+    maxTime,
+    ...rest
+  } = props
   const [pickDate, setPickDate] = useState<Date>(new Date())
   const hourRef = useRef<HTMLDivElement | null>(null)
   const minuteRef = useRef<HTMLDivElement | null>(null)
 
-  const [pageYear, setPageYear] = useState<number>(
+  const [pageLayer, setPageLayer] = useState<'decade' | 'year' | 'month'>(
+    'month',
+  )
+  const [pageDecade, setPageDecade] = useState<number>(
     Math.floor(new Date().getFullYear() / 10) * 10,
   )
-  const [pageMonth, setPageMonth] = useState<number>(new Date().getFullYear())
-  const [pageDay, setPageDay] = useState<number>(new Date().getMonth())
+  const [pageYear, setPageYear] = useState<number>(new Date().getFullYear())
+  const [pageMonth, setPageMonth] = useState<number>(new Date().getMonth())
 
   const centerHoursMinutes = useCallback(
     (instant: boolean) => {
@@ -252,14 +293,14 @@ const DatePicker = forwardRef<
             hourElement.offsetTop -
             hourRef.current.offsetHeight / 2 +
             hourElement.offsetHeight / 2,
-          behavior: instant ? 'instant' : 'smooth',
+          behavior: instant ? 'auto' : 'smooth',
         })
         minuteRef.current.scrollTo({
           top:
             minuteElement.offsetTop -
             minuteRef.current.offsetHeight / 2 +
             minuteElement.offsetHeight / 2,
-          behavior: instant ? 'instant' : 'smooth',
+          behavior: instant ? 'auto' : 'smooth',
         })
       }
     },
@@ -267,10 +308,10 @@ const DatePicker = forwardRef<
   )
 
   useEffect(() => {
-    if (pickRange === 'day') {
+    if (pageLayer === 'month') {
       centerHoursMinutes(true)
     }
-  }, [pickRange])
+  }, [pageLayer])
 
   useEffect(() => {
     if (
@@ -279,62 +320,63 @@ const DatePicker = forwardRef<
       propDate.getTime() === pickDate.getTime()
     )
       return
+
     setPickDate(propDate)
-    setPageYear(Math.floor(propDate.getFullYear() / 10) * 10)
-    setPageMonth(propDate.getFullYear())
-    setPageDay(propDate.getMonth())
+    setPageDecade(Math.floor(propDate.getFullYear() / 10) * 10)
+    setPageYear(propDate.getFullYear())
+    setPageMonth(propDate.getMonth())
 
     centerHoursMinutes(isFirst)
-  }, [propDate, pickDate, pickRange, hourRef.current, minuteRef.current])
+  }, [propDate, pickDate, hourRef.current, minuteRef.current])
 
   const handlePageChange = useCallback(
     (isForward: boolean) => {
-      switch (pickRange) {
+      switch (pageLayer) {
+        case 'decade':
+          setPageDecade((year) => year + (isForward ? 10 : -10))
+          break
         case 'year':
-          setPageYear((year) => year + (isForward ? 10 : -10))
+          setPageYear((month) => month + (isForward ? 1 : -1))
           break
         case 'month':
-          setPageMonth((month) => month + (isForward ? 1 : -1))
-          break
-        case 'day':
-          const newMonth = pageDay + (isForward ? 1 : -1)
+          const newMonth = pageMonth + (isForward ? 1 : -1)
           if (newMonth < 0) {
-            setPageMonth((month) => month - 1)
-            setPageDay(11)
+            setPageYear((month) => month - 1)
+            setPageMonth(11)
           } else if (newMonth > 11) {
-            setPageMonth((month) => month + 1)
-            setPageDay(0)
+            setPageYear((month) => month + 1)
+            setPageMonth(0)
           } else {
-            setPageDay(newMonth)
+            setPageMonth(newMonth)
           }
           break
       }
     },
-    [pickRange, pageDay],
+    [pageLayer, pageMonth],
   )
 
   const handleHeaderClick = useCallback(() => {
-    switch (pickRange) {
+    switch (pageLayer) {
+      case 'decade':
+        break
       case 'year':
+        setPageDecade(Math.floor(pageYear / 10) * 10)
+        setPageLayer('decade')
         break
       case 'month':
-        setPageYear(Math.floor(pageMonth / 10) * 10)
-        setPickRange('year')
-        break
-      case 'day':
-        setPickRange('month')
+        setPageLayer('year')
         break
     }
-  }, [pickRange, pageMonth])
+  }, [pageLayer, pageYear])
 
   const handleYearClick = useCallback((year: number) => {
-    setPageMonth(year)
-    setPickRange('month')
+    setPageYear(year)
+    setPageLayer('year')
   }, [])
 
   const handleMonthClick = useCallback((month: number) => {
-    setPageDay(month)
-    setPickRange('day')
+    setPageMonth(month)
+    setPageLayer('month')
   }, [])
 
   const handleDayClick = useCallback(
@@ -348,7 +390,7 @@ const DatePicker = forwardRef<
         newDate.setMinutes(dayDate.getMinutes())
       }
 
-      setPickRange('day')
+      setPageLayer('month')
       onDateChange?.(newDate)
     },
     [pickDate],
@@ -370,13 +412,13 @@ const DatePicker = forwardRef<
             <div className='grow text-center'>
               <button
                 className='rounded-lg px-2 py-1 disabled:pointer-events-none hover:bg-stone-200 active:scale-90'
-                disabled={pickRange === 'year'}
+                disabled={pageLayer === 'decade'}
                 onClick={handleHeaderClick}
               >
-                {pickRange === 'year' && `${pageYear} - ${pageYear + 9}`}
-                {pickRange === 'month' && `${pageMonth}年`}
-                {pickRange === 'day' &&
-                  `${new Date(pageMonth, pageDay).toLocaleString('default', {
+                {pageLayer === 'decade' && `${pageDecade} - ${pageDecade + 9}`}
+                {pageLayer === 'year' && `${pageYear}年`}
+                {pageLayer === 'month' &&
+                  `${new Date(pageYear, pageMonth).toLocaleString('default', {
                     year: 'numeric',
                     month: 'short',
                   })}`}
@@ -390,38 +432,38 @@ const DatePicker = forwardRef<
             </button>
           </div>
           {/* year picker */}
-          {pickRange === 'year' && (
+          {pageLayer === 'decade' && (
             <div className='grid grid-cols-4 gap-1'>
               {Array.from({ length: 10 }).map((_, index) => (
                 <button
-                  key={`year-${pageYear + index}`}
+                  key={`year-${pageDecade + index}`}
                   className={twMerge(
                     'rounded-lg px-2 py-1 hover:bg-stone-200 active:scale-90',
-                    pageYear + index === pickDate.getFullYear() &&
+                    pageDecade + index === pickDate.getFullYear() &&
                       'bg-yellow-400 hover:bg-yellow-500',
                   )}
-                  onClick={() => handleYearClick(pageYear + index)}
+                  onClick={() => handleYearClick(pageDecade + index)}
                 >
-                  {pageYear + index}
+                  {pageDecade + index}
                 </button>
               ))}
             </div>
           )}
           {/* month picker */}
-          {pickRange === 'month' && (
+          {pageLayer === 'year' && (
             <div className='grid grid-cols-4 gap-1'>
               {Array.from({ length: 12 }).map((_, index) => (
                 <button
-                  key={`month-${pageMonth + index}`}
+                  key={`month-${pageYear + index}`}
                   className={twMerge(
                     'rounded-lg px-2 py-1 hover:bg-stone-200 active:scale-90',
-                    pageMonth === pickDate.getFullYear() &&
+                    pageYear === pickDate.getFullYear() &&
                       index === pickDate.getMonth() &&
                       'bg-yellow-400 hover:bg-yellow-500',
                   )}
                   onClick={() => handleMonthClick(index)}
                 >
-                  {new Date(pageMonth, index).toLocaleString('default', {
+                  {new Date(pageYear, index).toLocaleString('default', {
                     month: 'short',
                   })}
                 </button>
@@ -429,8 +471,9 @@ const DatePicker = forwardRef<
             </div>
           )}
           {/* day picker */}
-          {pickRange === 'day' && (
-            <div className='grid grid-cols-7 gap-1'>
+          {pageLayer === 'month' && (
+            <div className={twMerge('relative grid grid-cols-7 gap-1')}>
+              {/* main */}
               {Array.from({ length: 7 }).map((_, index) => (
                 <div
                   key={`day-${index}`}
@@ -442,16 +485,23 @@ const DatePicker = forwardRef<
                 </div>
               ))}
               {Array.from({ length: 42 }).map((_, index) => {
-                const date = new Date(pageMonth, pageDay, 1)
+                const date = new Date(pageYear, pageMonth, 1)
                 const dayOfWeek = date.getDay()
                 date.setDate(index - dayOfWeek + 1)
-                const isCurrentMonth = date.getMonth() === pageDay
+                date.setHours(0, 0, 0, 0)
 
+                const isCurrentMonth = date.getMonth() === pageMonth
                 const isSelectedDate =
                   date.getFullYear() === pickDate.getFullYear() &&
                   date.getMonth() === pickDate.getMonth() &&
                   date.getDate() === pickDate.getDate() &&
                   propDate !== undefined
+
+                const thisTime = date.getTime()
+                const isInvalid =
+                  (minTime && thisTime < minTime) ||
+                  (maxTime && thisTime > maxTime) ||
+                  (invalidTimes && invalidTimes.includes(thisTime))
 
                 // remove next month row
                 // if (
@@ -469,6 +519,8 @@ const DatePicker = forwardRef<
                       'flex items-center justify-center rounded-lg px-2 py-1 text-sm hover:bg-stone-200 active:scale-90',
                       !isCurrentMonth && 'text-stone-300',
                       isSelectedDate && 'bg-yellow-400 hover:bg-yellow-500',
+                      isInvalid &&
+                        'pointer-events-none text-red-400 opacity-50',
                     )}
                     onClick={() => handleDayClick(date)}
                   >
@@ -495,7 +547,7 @@ const DatePicker = forwardRef<
           </div>
         </div>
         {/* time picker */}
-        {pickRange === 'day' && includeTime && (
+        {pageLayer === 'month' && includeTime && (
           <div className='mt-12 ml-4 flex border-l pl-4'>
             <div className='relative h-full w-8'>
               <div

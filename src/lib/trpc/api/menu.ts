@@ -6,7 +6,7 @@ import { userProcedure, staffProcedure, router } from '../trpc'
 import {
   getMenuWithComs,
   getReservationMenusForUser,
-  getReservationMenusFromMonth,
+  getReservationMenusSince,
   getActiveMenus,
   prismaCient,
   createMenu,
@@ -212,14 +212,14 @@ export const MenuRouter = router({
   getReservationsForUser: userProcedure.query(async ({ ctx }) => {
     return await getReservationMenusForUser({ userId: ctx.userLite.id })
   }),
-  getReservationsFromMonth: staffProcedure
+  getReservationsSince: staffProcedure
     .input(
       z.object({
         date: z.date(),
       }),
     )
     .query(async ({ input }) => {
-      return await getReservationMenusFromMonth({
+      return await getReservationMenusSince({
         year: input.date.getFullYear(),
         month: input.date.getMonth() + 1,
       })

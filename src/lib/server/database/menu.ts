@@ -223,23 +223,28 @@ export async function getReservationMenusForUser({
 }
 
 /* Get Menu reservation list from specific month */
-export async function getReservationMenusFromMonth({
+export async function getReservationMenusSince({
   year,
   month,
 }: {
   year: number
   month: number
 }) {
+  const sinceDate = new Date(year, month - 1, 1)
+  sinceDate.setHours(0, 0, 0, 0)
   const menus = await prisma.menu.findMany({
     where: {
       isDeleted: false,
       date: {
-        gte: new Date(year, month - 1, 1),
-        lt: new Date(year, month, 1),
+        gte: sinceDate,
       },
     },
     orderBy: {
       date: 'asc',
+    },
+    select: {
+      type: true,
+      date: true,
     },
   })
 
