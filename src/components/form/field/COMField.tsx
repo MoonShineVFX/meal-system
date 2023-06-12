@@ -74,7 +74,7 @@ export default function COMField<T extends FieldValues>(
   // set default value if supplier is changed
   useEffect(() => {
     if (!data) return
-    if (!supplier) {
+    if (!supplier && !props.formInput.data?.isEdit) {
       setComDatas([])
       return
     }
