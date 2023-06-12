@@ -235,6 +235,43 @@ const DatePicker = forwardRef<
   const [pageMonth, setPageMonth] = useState<number>(new Date().getFullYear())
   const [pageDay, setPageDay] = useState<number>(new Date().getMonth())
 
+  const centerHoursMinutes = useCallback(
+    (instant: boolean) => {
+      if (hourRef.current && minuteRef.current && propDate) {
+        const hours = propDate.getHours()
+        const minutes = propDate.getMinutes()
+        const hourElement = hourRef.current.children[
+          hours + 1
+        ] as HTMLDivElement
+        const minuteElement = minuteRef.current.children[
+          minutes + 1
+        ] as HTMLDivElement
+        if (!hourElement || !minuteElement) return
+        hourRef.current.scrollTo({
+          top:
+            hourElement.offsetTop -
+            hourRef.current.offsetHeight / 2 +
+            hourElement.offsetHeight / 2,
+          behavior: instant ? 'instant' : 'smooth',
+        })
+        minuteRef.current.scrollTo({
+          top:
+            minuteElement.offsetTop -
+            minuteRef.current.offsetHeight / 2 +
+            minuteElement.offsetHeight / 2,
+          behavior: instant ? 'instant' : 'smooth',
+        })
+      }
+    },
+    [propDate, hourRef.current, minuteRef.current],
+  )
+
+  useEffect(() => {
+    if (pickRange === 'day') {
+      centerHoursMinutes(true)
+    }
+  }, [pickRange])
+
   useEffect(() => {
     if (
       !propDate ||
@@ -247,30 +284,8 @@ const DatePicker = forwardRef<
     setPageMonth(propDate.getFullYear())
     setPageDay(propDate.getMonth())
 
-    if (hourRef.current && minuteRef.current) {
-      const hours = propDate.getHours()
-      const minutes = propDate.getMinutes()
-      const hourElement = hourRef.current.children[hours + 1] as HTMLDivElement
-      const minuteElement = minuteRef.current.children[
-        minutes + 1
-      ] as HTMLDivElement
-      if (!hourElement || !minuteElement) return
-      hourRef.current.scrollTo({
-        top:
-          hourElement.offsetTop -
-          hourRef.current.offsetHeight / 2 +
-          hourElement.offsetHeight / 2,
-        behavior: isFirst ? 'instant' : 'smooth',
-      })
-      minuteRef.current.scrollTo({
-        top:
-          minuteElement.offsetTop -
-          minuteRef.current.offsetHeight / 2 +
-          minuteElement.offsetHeight / 2,
-        behavior: isFirst ? 'instant' : 'smooth',
-      })
-    }
-  }, [propDate, pickDate, hourRef.current, minuteRef.current])
+    centerHoursMinutes(isFirst)
+  }, [propDate, pickDate, pickRange, hourRef.current, minuteRef.current])
 
   const handlePageChange = useCallback(
     (isForward: boolean) => {
@@ -334,9 +349,6 @@ const DatePicker = forwardRef<
       }
 
       setPickRange('day')
-      setPageDay(newDate.getMonth())
-      setPageMonth(newDate.getFullYear())
-      setPickDate(newDate)
       onDateChange?.(newDate)
     },
     [pickDate],
@@ -497,6 +509,7 @@ const DatePicker = forwardRef<
                     className={twMerge(
                       'rounded-md p-1 text-center font-mono text-lg text-stone-400 hover:bg-stone-200 hover:text-stone-500 active:scale-90',
                       index === pickDate.getHours() &&
+                        propDate !== undefined &&
                         'bg-yellow-400 text-stone-600 hover:bg-yellow-500',
                     )}
                     onClick={() => {
@@ -523,6 +536,7 @@ const DatePicker = forwardRef<
                     className={twMerge(
                       'rounded-md p-1 text-center font-mono text-lg text-stone-400 hover:bg-stone-200 hover:text-stone-500 active:scale-90',
                       index === pickDate.getMinutes() &&
+                        propDate !== undefined &&
                         'bg-yellow-400 text-stone-600 hover:bg-yellow-500',
                     )}
                     onClick={() => {
