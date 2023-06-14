@@ -9,6 +9,7 @@ import { twMerge } from 'tailwind-merge'
 
 import Button from '@/components/core/Button'
 import type { UseMutationResult } from '@/lib/client/trpc'
+import EventEmitter from 'events'
 
 type DialogProps<T extends UseMutationResult> = {
   open: boolean
@@ -27,11 +28,14 @@ type DialogProps<T extends UseMutationResult> = {
   onCancel?: () => void
   as?: 'form' | 'div'
   panelProps?: Parameters<typeof Dialog.Panel>[0]
+  customTrigger?: EventEmitter
 }
 
 export default function DialogCore<T extends UseMutationResult>(
   props: DialogProps<T>,
 ) {
+  const { className: panelClassName, ...panelPropsRest } =
+    props.panelProps ?? {}
   const mutation = props.useMutation ? props.useMutation() : undefined
   const handleConfirm = useCallback(() => {
     if (mutation && props.mutationOptions) {
@@ -40,19 +44,61 @@ export default function DialogCore<T extends UseMutationResult>(
           props.onClose()
         },
       })
-    } else if (props.onConfirm) {
+      return
+    }
+    if (props.customTrigger) {
+      setCustomState('loading')
+    }
+    if (props.onConfirm) {
       props.onConfirm()
     }
-    props.onClose()
+    if (!props.customTrigger) {
+      props.onClose()
+    }
   }, [mutation, props.mutationOptions])
+  const [customState, setCustomState] = useState<
+    'loading' | 'disabled' | 'null' | 'complete'
+  >('null')
 
   useEffect(() => {
     mutation?.reset()
+    setCustomState('null')
+    const handleLoading = () => setCustomState('loading')
+    const handleDisabled = () => setCustomState('disabled')
+    const handleNull = () => setCustomState('null')
+    const handleComplete = () => setCustomState('complete')
+    if (props.customTrigger) {
+      if (props.open) {
+        props.customTrigger.on('loading', handleLoading)
+        props.customTrigger.on('disabled', handleDisabled)
+        props.customTrigger.on('null', handleNull)
+        props.customTrigger.on('complete', handleComplete)
+      } else {
+        props.customTrigger.off('loading', handleLoading)
+        props.customTrigger.off('disabled', handleDisabled)
+        props.customTrigger.off('null', handleNull)
+        props.customTrigger.off('complete', handleComplete)
+      }
+    }
+    return () => {
+      props.customTrigger?.off('loading', handleLoading)
+      props.customTrigger?.off('disabled', handleDisabled)
+      props.customTrigger?.off('null', handleNull)
+      props.customTrigger?.off('complete', handleComplete)
+    }
   }, [props.open])
+
+  const isLoading =
+    mutation?.isLoading || mutation?.isSuccess || customState === 'loading'
 
   return (
     <Transition show={props.open} as={Fragment} appear={true}>
-      <Dialog onClose={props.onClose} className='relative z-50'>
+      <Dialog
+        onClose={() => {
+          if (!isLoading) props.onClose
+        }}
+        className='relative z-50'
+      >
         {/* Backdrop */}
         <Transition.Child
           as={Fragment}
@@ -78,8 +124,11 @@ export default function DialogCore<T extends UseMutationResult>(
           >
             <Dialog.Panel
               as={props.as}
-              {...props.panelProps}
-              className='mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-lg'
+              className={twMerge(
+                'mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-lg',
+                panelClassName,
+              )}
+              {...panelPropsRest}
             >
               <section className='sm:flex sm:gap-4'>
                 <div
@@ -124,18 +173,21 @@ export default function DialogCore<T extends UseMutationResult>(
                       props.onCancel?.()
                       props.onClose()
                     }}
-                    className='h-10 grow font-bold sm:max-w-[50%]'
+                    className='h-10 grow font-bold disabled:opacity-50 sm:max-w-[50%]'
                     label={props.cancelText ?? '取消'}
                     theme='support'
+                    isDisabled={isLoading}
                   ></Button>
                 )}
                 <Button
-                  isLoading={mutation?.isLoading || mutation?.isSuccess}
-                  isBusy={mutation?.isLoading || mutation?.isSuccess}
+                  isDisabled={customState === 'disabled'}
+                  isLoading={isLoading}
+                  isBusy={isLoading}
                   onClick={handleConfirm}
                   className={twMerge(
                     'h-10 grow font-bold',
                     props.cancel && 'sm:max-w-[50%]',
+                    isLoading && 'pointer-events-none',
                   )}
                   textClassName='fond-bold'
                   label={props.confirmText ?? '確認'}

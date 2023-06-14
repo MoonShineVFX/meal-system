@@ -100,6 +100,9 @@ dependencies:
   react-hook-form:
     specifier: ^7.40.0
     version: 7.40.0(react@18.2.0)
+  react-image-crop:
+    specifier: ^10.1.4
+    version: 10.1.4(react@18.2.0)
   react-intersection-observer:
     specifier: ^9.4.3
     version: 9.4.3(react@18.2.0)
@@ -818,6 +821,11 @@ packages:
       string-width: 4.2.3
       strip-ansi: 6.0.1
       wrap-ansi: 6.2.0
+    dev: false
+
+  /clsx@1.2.1:
+    resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
+    engines: {node: '>=6'}
     dev: false
 
   /color-convert@2.0.1:
@@ -1615,6 +1623,15 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18
     dependencies:
+      react: 18.2.0
+    dev: false
+
+  /react-image-crop@10.1.4(react@18.2.0):
+    resolution: {integrity: sha512-bEc/SfJRPU06ApivtzuNmofEH3rqf1WsKgWNwloiZ4ttCB37DEETwR4KsQb+KkW87srvRtWpCbOhPs0a4TVAKw==}
+    peerDependencies:
+      react: '>=16.13.1'
+    dependencies:
+      clsx: 1.2.1
       react: 18.2.0
     dev: false
 
