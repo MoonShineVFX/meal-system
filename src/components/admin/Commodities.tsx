@@ -86,7 +86,7 @@ export default function Commodities() {
               ? commodity.supplierId.toString()
               : !isEdit && supplierId
               ? supplierId.toString()
-              : undefined,
+              : '',
             disabled: isEdit,
             data: [
               ...(commodity?.supplier
@@ -110,7 +110,7 @@ export default function Commodities() {
                 ? commodity.supplierId.toString()
                 : !isEdit && supplierId
                 ? supplierId.toString()
-                : undefined,
+                : '',
               disabled: isEdit,
             },
             label: '店家',
@@ -156,7 +156,7 @@ export default function Commodities() {
               imageId: formData.image,
               menus: formData.menus,
               supplierId:
-                formData.supplier === ''
+                formData.supplier === '' || formData.supplier === undefined
                   ? undefined
                   : parseInt(formData.supplier),
             })
@@ -487,7 +487,8 @@ export default function Commodities() {
                 : (data) =>
                     data
                       .filter((c) => {
-                        if (tabName === '全部') return true
+                        if (tabName === '全部' || supplierId !== undefined)
+                          return true
                         if (tabName === '即時')
                           return c.onMenus.some((m) => m.menu.type === 'LIVE')
                         if (tabName === '自助')

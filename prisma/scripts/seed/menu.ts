@@ -57,7 +57,7 @@ export async function seedMenu() {
 
   // For empty test
   const commodity = await createCommodity({
-    name: '家齊之吻',
+    name: '家齊的暴躁',
     price: 999,
     description: '重量級服務，讓您的家人感受到您的溫暖',
   })

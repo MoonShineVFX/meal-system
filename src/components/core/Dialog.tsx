@@ -9,6 +9,7 @@ import { twMerge } from 'tailwind-merge'
 
 import Button from '@/components/core/Button'
 import type { UseMutationResult } from '@/lib/client/trpc'
+import { useStore } from '@/lib/client/store'
 
 type DialogProps<T extends UseMutationResult> = {
   open: boolean
@@ -23,7 +24,7 @@ type DialogProps<T extends UseMutationResult> = {
   icon?: 'info' | 'warning' | 'success' | null
   useMutation?: () => T
   mutationOptions?: Parameters<T['mutate']>[0]
-  onConfirm?: () => void
+  onConfirm?: () => void | Promise<void>
   onCancel?: () => void
   as?: 'form' | 'div'
   panelProps?: Parameters<typeof Dialog.Panel>[0]
@@ -32,6 +33,10 @@ type DialogProps<T extends UseMutationResult> = {
 export default function DialogCore<T extends UseMutationResult>(
   props: DialogProps<T>,
 ) {
+  const buttonState = useStore((state) => state.dialogButtonState)
+  const setButtonState = useStore((state) => state.setDialogButtonState)
+  const { className: panelClassName, ...panelPropsRest } =
+    props.panelProps ?? {}
   const mutation = props.useMutation ? props.useMutation() : undefined
   const handleConfirm = useCallback(() => {
     if (mutation && props.mutationOptions) {
@@ -40,19 +45,41 @@ export default function DialogCore<T extends UseMutationResult>(
           props.onClose()
         },
       })
-    } else if (props.onConfirm) {
-      props.onConfirm()
+      return
     }
-    props.onClose()
+    if (props.onConfirm) {
+      const result = props.onConfirm()
+      if (result instanceof Promise) {
+        setButtonState('loading')
+        result.then(() => {
+          setButtonState('success')
+          props.onClose()
+        })
+      } else {
+        props.onClose()
+      }
+    }
   }, [mutation, props.mutationOptions])
 
   useEffect(() => {
     mutation?.reset()
+    setButtonState('null')
   }, [props.open])
+
+  const isLoading =
+    mutation?.isLoading ||
+    mutation?.isSuccess ||
+    buttonState === 'loading' ||
+    buttonState === 'success'
 
   return (
     <Transition show={props.open} as={Fragment} appear={true}>
-      <Dialog onClose={props.onClose} className='relative z-50'>
+      <Dialog
+        onClose={() => {
+          if (!isLoading) props.onClose()
+        }}
+        className='relative z-50'
+      >
         {/* Backdrop */}
         <Transition.Child
           as={Fragment}
@@ -78,8 +105,11 @@ export default function DialogCore<T extends UseMutationResult>(
           >
             <Dialog.Panel
               as={props.as}
-              {...props.panelProps}
-              className='mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-lg'
+              className={twMerge(
+                'mx-auto flex max-w-md flex-col gap-6 rounded-2xl bg-white p-6 shadow-lg',
+                panelClassName,
+              )}
+              {...panelPropsRest}
             >
               <section className='sm:flex sm:gap-4'>
                 <div
@@ -124,18 +154,21 @@ export default function DialogCore<T extends UseMutationResult>(
                       props.onCancel?.()
                       props.onClose()
                     }}
-                    className='h-10 grow font-bold sm:max-w-[50%]'
+                    className='h-10 grow font-bold disabled:opacity-50 sm:max-w-[50%]'
                     label={props.cancelText ?? '取消'}
                     theme='support'
+                    isDisabled={isLoading}
                   ></Button>
                 )}
                 <Button
-                  isLoading={mutation?.isLoading || mutation?.isSuccess}
-                  isBusy={mutation?.isLoading || mutation?.isSuccess}
+                  isDisabled={buttonState === 'disabled'}
+                  isLoading={isLoading}
+                  isBusy={isLoading}
                   onClick={handleConfirm}
                   className={twMerge(
                     'h-10 grow font-bold',
                     props.cancel && 'sm:max-w-[50%]',
+                    isLoading && 'pointer-events-none',
                   )}
                   textClassName='fond-bold'
                   label={props.confirmText ?? '確認'}
