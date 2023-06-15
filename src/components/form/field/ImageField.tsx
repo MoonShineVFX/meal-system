@@ -8,7 +8,6 @@ import ReactCrop, {
   makeAspectCrop,
 } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import EventEmitter from 'events'
 
 import { uploadImage } from '@/lib/client/bunny'
 import trpc from '@/lib/client/trpc'
@@ -18,6 +17,9 @@ import Spinner from '@/components/core/Spinner'
 import Image from '@/components/core/Image'
 import { InputFieldProps } from './define'
 import { useDialog } from '@/components/core/Dialog'
+
+const MAX_IMAGE_LENGTH = 1280
+const MIN_IMAGE_LENGTH = 100
 
 function validateImageFile(files: FileList) {
   if (files.length === 0 || files.length > 1) return undefined
@@ -38,6 +40,12 @@ export default function ImageField<T extends FieldValues>(
   const addNotification = useStore((state) => state.addNotification)
   const { showDialog, dialog } = useDialog()
   const inputFileRef = useRef<HTMLInputElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const setButtonState = useStore((state) => state.setDialogButtonState)
+  const [cropMeta, setCropMeta] = useState<CropImageMeta | undefined>(undefined)
+  const [cropResolve, setCropResolve] = useState<
+    ((value: void | PromiseLike<void>) => void) | undefined
+  >(undefined)
 
   // Get default image path
   useEffect(() => {
@@ -52,15 +60,63 @@ export default function ImageField<T extends FieldValues>(
     }
   }, [props.formInput.defaultValue])
 
-  // Crop Image
+  // When image editor done
+  useEffect(() => {
+    if (!cropMeta || !cropResolve || !canvasRef.current) return
+
+    const cropWidth = Math.min(cropMeta.crop.width, MAX_IMAGE_LENGTH)
+    const cropHeight = Math.min(cropMeta.crop.height, MAX_IMAGE_LENGTH)
+
+    // Crop image if edited
+    if (
+      cropWidth !== cropMeta.image.naturalWidth ||
+      cropHeight !== cropMeta.image.naturalHeight
+    ) {
+      canvasRef.current.width = cropWidth
+      canvasRef.current.height = cropHeight
+      const ctx = canvasRef.current.getContext('2d')
+      ctx?.drawImage(
+        cropMeta.image,
+        cropMeta.crop.x,
+        cropMeta.crop.y,
+        cropMeta.crop.width,
+        cropMeta.crop.height,
+        0,
+        0,
+        cropWidth,
+        cropHeight,
+      )
+      canvasRef.current.toBlob(
+        (blob) => {
+          if (!blob) {
+            console.error('Invalid image blob')
+            return
+          }
+          uploadImageFile({ blob })
+        },
+        'image/jpeg',
+        0.9,
+      )
+    } else {
+      // Direct upload if not edited
+      console.log('direct upload')
+      const file = validateImageFile(inputFileRef.current!.files!)
+      if (!file) {
+        console.error('Invalid image file')
+        return
+      }
+      uploadImageFile({ file })
+    }
+
+    cropResolve()
+    setCropResolve(undefined)
+    setCropMeta(undefined)
+  }, [cropMeta, cropResolve, canvasRef.current, inputFileRef.current])
+
+  // Open crop image editor
   const cropImageFile = useCallback(
     async (imageFile: File) => {
       if (!inputFileRef.current) return
-
-      const emitter = new EventEmitter()
-      const resultCropMeta: { data: CropImageMeta | undefined } = {
-        data: undefined,
-      }
 
       showDialog({
         title: '編輯圖片',
@@ -71,30 +127,26 @@ export default function ImageField<T extends FieldValues>(
         content: (
           <ImageCropEditor
             imageUrl={URL.createObjectURL(imageFile)}
-            minLength={100}
+            minLength={MIN_IMAGE_LENGTH}
             onChange={(cropMeta) => {
               if (cropMeta === null) {
-                emitter.emit('disabled')
+                setButtonState('disabled')
               } else {
-                emitter.emit('null')
-                resultCropMeta.data = cropMeta
+                setButtonState('null')
+                setCropMeta(cropMeta)
               }
             }}
           />
         ),
         onConfirm: () => {
-          if (resultCropMeta.data) {
-            console.log('crop', resultCropMeta)
-            setTimeout(() => {
-              emitter.emit('complete')
-            }, 2000)
-          } else {
-            console.log('no data')
-          }
+          return new Promise<void>((resolve) => {
+            setCropResolve(() => {
+              return resolve
+            })
+          })
         },
         cancel: true,
         confirmText: '上傳',
-        customTrigger: emitter,
         onCancel: () => {
           inputFileRef.current!.value = ''
         },
@@ -108,11 +160,15 @@ export default function ImageField<T extends FieldValues>(
 
   // Upload image
   const uploadImageFile = useCallback(
-    async (imageFile: File) => {
+    async (inputData: { blob?: Blob; file?: File }) => {
+      if (!canvasRef.current) return
+      if (!inputData.blob && !inputData.file) return
+      setIsUploading(true)
+
       const CryptoJS = await import('crypto-js')
-      const dataString = await imageFile.text()
+      const dataString = await (inputData.blob ?? inputData.file)!.text()
       const imageId = CryptoJS.SHA256(dataString).toString()
-      const filename = imageId + '.' + imageFile.type.split('/')[1]
+      const filename = imageId + '.jpg'
       const checkImageResult = await getImageMutation.mutateAsync({
         id: imageId,
       })
@@ -125,14 +181,16 @@ export default function ImageField<T extends FieldValues>(
           imageId as Parameters<typeof props.useFormReturns.setValue>[1],
           { shouldDirty: true },
         )
+        setIsUploading(false)
       } else {
         // Upload
-        setIsUploading(true)
         const isSuccess = await uploadImage({
           apiKey: checkImageResult.apiKey!,
           url: `${checkImageResult.url!}/${settings.RESOURCE_UPLOAD_PATH}`,
           filename: filename,
-          file: imageFile,
+          file: inputData.blob
+            ? new File([inputData.blob], filename)
+            : inputData.file!,
         })
         if (isSuccess) {
           const createImageResult = await createImageMutation.mutateAsync({
@@ -230,6 +288,7 @@ export default function ImageField<T extends FieldValues>(
           </div>
         </label>
       )}
+      <canvas ref={canvasRef} className='sr-only' />
       {dialog}
     </div>
   )
@@ -268,8 +327,43 @@ export function ImageCropEditor(props: {
   const [isInvalid, setIsInvalid] = useState(false)
 
   const onImageLoaded = useCallback((image: HTMLImageElement) => {
-    setCrop(centerAspectCrop(image.width, image.height, 1))
+    const centerCrop = centerAspectCrop(image.width, image.height, 1)
+    setCrop(centerCrop)
+    handleCropChange(centerCrop)
   }, [])
+
+  const handleCropChange = useCallback(
+    (newCrop: PercentCrop) => {
+      if (!imageRef.current) return
+      const w = imageRef.current!.naturalWidth
+      const h = imageRef.current!.naturalHeight
+      const cropWidth = Math.floor((w * newCrop.width) / 100)
+      const cropHeight = Math.floor((h * newCrop.height) / 100)
+
+      if (
+        props.minLength &&
+        Math.min(cropWidth, cropHeight) < props.minLength
+      ) {
+        props.onChange?.(null)
+        setIsInvalid(true)
+        return
+      }
+
+      props.onChange?.({
+        width: w,
+        height: h,
+        crop: {
+          width: cropWidth,
+          height: cropHeight,
+          x: Math.floor((w * newCrop.x) / 100),
+          y: Math.floor((h * newCrop.y) / 100),
+        },
+        image: imageRef.current,
+      })
+      setIsInvalid(false)
+    },
+    [imageRef.current],
+  )
 
   return (
     <ReactCrop
@@ -280,34 +374,7 @@ export function ImageCropEditor(props: {
           return
         }
         setCrop(percentCrop)
-
-        if (!imageRef.current) return
-        const w = imageRef.current!.width
-        const h = imageRef.current!.height
-        const cropWidth = Math.floor((w * percentCrop.width) / 100)
-        const cropHeight = Math.floor((h * percentCrop.height) / 100)
-
-        if (
-          props.minLength &&
-          Math.min(cropWidth, cropHeight) < props.minLength
-        ) {
-          props.onChange?.(null)
-          setIsInvalid(true)
-          return
-        }
-
-        props.onChange?.({
-          width: w,
-          height: h,
-          crop: {
-            width: cropWidth,
-            height: cropHeight,
-            x: Math.floor((w * percentCrop.x) / 100),
-            y: Math.floor((h * percentCrop.y) / 100),
-          },
-          image: imageRef.current,
-        })
-        setIsInvalid(false)
+        handleCropChange(percentCrop)
       }}
     >
       {/* Circle */}

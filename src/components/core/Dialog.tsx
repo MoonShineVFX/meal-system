@@ -9,7 +9,7 @@ import { twMerge } from 'tailwind-merge'
 
 import Button from '@/components/core/Button'
 import type { UseMutationResult } from '@/lib/client/trpc'
-import EventEmitter from 'events'
+import { useStore } from '@/lib/client/store'
 
 type DialogProps<T extends UseMutationResult> = {
   open: boolean
@@ -24,16 +24,17 @@ type DialogProps<T extends UseMutationResult> = {
   icon?: 'info' | 'warning' | 'success' | null
   useMutation?: () => T
   mutationOptions?: Parameters<T['mutate']>[0]
-  onConfirm?: () => void
+  onConfirm?: () => void | Promise<void>
   onCancel?: () => void
   as?: 'form' | 'div'
   panelProps?: Parameters<typeof Dialog.Panel>[0]
-  customTrigger?: EventEmitter
 }
 
 export default function DialogCore<T extends UseMutationResult>(
   props: DialogProps<T>,
 ) {
+  const buttonState = useStore((state) => state.dialogButtonState)
+  const setButtonState = useStore((state) => state.setDialogButtonState)
   const { className: panelClassName, ...panelPropsRest } =
     props.panelProps ?? {}
   const mutation = props.useMutation ? props.useMutation() : undefined
@@ -46,56 +47,36 @@ export default function DialogCore<T extends UseMutationResult>(
       })
       return
     }
-    if (props.customTrigger) {
-      setCustomState('loading')
-    }
     if (props.onConfirm) {
-      props.onConfirm()
-    }
-    if (!props.customTrigger) {
-      props.onClose()
+      const result = props.onConfirm()
+      if (result instanceof Promise) {
+        setButtonState('loading')
+        result.then(() => {
+          setButtonState('success')
+          props.onClose()
+        })
+      } else {
+        props.onClose()
+      }
     }
   }, [mutation, props.mutationOptions])
-  const [customState, setCustomState] = useState<
-    'loading' | 'disabled' | 'null' | 'complete'
-  >('null')
 
   useEffect(() => {
     mutation?.reset()
-    setCustomState('null')
-    const handleLoading = () => setCustomState('loading')
-    const handleDisabled = () => setCustomState('disabled')
-    const handleNull = () => setCustomState('null')
-    const handleComplete = () => setCustomState('complete')
-    if (props.customTrigger) {
-      if (props.open) {
-        props.customTrigger.on('loading', handleLoading)
-        props.customTrigger.on('disabled', handleDisabled)
-        props.customTrigger.on('null', handleNull)
-        props.customTrigger.on('complete', handleComplete)
-      } else {
-        props.customTrigger.off('loading', handleLoading)
-        props.customTrigger.off('disabled', handleDisabled)
-        props.customTrigger.off('null', handleNull)
-        props.customTrigger.off('complete', handleComplete)
-      }
-    }
-    return () => {
-      props.customTrigger?.off('loading', handleLoading)
-      props.customTrigger?.off('disabled', handleDisabled)
-      props.customTrigger?.off('null', handleNull)
-      props.customTrigger?.off('complete', handleComplete)
-    }
+    setButtonState('null')
   }, [props.open])
 
   const isLoading =
-    mutation?.isLoading || mutation?.isSuccess || customState === 'loading'
+    mutation?.isLoading ||
+    mutation?.isSuccess ||
+    buttonState === 'loading' ||
+    buttonState === 'success'
 
   return (
     <Transition show={props.open} as={Fragment} appear={true}>
       <Dialog
         onClose={() => {
-          if (!isLoading) props.onClose
+          if (!isLoading) props.onClose()
         }}
         className='relative z-50'
       >
@@ -180,7 +161,7 @@ export default function DialogCore<T extends UseMutationResult>(
                   ></Button>
                 )}
                 <Button
-                  isDisabled={customState === 'disabled'}
+                  isDisabled={buttonState === 'disabled'}
                   isLoading={isLoading}
                   isBusy={isLoading}
                   onClick={handleConfirm}
