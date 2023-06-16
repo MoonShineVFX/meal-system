@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import * as BeamsWebClient from '@pusher/push-notifications-web'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
@@ -8,11 +9,70 @@ import trpc, {
 } from '@/lib/client/trpc'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 
+type BeamsToken = {
+  token: string
+}
+
+class CustomBeamsTokenProvider {
+  private readonly token: BeamsToken
+
+  constructor(token: BeamsToken) {
+    this.token = token
+  }
+
+  fetchToken(): Promise<BeamsToken> {
+    return Promise.resolve(this.token)
+  }
+}
+
 export default function EventListener() {
   const trpcContext = trpc.useContext()
   const addNotification = useStore((state) => state.addNotification)
+  const serviceWorkerRegistration = useStore(
+    (state) => state.serviceWorkerRegistration,
+  )
   const [hasDisconnected, setHasDisconnected] = useState(false)
   const userInfoQuery = trpc.user.get.useQuery(undefined)
+  const beamsClientRef = useRef<BeamsWebClient.Client | null>(null)
+  const getUserBeamsToken = trpc.user.getBeamsToken.useMutation(undefined)
+
+  /* Pusher Push Notifications Initialize */
+  useEffect(() => {
+    if (beamsClientRef.current && !userInfoQuery.data) {
+      console.log('[Beams] Unregistering')
+      beamsClientRef.current.stop()
+      beamsClientRef.current = null
+      return
+    }
+
+    if (!('serviceWorker' in navigator)) return
+    if (beamsClientRef.current) return
+    if (!serviceWorkerRegistration) return
+    if (!userInfoQuery.data) return
+
+    const beamsClient = new BeamsWebClient.Client({
+      instanceId: settings.BEAMS_KEY,
+      serviceWorkerRegistration: serviceWorkerRegistration,
+    })
+    beamsClientRef.current = beamsClient
+
+    getUserBeamsToken.mutate(undefined, {
+      onSuccess: (token) => {
+        const tokenProvider = new CustomBeamsTokenProvider(token)
+        beamsClient
+          .start()
+          .then(() =>
+            beamsClient.setUserId(userInfoQuery.data.id, tokenProvider),
+          )
+          .then(() =>
+            console.log(
+              `[Beams] Successfully registered as ${userInfoQuery.data.id}`,
+            ),
+          )
+          .catch((e) => console.error(`[Beams] ${e}`))
+      },
+    })
+  }, [userInfoQuery.data, beamsClientRef, serviceWorkerRegistration])
 
   /* Socket management */
   useEffect(() => {

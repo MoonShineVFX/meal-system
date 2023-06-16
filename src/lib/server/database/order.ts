@@ -878,6 +878,17 @@ export async function updateOrderStatus({
       data: {
         [status]: new Date(),
       },
+      include: {
+        items: {
+          select: {
+            image: {
+              select: {
+                path: true,
+              },
+            },
+          },
+        },
+      },
     })
 
     if (status !== 'timeCanceled') return { order: updatedOrder }

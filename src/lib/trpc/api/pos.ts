@@ -7,8 +7,9 @@ import {
   updateOrderStatus,
   updateOrdersStatus,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY, OrderStatus } from '@/lib/common'
+import { SERVER_NOTIFY, OrderStatus, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { pushNotificationToUser } from '@/lib/server/beams'
 
 function generateOrderNotifyMessage(orderId: number, status: OrderStatus) {
   switch (status) {
@@ -65,6 +66,25 @@ export const POSRouter = router({
         message: generateOrderNotifyMessage(order.id, input.status),
         link: `/order/id/${order.id}`,
       })
+
+      const orderImage = order.items.reduce(
+        (prev: string | undefined, curr) => {
+          if (prev) return prev
+          return curr.image?.path
+        },
+        undefined,
+      )
+
+      pushNotificationToUser({
+        users: [order.userId],
+        title: '訂單更新',
+        body: generateOrderNotifyMessage(order.id, input.status),
+        link: `${settings.WEBSITE_URL}/order/id/${order.id}`,
+        icon: `${settings.RESOURCE_URL}/image/${
+          orderImage ?? settings.RESOURCE_FOOD_PLACEHOLDER
+        }?width=64&quality=75`,
+      })
+
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: SERVER_NOTIFY.POS_UPDATE,
         skipNotify: true,

@@ -16,6 +16,7 @@ import {
   SERVER_NOTIFY,
 } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { generateUserBeamsToken } from '@/lib/server/beams'
 
 import { userProcedure, publicProcedure, router } from '../trpc'
 
@@ -164,4 +165,7 @@ export const UserRouter = router({
         type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
       })
     }),
+  getBeamsToken: userProcedure.mutation(async ({ ctx }) => {
+    return generateUserBeamsToken(ctx.userLite.id)
+  }),
 })

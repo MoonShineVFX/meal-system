@@ -144,6 +144,7 @@ export const settings = {
         new Date(dateString + 'T00:00:00+08:00').getTime(),
       )
     : [],
+  BEAMS_PRIVATE_KEY: process.env.BEAMS_PRIVATE_KEY!,
 
   /* NewebPay */
   NEWEBPAY_API_URL: process.env.NEWEBPAY_API_URL!,
@@ -157,6 +158,8 @@ export const settings = {
   WEBSOCKET_DEV_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_DEV_PORT ?? '3001',
   WEBSOCKET_PROD_HOST: process.env.NEXT_PUBLIC_WEBSOCKET_PROD_HOST,
   HTTP_PORT: process.env.PORT ?? '3000',
+  BEAMS_KEY: process.env.NEXT_PUBLIC_BEAMS_KEY!,
+  WEBSITE_URL: process.env.WEBSITE_URL!,
 
   /* Log */
   LOG_BLOCKCHAIN: process.env.LOG_BLOCKCHAIN === 'true',

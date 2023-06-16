@@ -12,6 +12,7 @@ import Navigation from '@/components/overlays/Navigation'
 import RouterProgress from '@/components/overlays/RouteProgress'
 import '@/styles/globals.css'
 import Title from '@/components/core/Title'
+import { useStore } from '@/lib/client/store'
 
 const FULLSCREEN_COMPONENT_PATHS = ['/login']
 
@@ -20,11 +21,17 @@ const PageApp: AppType = ({ Component, pageProps }) => {
   const isComponentFullscreen = FULLSCREEN_COMPONENT_PATHS.includes(
     router.pathname,
   )
+  const setServiceWorkerRegistration = useStore(
+    (state) => state.setServiceWorkerRegistration,
+  )
 
   // Register service worker
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/pwa-sw.js')
+      navigator.serviceWorker.register('/pwa-sw.js').then((reg) => {
+        console.log('Service worker registered', reg)
+        setServiceWorkerRegistration(reg)
+      })
     }
   }, [])
 
