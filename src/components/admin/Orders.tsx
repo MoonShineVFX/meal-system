@@ -74,6 +74,7 @@ export default function Orders() {
             {
               name: '菜單',
               align: 'left',
+              cellClassName: 'text-sm',
               render: (order) => getMenuName(order.menu) ?? '未知菜單',
             },
             {
@@ -98,21 +99,29 @@ export default function Orders() {
               align: 'left',
               render: (order) => {
                 if (order.timeCanceled !== null) {
-                  return '已取消'
+                  return <p className='text-red-300'>取消</p>
                 } else if (order.timeCompleted !== null) {
-                  return '已完成'
+                  return <p className='text-green-400'>完成</p>
                 } else if (order.timeDishedUp !== null) {
-                  return '已出餐'
+                  return <p className='text-teal-400'>出餐</p>
                 } else if (order.timePreparing !== null) {
-                  return '準備中'
+                  return <p className='text-blue-400'>準備中</p>
                 }
-                return '已下單'
+                return '下單'
               },
             },
             {
               name: '備註',
               align: 'left',
-              render: (order) => (order.forClient ? '客戶招待' : ''),
+              cellClassName: 'text-sm',
+              render: (order) =>
+                order.forClient ? (
+                  <p className='rounded-lg bg-stone-100 p-1 text-stone-400'>
+                    客戶招待
+                  </p>
+                ) : (
+                  ''
+                ),
             },
           ]}
           footer={

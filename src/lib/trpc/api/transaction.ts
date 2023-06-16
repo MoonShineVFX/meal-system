@@ -7,7 +7,7 @@ import { userProcedure, staffProcedure, router } from '../trpc'
 
 export const TransactionRouter = router({
   // Get transaction records, use until arg to update new records
-  get: userProcedure
+  getListByUser: userProcedure
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
@@ -21,14 +21,14 @@ export const TransactionRouter = router({
         keyword: input.keyword ? input.keyword.trim() : undefined,
       })
     }),
-  getList: staffProcedure
+  getListByStaff: staffProcedure
     .input(
       z.object({
         cursor: z.number().int().positive().optional(),
         keyword: z.string().optional(),
       }),
     )
-    .query(async ({ input, ctx }) => {
+    .query(async ({ input }) => {
       return await getTransactionsWithCursor({
         cursor: input.cursor,
         keyword: input.keyword ? input.keyword.trim() : undefined,

@@ -415,8 +415,8 @@ export async function getTransactions({
     take: settings.TRANSACTIONS_PER_QUERY + 1,
     cursor: cursor ? { id: cursor } : undefined,
     include: {
-      sourceUser: { select: { name: true } },
-      targetUser: { select: { name: true } },
+      sourceUser: { select: { name: true, id: true } },
+      targetUser: { select: { name: true, id: true } },
     },
   })
   return transactions

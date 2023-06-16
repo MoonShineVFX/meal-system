@@ -103,7 +103,7 @@ function Navigation() {
             rememberSubpath={true}
           />
           <NavButton
-            className='hidden lg:block'
+            className='hidden sm:block'
             label='管理後台'
             path='/admin'
             icons={[WrenchScrewdriverIcon, WrenchScrewdriverIconSolid]}

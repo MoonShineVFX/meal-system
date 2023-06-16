@@ -283,11 +283,13 @@ export default function Menus() {
             {
               name: '狀態',
               render: (row) =>
-                row.closedDate && new Date() > row.closedDate
-                  ? '已關閉'
-                  : row.publishedDate && new Date() < row.publishedDate
-                  ? '未發佈'
-                  : '公開',
+                row.closedDate && new Date() > row.closedDate ? (
+                  <p className='text-red-300'>已關閉</p>
+                ) : row.publishedDate && new Date() < row.publishedDate ? (
+                  <p className='text-stone-400'>未發佈</p>
+                ) : (
+                  <p className='text-green-400'>公開</p>
+                ),
               sort: true,
             },
             {
@@ -302,11 +304,16 @@ export default function Menus() {
               align: 'right',
               sort: true,
               render: (row) =>
-                row.limitPerUser === 0 ? '無限制' : row.limitPerUser,
+                row.limitPerUser === 0 ? (
+                  <p className='text-sm text-stone-400'>無限制</p>
+                ) : (
+                  row.limitPerUser
+                ),
             },
             {
               name: '發佈時間',
               align: 'right',
+              cellClassName: 'text-sm',
               render: (row) =>
                 row.publishedDate?.toLocaleString('zh-TW', {
                   month: 'short',
@@ -314,7 +321,7 @@ export default function Menus() {
                   hour: 'numeric',
                   minute: 'numeric',
                   hour12: false,
-                }) ?? '未設定',
+                }) ?? <p className='text-stone-400'>未設定</p>,
               hint: (row) => row.publishedDate?.toLocaleString() ?? '未設定',
               sort: (a, b) => {
                 if (!a.publishedDate && !b.publishedDate) return 0
@@ -326,6 +333,7 @@ export default function Menus() {
             {
               name: '關閉時間',
               align: 'right',
+              cellClassName: 'text-sm',
               render: (row) =>
                 row.closedDate?.toLocaleString('zh-TW', {
                   month: 'short',
@@ -333,7 +341,7 @@ export default function Menus() {
                   hour: 'numeric',
                   minute: 'numeric',
                   hour12: false,
-                }) ?? '未設定',
+                }) ?? <p className='text-stone-400'>未設定</p>,
               hint: (row) => row.closedDate?.toLocaleString() ?? '未設定',
               sort: (a, b) => {
                 if (!a.closedDate && !b.closedDate) return 0

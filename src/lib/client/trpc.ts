@@ -54,7 +54,7 @@ export type POSLiveDatas = RouterOutput['pos']['getLive']
 export type POSReservationDatas = RouterOutput['pos']['getReservation']
 export type ReservationDatas = RouterOutput['menu']['getReservationsForUser']
 export type TransactionDatas =
-  RouterOutput['transaction']['get']['transactions']
+  RouterOutput['transaction']['getListByUser']['transactions']
 export type CategoryDatas = RouterOutput['category']['get']
 export type CommodityDatas = RouterOutput['commodity']['getList']
 export type OptionSetsTemplateDatas = RouterOutput['optionSet']['get']

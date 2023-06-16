@@ -41,7 +41,7 @@ export default function Button(props: {
       }}
       disabled={props.isDisabled ?? isBusy ?? false}
       className={twMerge(
-        `relative flex items-center justify-center rounded-2xl indent-[0.1em] tracking-widest focus:outline-none disabled:pointer-events-none`,
+        `relative flex items-center justify-center whitespace-nowrap rounded-2xl indent-[0.1em] tracking-widest focus:outline-none disabled:pointer-events-none`,
         themeColor,
         props.className,
       )}

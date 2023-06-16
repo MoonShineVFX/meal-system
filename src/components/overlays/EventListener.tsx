@@ -93,7 +93,7 @@ export default function EventListener() {
           trpcContext.user.get.invalidate()
           trpcContext.order.get.invalidate()
           trpcContext.order.getCount.invalidate()
-          trpcContext.transaction.get.invalidate()
+          trpcContext.transaction.getListByUser.invalidate()
           break
         case SERVER_NOTIFY.ORDER_UPDATE:
           trpcContext.order.get.invalidate()
@@ -103,7 +103,7 @@ export default function EventListener() {
           trpcContext.order.get.invalidate()
           trpcContext.user.get.invalidate()
           trpcContext.order.getCount.invalidate()
-          trpcContext.transaction.get.invalidate()
+          trpcContext.transaction.getListByUser.invalidate()
           break
         case SERVER_NOTIFY.DEPOSIT_RECHARGE:
           trpcContext.user.get.invalidate()

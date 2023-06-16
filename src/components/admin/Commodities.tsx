@@ -412,7 +412,7 @@ export default function Commodities() {
     <div className='relative h-full min-h-full w-full'>
       <div className='absolute inset-0 flex flex-col gap-4 p-8'>
         {/* Top */}
-        <div className='flex items-center gap-4'>
+        <div className='flex flex-wrap items-center gap-4'>
           <SearchBar
             placeholder='搜尋餐點'
             isLoading={false}
@@ -420,6 +420,7 @@ export default function Commodities() {
             setSearchKeyword={setSearchKeyword}
           />
           <TabHeader
+            className='flex-shrink-0 flex-grow-0'
             tabNames={TabNames}
             onChange={(tabName) => {
               setSupplierId(undefined)
@@ -428,7 +429,7 @@ export default function Commodities() {
             clear={supplierId !== undefined}
           />
           <Select
-            className='mr-auto w-40'
+            className='mr-auto w-40 whitespace-nowrap'
             value={supplierId ? supplierId.toString() : ''}
             data={[
               { label: '無指定店家', value: '' },
@@ -455,7 +456,7 @@ export default function Commodities() {
           )}
           {selectedIds.length > 0 && (
             <DropdownMenu
-              className='py-3 text-base font-bold'
+              className='whitespace-nowrap py-3 text-base font-bold'
               label='批次編輯'
               disabled={selectedIds.length < 2}
             >
@@ -569,7 +570,8 @@ export default function Commodities() {
               {
                 name: '描述',
                 hideByDefault: true,
-                cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
+                cellClassName:
+                  'text-sm max-w-[30ch] overflow-hidden overflow-ellipsis',
                 sort: true,
                 render: (row) => row.description,
               },
@@ -581,6 +583,7 @@ export default function Commodities() {
               {
                 name: '選項',
                 sort: true,
+                cellClassName: 'text-sm',
                 hint: (row) =>
                   row.optionSets
                     ? row.optionSets
@@ -596,7 +599,8 @@ export default function Commodities() {
               },
               {
                 name: '菜單',
-                cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
+                cellClassName:
+                  'max-w-[30ch] overflow-hidden overflow-ellipsis text-sm',
                 sort: true,
                 hint: (row) =>
                   row.onMenus.length > 0
@@ -616,6 +620,7 @@ export default function Commodities() {
               {
                 name: '創建日期',
                 render: (row) => row.createdAt.toLocaleDateString(),
+                cellClassName: 'text-sm',
                 hint: (row) => row.createdAt.toLocaleString(),
                 sort: (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
                 hideByDefault: true,
@@ -623,6 +628,7 @@ export default function Commodities() {
               {
                 name: '修改日期',
                 render: (row) => row.updatedAt.toLocaleDateString(),
+                cellClassName: 'text-sm',
                 hint: (row) => row.updatedAt.toLocaleString(),
                 sort: (a, b) => a.updatedAt.getTime() - b.updatedAt.getTime(),
                 hideByDefault: true,

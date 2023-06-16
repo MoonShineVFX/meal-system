@@ -58,6 +58,8 @@ export default function DialogCore<T extends UseMutationResult>(
       } else {
         props.onClose()
       }
+    } else {
+      props.onClose()
     }
   }, [mutation, props.mutationOptions])
 

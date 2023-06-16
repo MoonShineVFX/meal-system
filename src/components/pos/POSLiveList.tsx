@@ -20,12 +20,14 @@ export default function POSLiveList(props: {
     if (!data) return []
 
     if (props.tabName === '待處理') {
-      return data.sort((a, b) => {
-        const aOrder = a.timeDishedUp ? 1 : 0
-        const bOrder = b.timeDishedUp ? 1 : 0
-        if (aOrder === bOrder) return 0
-        return aOrder - bOrder
-      })
+      return data
+        .filter((order) => order.timeDishedUp === null)
+        .sort((a, b) => {
+          const aOrder = a.timeDishedUp ? 1 : 0
+          const bOrder = b.timeDishedUp ? 1 : 0
+          if (aOrder === bOrder) return 0
+          return aOrder - bOrder
+        })
     } else if (props.tabName === '已出餐') {
       return data.filter((order) => order.timeDishedUp !== null)
     } else if (props.tabName === '已完成') {
@@ -67,7 +69,7 @@ export default function POSLiveList(props: {
               ))}
             </>
           ) : props.tabName !== '已完成' ? (
-            <AnimatePresence initial={false}>
+            <AnimatePresence key={props.tabName} initial={false}>
               {filteredOrders.map((order) => (
                 <POSLiveCard key={order.id} order={order} />
               ))}

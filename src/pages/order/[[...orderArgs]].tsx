@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { GetServerSideProps } from 'next'
 import z from 'zod'
@@ -90,6 +90,23 @@ export default function PageOrder(props: {
             : undefined,
       },
     )
+  const orders = useMemo(() => {
+    if (!data) return []
+    const flatData = data.pages.flatMap((page) => page.orders)
+
+    if (props.tabName !== '處理中') return flatData
+
+    // 把可取餐的訂單排在前面
+    return flatData.sort((a, b) => {
+      if (a.timeDishedUp !== null && b.timeDishedUp === null) {
+        return -1
+      } else if (a.timeDishedUp === null && b.timeDishedUp !== null) {
+        return 1
+      } else {
+        return 0
+      }
+    })
+  }, [data, props.tabName])
 
   const handleScrollEndReached = useCallback(() => {
     if (hasNextPage) {
@@ -101,8 +118,6 @@ export default function PageOrder(props: {
     return <Error description={error.message} />
   }
   const isSearch = props.tabName === '搜尋'
-
-  const orders = data?.pages.flatMap((page) => page.orders) ?? []
 
   return (
     <>

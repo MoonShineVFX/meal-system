@@ -77,6 +77,7 @@ export default function OrderCard(props: {
         props.isFirst && 'pt-[4.25rem] sm:pt-[4.5rem]',
         props.isLast && 'border-none',
         props.isLoading && 'group pointer-events-none',
+        step === 2 && 'bg-stone-50',
       )}
       {...twData({ loading: props.isLoading })}
     >

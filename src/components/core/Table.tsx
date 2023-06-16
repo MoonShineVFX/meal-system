@@ -247,6 +247,7 @@ export default function Table<
                         col.align === 'right' && 'justify-end',
                         col.align === 'left' && 'justify-start',
                         col.sort && 'cursor-pointer',
+                        sortType && sortType !== 'none' && 'font-bold',
                       )}
                       onClick={() => handleSortColumn(col.name)}
                     >
@@ -315,6 +316,10 @@ export default function Table<
                     key={col.name + index}
                     className={twMerge(
                       'whitespace-nowrap p-4',
+                      'even:bg-stone-50 group-hover/row:bg-yellow-50',
+                      props.idField &&
+                        selectedIds.includes(row[props.idField!]) &&
+                        'bg-yellow-100 even:bg-yellow-100 group-hover/row:bg-yellow-100',
                       typeof content === 'string' && 'text-left',
                       typeof content === 'number' && 'text-right',
                       col.align === 'center' && 'text-center',
@@ -346,12 +351,12 @@ export default function Table<
               <tr
                 {...rest}
                 className={twMerge(
-                  'hover:bg-stone-100',
+                  'group/row hover:bg-yellow-50',
                   props.idField &&
                     selectedIds.includes(
                       tableData[rest['data-item-index']][props.idField!],
                     ) &&
-                    'bg-yellow-50 hover:bg-yellow-100',
+                    'bg-yellow-100 hover:bg-yellow-100',
                 )}
                 style={style}
               />
