@@ -195,14 +195,14 @@ export default function SortableList<
         {!isBatchEdit && props.onCreate && (
           <div
             className={twMerge(
-              'mt-2 flex justify-center',
+              'mt-4 flex justify-center',
               props.items.length === 0 && 'mt-0',
             )}
           >
             <Button
               onClick={props.onCreate}
               label={
-                <p className='flex items-center p-2 text-sm'>
+                <p className='flex items-center p-2 text-sm text-stone-400 hover:text-stone-600'>
                   {props.onCreateLabel ?? '新增'}{' '}
                   <PlusIcon className='inline h-4 w-4' />
                 </p>

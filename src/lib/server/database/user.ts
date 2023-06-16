@@ -1,10 +1,8 @@
-import { UserRole, Transaction } from '@prisma/client'
+import { UserRole, UserSettings } from '@prisma/client'
 import CryptoJS from 'crypto-js'
 
 import { prisma, log } from './define'
 import { settings } from '@/lib/common'
-import { blockchainManager } from '@/lib/server/blockchain'
-import { forceSyncBlockchainWallet } from './blockchain'
 import { rechargeUserBalanceBase } from './transaction'
 
 type EnsureUserArgs = {
@@ -45,29 +43,46 @@ export async function ensureUser({
       name: name ?? userId,
     },
     include: {
-      ethWallet: true,
+      settings: true,
     },
   })
 
-  // If user does not have a blockchain, create one
-  if (!user.ethWallet) {
-    log(`Creating blockchain account for user ${user.name} (${userId})`)
-    const newBlockchainAccount = await blockchainManager.createAccount()
-    await prisma.user.update({
-      where: {
-        id: userId,
-      },
+  // If user does not have a user settings, create one
+  if (!user.settings) {
+    await prisma.userSettings.create({
       data: {
-        ethWallet: {
-          create: {
-            address: newBlockchainAccount.address,
-            privateKey: newBlockchainAccount.privateKey,
-          },
-        },
+        userId: user.id,
       },
     })
   }
-  forceSyncBlockchainWallet(user.id)
+
+  // If user profile image exists, create one
+  if (!user.profileImageId) {
+    try {
+      const response = await fetch(
+        `${settings.RESOURCE_URL}/image/profile/${userId}.jpg`,
+        {
+          method: 'HEAD',
+        },
+      )
+      if (response.ok) {
+        await prisma.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            profileImage: {
+              create: {
+                path: `profile/${userId}.jpg`,
+              },
+            },
+          },
+        })
+      }
+    } catch (e) {
+      log(e)
+    }
+  }
 }
 
 export async function createUserToken(userId: string) {
@@ -81,7 +96,11 @@ export async function createUserToken(userId: string) {
           id: true,
           name: true,
           role: true,
-          tokens: true,
+          tokens: {
+            orderBy: {
+              createdAt: 'asc',
+            },
+          },
         },
       },
     },
@@ -139,11 +158,13 @@ export async function getUserInfo(userId: string) {
         pointBalance: true,
         creditBalance: true,
         lastPointRechargeTime: true,
+        authorities: true,
         profileImage: {
           select: {
             path: true,
           },
         },
+        settings: true,
       },
     })
 
@@ -151,7 +172,7 @@ export async function getUserInfo(userId: string) {
 
     // Check if user needs to recharge points
     let isRecharged = false
-    let thisCallback: (() => Promise<Transaction>) | undefined = undefined
+    let thisCallback: (() => void) | undefined = undefined
     const now = new Date()
     // if no last recharge time, set yesterday
     const lastRechargeTime =
@@ -233,4 +254,16 @@ export async function getUserInfo(userId: string) {
   if (callback) callback()
 
   return { user, isRecharged }
+}
+
+export async function updateUserSettings(
+  props: { userId: string } & Partial<UserSettings>,
+) {
+  const { userId, ...data } = props
+  await prisma.userSettings.update({
+    where: {
+      userId,
+    },
+    data,
+  })
 }

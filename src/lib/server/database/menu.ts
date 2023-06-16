@@ -160,8 +160,12 @@ export async function getActiveMenus(props: {
   })
 }
 
-/* Get Menu reservation list */
-export async function getReservationMenus({ userId }: { userId: string }) {
+/* Get Menu reservation list with user order count */
+export async function getReservationMenusForUser({
+  userId,
+}: {
+  userId: string
+}) {
   const now = new Date()
   const menus = await prisma.menu.findMany({
     where: {
@@ -212,6 +216,35 @@ export async function getReservationMenus({ userId }: { userId: string }) {
     },
     orderBy: {
       date: 'asc',
+    },
+  })
+
+  return menus
+}
+
+/* Get Menu reservation list from specific month */
+export async function getReservationMenusSince({
+  year,
+  month,
+}: {
+  year: number
+  month: number
+}) {
+  const sinceDate = new Date(year, month - 1, 1)
+  sinceDate.setHours(0, 0, 0, 0)
+  const menus = await prisma.menu.findMany({
+    where: {
+      isDeleted: false,
+      date: {
+        gte: sinceDate,
+      },
+    },
+    orderBy: {
+      date: 'asc',
+    },
+    select: {
+      type: true,
+      date: true,
     },
   })
 

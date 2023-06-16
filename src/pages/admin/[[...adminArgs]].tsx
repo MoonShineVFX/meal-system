@@ -74,9 +74,10 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
           tabNames={TAB_NAMES}
           currentTabName={tabName}
           tabLinks={TAB_LINKS}
+          dividers={[2, 4]}
         />
         <div className='relative h-full grow'>
-          <div className='absolute inset-0'>
+          <div className='absolute inset-0 sm:pt-[2rem] lg:pt-0'>
             {tabName === '餐點' && <Commodities />}
             {tabName === '菜單' && <Menus />}
             {tabName === '店家' && <Suppliers />}

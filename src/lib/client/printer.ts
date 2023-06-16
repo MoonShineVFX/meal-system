@@ -19,6 +19,10 @@ export async function print(props: {
       throw new Error('No items to print')
     }
 
+    if (settings.PRINTER_API_URL === undefined) {
+      throw new Error('Printer API URL is not set')
+    }
+
     const bodyData = props.items.map((item) => ({
       order_id: item.orderId,
       date: props.date,

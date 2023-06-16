@@ -1,4 +1,11 @@
-import { TransactionType, UserRole, Menu, MenuType } from '@prisma/client'
+import {
+  TransactionType,
+  UserRole,
+  Menu,
+  MenuType,
+  UserAuthority,
+  User,
+} from '@prisma/client'
 
 import type { NotificationType } from '@/lib/client/store'
 
@@ -52,6 +59,7 @@ export enum SERVER_NOTIFY {
   SUPPLIER_ADD = '店家新增',
   SUPPLIER_UPDATE = '店家更新',
   SUPPLIER_DELETE = '店家刪除',
+  USER_SETTINGS_UPDATE = '用戶設定已更改',
 }
 
 export enum CurrencyType {
@@ -116,6 +124,7 @@ export const settings = {
   MENU_MAX_QUANTITY_PER_ORDER: 10,
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
+  SERVER_CLIENTORDER_ID: '_client',
   POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
     ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
     : 50,
@@ -149,26 +158,20 @@ export const settings = {
   WEBSOCKET_PROD_HOST: process.env.NEXT_PUBLIC_WEBSOCKET_PROD_HOST,
   HTTP_PORT: process.env.PORT ?? '3000',
 
-  /* Blockchain */
-  BLOCKCHAIN_URL: process.env.BLOCKCHAIN_URL!,
-  BLOCKCHAIN_CREDIT_ADDRESS: process.env.BLOCKCHAIN_CREDIT_ADDRESS!,
-  BLOCKCHAIN_POINT_ADDRESS: process.env.BLOCKCHAIN_POINT_ADDRESS!,
-  BLOCKCHAIN_PRIVATE_KEY: process.env.BLOCKCHAIN_PRIVATE_KEY!,
-  BLOCKCHAIN_GAS_PRICE: 5,
-  BLOCKCHAIN_GAS: 200000,
-  BLOCKCHAIN_NONCE_MS: 1000 * 60,
-
   /* Log */
   LOG_BLOCKCHAIN: process.env.LOG_BLOCKCHAIN === 'true',
   LOG_DATABASE: process.env.LOG_DATABASE === 'true',
 
   /* Resource */
   RESOURCE_URL: process.env.NEXT_PUBLIC_RESOURCE_URL ?? '',
+  // prefix with image
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',
   RESOURCE_IMAGE_TYPES: ['image/png', 'image/jpeg', 'image/webp'],
   RESOURCE_UPLOAD_PATH: 'upload',
+  // asset
+  RESOURCE_NOTIFICATION_SOUND: 'audio/notification.mp3',
 
   /* Bunny */
   BUNNY_API_KEY: process.env.BUNNY_API_KEY!,
@@ -209,6 +212,18 @@ export function validateRole(sourceRole: UserRole, targetRole: UserRole) {
   }
 
   return roleWeight[sourceRole] >= roleWeight[targetRole]
+}
+
+export function validateAuthority(
+  user: Pick<User, 'role' | 'authorities'>,
+  authority: UserAuthority,
+) {
+  if (
+    user.authorities.includes(authority) ||
+    validateRole(user.role, UserRole.ADMIN)
+  ) {
+    return true
+  }
 }
 
 type TwDataKeys = 'selected' | 'loading' | 'busy' | 'available'

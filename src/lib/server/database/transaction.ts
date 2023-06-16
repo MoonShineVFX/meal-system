@@ -2,10 +2,6 @@ import { TransactionType, Prisma, PrismaClient } from '@prisma/client'
 
 import { prisma } from './define'
 import { settings, TransactionName } from '@/lib/common'
-import {
-  updateBlockchainByMintBurn,
-  updateBlockchainByTransfer,
-} from './blockchain'
 
 /* Recharge */
 type RechargeUserBalanceBaseArgs = {
@@ -68,7 +64,7 @@ export async function rechargeUserBalanceBase({
     },
   })
 
-  const callback = () => updateBlockchainByMintBurn(transaction.id)
+  const callback = () => {}
 
   return {
     user,
@@ -135,7 +131,7 @@ export async function refundUserBalanceBase({
     },
   })
 
-  const callback = () => updateBlockchainByMintBurn(transaction.id)
+  const callback = () => {}
 
   return {
     user,
@@ -176,6 +172,8 @@ export async function chargeUserBalanceBase({
   client: Prisma.TransactionClient | PrismaClient
 }) {
   const thisPrisma = client ?? prisma
+  const isClientOrder = userId === settings.SERVER_CLIENTORDER_ID
+
   /* Validate */
   // Check user has enough balance
   const user = await thisPrisma.user.findUnique({
@@ -190,7 +188,7 @@ export async function chargeUserBalanceBase({
   pointAmountToPay = Math.min(amount, user.pointBalance)
   creditAmountToPay = amount - pointAmountToPay
 
-  if (creditAmountToPay > user.creditBalance)
+  if (creditAmountToPay > user.creditBalance && !isClientOrder)
     throw new Error('Not enough credits')
 
   /* Operation */
@@ -241,9 +239,6 @@ export async function chargeUserBalance({
       client,
     })
   })
-
-  // Update blockchain
-  updateBlockchainByTransfer(transaction.id)
 
   return {
     user,
@@ -420,8 +415,8 @@ export async function getTransactions({
     take: settings.TRANSACTIONS_PER_QUERY + 1,
     cursor: cursor ? { id: cursor } : undefined,
     include: {
-      sourceUser: { select: { name: true } },
-      targetUser: { select: { name: true } },
+      sourceUser: { select: { name: true, id: true } },
+      targetUser: { select: { name: true, id: true } },
     },
   })
   return transactions

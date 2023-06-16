@@ -17,7 +17,7 @@ export default function TransactionList(props: {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [checkScrollState, setCheckScrollState] = useState<number>(0) // 0: initial, 1: able to set, 2: set
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
-    trpc.transaction.get.useInfiniteQuery(
+    trpc.transaction.getListByUser.useInfiniteQuery(
       { keyword: searchKeyword },
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,

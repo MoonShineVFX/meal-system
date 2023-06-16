@@ -144,7 +144,7 @@ export async function getDeposits({
       const thisId = keyword.slice(1)
       whereInput = {
         id: {
-          contains: thisId,
+          contains: thisId.toUpperCase(),
         },
       }
       // if match deposit status

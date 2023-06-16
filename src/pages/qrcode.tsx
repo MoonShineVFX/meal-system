@@ -9,27 +9,20 @@ import { settings } from '@/lib/common'
 import Checkout from '@/components/cart/Checkout'
 import Title from '@/components/core/Title'
 import { useStore } from '@/lib/client/store'
-import CheckBox from '@/components/form/base/CheckBox'
+import Toggle from '@/components/form/base/Toggle'
 
 export default function PageQRCode() {
   const router = useRouter()
   const userQuery = trpc.user.get.useQuery()
+  const userSettingsMutation = trpc.user.updateSettings.useMutation()
   const [cipher, setCipher] = useState<string | null>(null)
   const addToHistory = useStore((state) => state.addToHistory)
-  const [autoCheckout, setAutoCheckout] = useState<boolean | undefined>(
-    undefined,
-  )
   const { data, error, isLoading } = trpc.menu.getCOMFromQRCodeCipher.useQuery(
     {
       cipher: cipher as string,
     },
     { enabled: cipher !== null },
   )
-
-  useEffect(() => {
-    const isAutoCheckout = localStorage.getItem('autoCheckout') === 'true'
-    setAutoCheckout(isAutoCheckout)
-  }, [])
 
   useEffect(() => {
     if (!router.isReady || !userQuery.isSuccess) return
@@ -89,25 +82,24 @@ export default function PageQRCode() {
             </div>
           </div>
         </div>
-        {typeof autoCheckout === 'boolean' && (
+        {userQuery.data && (
           <div className='absolute inset-x-0 bottom-0 p-4'>
-            <label className='mb-4 flex w-fit cursor-pointer items-center gap-2'>
-              <CheckBox
-                checked={autoCheckout}
-                onChange={() => {
-                  const isAutoCheckout = !autoCheckout
-                  setAutoCheckout(isAutoCheckout)
-                  localStorage.setItem(
-                    'autoCheckout',
-                    isAutoCheckout.toString(),
-                  )
-                }}
-              />
+            <label className='mb-4 flex w-full cursor-pointer items-center justify-between'>
               <div className='flex flex-col gap-0.5'>
                 <h3 className='text-sm font-bold'>啟用快速付款</h3>
                 <p className='text-xs text-stone-400'>
                   之後 QRCode 付款直接結帳，不需確認
                 </p>
+              </div>
+              <div className='mr-1 flex items-center'>
+                <Toggle
+                  checked={userQuery.data.settings!.qrcodeAutoCheckout}
+                  onChange={(event) =>
+                    userSettingsMutation.mutate({
+                      qrcodeAutoCheckout: event.target.checked,
+                    })
+                  }
+                />
               </div>
             </label>
             <Checkout
@@ -115,7 +107,7 @@ export default function PageQRCode() {
               totalPrice={data.commodity.price}
               retailCipher={cipher}
               onDeposit={() => addToHistory(`/qrcode?key=${cipher}`)}
-              autoCheckout={autoCheckout}
+              autoCheckout={userQuery.data.settings!.qrcodeAutoCheckout}
             />
           </div>
         )}

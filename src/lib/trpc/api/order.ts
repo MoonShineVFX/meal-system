@@ -12,32 +12,41 @@ import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const OrderRouter = router({
-  addFromCart: userProcedure.mutation(async ({ ctx }) => {
-    const orders = await createOrderFromCart({ userId: ctx.userLite.id })
+  addFromCart: userProcedure
+    .input(
+      z.object({
+        clientOrder: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orders = await createOrderFromCart({
+        userId: ctx.userLite.id,
+        ...input,
+      })
 
-    eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-      type: SERVER_NOTIFY.ORDER_ADD,
-      link: `/order/id/${orders[0].id}`,
-    })
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.ORDER_ADD,
+        link: `/order/id/${orders[0].id}`,
+      })
 
-    for (const order of orders) {
-      // notify when menu type is main
-      if (order.menu.type === 'LIVE') {
-        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-          type: SERVER_NOTIFY.POS_ADD,
-          message: `${order.user.name} 新增了一筆訂單`,
-          link: `/pos/live`,
-        })
-      } else if (order.menu.date) {
-        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-          type: SERVER_NOTIFY.POS_ADD,
-          skipNotify: true,
-        })
+      for (const order of orders) {
+        // notify when menu type is main
+        if (order.menu.type === 'LIVE') {
+          eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+            type: SERVER_NOTIFY.POS_ADD,
+            message: `${order.user.name} 新增了一筆訂單`,
+            link: `/pos/live`,
+          })
+        } else if (order.menu.date) {
+          eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+            type: SERVER_NOTIFY.POS_ADD,
+            skipNotify: true,
+          })
+        }
       }
-    }
 
-    return orders
-  }),
+      return orders
+    }),
   addFromRetail: userProcedure
     .input(z.object({ cipher: z.string() }))
     .mutation(async ({ ctx, input }) => {

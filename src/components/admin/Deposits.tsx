@@ -114,12 +114,28 @@ export default function Deposits() {
               name: '狀態',
               align: 'left',
               cellClassName: 'text-xs font-bold',
-              render: (deposit) =>
-                deposit.status === DepositStatus.SUCCESS ? (
-                  <span className='text-green-500'>{`${deposit.status}`}</span>
-                ) : (
-                  deposit.status
-                ),
+              render: (deposit) => {
+                switch (deposit.status) {
+                  case DepositStatus.PENDING:
+                    return (
+                      <span className='text-yellow-400'>{`${deposit.status}`}</span>
+                    )
+                  case DepositStatus.REFUND:
+                    return (
+                      <span className='text-blue-400'>{`${deposit.status}`}</span>
+                    )
+                  case DepositStatus.SUCCESS:
+                    return (
+                      <span className='text-green-400'>{`${deposit.status}`}</span>
+                    )
+                  case DepositStatus.FAILED:
+                    return (
+                      <span className='text-red-300'>{`${deposit.status}`}</span>
+                    )
+                  default:
+                    return deposit.status
+                }
+              },
             },
             {
               name: '動作',

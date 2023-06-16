@@ -16,8 +16,14 @@ import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 import { prisma } from './define'
 
 /* Validate and create orders by menu with transaction */
-export async function createOrderFromCart({ userId }: { userId: string }) {
-  return await prisma.$transaction(async (client) => {
+export async function createOrderFromCart({
+  userId,
+  clientOrder,
+}: {
+  userId: string
+  clientOrder?: boolean
+}) {
+  const { orders } = await prisma.$transaction(async (client) => {
     // Get valid cart items
     const getCartItemsResult = await getCartItemsBase({ userId, client })
     const totalPrice = getCartItemsResult.cartItems.reduce(
@@ -25,9 +31,19 @@ export async function createOrderFromCart({ userId }: { userId: string }) {
       0,
     )
 
+    // validate cart items is live only when client order is true
+    if (clientOrder) {
+      const isNtoAllLive = getCartItemsResult.cartItems.some(
+        (cartItem) => cartItem.commodityOnMenu.menu.type !== MenuType.LIVE,
+      )
+      if (isNtoAllLive) {
+        throw new Error('購物車含有非即時餐點，無法使用客戶招待下單')
+      }
+    }
+
     // Charge user balance
     const { transaction } = await chargeUserBalanceBase({
-      userId,
+      userId: clientOrder ? settings.SERVER_CLIENTORDER_ID : userId,
       amount: totalPrice,
       client,
     })
@@ -116,6 +132,7 @@ export async function createOrderFromCart({ userId }: { userId: string }) {
               },
             },
             menuId: menuId,
+            forClient: clientOrder,
           },
           select: {
             id: true,
@@ -140,8 +157,10 @@ export async function createOrderFromCart({ userId }: { userId: string }) {
       where: { userId: userId },
     })
 
-    return orders
+    return { orders, transaction }
   })
+
+  return orders
 }
 
 export async function createOrderFromRetail(args: {
@@ -150,7 +169,7 @@ export async function createOrderFromRetail(args: {
 }) {
   const { userId, cipher } = args
 
-  return await prisma.$transaction(async (client) => {
+  const { order } = await prisma.$transaction(async (client) => {
     const com = await getRetailCOM({ cipher, userId, client: client })
 
     if (!com) {
@@ -201,8 +220,13 @@ export async function createOrderFromRetail(args: {
       },
     })
 
-    return order
+    return {
+      order,
+      transaction,
+    }
   })
+
+  return order
 }
 
 // Get orders count for user navigation badge, today's reservation and live orders

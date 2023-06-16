@@ -1,13 +1,13 @@
 import { FieldValues } from 'react-hook-form'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { MenuType } from '@prisma/client'
 import { twMerge } from 'tailwind-merge'
 
 import { InputFieldProps, MenuDateTypeData } from './define'
 import Select from '../base/Select'
 import DateInput from '../base/DateInput'
-import DatetimeInput from '../base/DatetimeInput'
 import { MenuTypeName } from '@/lib/common'
+import trpc from '@/lib/client/trpc'
 
 function convertInputDateValueToDate(value: string | null) {
   if (!value) return null
@@ -44,6 +44,25 @@ export default function MenuTypeDateField<T extends FieldValues>(
   const reservationDateRef = useRef<HTMLInputElement>(null)
   const publishedDateRef = useRef<HTMLInputElement>(null)
   const closedDateRef = useRef<HTMLInputElement>(null)
+  const reservationMenusQuery = trpc.menu.getReservationsSince.useQuery({
+    // three months ago from now and remove time
+    date: new Date(
+      new Date(new Date().getTime() - 90 * 24 * 60 * 60 * 1000).setHours(
+        0,
+        0,
+        0,
+        0,
+      ),
+    ),
+  })
+  const invalidDates = useMemo(() => {
+    if (!reservationMenusQuery.data) return []
+    if (!value.type) return []
+    const dates = reservationMenusQuery.data
+      .filter((menu) => value.type === menu.type && menu.date)
+      .map((menu) => menu.date!)
+    return dates
+  }, [reservationMenusQuery.data, value.type])
 
   // set options
   useEffect(() => {
@@ -145,6 +164,7 @@ export default function MenuTypeDateField<T extends FieldValues>(
         <DateInput
           ref={reservationDateRef}
           className='text-sm'
+          invalidDates={invalidDates}
           disabled={!isReservation || props.formInput.data?.isEdit}
           value={convertDateToInputDateValue(value?.date)}
           onChange={(e) => {
@@ -166,9 +186,10 @@ export default function MenuTypeDateField<T extends FieldValues>(
         >
           發佈時間
         </label>
-        <DatetimeInput
+        <DateInput
           ref={publishedDateRef}
           className='text-sm'
+          includeTime={true}
           disabled={!isReservation}
           value={convertDateToInputDateValue(value?.publishedDate, true)}
           onChange={(e) =>
@@ -181,9 +202,10 @@ export default function MenuTypeDateField<T extends FieldValues>(
       </div>
       <div className='flex flex-col gap-1'>
         <label className='text-sm font-bold text-stone-500'>關閉時間</label>
-        <DatetimeInput
+        <DateInput
           ref={closedDateRef}
           className='text-sm'
+          includeTime={true}
           value={convertDateToInputDateValue(value?.closedDate, true)}
           onChange={(e) =>
             setValue({

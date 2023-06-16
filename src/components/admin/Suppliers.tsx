@@ -144,7 +144,8 @@ export default function Suppliers() {
               },
               {
                 name: '描述',
-                cellClassName: 'max-w-[30ch] overflow-hidden overflow-ellipsis',
+                cellClassName:
+                  'text-sm max-w-[30ch] overflow-hidden overflow-ellipsis',
                 align: 'left',
                 sort: true,
                 render: (supplier) => supplier.description,

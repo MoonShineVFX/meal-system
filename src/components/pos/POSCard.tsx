@@ -111,7 +111,6 @@ export default function POSCard(props: {
     print({
       ...props.print!,
       onSuccess: () => {
-        console.debug('Printed')
         setIsPrinting(false)
       },
       onError: (error) => {

@@ -3,30 +3,34 @@ import { memo, useEffect, useState, MouseEventHandler } from 'react'
 import { useRouter } from 'next/router'
 import { motion, useAnimationControls } from 'framer-motion'
 import { Popover, Transition } from '@headlessui/react'
-import { HomeIcon as HomeIconSolid } from '@heroicons/react/24/solid'
-import { CalendarDaysIcon as CalendarDaysIconSolid } from '@heroicons/react/24/solid'
-import { DocumentTextIcon as DocumentTextIconSolid } from '@heroicons/react/24/solid'
-import { WalletIcon as WalletIconSolid } from '@heroicons/react/24/solid'
-import { HomeIcon } from '@heroicons/react/24/outline'
-import { CalendarDaysIcon } from '@heroicons/react/24/outline'
-import { DocumentTextIcon } from '@heroicons/react/24/outline'
-import { WalletIcon } from '@heroicons/react/24/outline'
-import { ShoppingCartIcon as ShoppingCartIconSolid } from '@heroicons/react/24/solid'
-import { ShoppingCartIcon } from '@heroicons/react/24/outline'
-import { SquaresPlusIcon as SquaresPlusIconSolid } from '@heroicons/react/24/solid'
-import { SquaresPlusIcon } from '@heroicons/react/24/outline'
-import { ExclamationCircleIcon } from '@heroicons/react/20/solid'
-import { CircleStackIcon } from '@heroicons/react/24/outline'
-import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
-import { ArrowRightOnRectangleIcon as ArrowRightOnRectangleIconSolid } from '@heroicons/react/24/solid'
-import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
-import { Cog6ToothIcon } from '@heroicons/react/24/outline'
-import { Cog6ToothIcon as Cog6ToothIconSolid } from '@heroicons/react/24/solid'
 import {
+  HomeIcon,
+  CalendarDaysIcon,
+  DocumentTextIcon,
+  WalletIcon,
+  ShoppingCartIcon,
+  SquaresPlusIcon,
+  ExclamationCircleIcon,
+  CircleStackIcon,
+  CurrencyDollarIcon,
+  ArrowRightOnRectangleIcon,
+  Cog6ToothIcon,
   PhoneIcon,
   EnvelopeIcon,
   ChatBubbleBottomCenterIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline'
+import {
+  HomeIcon as HomeIconSolid,
+  CalendarDaysIcon as CalendarDaysIconSolid,
+  DocumentTextIcon as DocumentTextIconSolid,
+  WalletIcon as WalletIconSolid,
+  ShoppingCartIcon as ShoppingCartIconSolid,
+  SquaresPlusIcon as SquaresPlusIconSolid,
+  ArrowRightOnRectangleIcon as ArrowRightOnRectangleIconSolid,
+  Cog6ToothIcon as Cog6ToothIconSolid,
+  WrenchScrewdriverIcon as WrenchScrewdriverIconSolid,
+} from '@heroicons/react/24/solid'
 
 import PriceNumber from '@/components/core/PriceNumber'
 import Error from '@/components/core/Error'
@@ -80,8 +84,16 @@ function Navigation() {
         icons={[WalletIcon, WalletIconSolid]}
         rememberSubpath={true}
       />
+      <NavButton
+        className='hidden sm:block'
+        label='設定'
+        path='/settings'
+        icons={[Cog6ToothIcon, Cog6ToothIconSolid]}
+        rememberSubpath={true}
+      />
       {data && ['ADMIN', 'STAFF'].includes(data.role) && (
         <>
+          <div className='hidden h-[2px] w-full rounded bg-stone-300 sm:block'></div>
           <NavButton
             className='hidden sm:block'
             path='/pos'
@@ -91,16 +103,17 @@ function Navigation() {
             rememberSubpath={true}
           />
           <NavButton
-            className='hidden lg:block'
+            className='hidden sm:block'
             label='管理後台'
             path='/admin'
-            icons={[Cog6ToothIcon, Cog6ToothIconSolid]}
+            icons={[WrenchScrewdriverIcon, WrenchScrewdriverIconSolid]}
             rememberSubpath={true}
           />
         </>
       )}
 
-      <div className='mt-auto hidden w-full sm:block'>
+      {/* 如果需要使用 sm-block 顯示 */}
+      <div className='mt-auto hidden w-full'>
         <DropdownMenu
           className='flex w-full items-center justify-start gap-0 rounded-2xl py-2 px-3 text-base font-bold tracking-widest text-stone-500 hover:cursor-pointer hover:bg-stone-200 active:scale-95'
           label={
@@ -137,7 +150,7 @@ function Navigation() {
         </DropdownMenu>
       </div>
       <NavButton
-        className='hidden sm:block'
+        className='mt-auto hidden sm:block'
         label='登出'
         path='/login'
         icons={[ArrowRightOnRectangleIcon, ArrowRightOnRectangleIconSolid]}
@@ -241,7 +254,7 @@ function ProfileButton(props: { className?: string }) {
                 <>
                   <Link
                     href='/pos'
-                    className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+                    className='block w-full cursor-pointer border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
                   >
                     處理訂單
                   </Link>
@@ -253,26 +266,32 @@ function ProfileButton(props: { className?: string }) {
                         closedDate: isLiveMenuClosed ? null : new Date(),
                       })
                     }
-                    className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+                    className='block w-full cursor-pointer border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
                   >
                     {isLiveMenuClosed ? '開啟點餐' : '關閉點餐'}
                   </div>
                 </>
               )}
               <Link
+                href='/settings'
+                className='block w-full cursor-pointer border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+              >
+                設定
+              </Link>
+              <Link
                 href='/transaction'
-                className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+                className='block w-full cursor-pointer border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
               >
                 交易紀錄
               </Link>
               <Link
                 href='/deposit'
-                className='block w-full cursor-pointer rounded-xl border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
+                className='block w-full cursor-pointer border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
               >
                 儲值
               </Link>
               <div
-                className='w-full cursor-pointer rounded-xl py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'
+                className='w-full cursor-pointer py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'
                 onClick={handleLogout}
               >
                 登出
