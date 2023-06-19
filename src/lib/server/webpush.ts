@@ -13,8 +13,9 @@ export async function sendNotificationToUser(props: {
   title: string
   message: string
   icon?: string
+  tag?: string
 }) {
-  const { userId, title, message, icon } = props
+  const { userId, title, message, icon, tag } = props
   const userSubs = await getUserSubscriptions(userId)
 
   const promises = userSubs.map((sub) => {
@@ -32,6 +33,7 @@ export async function sendNotificationToUser(props: {
           options: {
             body: message,
             icon: icon,
+            tag: tag,
             badge: `${settings.RESOURCE_URL}/image/${settings.RESOURCE_BADGE}`,
           },
         }),

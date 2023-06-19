@@ -29,7 +29,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/pwa-sw.js').then((reg) => {
-        console.log('Service worker registered', reg)
+        console.debug('Service worker registered', reg)
         setServiceWorkerRegistration(reg)
       })
     }

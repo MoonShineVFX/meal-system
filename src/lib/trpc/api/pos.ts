@@ -75,14 +75,17 @@ export const POSRouter = router({
         undefined,
       )
 
-      sendNotificationToUser({
-        userId: order.userId,
-        title: '訂單更新',
-        message: generateOrderNotifyMessage(order.id, input.status),
-        icon: `${settings.RESOURCE_URL}/image/${
-          orderImage ?? settings.RESOURCE_FOOD_PLACEHOLDER
-        }?width=64&quality=75`,
-      })
+      if (input.status !== 'timeCompleted') {
+        sendNotificationToUser({
+          userId: order.userId,
+          title: '訂單更新',
+          message: generateOrderNotifyMessage(order.id, input.status),
+          icon: `${settings.RESOURCE_URL}/image/${
+            orderImage ?? settings.RESOURCE_FOOD_PLACEHOLDER
+          }?width=64&quality=75`,
+          tag: `order-${order.id}`,
+        })
+      }
 
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: SERVER_NOTIFY.POS_UPDATE,
