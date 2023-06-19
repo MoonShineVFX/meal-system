@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
 
-const withTM = require('next-transpile-modules')([
-  '@pusher/push-notifications-web',
-])
-
-const nextConfig = withTM({
+const nextConfig = {
   async redirects() {
     return [
       {
@@ -32,6 +28,6 @@ const nextConfig = withTM({
     ],
   },
   reactStrictMode: true,
-})
+}
 
 module.exports = nextConfig
