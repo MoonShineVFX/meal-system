@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
+import { sendNotificationToUser } from '@/lib/server/webpush'
 
 import {
   createUserToken,
@@ -8,6 +9,8 @@ import {
   getUserInfo,
   validateUserPassword,
   updateUserSettings,
+  addUserSubscription,
+  deleteSubscription,
 } from '@/lib/server/database'
 import {
   settings,
@@ -16,7 +19,6 @@ import {
   SERVER_NOTIFY,
 } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
-import { generateUserBeamsToken } from '@/lib/server/beams'
 
 import { userProcedure, publicProcedure, router } from '../trpc'
 
@@ -165,7 +167,43 @@ export const UserRouter = router({
         type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
       })
     }),
-  getBeamsToken: userProcedure.mutation(async ({ ctx }) => {
-    return generateUserBeamsToken(ctx.userLite.id)
+  addSubscription: userProcedure
+    .input(
+      z.object({
+        auth: z.string(),
+        endpoint: z.string(),
+        p256dh: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await addUserSubscription({
+        userId: ctx.userLite.id,
+        auth: input.auth,
+        endpoint: input.endpoint,
+        p256dh: input.p256dh,
+      })
+    }),
+  deleteSubscription: publicProcedure
+    .input(
+      z.object({
+        endpoint: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await deleteSubscription({
+        endpoint: input.endpoint,
+      })
+    }),
+  testPushNotification: userProcedure.mutation(async ({ ctx }) => {
+    const result = await sendNotificationToUser({
+      userId: ctx.userLite.id,
+      title: '測試推送通知',
+      message: '這是一個測試推送通知',
+    })
+    const count = result.filter((r) => r.success)
+    eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+      type: SERVER_NOTIFY.USER_TEST_PUSH_NOTIFICATION,
+      message: `送出 ${count.length} 個推送通知，成功 ${count.length} 個`,
+    })
   }),
 })

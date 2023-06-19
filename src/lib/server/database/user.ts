@@ -267,3 +267,69 @@ export async function updateUserSettings(
     data,
   })
 }
+
+export async function addUserSubscription(props: {
+  userId: string
+  endpoint: string
+  p256dh: string
+  auth: string
+}) {
+  const { userId, endpoint, p256dh, auth } = props
+  const userSub = await prisma.userSubscription.create({
+    data: {
+      userId,
+      endpoint,
+      p256dh,
+      auth,
+    },
+    include: {
+      user: {
+        select: {
+          subscriptions: {
+            select: {
+              id: true,
+            },
+            orderBy: {
+              createdAt: 'asc',
+            },
+          },
+        },
+      },
+    },
+  })
+
+  // Limit subs per user
+  if (userSub.user.subscriptions.length > settings.TOKEN_COUNT_PER_USER) {
+    const toDeleteSubIds = userSub.user.subscriptions
+      .slice(
+        0,
+        userSub.user.subscriptions.length - settings.TOKEN_COUNT_PER_USER,
+      )
+      .map((t) => t.id)
+    await prisma.userSubscription.deleteMany({
+      where: {
+        id: { in: toDeleteSubIds },
+      },
+    })
+  }
+
+  return userSub
+}
+
+export async function deleteSubscription(props: { endpoint: string }) {
+  await prisma.userSubscription.deleteMany({
+    where: {
+      endpoint: props.endpoint,
+    },
+  })
+}
+
+export async function getUserSubscriptions(userId: string) {
+  const userSubs = await prisma.userSubscription.findMany({
+    where: {
+      userId,
+    },
+  })
+
+  return userSubs
+}

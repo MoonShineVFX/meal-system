@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
-import * as BeamsWebClient from '@pusher/push-notifications-web'
+import { useEffect, useState } from 'react'
 
 import { useStore, NotificationType } from '@/lib/client/store'
 import trpc, {
@@ -9,70 +8,82 @@ import trpc, {
 } from '@/lib/client/trpc'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 
-type BeamsToken = {
-  token: string
-}
-
-class CustomBeamsTokenProvider {
-  private readonly token: BeamsToken
-
-  constructor(token: BeamsToken) {
-    this.token = token
-  }
-
-  fetchToken(): Promise<BeamsToken> {
-    return Promise.resolve(this.token)
-  }
-}
-
 export default function EventListener() {
   const trpcContext = trpc.useContext()
   const addNotification = useStore((state) => state.addNotification)
+  const webpushState = useStore((state) => state.webpushState)
+  const setWebpushState = useStore((state) => state.setWebpushState)
   const serviceWorkerRegistration = useStore(
     (state) => state.serviceWorkerRegistration,
   )
   const [hasDisconnected, setHasDisconnected] = useState(false)
   const userInfoQuery = trpc.user.get.useQuery(undefined)
-  const beamsClientRef = useRef<BeamsWebClient.Client | null>(null)
-  const getUserBeamsToken = trpc.user.getBeamsToken.useMutation(undefined)
+  const addUserSubscriptionMutation = trpc.user.addSubscription.useMutation()
+  const deleteUserSubscriptionMutation =
+    trpc.user.deleteSubscription.useMutation()
 
   /* Pusher Push Notifications Initialize */
   useEffect(() => {
-    if (beamsClientRef.current && !userInfoQuery.data) {
-      console.log('[Beams] Unregistering')
-      beamsClientRef.current.stop()
-      beamsClientRef.current = null
-      return
-    }
-
-    if (!('serviceWorker' in navigator)) return
-    if (beamsClientRef.current) return
     if (!serviceWorkerRegistration) return
-    if (!userInfoQuery.data) return
 
-    const beamsClient = new BeamsWebClient.Client({
-      instanceId: settings.BEAMS_KEY,
-      serviceWorkerRegistration: serviceWorkerRegistration,
-    })
-    beamsClientRef.current = beamsClient
+    serviceWorkerRegistration.pushManager
+      .getSubscription()
+      .then((subscription) => {
+        // Unsubscribe if user disable webpush or user is not login
+        if (webpushState !== 'enabled' || userInfoQuery.isError) {
+          localStorage.setItem('webpush-enable', 'disabled')
+          setWebpushState('disabled')
+          if (subscription) {
+            console.debug('Push Notifications Unsubscribed', subscription)
+            const endpoint = subscription.toJSON().endpoint
+            if (endpoint) deleteUserSubscriptionMutation.mutate({ endpoint })
+            subscription.unsubscribe()
+          }
+          return
+        }
 
-    getUserBeamsToken.mutate(undefined, {
-      onSuccess: (token) => {
-        const tokenProvider = new CustomBeamsTokenProvider(token)
-        beamsClient
-          .start()
-          .then(() =>
-            beamsClient.setUserId(userInfoQuery.data.id, tokenProvider),
+        if (!userInfoQuery.data) return
+
+        if (!subscription) {
+          serviceWorkerRegistration.pushManager
+            .subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: settings.WEBPUSH_PUBLIC_KEY,
+            })
+            .then((subscription) => {
+              const subJson = subscription.toJSON()
+              if (subJson.endpoint && subJson.keys) {
+                addUserSubscriptionMutation.mutate({
+                  endpoint: subJson.endpoint,
+                  p256dh: subJson.keys.p256dh,
+                  auth: subJson.keys.auth,
+                })
+              }
+              console.debug(
+                'Push Notifications Subscribed',
+                subscription.toJSON(),
+              )
+            })
+            .catch((error) => {
+              addNotification({
+                type: NotificationType.ERROR,
+                message: error.message,
+              })
+              setWebpushState('disabled')
+            })
+        } else {
+          console.debug(
+            'Push Notifications Already Subscribed',
+            subscription.toJSON(),
           )
-          .then(() =>
-            console.log(
-              `[Beams] Successfully registered as ${userInfoQuery.data.id}`,
-            ),
-          )
-          .catch((e) => console.error(`[Beams] ${e}`))
-      },
-    })
-  }, [userInfoQuery.data, beamsClientRef, serviceWorkerRegistration])
+        }
+      })
+  }, [
+    userInfoQuery.data,
+    serviceWorkerRegistration,
+    webpushState,
+    userInfoQuery.isError,
+  ])
 
   /* Socket management */
   useEffect(() => {

@@ -6,10 +6,17 @@ import TextInput from '@/components/form/base/TextInput'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import trpc from '@/lib/client/trpc'
 import { validateRole } from '@/lib/common'
+import { useStore } from '@/lib/client/store'
+import { useDialog } from '@/components/core/Dialog'
+import Button from '@/components/core/Button'
 
 export default function Settings() {
   const userQuery = trpc.user.get.useQuery(undefined)
   const userSettingsMutation = trpc.user.updateSettings.useMutation()
+  const testPushMutation = trpc.user.testPushNotification.useMutation()
+  const webpushState = useStore((state) => state.webpushState)
+  const setWebpushState = useStore((state) => state.setWebpushState)
+  const { showDialog, dialog } = useDialog()
   const [customPrinterApi, setCustomPrinterApi] = useState<{
     enabled: boolean
     url: string
@@ -34,6 +41,44 @@ export default function Settings() {
         <div className='h-min min-h-full max-w-lg grow p-4 lg:p-8'>
           <h1 className='mb-4 text-xl font-bold lg:mb-8'>設定</h1>
           <div className='flex flex-col gap-4 lg:gap-6'>
+            {/* 開啟通知 */}
+            <OptionField
+              title='背景通知'
+              description='當您有訂單或其他更新訊息時，就算 App 不在前景也會收到通知。'
+              loading={false}
+              checked={webpushState === 'enabled'}
+              onChange={(checked) => {
+                if (checked) {
+                  if (webpushState === 'denied') {
+                    showDialog({
+                      title: '無法開啟通知',
+                      content: '您已經拒絕了通知權限，請至瀏覽器設定開啟。',
+                    })
+                    return
+                  }
+                  Notification.requestPermission().then((permission) => {
+                    if (permission === 'granted') {
+                      localStorage.setItem('webpush-enable', 'true')
+                      setWebpushState('enabled')
+                    }
+                  })
+                } else {
+                  localStorage.setItem('webpush-enable', 'false')
+                  setWebpushState('disabled')
+                }
+              }}
+            >
+              {webpushState === 'enabled' ? (
+                <Button
+                  className='ml-auto mt-2 p-2'
+                  label='測試通知'
+                  textClassName='text-sm'
+                  onClick={() => testPushMutation.mutate()}
+                  isBusy={testPushMutation.isLoading}
+                  isLoading={testPushMutation.isLoading}
+                />
+              ) : null}
+            </OptionField>
             {/* 自動結帳 */}
             <OptionField
               title='QRCode 自動結帳'
@@ -106,6 +151,7 @@ export default function Settings() {
           </div>
         </div>
       </div>
+      {dialog}
     </div>
   )
 }

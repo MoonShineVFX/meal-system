@@ -27,7 +27,6 @@ import {
   WalletIcon as WalletIconSolid,
   ShoppingCartIcon as ShoppingCartIconSolid,
   SquaresPlusIcon as SquaresPlusIconSolid,
-  ArrowRightOnRectangleIcon as ArrowRightOnRectangleIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
   WrenchScrewdriverIcon as WrenchScrewdriverIconSolid,
 } from '@heroicons/react/24/solid'
@@ -149,19 +148,23 @@ function Navigation() {
           />
         </DropdownMenu>
       </div>
-      <NavButton
-        className='mt-auto hidden sm:block'
-        label='登出'
-        path='/login'
-        icons={[ArrowRightOnRectangleIcon, ArrowRightOnRectangleIconSolid]}
-        onClick={() => {
-          document.cookie = generateCookie(undefined)
-        }}
-      />
-
+      {/* 登出 */}
+      <div
+        className='mt-auto hidden w-full cursor-pointer items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 hover:bg-stone-200 active:scale-95 sm:flex'
+        onClick={handleLogout}
+      >
+        <ArrowRightOnRectangleIcon className='h-5 w-5' />
+        <span className='ml-4'>登出</span>
+      </div>
       <ProfileButton className='sm:-order-1' />
     </div>
   )
+}
+
+function handleLogout() {
+  const cookie = generateCookie(undefined)
+  document.cookie = cookie
+  window.location.reload()
 }
 
 function ProfileButton(props: { className?: string }) {
@@ -175,12 +178,6 @@ function ProfileButton(props: { className?: string }) {
     type: 'LIVE',
   })
   const menuUpdateMutation = trpc.menu.createOrEdit.useMutation()
-
-  const handleLogout = () => {
-    const cookie = generateCookie(undefined)
-    document.cookie = cookie
-    window.location.href = '/login'
-  }
 
   if (isLoading || menuQuery.isLoading) return <Spinner className='h-8 w-8' />
   if (isError || menuQuery.isError)
