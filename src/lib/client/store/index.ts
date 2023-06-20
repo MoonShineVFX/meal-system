@@ -1,17 +1,68 @@
-import create from 'zustand'
+import { create } from 'zustand'
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware'
 
 import { createNotificationSlice } from './notification'
-import { createMenuSlice } from './menu'
-import { createRouteSlice } from './route'
 import { createUISlice } from './ui'
+import { createSettingSlice } from './setting'
 import type { StoreState } from './define'
 
-export const useStore = create<StoreState>()((...a) => ({
-  ...createNotificationSlice(...a),
-  ...createMenuSlice(...a),
-  ...createRouteSlice(...a),
-  ...createUISlice(...a),
-}))
+const storage: StateStorage = {
+  getItem: (name) => {
+    const localState = localStorage.getItem(name)
+    const sessionState = sessionStorage.getItem(name)
+    const localData = localState ? JSON.parse(localState) : {}
+    const sessionData = sessionState ? JSON.parse(sessionState) : {}
+    return JSON.stringify({
+      state: { ...localData.state, ...sessionData.state },
+      version: localData.version,
+    })
+  },
+  setItem: (name, value) => {
+    const { state, version } = JSON.parse(value)
+    const localData = Object.fromEntries(
+      Object.entries(state).filter(([key]) => key.endsWith('_local')),
+    )
+    const sessionData = Object.fromEntries(
+      Object.entries(state).filter(([key]) => key.endsWith('_session')),
+    )
+    localStorage.setItem(name, JSON.stringify({ state: localData, version }))
+    sessionStorage.setItem(
+      name,
+      JSON.stringify({ state: sessionData, version }),
+    )
+  },
+  removeItem: (name) => {
+    localStorage.removeItem(name)
+    sessionStorage.removeItem(name)
+  },
+}
+
+export const useStore = create<StoreState>()(
+  persist(
+    (...a) => ({
+      ...createNotificationSlice(...a),
+      ...createUISlice(...a),
+      ...createSettingSlice(...a),
+    }),
+    {
+      name: 'ms-cafe-zustand',
+      storage: createJSONStorage(() => storage),
+      partialize: (state) => ({
+        webpushEnabled_local: state.webpushEnabled_local,
+        printerAPI_local: state.printerAPI_local,
+        depositRedirect_local: state.depositRedirect_local,
+        comOptionsMemo_local: state.comOptionsMemo_local,
+        loginSuccessNotify_session: state.loginSuccessNotify_session,
+        loginRedirect_session: state.loginRedirect_session,
+        unavailableConfirms_session: state.unavailableConfirms_session,
+        reservationsScrollPosition_session:
+          state.reservationsScrollPosition_session,
+        transactionListScrollPosition_session:
+          state.transactionListScrollPosition_session,
+      }),
+    },
+  ),
+)
 
 export { NotificationType } from './notification'
 export type { NotificationPayload } from './notification'

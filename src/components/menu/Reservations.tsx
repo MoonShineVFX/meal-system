@@ -1,16 +1,18 @@
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, useState } from 'react'
 import { MenuType } from '@prisma/client'
 import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
 import { motion } from 'framer-motion'
 import { CalendarDaysIcon } from '@heroicons/react/24/outline'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import { useDebounce } from 'usehooks-ts'
 
 import Title from '@/components/core/Title'
 import trpc, { ReservationDatas } from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
 import { MenuTypeName, settings, twData } from '@/lib/common'
 import Image from '@/components/core/Image'
+import { useStore } from '@/lib/client/store'
 
 const MENU_TYPE_ORDER = [
   MenuType.BREAKFAST,
@@ -25,6 +27,15 @@ export default function Reservations(props: { activeMenuId?: number }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const { data, isLoading, isError, error } =
     trpc.menu.getReservationsForUser.useQuery()
+  const { reservationsScrollPosition, setReservationsScrollPosition } =
+    useStore((state) => ({
+      reservationsScrollPosition: state.reservationsScrollPosition_session,
+      setReservationsScrollPosition: state.setReservationsScrollPosition,
+    }))
+  const [tempScrollValue, setTempScrollValue] = useState(
+    reservationsScrollPosition,
+  )
+  const debouncedScrollValue = useDebounce(tempScrollValue, 500)
 
   const reservationMenusByDate = useMemo(() => {
     if (!data)
@@ -65,10 +76,7 @@ export default function Reservations(props: { activeMenuId?: number }) {
 
     const handleScroll = () => {
       if (!props.activeMenuId) {
-        sessionStorage.setItem(
-          'reservations-scroll-position',
-          JSON.stringify(scrollRef.current?.scrollTop),
-        )
+        setTempScrollValue(scrollRef.current?.scrollTop ?? 0)
       }
     }
 
@@ -77,18 +85,19 @@ export default function Reservations(props: { activeMenuId?: number }) {
       scrollRef.current?.removeEventListener('scroll', handleScroll)
     }
   }, [scrollRef.current])
+  useEffect(() => {
+    setReservationsScrollPosition(debouncedScrollValue)
+  }, [debouncedScrollValue])
 
   // Scroll to active menu if not visible
   useEffect(() => {
     if (!scrollRef.current) return
+    if (!data) return
 
     // if activeMenuId is not set, scroll to previous position
     if (!props.activeMenuId) {
-      const previousScrollPosition = JSON.parse(
-        sessionStorage.getItem('reservations-scroll-position') || '0',
-      )
       scrollRef.current.scrollTo({
-        top: previousScrollPosition,
+        top: reservationsScrollPosition,
         behavior: 'auto',
       })
       return
@@ -107,7 +116,7 @@ export default function Reservations(props: { activeMenuId?: number }) {
         behavior: 'smooth',
       })
     }
-  }, [props.activeMenuId])
+  }, [props.activeMenuId, data])
 
   if (isError) return <Error description={error.message} />
 

@@ -14,27 +14,15 @@ export default function Settings() {
   const userQuery = trpc.user.get.useQuery(undefined)
   const userSettingsMutation = trpc.user.updateSettings.useMutation()
   const testPushMutation = trpc.user.testPushNotification.useMutation()
-  const webpushState = useStore((state) => state.webpushState)
-  const setWebpushState = useStore((state) => state.setWebpushState)
+  const { webpushEnabled, setWebpushState, printerApi, setPrinterApi } =
+    useStore((state) => ({
+      webpushEnabled: state.webpushEnabled_local,
+      setWebpushState: state.setWebpushState,
+      printerApi: state.printerAPI_local,
+      setPrinterApi: state.setPrinterAPI,
+    }))
   const [isPushApiSupported, setIsPushApiSupported] = useState(false)
   const { showDialog, dialog } = useDialog()
-  const [customPrinterApi, setCustomPrinterApi] = useState<{
-    enabled: boolean
-    url: string
-  }>(
-    typeof window !== 'undefined' &&
-      localStorage &&
-      localStorage.getItem('customPrinterApi')
-      ? JSON.parse(localStorage.getItem('customPrinterApi')!)
-      : {
-          enabled: false,
-          url: 'http://localhost:5000',
-        },
-  )
-
-  useEffect(() => {
-    localStorage.setItem('customPrinterApi', JSON.stringify(customPrinterApi))
-  }, [customPrinterApi])
 
   useEffect(() => {
     if (
@@ -59,10 +47,10 @@ export default function Settings() {
                 title='背景通知'
                 description='當您有訂單或其他更新訊息時，就算 App 不在前景也會收到通知。'
                 loading={false}
-                checked={webpushState === 'enabled'}
+                checked={webpushEnabled}
                 onChange={(checked) => {
                   if (checked) {
-                    if (webpushState === 'denied') {
+                    if (Notification.permission === 'denied') {
                       showDialog({
                         title: '無法開啟通知',
                         content: '您已經拒絕了通知權限，請至瀏覽器設定開啟。',
@@ -71,17 +59,15 @@ export default function Settings() {
                     }
                     Notification.requestPermission().then((permission) => {
                       if (permission === 'granted') {
-                        localStorage.setItem('webpush-enable', 'true')
-                        setWebpushState('enabled')
+                        setWebpushState(true)
                       }
                     })
                   } else {
-                    localStorage.setItem('webpush-enable', 'false')
-                    setWebpushState('disabled')
+                    setWebpushState(false)
                   }
                 }}
               >
-                {webpushState === 'enabled' ? (
+                {webpushEnabled ? (
                   <Button
                     className='ml-auto mt-2 p-2'
                     label='測試通知'
@@ -136,25 +122,25 @@ export default function Settings() {
                       userQuery.data?.settings === undefined ||
                       userSettingsMutation.isError
                     }
-                    checked={customPrinterApi.enabled ?? false}
+                    checked={printerApi.enabled ?? false}
                     onChange={(checked) =>
-                      setCustomPrinterApi((prev) => ({
-                        ...prev,
+                      setPrinterApi({
+                        ...printerApi,
                         enabled: checked,
-                      }))
+                      })
                     }
                   >
-                    {customPrinterApi.enabled ? (
+                    {printerApi.enabled ? (
                       <div className='flex w-full justify-end'>
                         <TextInput
                           className='mt-2 w-full max-w-md'
                           placeholder='http://localhost:5000'
-                          value={customPrinterApi.url}
+                          value={printerApi.url}
                           onChange={(event) =>
-                            setCustomPrinterApi((prev) => ({
-                              ...prev,
+                            setPrinterApi({
+                              ...printerApi,
                               url: event.target.value,
-                            }))
+                            })
                           }
                         />
                       </div>

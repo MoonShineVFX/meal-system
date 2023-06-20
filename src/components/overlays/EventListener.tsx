@@ -11,7 +11,7 @@ import { SERVER_NOTIFY, settings } from '@/lib/common'
 export default function EventListener() {
   const trpcContext = trpc.useContext()
   const addNotification = useStore((state) => state.addNotification)
-  const webpushState = useStore((state) => state.webpushState)
+  const webpushState = useStore((state) => state.webpushEnabled_local)
   const setWebpushState = useStore((state) => state.setWebpushState)
   const serviceWorkerRegistration = useStore(
     (state) => state.serviceWorkerRegistration,
@@ -30,9 +30,8 @@ export default function EventListener() {
       .getSubscription()
       .then((subscription) => {
         // Unsubscribe if user disable webpush or user is not login
-        if (webpushState !== 'enabled' || userInfoQuery.isError) {
-          localStorage.setItem('webpush-enable', 'disabled')
-          setWebpushState('disabled')
+        if (!webpushState || userInfoQuery.isError) {
+          setWebpushState(false)
           if (subscription) {
             console.debug('Push Notifications Unsubscribed', subscription)
             const endpoint = subscription.toJSON().endpoint
@@ -69,7 +68,7 @@ export default function EventListener() {
                 type: NotificationType.ERROR,
                 message: error.message,
               })
-              setWebpushState('disabled')
+              setWebpushState(false)
             })
         } else {
           console.debug(

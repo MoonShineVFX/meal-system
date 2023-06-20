@@ -36,10 +36,6 @@ type FormInputs = {
   options: OrderOptions
 }
 
-function generateCOMKey(com: CommodityOnMenu) {
-  return `com-opt-${com.commodity.id}`
-}
-
 function COMDialogContent(props: {
   onClose: () => void
   com: CommodityOnMenu
@@ -47,7 +43,13 @@ function COMDialogContent(props: {
   const addCartMutation = trpc.cart.add.useMutation()
   const { com } = props
   const [isLimited, setIsLimited] = useState(false)
-  const menu = useStore((state) => state.currentMenu)
+  const { currentMenu, getComOptionsMemo, addCOMOptionsMemo } = useStore(
+    (state) => ({
+      currentMenu: state.currentMenu,
+      getComOptionsMemo: state.getCOMOptionsMemo,
+      addCOMOptionsMemo: state.addCOMOptionsMemo,
+    }),
+  )
   const {
     register,
     handleSubmit,
@@ -77,7 +79,8 @@ function COMDialogContent(props: {
       setIsLimited(
         com.limitPerUser > 0 ||
           com.stock > 0 ||
-          (menu?.limitPerUser !== undefined && menu.limitPerUser > 0),
+          (currentMenu?.limitPerUser !== undefined &&
+            currentMenu.limitPerUser > 0),
       )
       reset()
     }
@@ -86,21 +89,10 @@ function COMDialogContent(props: {
   // Load options from local storage
   useEffect(() => {
     if (com) {
-      Object.entries(localStorage).forEach(([key, value]) => {
-        if (key.startsWith('com-opt-')) {
-          const data = JSON.parse(value) as {
-            expireTime: number
-            options: OrderOptions
-          }
-          if (data.expireTime < Date.now()) {
-            localStorage.removeItem(key)
-          } else {
-            if (key === generateCOMKey(com)) {
-              setValue('options', data.options)
-            }
-          }
-        }
-      })
+      const comOptionsMemo = getComOptionsMemo(com.commodity.id.toString())
+      if (comOptionsMemo) {
+        setValue('options', comOptionsMemo)
+      }
     }
   }, [com?.commodity.id])
 
@@ -109,7 +101,7 @@ function COMDialogContent(props: {
       addCartMutation.mutate(
         {
           commodityId: com.commodity.id,
-          menuId: menu!.id,
+          menuId: currentMenu!.id,
           quantity: formData.quantity,
           options: formData.options,
         },
@@ -126,19 +118,15 @@ function COMDialogContent(props: {
   // save options to local storage
   const handleOnOptionsChange = useCallback(
     (options: OrderOptions) => {
-      localStorage.setItem(
-        generateCOMKey(com),
-        JSON.stringify({
-          options,
-          expireTime: Date.now() + 1000 * 60 * 60 * 24 * 30, // 30 days
-        }),
-      )
+      addCOMOptionsMemo(com.commodity.id.toString(), options)
     },
-    [menu?.id, com.commodity.id],
+    [currentMenu?.id, com.commodity.id],
   )
 
   const isUnavailable =
-    (menu?.unavailableReasons.length ?? 0) + com.unavailableReasons.length > 0
+    (currentMenu?.unavailableReasons.length ?? 0) +
+      com.unavailableReasons.length >
+    0
 
   return (
     <section
@@ -146,7 +134,9 @@ function COMDialogContent(props: {
       onClick={(event) => event.stopPropagation()}
     >
       <Title
-        prefix={`${com.commodity.name} - ${getMenuName(menu ?? undefined)}`}
+        prefix={`${com.commodity.name} - ${getMenuName(
+          currentMenu ?? undefined,
+        )}`}
       />
       {/* Close button */}
       <button
@@ -234,7 +224,7 @@ function COMDialogContent(props: {
               isUnavailable={isUnavailable}
               maxQuantity={Math.min(
                 com.maxQuantity,
-                menu?.maxQuantity ?? Infinity,
+                currentMenu?.maxQuantity ?? Infinity,
               )}
               register={register}
             />
@@ -248,7 +238,7 @@ function COMDialogContent(props: {
               </div>
               <ul className='flex flex-col gap-1 text-red-300'>
                 {[
-                  ...(menu?.unavailableReasons ?? []),
+                  ...(currentMenu?.unavailableReasons ?? []),
                   ...com.unavailableReasons,
                 ].map((reason) => (
                   <li className='ml-7 text-sm' key={reason}>

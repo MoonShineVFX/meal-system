@@ -2,47 +2,45 @@ import { StateCreator } from 'zustand'
 import type { Supplier } from '@prisma/client'
 
 import type { StoreState } from './define'
+import type { MenuData } from '@/lib/client/trpc'
 
 type DialogButtonState = 'loading' | 'disabled' | 'null' | 'success'
-type WebpushState =
-  | Omit<NotificationPermission, 'granted'>
-  | 'disabled'
-  | 'enabled'
 
 export interface UISlice {
-  serviceWorkerRegistration: ServiceWorkerRegistration | null
+  currentMenu: MenuData | null
+  currentCategory: string | null
   formMenuSupplier: Supplier | null
   formMenuCreateSupplier: boolean
   dialogButtonState: DialogButtonState
-  webpushState: WebpushState
-  setServiceWorkerRegistration: (
-    registration: ServiceWorkerRegistration | null,
-  ) => void
+  loginSuccessNotify_session: boolean
+  unavailableConfirms_session: Record<string, boolean>
+  reservationsScrollPosition_session: number
+  transactionListScrollPosition_session: number
+  setLoginSuccessNotify: (state: boolean) => void
+  setCurrentMenu: (menu: MenuData | null) => void
+  setCurrentCategory: (category: string | null) => void
   setFormMenuSupplier: (supplier: Supplier | null) => void
   setFormMenuCreateSupplier: (isSupplier: boolean) => void
   setDialogButtonState: (state: DialogButtonState) => void
-  setWebpushState: (state: WebpushState) => void
+  addUnavailableConfirm: (id: string) => void
+  setReservationsScrollPosition: (position: number) => void
+  setTransactionListScrollPosition: (position: number) => void
 }
 
 export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (
   set,
 ) => ({
-  serviceWorkerRegistration: null,
+  currentMenu: null,
+  currentCategory: null,
   formMenuSupplier: null,
   formMenuCreateSupplier: false,
   dialogButtonState: 'null',
-  webpushState:
-    typeof window !== 'undefined'
-      ? Notification.permission === 'granted'
-        ? localStorage.getItem('webpush-enable') === 'true'
-          ? 'enabled'
-          : 'disabled'
-        : Notification.permission
-      : 'denied',
-  setServiceWorkerRegistration: (
-    registration: ServiceWorkerRegistration | null,
-  ) => {
-    set({ serviceWorkerRegistration: registration })
+  loginSuccessNotify_session: false,
+  unavailableConfirms_session: {},
+  reservationsScrollPosition_session: 0,
+  transactionListScrollPosition_session: 0,
+  setLoginSuccessNotify: (state: boolean) => {
+    set({ loginSuccessNotify_session: state })
   },
   setFormMenuSupplier: (supplier: Supplier | null) => {
     set({ formMenuSupplier: supplier })
@@ -53,7 +51,20 @@ export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (
   setDialogButtonState: (state: DialogButtonState) => {
     set({ dialogButtonState: state })
   },
-  setWebpushState: (state: WebpushState) => {
-    set({ webpushState: state })
+  setCurrentMenu: (menu) => set({ currentMenu: menu }),
+  setCurrentCategory: (category) => set({ currentCategory: category }),
+  addUnavailableConfirm: (id) => {
+    set((state) => ({
+      unavailableConfirms_session: {
+        ...state.unavailableConfirms_session,
+        [id]: true,
+      },
+    }))
+  },
+  setReservationsScrollPosition: (position) => {
+    set({ reservationsScrollPosition_session: position })
+  },
+  setTransactionListScrollPosition: (position) => {
+    set({ transactionListScrollPosition_session: position })
   },
 })

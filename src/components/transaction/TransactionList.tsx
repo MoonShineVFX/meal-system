@@ -2,12 +2,14 @@ import { useMediaQuery } from 'usehooks-ts'
 import { Virtuoso } from 'react-virtuoso'
 import { useCallback, useState, useEffect } from 'react'
 import { WalletIcon } from '@heroicons/react/24/outline'
+import { useDebounce } from 'usehooks-ts'
 
 import Error from '@/components/core/Error'
 import trpc from '@/lib/client/trpc'
 import { twData } from '@/lib/common'
 import SearchBar from '@/components/core/SearchBar'
 import TransactionCard from './TransactionCard'
+import { useStore } from '@/lib/client/store'
 
 export default function TransactionList(props: {
   activeTransactionId?: number
@@ -23,17 +25,25 @@ export default function TransactionList(props: {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
       },
     )
+  const { transactionListScrollPosition, setTransactionListScrollPosition } =
+    useStore((state) => ({
+      transactionListScrollPosition:
+        state.transactionListScrollPosition_session,
+      setTransactionListScrollPosition: state.setTransactionListScrollPosition,
+    }))
+  const [tempScrollValue, setTempScrollValue] = useState(
+    transactionListScrollPosition,
+  )
+  const debouncedScrollValue = useDebounce(tempScrollValue, 500)
 
   // Remember scroll position
+  // mobile layout
   useEffect(() => {
     if (!props.scrollRef?.current) return
 
     const handleScroll = () => {
       if (!props.activeTransactionId) {
-        sessionStorage.setItem(
-          'transaction-scroll-position',
-          JSON.stringify(props.scrollRef?.current?.scrollTop),
-        )
+        setTempScrollValue(props.scrollRef?.current?.scrollTop ?? 0)
       }
     }
 
@@ -41,30 +51,37 @@ export default function TransactionList(props: {
     return () => {
       props.scrollRef?.current?.removeEventListener('scroll', handleScroll)
     }
-  }, [props.scrollRef?.current])
+  }, [props.scrollRef?.current, props.activeTransactionId])
+  useEffect(() => {
+    setTransactionListScrollPosition(debouncedScrollValue)
+  }, [debouncedScrollValue])
 
   // Scroll to previous position
   useEffect(() => {
     if (
       !props.scrollRef?.current ||
       props.activeTransactionId ||
-      checkScrollState !== 1
+      checkScrollState !== 1 ||
+      !data
     )
       return
 
-    const previousScrollPosition = JSON.parse(
-      sessionStorage.getItem('transaction-scroll-position') || '0',
-    )
-    const scrollRef = props.scrollRef.current
-
-    setTimeout(() => {
-      scrollRef.scrollTo({
-        top: previousScrollPosition,
-        behavior: 'auto',
-      })
-      setCheckScrollState(2)
-    }, 1)
-  }, [props.activeTransactionId, checkScrollState, props.scrollRef?.current])
+    if (transactionListScrollPosition !== 0) {
+      const scrollRef = props.scrollRef.current
+      setTimeout(() => {
+        scrollRef.scrollTo({
+          top: transactionListScrollPosition,
+          behavior: 'auto',
+        })
+        setCheckScrollState(2)
+      }, 1)
+    }
+  }, [
+    props.activeTransactionId,
+    checkScrollState,
+    props.scrollRef?.current,
+    data,
+  ])
 
   const handleScrollEndReached = useCallback(() => {
     if (hasNextPage) {

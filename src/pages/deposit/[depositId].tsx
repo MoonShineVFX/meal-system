@@ -13,6 +13,7 @@ import Error from '@/components/core/Error'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Title from '@/components/core/Title'
 import Button from '@/components/core/Button'
+import { useStore } from '@/lib/client/store'
 
 export default function PageDepositDetail() {
   const router = useRouter()
@@ -28,6 +29,10 @@ export default function PageDepositDetail() {
     },
   )
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null)
+  const { depositRedirect, setDepositRedirect } = useStore((state) => ({
+    depositRedirect: state.depositRedirect_local,
+    setDepositRedirect: state.setDepositRedirect,
+  }))
 
   useEffect(() => {
     setDeposit(data)
@@ -35,16 +40,12 @@ export default function PageDepositDetail() {
 
   useEffect(() => {
     if (typeof depositId !== 'string') return
-    const depositRedirect = localStorage.getItem('deposit-redirect')
-    if (depositRedirect) {
-      const redirectMetadata: { id: string; url: string } =
-        JSON.parse(depositRedirect)
-      if (redirectMetadata.id === depositId) {
-        setRedirectUrl(redirectMetadata.url)
-      }
-      localStorage.removeItem('deposit-redirect')
+    if (depositRedirect === null) return
+    if (depositRedirect.id === depositId) {
+      setRedirectUrl(depositRedirect.url)
     }
-  }, [depositId])
+    setDepositRedirect(null)
+  }, [depositId, depositRedirect])
 
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />

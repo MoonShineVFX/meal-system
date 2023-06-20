@@ -13,6 +13,7 @@ import type { UseTRPCMutationResult } from '@trpc/react-query/shared'
 
 import { generateCookie, settings } from '@/lib/common'
 import type { AppRouter } from '@/lib/trpc'
+import { useStore } from './store'
 
 export const onSocketOpenCallbacks: (() => void)[] = []
 export const onSocketCloseCallbacks: (() => void)[] = []
@@ -122,12 +123,12 @@ const authLink: TRPCLink<AppRouter> = () => {
             const cookie = generateCookie(
               (value.result.data as { token: string }).token,
             )
-            sessionStorage.setItem('login-success-notify', 'true')
+            useStore.setState({ loginSuccessNotify_session: true })
             document.cookie = cookie
 
-            const loginRedirect = sessionStorage.getItem('login-redirect')
+            const loginRedirect = useStore.getState().loginRedirect_session
             if (loginRedirect !== null) {
-              sessionStorage.removeItem('login-redirect')
+              useStore.setState({ loginRedirect_session: null })
             }
 
             window.location.href =

@@ -2,7 +2,7 @@ import type { AppType } from 'next/app'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { twMerge } from 'tailwind-merge'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 import trpc from '@/lib/client/trpc'
 import EventListener from '@/components/overlays/EventListener'
@@ -17,13 +17,16 @@ import { useStore } from '@/lib/client/store'
 const FULLSCREEN_COMPONENT_PATHS = ['/login']
 
 const PageApp: AppType = ({ Component, pageProps }) => {
+  const router = useRouter()
+  const isComponentFullscreen = FULLSCREEN_COMPONENT_PATHS.includes(
+    router.pathname,
+  )
   const setServiceWorkerRegistration = useStore(
     (state) => state.setServiceWorkerRegistration,
   )
 
   // Register service worker
   useEffect(() => {
-    console.log('effect')
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/pwa-sw.js').then((reg) => {
         console.debug('Service worker registered', reg)
@@ -42,28 +45,24 @@ const PageApp: AppType = ({ Component, pageProps }) => {
       </Head>
       <Title />
       {/* Content */}
-      <FullscreenDetector>
-        {(isFullscreen) => (
-          <div className='grid h-full grid-rows-[auto_calc(4rem_+_env(safe-area-inset-bottom))] sm:grid-cols-[14rem_auto] sm:grid-rows-none lg:grid-cols-[15rem_auto]'>
-            <nav
-              className={twMerge(
-                'order-last sm:order-none',
-                isFullscreen && 'hidden',
-              )}
-            >
-              <Navigation />
-            </nav>
-            <main
-              className={twMerge(
-                '@container/main',
-                isFullscreen && 'col-span-full row-span-full',
-              )}
-            >
-              <Component {...pageProps} />
-            </main>
-          </div>
-        )}
-      </FullscreenDetector>
+      <div className='grid h-full grid-rows-[auto_calc(4rem_+_env(safe-area-inset-bottom))] sm:grid-cols-[14rem_auto] sm:grid-rows-none lg:grid-cols-[15rem_auto]'>
+        <nav
+          className={twMerge(
+            'order-last sm:order-none',
+            isComponentFullscreen && 'hidden',
+          )}
+        >
+          <Navigation />
+        </nav>
+        <main
+          className={twMerge(
+            '@container/main',
+            isComponentFullscreen && 'col-span-full row-span-full',
+          )}
+        >
+          <Component {...pageProps} />
+        </main>
+      </div>
       {/* Overlay */}
       <EventListener />
       <RouterProgress />
@@ -74,24 +73,3 @@ const PageApp: AppType = ({ Component, pageProps }) => {
 }
 
 export default trpc.withTRPC(PageApp)
-
-function FullscreenDetector(props: {
-  children: (isFullscreen: boolean) => JSX.Element
-}) {
-  const router = useRouter()
-  const [isFullscreen, setIsFullscreen] = useState(false)
-
-  useEffect(() => {
-    const handleRouteChange = () => {
-      setIsFullscreen(FULLSCREEN_COMPONENT_PATHS.includes(router.pathname))
-    }
-
-    router.events.on('routeChangeStart', handleRouteChange)
-
-    return () => {
-      router.events.off('routeChangeStart', handleRouteChange)
-    }
-  }, [])
-
-  return props.children(isFullscreen)
-}

@@ -8,13 +8,23 @@ import { useStore, NotificationType } from '@/lib/client/store'
 /* Component */
 export default function AuthValidator() {
   const router = useRouter()
-  const addNotification = useStore((state) => state.addNotification)
+  const {
+    addNotification,
+    loginSuccessNotify,
+    setLoginRedirect,
+    setLoginSuccessNotify,
+  } = useStore((state) => ({
+    addNotification: state.addNotification,
+    loginSuccessNotify: state.loginSuccessNotify_session,
+    setLoginRedirect: state.setLoginRedirect,
+    setLoginSuccessNotify: state.setLoginSuccessNotify,
+  }))
 
   /* Validate user and redirect to logout */
   const userInfoQuery = trpc.user.get.useQuery(undefined, {
     onError() {
       if (router.pathname !== '/login') {
-        sessionStorage.setItem('login-redirect', router.asPath)
+        setLoginRedirect(router.asPath)
         router.push(`/login`)
       }
     },
@@ -23,16 +33,16 @@ export default function AuthValidator() {
   /* Login success notice */
   useEffect(() => {
     if (!userInfoQuery.isSuccess) return
-    const notify = sessionStorage.getItem('login-success-notify')
-    if (notify && notify === 'true') {
+
+    if (loginSuccessNotify) {
       addNotification({
         type: NotificationType.SUCCESS,
         message: '登入成功',
       })
 
-      sessionStorage.removeItem('login-success-notify')
+      setLoginSuccessNotify(false)
     }
-  }, [userInfoQuery.isSuccess])
+  }, [userInfoQuery.isSuccess, loginSuccessNotify])
 
   if (userInfoQuery.status !== 'success' && router.pathname !== '/login')
     return (
