@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
-import { sendNotificationToUser } from '@/lib/server/webpush'
+import webPusher from '@/lib/server/webpush'
 
 import {
   createUserToken,
@@ -195,11 +195,14 @@ export const UserRouter = router({
       })
     }),
   testPushNotification: userProcedure.mutation(async ({ ctx }) => {
-    const result = await sendNotificationToUser({
+    const result = await webPusher.pushNotificationToUser({
       userId: ctx.userLite.id,
       title: '測試推送通知',
-      message: '這是一個測試推送通知',
+      message: '有看到就表示通知功能正常',
+      tag: 'test',
+      url: `${settings.WEBSITE_URL}/deposit`,
     })
+
     const count = result.filter((r) => r.success)
     eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
       type: SERVER_NOTIFY.USER_TEST_PUSH_NOTIFICATION,

@@ -16,6 +16,7 @@ export default function Settings() {
   const testPushMutation = trpc.user.testPushNotification.useMutation()
   const webpushState = useStore((state) => state.webpushState)
   const setWebpushState = useStore((state) => state.setWebpushState)
+  const [isPushApiSupported, setIsPushApiSupported] = useState(false)
   const { showDialog, dialog } = useDialog()
   const [customPrinterApi, setCustomPrinterApi] = useState<{
     enabled: boolean
@@ -35,6 +36,17 @@ export default function Settings() {
     localStorage.setItem('customPrinterApi', JSON.stringify(customPrinterApi))
   }, [customPrinterApi])
 
+  useEffect(() => {
+    if (
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window
+    ) {
+      setIsPushApiSupported(true)
+    }
+  }, [])
+
   return (
     <div className='relative h-full w-full'>
       <div className='ms-scroll absolute inset-0 flex justify-center overflow-y-auto overflow-x-hidden'>
@@ -42,43 +54,45 @@ export default function Settings() {
           <h1 className='mb-4 text-xl font-bold lg:mb-8'>設定</h1>
           <div className='flex flex-col gap-4 lg:gap-6'>
             {/* 開啟通知 */}
-            <OptionField
-              title='背景通知'
-              description='當您有訂單或其他更新訊息時，就算 App 不在前景也會收到通知。'
-              loading={false}
-              checked={webpushState === 'enabled'}
-              onChange={(checked) => {
-                if (checked) {
-                  if (webpushState === 'denied') {
-                    showDialog({
-                      title: '無法開啟通知',
-                      content: '您已經拒絕了通知權限，請至瀏覽器設定開啟。',
-                    })
-                    return
-                  }
-                  Notification.requestPermission().then((permission) => {
-                    if (permission === 'granted') {
-                      localStorage.setItem('webpush-enable', 'true')
-                      setWebpushState('enabled')
+            {isPushApiSupported && (
+              <OptionField
+                title='背景通知'
+                description='當您有訂單或其他更新訊息時，就算 App 不在前景也會收到通知。'
+                loading={false}
+                checked={webpushState === 'enabled'}
+                onChange={(checked) => {
+                  if (checked) {
+                    if (webpushState === 'denied') {
+                      showDialog({
+                        title: '無法開啟通知',
+                        content: '您已經拒絕了通知權限，請至瀏覽器設定開啟。',
+                      })
+                      return
                     }
-                  })
-                } else {
-                  localStorage.setItem('webpush-enable', 'false')
-                  setWebpushState('disabled')
-                }
-              }}
-            >
-              {webpushState === 'enabled' ? (
-                <Button
-                  className='ml-auto mt-2 p-2'
-                  label='測試通知'
-                  textClassName='text-sm'
-                  onClick={() => testPushMutation.mutate()}
-                  isBusy={testPushMutation.isLoading}
-                  isLoading={testPushMutation.isLoading}
-                />
-              ) : null}
-            </OptionField>
+                    Notification.requestPermission().then((permission) => {
+                      if (permission === 'granted') {
+                        localStorage.setItem('webpush-enable', 'true')
+                        setWebpushState('enabled')
+                      }
+                    })
+                  } else {
+                    localStorage.setItem('webpush-enable', 'false')
+                    setWebpushState('disabled')
+                  }
+                }}
+              >
+                {webpushState === 'enabled' ? (
+                  <Button
+                    className='ml-auto mt-2 p-2'
+                    label='測試通知'
+                    textClassName='text-sm'
+                    onClick={() => testPushMutation.mutate()}
+                    isBusy={testPushMutation.isLoading}
+                    isLoading={testPushMutation.isLoading}
+                  />
+                ) : null}
+              </OptionField>
+            )}
             {/* 自動結帳 */}
             <OptionField
               title='QRCode 自動結帳'

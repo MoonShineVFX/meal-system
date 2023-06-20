@@ -9,7 +9,7 @@ import {
 } from '@/lib/server/database'
 import { SERVER_NOTIFY, OrderStatus, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
-import { sendNotificationToUser } from '@/lib/server/webpush'
+import webPusher from '@/lib/server/webpush'
 
 function generateOrderNotifyMessage(orderId: number, status: OrderStatus) {
   switch (status) {
@@ -76,7 +76,7 @@ export const POSRouter = router({
       )
 
       if (input.status !== 'timeCompleted') {
-        sendNotificationToUser({
+        webPusher.pushNotificationToUser({
           userId: order.userId,
           title: '訂單更新',
           message: generateOrderNotifyMessage(order.id, input.status),
@@ -84,6 +84,8 @@ export const POSRouter = router({
             orderImage ?? settings.RESOURCE_FOOD_PLACEHOLDER
           }?width=64&quality=75`,
           tag: `order-${order.id}`,
+          url: `${settings.WEBSITE_URL}/order/id/${order.id}`,
+          ignoreIfFocused: true,
         })
       }
 
