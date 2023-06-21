@@ -10,6 +10,7 @@ import {
 } from '@/lib/server/database'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import webPusher from '@/lib/server/webpush'
 
 export const OrderRouter = router({
   addFromCart: userProcedure
@@ -44,6 +45,10 @@ export const OrderRouter = router({
           })
         }
       }
+
+      webPusher.pushBadgeCountToUser({
+        userId: ctx.userLite.id,
+      })
 
       return orders
     }),
@@ -126,8 +131,12 @@ export const OrderRouter = router({
         type: SERVER_NOTIFY.POS_UPDATE,
         message: `${ctx.userLite.name} ${typeString}訂單 #${order.id}`,
       })
+
+      webPusher.pushBadgeCountToUser({
+        userId: ctx.userLite.id,
+      })
     }),
-  getCount: userProcedure.query(async ({ ctx }) => {
+  getBadgeCount: userProcedure.query(async ({ ctx }) => {
     return await getOrdersCount({ userId: ctx.userLite.id })
   }),
 })

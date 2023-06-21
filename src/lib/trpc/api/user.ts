@@ -1,8 +1,8 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
-import webPusher from '@/lib/server/webpush'
 
+import webPusher from '@/lib/server/webpush'
 import {
   createUserToken,
   ensureUser,
@@ -180,6 +180,11 @@ export const UserRouter = router({
         auth: input.auth,
         endpoint: input.endpoint,
         p256dh: input.p256dh,
+      })
+
+      // update app badge
+      webPusher.pushBadgeCountToUser({
+        userId: ctx.userLite.id,
       })
     }),
   deleteSubscription: publicProcedure

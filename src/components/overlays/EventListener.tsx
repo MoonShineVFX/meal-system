@@ -41,7 +41,7 @@ export default function EventListener() {
         if (!webpushState || userInfoQuery.isError) {
           setWebpushState(false)
           if (subscription) {
-            console.debug('Push Notifications Unsubscribed', subscription)
+            console.debug('Push Notifications Unsubscribed')
             const endpoint = subscription.toJSON().endpoint
             if (endpoint) deleteUserSubscriptionMutation.mutate({ endpoint })
             subscription.unsubscribe()
@@ -66,10 +66,7 @@ export default function EventListener() {
                   auth: subJson.keys.auth,
                 })
               }
-              console.debug(
-                'Push Notifications Subscribed',
-                subscription.toJSON(),
-              )
+              console.debug('Push Notifications Subscribed')
             })
             .catch((error) => {
               addNotification({
@@ -79,10 +76,7 @@ export default function EventListener() {
               setWebpushState(false)
             })
         } else {
-          console.debug(
-            'Push Notifications Already Subscribed',
-            subscription.toJSON(),
-          )
+          console.debug('Push Notifications Already Subscribed')
         }
       })
   }, [
@@ -116,6 +110,7 @@ export default function EventListener() {
       addNotification({
         type: NotificationType.INFO,
         message: '恢復連線',
+        tag: 'connection',
       })
     }
     const handleSocketClose = async () => {
@@ -124,6 +119,7 @@ export default function EventListener() {
       addNotification({
         type: NotificationType.ERROR,
         message: '連線中斷',
+        tag: 'connection',
       })
     }
     onSocketCloseCallbacks.push(handleSocketClose)
@@ -170,17 +166,17 @@ export default function EventListener() {
           trpcContext.cart.get.invalidate()
           trpcContext.user.get.invalidate()
           trpcContext.order.get.invalidate()
-          trpcContext.order.getCount.invalidate()
+          trpcContext.order.getBadgeCount.invalidate()
           trpcContext.transaction.getListByUser.invalidate()
           break
         case SERVER_NOTIFY.ORDER_UPDATE:
           trpcContext.order.get.invalidate()
-          trpcContext.order.getCount.invalidate()
+          trpcContext.order.getBadgeCount.invalidate()
           break
         case SERVER_NOTIFY.ORDER_CANCEL:
           trpcContext.order.get.invalidate()
           trpcContext.user.get.invalidate()
-          trpcContext.order.getCount.invalidate()
+          trpcContext.order.getBadgeCount.invalidate()
           trpcContext.transaction.getListByUser.invalidate()
           break
         case SERVER_NOTIFY.DEPOSIT_RECHARGE:

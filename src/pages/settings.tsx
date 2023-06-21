@@ -56,7 +56,7 @@ export default function Settings() {
             {isPushApiSupported && (
               <OptionField
                 title='背景通知'
-                description='當您有訂單或其他更新訊息時，就算 App 不在前景也會收到通知。'
+                description='當您訂單有更新時，就算 App 不在前景也會收到通知，同時會在圖示顯示數字標籤。'
                 loading={false}
                 checked={webpushEnabled}
                 onChange={(checked) => {

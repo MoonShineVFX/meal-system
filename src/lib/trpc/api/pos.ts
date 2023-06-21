@@ -93,6 +93,10 @@ export const POSRouter = router({
         type: SERVER_NOTIFY.POS_UPDATE,
         skipNotify: true,
       })
+
+      webPusher.pushBadgeCountToUser({
+        userId: order.userId,
+      })
     }),
   updateReservation: staffProcedure
     .input(
@@ -117,6 +121,10 @@ export const POSRouter = router({
               : SERVER_NOTIFY.ORDER_CANCEL,
           message: generateOrderNotifyMessage(order.id, input.status),
           link: `/order/id/${order.id}`,
+        })
+
+        webPusher.pushBadgeCountToUser({
+          userId: order.userId,
         })
       }
 

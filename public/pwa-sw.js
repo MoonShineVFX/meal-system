@@ -19,20 +19,19 @@ self.addEventListener('push', (event) => {
       .then((clientIsFocused) => {
         payload = event.data.json()
 
-        // If the notification is not to be shown when the client is focused, exit early.
-        if (
-          clientIsFocused &&
-          payload.type === 'notification' &&
-          payload.data.ignoreIfFocused
-        ) {
-          return
-        }
-
         switch (payload.type) {
           case 'notification':
+            // If the notification is not to be shown when the client is focused, exit early.
+            if (
+              clientIsFocused &&
+              payload.type === 'notification' &&
+              payload.data.ignoreIfFocused
+            ) {
+              return
+            }
             const { title, ...options } = payload.data
             options.body = options.message
-            promiseChain = self.registration.showNotification(title, {
+            self.registration.showNotification(title, {
               ...options,
               renotify: !!options.tag,
               data: {
@@ -41,6 +40,17 @@ self.addEventListener('push', (event) => {
             })
             break
           case 'badge':
+            if ('setAppBadge' in navigator !== true) {
+              return
+            }
+
+            const badgeCount = payload.data
+            if (badgeCount > 0) {
+              navigator.setAppBadge(badgeCount)
+            } else {
+              navigator.clearAppBadge()
+            }
+
             break
         }
       }),

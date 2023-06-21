@@ -1,4 +1,8 @@
-import { getUserSubscriptions, deleteSubscription } from './database'
+import {
+  getUserSubscriptions,
+  deleteSubscription,
+  getOrdersCount,
+} from './database'
 import webpush from 'web-push'
 import { settings } from '@/lib/common'
 import { UserSubscription } from '@prisma/client'
@@ -71,6 +75,22 @@ class WebPusher {
           success: false,
         }
       })
+  }
+
+  async pushBadgeCountToUser(props: { userId: string }) {
+    const { userId } = props
+    const badgeCount = await getOrdersCount({ userId })
+    const userSubs = await getUserSubscriptions(userId)
+
+    const promises = userSubs.map((sub) => {
+      return this.push({
+        sub,
+        type: 'badge',
+        data: badgeCount,
+      })
+    })
+
+    return await Promise.all(promises)
   }
 
   async pushNotificationToUser(

@@ -471,7 +471,7 @@ export async function getMenuWithComs({
     )
   }
   const maxQuantity = Math.min(
-    menu.limitPerUser !== 0 ? menu.limitPerUser - menuOrderedCount : Infinity,
+    menu.limitPerUser !== 0 ? menu.limitPerUser - menuOrderedCount : 999, // Infinity will turn to -2 in client [BUG]
   )
 
   // lower coms max quantity if menu max quantity is lower

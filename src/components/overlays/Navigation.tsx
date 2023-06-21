@@ -444,7 +444,7 @@ function CartNumberBadge() {
 }
 
 function OrderNumberBadge() {
-  const { data, isLoading, isError } = trpc.order.getCount.useQuery()
+  const { data, isLoading, isError } = trpc.order.getBadgeCount.useQuery()
   return <NumberBadge number={data} isLoading={isLoading} isError={isError} />
 }
 
