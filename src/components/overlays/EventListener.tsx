@@ -25,6 +25,7 @@ export default function EventListener() {
   /* Pusher Push Notifications Initialize */
   useEffect(() => {
     if (!serviceWorkerRegistration) return
+    if ('pushManager' in serviceWorkerRegistration === false) return
 
     serviceWorkerRegistration.pushManager
       .getSubscription()
