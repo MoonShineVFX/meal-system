@@ -14,9 +14,14 @@ import Toggle from '@/components/form/base/Toggle'
 export default function PageQRCode() {
   const router = useRouter()
   const userQuery = trpc.user.get.useQuery()
-  const userSettingsMutation = trpc.user.updateSettings.useMutation()
   const [cipher, setCipher] = useState<string | null>(null)
-  const addToHistory = useStore((state) => state.addToHistory)
+  const { addToHistory, qrcodeAutoCheckout, setQRCodeAutoCheckout } = useStore(
+    (state) => ({
+      addToHistory: state.addToHistory,
+      qrcodeAutoCheckout: state.qrcodeAutoCheckout_local,
+      setQRCodeAutoCheckout: state.setQRCodeAutoCheckout,
+    }),
+  )
   const { data, error, isLoading } = trpc.menu.getCOMFromQRCodeCipher.useQuery(
     {
       cipher: cipher as string,
@@ -93,11 +98,9 @@ export default function PageQRCode() {
               </div>
               <div className='mr-1 flex items-center'>
                 <Toggle
-                  checked={userQuery.data.settings!.qrcodeAutoCheckout}
+                  checked={qrcodeAutoCheckout}
                   onChange={(event) =>
-                    userSettingsMutation.mutate({
-                      qrcodeAutoCheckout: event.target.checked,
-                    })
+                    setQRCodeAutoCheckout(event.target.checked)
                   }
                 />
               </div>
@@ -107,7 +110,7 @@ export default function PageQRCode() {
               totalPrice={data.commodity.price}
               retailCipher={cipher}
               onDeposit={() => addToHistory(`/qrcode?key=${cipher}`)}
-              autoCheckout={userQuery.data.settings!.qrcodeAutoCheckout}
+              autoCheckout={qrcodeAutoCheckout}
             />
           </div>
         )}

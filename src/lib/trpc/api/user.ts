@@ -8,7 +8,6 @@ import {
   ensureUser,
   getUserInfo,
   validateUserPassword,
-  updateUserSettings,
   addUserSubscription,
   deleteSubscription,
 } from '@/lib/server/database'
@@ -154,19 +153,19 @@ export const UserRouter = router({
 
       return { token }
     }),
-  updateSettings: userProcedure
-    .input(
-      z.object({
-        qrcodeAutoCheckout: z.boolean().optional(),
-        notificationSound: z.boolean().optional(),
-      }),
-    )
-    .mutation(async ({ input, ctx }) => {
-      await updateUserSettings({ userId: ctx.userLite.id, ...input })
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-        type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
-      })
-    }),
+  // updateSettings: userProcedure
+  //   .input(
+  //     z.object({
+  //       qrcodeAutoCheckout: z.boolean().optional(),
+  //       notificationSound: z.boolean().optional(),
+  //     }),
+  //   )
+  //   .mutation(async ({ input, ctx }) => {
+  //     await updateUserSettings({ userId: ctx.userLite.id, ...input })
+  //     eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+  //       type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
+  //     })
+  //   }),
   addSubscription: userProcedure
     .input(
       z.object({

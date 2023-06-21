@@ -26,6 +26,8 @@ export interface SettingSlice {
   serviceWorkerRegistration: ServiceWorkerRegistration | null
   webpushEnabled_local: boolean
   printerAPI_local: PrinterAPI
+  qrcodeAutoCheckout_local: boolean
+  posNotificationSound_local: boolean
   depositRedirect_local: DepositRedirect | null
   comOptionsMemo_local: COMOptionsMemo
   loginRedirect_session: string | null
@@ -39,6 +41,8 @@ export interface SettingSlice {
   setDepositRedirect: (depositRedirect: DepositRedirect | null) => void
   getCOMOptionsMemo: (id: string) => OrderOptions | null
   addCOMOptionsMemo: (id: string, options: OrderOptions) => void
+  setQRCodeAutoCheckout: (state: boolean) => void
+  setPOSNotificationSound: (state: boolean) => void
 }
 
 export const createSettingSlice: StateCreator<
@@ -50,6 +54,8 @@ export const createSettingSlice: StateCreator<
   history: [],
   serviceWorkerRegistration: null,
   webpushEnabled_local: false,
+  qrcodeAutoCheckout_local: false,
+  posNotificationSound_local: true,
   printerAPI_local: {
     enabled: false,
     url: 'http://localhost:5000',
@@ -107,5 +113,11 @@ export const createSettingSlice: StateCreator<
   },
   setDepositRedirect: (depositRedirect: DepositRedirect | null) => {
     set({ depositRedirect_local: depositRedirect })
+  },
+  setQRCodeAutoCheckout: (state: boolean) => {
+    set({ qrcodeAutoCheckout_local: state })
+  },
+  setPOSNotificationSound: (state: boolean) => {
+    set({ posNotificationSound_local: state })
   },
 })

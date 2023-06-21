@@ -35,10 +35,8 @@ model UserSettings {
   userId String @id
   user   User   @relation(fields: [userId], references: [id])
 
-  // user
-  qrcodeAutoCheckout Boolean @default(false)
-  // staff
-  notificationSound  Boolean @default(true)
+  // qrcodeAutoCheckout Boolean @default(false)
+  // notificationSound  Boolean @default(true)
 }
 
 model User {

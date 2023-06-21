@@ -10,12 +10,19 @@ import { SERVER_NOTIFY, settings } from '@/lib/common'
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
-  const addNotification = useStore((state) => state.addNotification)
-  const webpushState = useStore((state) => state.webpushEnabled_local)
-  const setWebpushState = useStore((state) => state.setWebpushState)
-  const serviceWorkerRegistration = useStore(
-    (state) => state.serviceWorkerRegistration,
-  )
+  const {
+    addNotification,
+    webpushState,
+    setWebpushState,
+    serviceWorkerRegistration,
+    posNotificationSound,
+  } = useStore((state) => ({
+    addNotification: state.addNotification,
+    webpushState: state.webpushEnabled_local,
+    setWebpushState: state.setWebpushState,
+    serviceWorkerRegistration: state.serviceWorkerRegistration,
+    posNotificationSound: state.posNotificationSound_local,
+  }))
   const [hasDisconnected, setHasDisconnected] = useState(false)
   const userInfoQuery = trpc.user.get.useQuery(undefined)
   const addUserSubscriptionMutation = trpc.user.addSubscription.useMutation()
@@ -187,7 +194,8 @@ export default function EventListener() {
           // Check if order is live, 這判斷有點勉強，之後可能需要改
           if (
             notifyPayload.link &&
-            notifyPayload.link.startsWith('/pos/live')
+            notifyPayload.link.startsWith('/pos/live') &&
+            posNotificationSound
           ) {
             const audio = new Audio(
               `${settings.RESOURCE_URL}/${settings.RESOURCE_NOTIFICATION_SOUND}`,

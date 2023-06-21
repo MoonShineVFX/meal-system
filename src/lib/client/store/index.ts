@@ -59,6 +59,8 @@ export const useStore = create<StoreState>()(
           state.reservationsScrollPosition_session,
         transactionListScrollPosition_session:
           state.transactionListScrollPosition_session,
+        qrcodeAutoCheckout_local: state.qrcodeAutoCheckout_local,
+        posNotificationSound_local: state.posNotificationSound_local,
       }),
     },
   ),

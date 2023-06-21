@@ -12,15 +12,26 @@ import Button from '@/components/core/Button'
 
 export default function Settings() {
   const userQuery = trpc.user.get.useQuery(undefined)
-  const userSettingsMutation = trpc.user.updateSettings.useMutation()
   const testPushMutation = trpc.user.testPushNotification.useMutation()
-  const { webpushEnabled, setWebpushState, printerApi, setPrinterApi } =
-    useStore((state) => ({
-      webpushEnabled: state.webpushEnabled_local,
-      setWebpushState: state.setWebpushState,
-      printerApi: state.printerAPI_local,
-      setPrinterApi: state.setPrinterAPI,
-    }))
+  const {
+    webpushEnabled,
+    setWebpushState,
+    printerApi,
+    setPrinterApi,
+    qrcodeAutoCheckout,
+    posNotificationSound,
+    setQRCodeAutoCheckout,
+    setPOSNotificationSound,
+  } = useStore((state) => ({
+    webpushEnabled: state.webpushEnabled_local,
+    setWebpushState: state.setWebpushState,
+    printerApi: state.printerAPI_local,
+    setPrinterApi: state.setPrinterAPI,
+    qrcodeAutoCheckout: state.qrcodeAutoCheckout_local,
+    posNotificationSound: state.posNotificationSound_local,
+    setQRCodeAutoCheckout: state.setQRCodeAutoCheckout,
+    setPOSNotificationSound: state.setPOSNotificationSound,
+  }))
   const [isPushApiSupported, setIsPushApiSupported] = useState(false)
   const { showDialog, dialog } = useDialog()
 
@@ -83,14 +94,9 @@ export default function Settings() {
             <OptionField
               title='QRCode 自動結帳'
               description='當您掃描 QRCode 付款時，系統會自動結帳，無需再按結帳按鈕。'
-              loading={
-                userQuery.data?.settings === undefined ||
-                userSettingsMutation.isError
-              }
-              checked={userQuery.data?.settings?.qrcodeAutoCheckout ?? false}
-              onChange={(checked) =>
-                userSettingsMutation.mutate({ qrcodeAutoCheckout: checked })
-              }
+              checked={qrcodeAutoCheckout}
+              loading={false}
+              onChange={setQRCodeAutoCheckout}
             />
             {/* 管理員 */}
             {userQuery.data?.role &&
@@ -100,28 +106,16 @@ export default function Settings() {
                   <OptionField
                     title='訂單通知音效'
                     description='當有新訂單時，系統會發出通知音效。'
-                    loading={
-                      userQuery.data?.settings === undefined ||
-                      userSettingsMutation.isError
-                    }
-                    checked={
-                      userQuery.data?.settings?.notificationSound ?? false
-                    }
-                    onChange={(checked) =>
-                      userSettingsMutation.mutate({
-                        notificationSound: checked,
-                      })
-                    }
+                    loading={false}
+                    checked={posNotificationSound}
+                    onChange={setPOSNotificationSound}
                   />
                   <div className='my-4 h-[2px] bg-stone-200'></div>
                   {/* 標籤機設定 */}
                   <OptionField
                     title='自訂標籤機 API 網址'
                     description='覆蓋預設的標籤機 API 網址，此設定存放在個別裝置。'
-                    loading={
-                      userQuery.data?.settings === undefined ||
-                      userSettingsMutation.isError
-                    }
+                    loading={false}
                     checked={printerApi.enabled ?? false}
                     onChange={(checked) =>
                       setPrinterApi({
