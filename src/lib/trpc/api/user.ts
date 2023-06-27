@@ -10,6 +10,7 @@ import {
   validateUserPassword,
   addUserSubscription,
   deleteSubscription,
+  deleteUserToken,
 } from '@/lib/server/database'
 import {
   settings,
@@ -153,6 +154,9 @@ export const UserRouter = router({
 
       return { token }
     }),
+  logout: userProcedure.mutation(async ({ ctx }) => {
+    await deleteUserToken(ctx.userLite.token)
+  }),
   // updateSettings: userProcedure
   //   .input(
   //     z.object({

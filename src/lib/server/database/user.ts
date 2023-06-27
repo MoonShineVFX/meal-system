@@ -317,3 +317,11 @@ export async function getUserTokens(userId: string) {
 
   return userSubs
 }
+
+export async function deleteUserToken(token: string) {
+  await prisma.userToken.delete({
+    where: {
+      id: token,
+    },
+  })
+}
