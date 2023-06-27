@@ -176,7 +176,7 @@ export const UserRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       await addUserSubscription({
-        userId: ctx.userLite.id,
+        userToken: ctx.userLite.token,
         auth: input.auth,
         endpoint: input.endpoint,
         p256dh: input.p256dh,

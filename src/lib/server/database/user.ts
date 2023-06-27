@@ -89,6 +89,7 @@ export async function createUserToken(userId: string) {
   const userToken = await prisma.userToken.create({
     data: {
       userId: userId,
+      lastUsedAt: new Date(),
     },
     include: {
       user: {
@@ -98,7 +99,7 @@ export async function createUserToken(userId: string) {
           role: true,
           tokens: {
             orderBy: {
-              createdAt: 'asc',
+              lastUsedAt: 'asc',
             },
           },
         },
@@ -144,7 +145,12 @@ export async function getUserLite({ token }: { token: string }) {
   })
   if (!userToken) return null
 
-  return userToken.user
+  prisma.userToken.update({
+    where: { id: token },
+    data: { lastUsedAt: new Date() },
+  })
+
+  return { ...userToken.user, token: userToken.id }
 }
 
 export async function getUserInfo(userId: string) {
@@ -269,63 +275,41 @@ export async function updateUserSettings(
 }
 
 export async function addUserSubscription(props: {
-  userId: string
+  userToken: string
   endpoint: string
   p256dh: string
   auth: string
 }) {
-  const { userId, endpoint, p256dh, auth } = props
-  const userSub = await prisma.userSubscription.create({
+  const { userToken, endpoint, p256dh, auth } = props
+  const userSub = await prisma.userToken.update({
+    where: {
+      id: userToken,
+    },
     data: {
-      userId,
       endpoint,
       p256dh,
       auth,
     },
-    include: {
-      user: {
-        select: {
-          subscriptions: {
-            select: {
-              id: true,
-            },
-            orderBy: {
-              createdAt: 'asc',
-            },
-          },
-        },
-      },
-    },
   })
-
-  // Limit subs per user
-  if (userSub.user.subscriptions.length > settings.TOKEN_COUNT_PER_USER) {
-    const toDeleteSubIds = userSub.user.subscriptions
-      .slice(
-        0,
-        userSub.user.subscriptions.length - settings.TOKEN_COUNT_PER_USER,
-      )
-      .map((t) => t.id)
-    await prisma.userSubscription.deleteMany({
-      where: {
-        id: { in: toDeleteSubIds },
-      },
-    })
-  }
 
   return userSub
 }
 
 export async function deleteSubscription(props: { endpoint: string }) {
-  await prisma.userSubscription.deleteMany({
+  await prisma.userToken.update({
     where: {
       endpoint: props.endpoint,
+    },
+    data: {
+      endpoint: null,
+      p256dh: null,
+      auth: null,
     },
   })
 }
 
-export async function getUserSubscriptions(userId: string) {
-  const userSubs = await prisma.userSubscription.findMany({
+export async function getUserTokens(userId: string) {
+  const userSubs = await prisma.userToken.findMany({
     where: {
       userId,
     },

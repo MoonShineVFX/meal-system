@@ -1,11 +1,6 @@
-import {
-  getUserSubscriptions,
-  deleteSubscription,
-  getOrdersCount,
-} from './database'
+import { getUserTokens, deleteSubscription, getOrdersCount } from './database'
 import webpush from 'web-push'
 import { settings } from '@/lib/common'
-import { UserSubscription } from '@prisma/client'
 
 type NotificationPayload = {
   type: 'notification'
@@ -25,7 +20,7 @@ type BadgePayload = {
 }
 
 type PushArgs = {
-  sub: Pick<UserSubscription, 'endpoint' | 'auth' | 'p256dh'>
+  sub: { endpoint: string; auth: string; p256dh: string }
 } & (NotificationPayload | BadgePayload)
 
 class WebPusher {
@@ -80,7 +75,7 @@ class WebPusher {
   async pushBadgeCountToUser(props: { userId: string }) {
     const { userId } = props
     const badgeCount = await getOrdersCount({ userId })
-    const userSubs = await getUserSubscriptions(userId)
+    const userSubs = await this.getUserSubs(userId)
 
     const promises = userSubs.map((sub) => {
       return this.push({
@@ -97,7 +92,7 @@ class WebPusher {
     props: { userId: string } & NotificationPayload['data'],
   ) {
     const { userId, ...data } = props
-    const userSubs = await getUserSubscriptions(userId)
+    const userSubs = await this.getUserSubs(userId)
 
     const promises = userSubs.map((sub) => {
       return this.push({
@@ -108,6 +103,22 @@ class WebPusher {
     })
 
     return await Promise.all(promises)
+  }
+
+  async getUserSubs(userId: string) {
+    const userSubs = await getUserTokens(userId)
+    return userSubs
+      .filter(
+        (sub) =>
+          sub.endpoint !== null &&
+          sub.endpoint !== 'null' &&
+          sub.endpoint !== 'undefined',
+      )
+      .map((sub) => ({
+        endpoint: sub.endpoint!,
+        auth: sub.auth!,
+        p256dh: sub.p256dh!,
+      }))
   }
 }
 

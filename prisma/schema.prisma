@@ -24,6 +24,12 @@ model UserToken {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
+  lastUsedAt DateTime?
+  // web push notification
+  endpoint   String?   @unique
+  p256dh     String?   @unique
+  auth       String?   @unique
+
   user   User   @relation(fields: [userId], references: [id])
   userId String
 }
@@ -54,27 +60,14 @@ model User {
   email                 String?
 
   settings           UserSettings?
-  profileImage       Image?             @relation(fields: [profileImageId], references: [id])
-  profileImageId     String?            @unique
+  profileImage       Image?        @relation(fields: [profileImageId], references: [id])
+  profileImageId     String?       @unique
   cartItems          CartItem[]
   tokens             UserToken[]
   orders             Order[]
   Deposit            Deposit[]
-  sourceTransactions Transaction[]      @relation("source")
-  targetTransactions Transaction[]      @relation("target")
-  subscriptions      UserSubscription[]
-}
-
-model UserSubscription {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-
-  endpoint String
-  p256dh   String
-  auth     String
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
+  sourceTransactions Transaction[] @relation("source")
+  targetTransactions Transaction[] @relation("target")
 }
 
 // Transaction
