@@ -8,9 +8,10 @@ import {
   ensureUser,
   getUserInfo,
   validateUserPassword,
-  addUserSubscription,
+  updateUserToken,
   deleteSubscription,
   deleteUserToken,
+  getUserToken,
 } from '@/lib/server/database'
 import {
   settings,
@@ -157,6 +158,9 @@ export const UserRouter = router({
   logout: userProcedure.mutation(async ({ ctx }) => {
     await deleteUserToken(ctx.userLite.token)
   }),
+  getToken: userProcedure.query(async ({ ctx }) => {
+    return await getUserToken(ctx.userLite.token)
+  }),
   // updateSettings: userProcedure
   //   .input(
   //     z.object({
@@ -170,26 +174,33 @@ export const UserRouter = router({
   //       type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
   //     })
   //   }),
-  addSubscription: userProcedure
+  updateToken: userProcedure
     .input(
       z.object({
-        auth: z.string(),
-        endpoint: z.string(),
-        p256dh: z.string(),
+        notificationEnabled: z.boolean().optional(),
+        badgeEnabled: z.boolean().optional(),
+        auth: z.string().optional(),
+        endpoint: z.string().optional(),
+        p256dh: z.string().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      await addUserSubscription({
+      await updateUserToken({
         userToken: ctx.userLite.token,
-        auth: input.auth,
-        endpoint: input.endpoint,
-        p256dh: input.p256dh,
+        ...input,
+      })
+
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.USER_TOKEN_UPDATE,
+        skipNotify: true,
       })
 
       // update app badge
-      webPusher.pushBadgeCountToUser({
-        userId: ctx.userLite.id,
-      })
+      if (input.badgeEnabled || input.endpoint) {
+        webPusher.pushBadgeCountToUser({
+          userId: ctx.userLite.id,
+        })
+      }
     }),
   deleteSubscription: publicProcedure
     .input(
@@ -202,6 +213,11 @@ export const UserRouter = router({
         endpoint: input.endpoint,
       })
     }),
+  getBadgeCount: userProcedure.mutation(async ({ ctx }) => {
+    await webPusher.pushBadgeCountToUser({
+      userId: ctx.userLite.id,
+    })
+  }),
   testPushNotification: userProcedure.mutation(async ({ ctx }) => {
     const result = await webPusher.pushNotificationToUser({
       userId: ctx.userLite.id,

@@ -274,18 +274,29 @@ export async function updateUserSettings(
   })
 }
 
-export async function addUserSubscription(props: {
+export async function updateUserToken(props: {
   userToken: string
-  endpoint: string
-  p256dh: string
-  auth: string
+  notificationEnabled?: boolean
+  badgeEnabled?: boolean
+  endpoint?: string
+  p256dh?: string
+  auth?: string
 }) {
-  const { userToken, endpoint, p256dh, auth } = props
+  const {
+    userToken,
+    endpoint,
+    p256dh,
+    auth,
+    notificationEnabled,
+    badgeEnabled,
+  } = props
   const userSub = await prisma.userToken.update({
     where: {
       id: userToken,
     },
     data: {
+      notificationEnabled,
+      badgeEnabled,
       endpoint,
       p256dh,
       auth,
@@ -296,9 +307,17 @@ export async function addUserSubscription(props: {
 }
 
 export async function deleteSubscription(props: { endpoint: string }) {
-  await prisma.userToken.update({
+  const userToken = await prisma.userToken.findUnique({
     where: {
       endpoint: props.endpoint,
+    },
+  })
+
+  if (!userToken) return
+
+  await prisma.userToken.update({
+    where: {
+      id: userToken.id,
     },
     data: {
       endpoint: null,
@@ -324,4 +343,14 @@ export async function deleteUserToken(token: string) {
       id: token,
     },
   })
+}
+
+export async function getUserToken(token: string) {
+  const userSub = await prisma.userToken.findUnique({
+    where: {
+      id: token,
+    },
+  })
+
+  return userSub
 }

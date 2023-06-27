@@ -48,7 +48,6 @@ export const useStore = create<StoreState>()(
       name: 'ms-cafe-zustand',
       storage: createJSONStorage(() => storage),
       partialize: (state) => ({
-        webpushEnabled_local: state.webpushEnabled_local,
         printerAPI_local: state.printerAPI_local,
         depositRedirect_local: state.depositRedirect_local,
         comOptionsMemo_local: state.comOptionsMemo_local,

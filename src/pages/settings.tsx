@@ -12,10 +12,10 @@ import Button from '@/components/core/Button'
 
 export default function Settings() {
   const userQuery = trpc.user.get.useQuery(undefined)
+  const userTokenQuery = trpc.user.getToken.useQuery(undefined)
+  const updateUserTokenMutation = trpc.user.updateToken.useMutation()
   const testPushMutation = trpc.user.testPushNotification.useMutation()
   const {
-    webpushEnabled,
-    setWebpushState,
     printerApi,
     setPrinterApi,
     qrcodeAutoCheckout,
@@ -23,8 +23,6 @@ export default function Settings() {
     setQRCodeAutoCheckout,
     setPOSNotificationSound,
   } = useStore((state) => ({
-    webpushEnabled: state.webpushEnabled_local,
-    setWebpushState: state.setWebpushState,
     printerApi: state.printerAPI_local,
     setPrinterApi: state.setPrinterAPI,
     qrcodeAutoCheckout: state.qrcodeAutoCheckout_local,
@@ -53,12 +51,12 @@ export default function Settings() {
           <h1 className='mb-4 text-xl font-bold lg:mb-8'>設定</h1>
           <div className='flex flex-col gap-4 lg:gap-6'>
             {/* 開啟通知 */}
-            {isPushApiSupported && (
+            {isPushApiSupported && Notification.permission !== 'granted' && (
               <OptionField
-                title='背景通知'
-                description='當您訂單有更新時，就算 App 不在前景也會收到通知，同時會在圖示顯示數字標籤。'
+                title='開啟通知權限'
+                description='允許通知權限，當您訂單有更新時，會收到通知，以及顯示即時數字在圖示上。'
                 loading={false}
-                checked={webpushEnabled}
+                checked={false}
                 onChange={(checked) => {
                   if (checked) {
                     if (Notification.permission === 'denied') {
@@ -70,26 +68,62 @@ export default function Settings() {
                     }
                     Notification.requestPermission().then((permission) => {
                       if (permission === 'granted') {
-                        setWebpushState(true)
+                        window.location.reload()
                       }
                     })
-                  } else {
-                    setWebpushState(false)
                   }
                 }}
-              >
-                {webpushEnabled ? (
-                  <Button
-                    className='ml-auto mt-2 p-2'
-                    label='測試通知'
-                    textClassName='text-sm'
-                    onClick={() => testPushMutation.mutate()}
-                    isBusy={testPushMutation.isLoading}
-                    isLoading={testPushMutation.isLoading}
-                  />
-                ) : null}
-              </OptionField>
+              />
             )}
+            {isPushApiSupported &&
+              Notification.permission === 'granted' &&
+              userTokenQuery.data && (
+                <>
+                  <OptionField
+                    title='背景通知'
+                    description='當您訂單有更新時，就算 App 不在前景也會收到通知。'
+                    loading={updateUserTokenMutation.isLoading}
+                    checked={userTokenQuery.data.notificationEnabled}
+                    onChange={(checked) => {
+                      updateUserTokenMutation.mutate({
+                        notificationEnabled: checked,
+                      })
+                    }}
+                  >
+                    {userTokenQuery.data.notificationEnabled || true ? (
+                      <Button
+                        className='ml-auto mt-2 p-2'
+                        label='測試通知'
+                        textClassName='text-sm'
+                        onClick={() => testPushMutation.mutate()}
+                        isBusy={testPushMutation.isLoading}
+                        isLoading={testPushMutation.isLoading}
+                      />
+                    ) : null}
+                  </OptionField>
+                  {'setAppBadge' in navigator && (
+                    <OptionField
+                      title='App 圖示數量標籤'
+                      description='顯示處理中的即時訂單數量在 APP 圖示上。'
+                      loading={userTokenQuery.isLoading}
+                      checked={userTokenQuery.data.badgeEnabled}
+                      onChange={(checked) => {
+                        updateUserTokenMutation.mutate({
+                          badgeEnabled: checked,
+                        })
+                        if (!checked) {
+                          if (
+                            'clearAppBadge' in navigator &&
+                            typeof navigator.clearAppBadge === 'function'
+                          ) {
+                            navigator.clearAppBadge()
+                          }
+                        }
+                      }}
+                    />
+                  )}
+                </>
+              )}
             {/* 自動結帳 */}
             <OptionField
               title='QRCode 自動結帳'

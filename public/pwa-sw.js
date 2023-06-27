@@ -21,7 +21,7 @@ self.addEventListener('push', (event) => {
 
         switch (payload.type) {
           case 'notification':
-            // If the notification is not to be shown when the client is focused, exit early.
+            // If client is focused, don't show a notification if ignoreIfFocused is true.
             if (
               clientIsFocused &&
               payload.type === 'notification' &&

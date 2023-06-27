@@ -2,6 +2,7 @@ import { StateCreator } from 'zustand'
 
 import type { StoreState } from './define'
 import { OrderOptions } from '@/lib/common'
+import ServiceWorkerHandler from '@/lib/client/sw'
 
 type PrinterAPI = {
   enabled: boolean
@@ -23,26 +24,22 @@ type COMOptionsMemo = Record<
 
 export interface SettingSlice {
   history: string[]
-  serviceWorkerRegistration: ServiceWorkerRegistration | null
-  webpushEnabled_local: boolean
   printerAPI_local: PrinterAPI
   qrcodeAutoCheckout_local: boolean
   posNotificationSound_local: boolean
   depositRedirect_local: DepositRedirect | null
   comOptionsMemo_local: COMOptionsMemo
   loginRedirect_session: string | null
+  serviceWorkerHandler: ServiceWorkerHandler | null
   setLoginRedirect: (path: string | null) => void
   addToHistory: (path: string) => void
-  setServiceWorkerRegistration: (
-    registration: ServiceWorkerRegistration | null,
-  ) => void
-  setWebpushState: (state: boolean) => void
   setPrinterAPI: (printerAPI: PrinterAPI) => void
   setDepositRedirect: (depositRedirect: DepositRedirect | null) => void
   getCOMOptionsMemo: (id: string) => OrderOptions | null
   addCOMOptionsMemo: (id: string, options: OrderOptions) => void
   setQRCodeAutoCheckout: (state: boolean) => void
   setPOSNotificationSound: (state: boolean) => void
+  setServiceWorkerHandler: (handler: ServiceWorkerHandler) => void
 }
 
 export const createSettingSlice: StateCreator<
@@ -52,8 +49,6 @@ export const createSettingSlice: StateCreator<
   SettingSlice
 > = (set, get) => ({
   history: [],
-  serviceWorkerRegistration: null,
-  webpushEnabled_local: false,
   qrcodeAutoCheckout_local: false,
   posNotificationSound_local: true,
   printerAPI_local: {
@@ -63,6 +58,7 @@ export const createSettingSlice: StateCreator<
   depositRedirect_local: null,
   comOptionsMemo_local: {},
   loginRedirect_session: null,
+  serviceWorkerHandler: null,
   setLoginRedirect: (path: string | null) => {
     set({ loginRedirect_session: path })
   },
@@ -100,14 +96,6 @@ export const createSettingSlice: StateCreator<
       history: [...state.history.slice(-99), path],
     }))
   },
-  setWebpushState: (state: boolean) => {
-    set({ webpushEnabled_local: state })
-  },
-  setServiceWorkerRegistration: (
-    registration: ServiceWorkerRegistration | null,
-  ) => {
-    set({ serviceWorkerRegistration: registration })
-  },
   setPrinterAPI: (printerAPI: PrinterAPI) => {
     set({ printerAPI_local: printerAPI })
   },
@@ -119,5 +107,8 @@ export const createSettingSlice: StateCreator<
   },
   setPOSNotificationSound: (state: boolean) => {
     set({ posNotificationSound_local: state })
+  },
+  setServiceWorkerHandler: (handler: ServiceWorkerHandler) => {
+    set({ serviceWorkerHandler: handler })
   },
 })

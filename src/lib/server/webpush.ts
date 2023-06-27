@@ -77,13 +77,15 @@ class WebPusher {
     const badgeCount = await getOrdersCount({ userId })
     const userSubs = await this.getUserSubs(userId)
 
-    const promises = userSubs.map((sub) => {
-      return this.push({
-        sub,
-        type: 'badge',
-        data: badgeCount,
+    const promises = userSubs
+      .filter((sub) => sub.badgeEnabled)
+      .map((sub) => {
+        return this.push({
+          sub,
+          type: 'badge',
+          data: badgeCount,
+        })
       })
-    })
 
     return await Promise.all(promises)
   }
@@ -94,13 +96,15 @@ class WebPusher {
     const { userId, ...data } = props
     const userSubs = await this.getUserSubs(userId)
 
-    const promises = userSubs.map((sub) => {
-      return this.push({
-        sub,
-        type: 'notification',
-        data,
+    const promises = userSubs
+      .filter((sub) => sub.notificationEnabled)
+      .map((sub) => {
+        return this.push({
+          sub,
+          type: 'notification',
+          data,
+        })
       })
-    })
 
     return await Promise.all(promises)
   }
@@ -115,6 +119,8 @@ class WebPusher {
           sub.endpoint !== 'undefined',
       )
       .map((sub) => ({
+        notificationEnabled: sub.notificationEnabled,
+        badgeEnabled: sub.badgeEnabled,
         endpoint: sub.endpoint!,
         auth: sub.auth!,
         p256dh: sub.p256dh!,

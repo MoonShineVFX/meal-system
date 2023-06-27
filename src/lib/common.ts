@@ -61,6 +61,7 @@ export enum SERVER_NOTIFY {
   SUPPLIER_DELETE = '店家刪除',
   USER_SETTINGS_UPDATE = '用戶設定已更改',
   USER_TEST_PUSH_NOTIFICATION = '測試推送通知',
+  USER_TOKEN_UPDATE = '用戶裝置設定已更改',
 }
 
 export enum CurrencyType {

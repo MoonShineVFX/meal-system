@@ -7,57 +7,36 @@ import trpc, {
   onQueryMutationErrorCallbacks,
 } from '@/lib/client/trpc'
 import { SERVER_NOTIFY, settings } from '@/lib/common'
+import ServiceWorkerHandler from '@/lib/client/sw'
 
 export default function EventListener() {
   const trpcContext = trpc.useContext()
   const {
     addNotification,
-    webpushState,
-    setWebpushState,
-    serviceWorkerRegistration,
     posNotificationSound,
+    serviceWorkerHandler,
+    setServiceWorkerHandler,
   } = useStore((state) => ({
     addNotification: state.addNotification,
-    webpushState: state.webpushEnabled_local,
-    setWebpushState: state.setWebpushState,
-    serviceWorkerRegistration: state.serviceWorkerRegistration,
     posNotificationSound: state.posNotificationSound_local,
+    serviceWorkerHandler: state.serviceWorkerHandler,
+    setServiceWorkerHandler: state.setServiceWorkerHandler,
   }))
   const [hasDisconnected, setHasDisconnected] = useState(false)
   const userInfoQuery = trpc.user.get.useQuery(undefined)
-  const addUserSubscriptionMutation = trpc.user.addSubscription.useMutation()
+  const userSub = trpc.user.getToken.useQuery(undefined)
+  const addUserSubscriptionMutation = trpc.user.updateToken.useMutation()
   const deleteUserSubscriptionMutation =
     trpc.user.deleteSubscription.useMutation()
 
   /* Pusher Push Notifications Initialize */
   useEffect(() => {
-    if (!serviceWorkerRegistration) return
-    if ('pushManager' in serviceWorkerRegistration === false) return
-
-    serviceWorkerRegistration.pushManager
-      .getSubscription()
-      .then((subscription) => {
-        // Unsubscribe if user disable webpush or user is not login
-        if (!webpushState || userInfoQuery.isError) {
-          setWebpushState(false)
-          if (subscription) {
-            console.debug('Push Notifications Unsubscribed')
-            const endpoint = subscription.toJSON().endpoint
-            if (endpoint) deleteUserSubscriptionMutation.mutate({ endpoint })
-            subscription.unsubscribe()
-          }
-          return
-        }
-
-        if (!userInfoQuery.data) return
-
-        if (!subscription) {
-          serviceWorkerRegistration.pushManager
-            .subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: settings.WEBPUSH_PUBLIC_KEY,
-            })
-            .then((subscription) => {
+    if (!serviceWorkerHandler) {
+      setServiceWorkerHandler(
+        new ServiceWorkerHandler({
+          onSubscriptionChange: (subscription, state, endpoint) => {
+            if (state === 'subscribe') {
+              if (!subscription) return
               const subJson = subscription.toJSON()
               if (subJson.endpoint && subJson.keys) {
                 addUserSubscriptionMutation.mutate({
@@ -67,24 +46,34 @@ export default function EventListener() {
                 })
               }
               console.debug('Push Notifications Subscribed')
-            })
-            .catch((error) => {
-              addNotification({
-                type: NotificationType.ERROR,
-                message: error.message,
+            } else if (state === 'unsubscribe') {
+              if (!subscription && !endpoint) return
+              const thisEndpoint = endpoint || subscription?.endpoint
+              if (!thisEndpoint) return
+              deleteUserSubscriptionMutation.mutate({
+                endpoint: thisEndpoint,
               })
-              setWebpushState(false)
+            } else {
+              console.warn('Unknown Push Notifications State')
+            }
+          },
+          onError: (error) => {
+            addNotification({
+              type: NotificationType.ERROR,
+              message: error.message,
             })
-        } else {
-          console.debug('Push Notifications Already Subscribed')
-        }
-      })
-  }, [
-    userInfoQuery.data,
-    serviceWorkerRegistration,
-    webpushState,
-    userInfoQuery.isError,
-  ])
+          },
+        }),
+      )
+    } else {
+      if (userSub.isError) {
+        serviceWorkerHandler.setUser(null)
+      }
+      if (userSub.data) {
+        serviceWorkerHandler.setUser(userSub.data)
+      }
+    }
+  }, [userSub.data, serviceWorkerHandler, userSub.isError])
 
   /* Socket management */
   useEffect(() => {
@@ -181,6 +170,8 @@ export default function EventListener() {
           break
         case SERVER_NOTIFY.DEPOSIT_RECHARGE:
           trpcContext.user.get.invalidate()
+        case SERVER_NOTIFY.USER_TOKEN_UPDATE:
+          trpcContext.user.getToken.invalidate()
           break
 
         // Staff & Admin

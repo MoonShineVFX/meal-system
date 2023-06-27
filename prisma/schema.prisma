@@ -24,11 +24,13 @@ model UserToken {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
-  lastUsedAt DateTime?
+  lastUsedAt          DateTime?
   // web push notification
-  endpoint   String?   @unique
-  p256dh     String?   @unique
-  auth       String?   @unique
+  notificationEnabled Boolean   @default(true)
+  badgeEnabled        Boolean   @default(true)
+  endpoint            String?   @unique
+  p256dh              String?   @unique
+  auth                String?   @unique
 
   user   User   @relation(fields: [userId], references: [id])
   userId String
