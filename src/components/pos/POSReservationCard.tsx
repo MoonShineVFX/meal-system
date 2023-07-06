@@ -74,8 +74,6 @@ export default function POSReservationCard(props: {
     [com],
   )
 
-  console.log('>', com?.optionsWithOrders)
-
   return (
     <POSCard
       order={
