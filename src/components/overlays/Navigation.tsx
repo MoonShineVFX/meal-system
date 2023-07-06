@@ -27,7 +27,6 @@ import {
   WalletIcon as WalletIconSolid,
   ShoppingCartIcon as ShoppingCartIconSolid,
   SquaresPlusIcon as SquaresPlusIconSolid,
-  ArrowRightOnRectangleIcon as ArrowRightOnRectangleIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
   WrenchScrewdriverIcon as WrenchScrewdriverIconSolid,
 } from '@heroicons/react/24/solid'
@@ -45,6 +44,7 @@ import { DropdownMenu, DropdownMenuItem } from '../core/DropdownMenu'
 
 function Navigation() {
   const { data } = trpc.user.get.useQuery(undefined)
+  const logoutMutation = trpc.user.logout.useMutation()
 
   return (
     <div className='relative z-40 flex h-full items-center justify-evenly bg-white pb-[env(safe-area-inset-bottom)] shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
@@ -149,19 +149,29 @@ function Navigation() {
           />
         </DropdownMenu>
       </div>
-      <NavButton
-        className='mt-auto hidden sm:block'
-        label='登出'
-        path='/login'
-        icons={[ArrowRightOnRectangleIcon, ArrowRightOnRectangleIconSolid]}
-        onClick={() => {
-          document.cookie = generateCookie(undefined)
-        }}
-      />
-
+      {/* 登出 */}
+      <div
+        className='mt-auto hidden w-full cursor-pointer items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 hover:bg-stone-200 active:scale-95 sm:flex'
+        onClick={() => handleLogout(logoutMutation)}
+      >
+        <ArrowRightOnRectangleIcon className='h-5 w-5' />
+        <span className='ml-4'>登出</span>
+      </div>
       <ProfileButton className='sm:-order-1' />
     </div>
   )
+}
+
+function handleLogout(
+  logoutMutation: ReturnType<typeof trpc.user.logout.useMutation>,
+) {
+  logoutMutation.mutate(undefined, {
+    onSuccess: () => {
+      const cookie = generateCookie(undefined)
+      document.cookie = cookie
+      window.location.reload()
+    },
+  })
 }
 
 function ProfileButton(props: { className?: string }) {
@@ -175,12 +185,7 @@ function ProfileButton(props: { className?: string }) {
     type: 'LIVE',
   })
   const menuUpdateMutation = trpc.menu.createOrEdit.useMutation()
-
-  const handleLogout = () => {
-    const cookie = generateCookie(undefined)
-    document.cookie = cookie
-    window.location.href = '/login'
-  }
+  const logoutMutation = trpc.user.logout.useMutation()
 
   if (isLoading || menuQuery.isLoading) return <Spinner className='h-8 w-8' />
   if (isError || menuQuery.isError)
@@ -292,7 +297,7 @@ function ProfileButton(props: { className?: string }) {
               </Link>
               <div
                 className='w-full cursor-pointer py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'
-                onClick={handleLogout}
+                onClick={() => handleLogout(logoutMutation)}
               >
                 登出
               </div>
@@ -447,7 +452,7 @@ function CartNumberBadge() {
 }
 
 function OrderNumberBadge() {
-  const { data, isLoading, isError } = trpc.order.getCount.useQuery()
+  const { data, isLoading, isError } = trpc.order.getBadgeCount.useQuery()
   return <NumberBadge number={data} isLoading={isLoading} isError={isError} />
 }
 

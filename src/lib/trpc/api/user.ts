@@ -2,12 +2,16 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { observable } from '@trpc/server/observable'
 
+import webPusher from '@/lib/server/webpush'
 import {
   createUserToken,
   ensureUser,
   getUserInfo,
   validateUserPassword,
-  updateUserSettings,
+  updateUserToken,
+  deleteSubscription,
+  deleteUserToken,
+  getUserToken,
 } from '@/lib/server/database'
 import {
   settings,
@@ -151,17 +155,82 @@ export const UserRouter = router({
 
       return { token }
     }),
-  updateSettings: userProcedure
+  logout: userProcedure.mutation(async ({ ctx }) => {
+    await deleteUserToken(ctx.userLite.token)
+  }),
+  getToken: userProcedure.query(async ({ ctx }) => {
+    return await getUserToken(ctx.userLite.token)
+  }),
+  // updateSettings: userProcedure
+  //   .input(
+  //     z.object({
+  //       qrcodeAutoCheckout: z.boolean().optional(),
+  //       notificationSound: z.boolean().optional(),
+  //     }),
+  //   )
+  //   .mutation(async ({ input, ctx }) => {
+  //     await updateUserSettings({ userId: ctx.userLite.id, ...input })
+  //     eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+  //       type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
+  //     })
+  //   }),
+  updateToken: userProcedure
     .input(
       z.object({
-        qrcodeAutoCheckout: z.boolean().optional(),
-        notificationSound: z.boolean().optional(),
+        notificationEnabled: z.boolean().optional(),
+        badgeEnabled: z.boolean().optional(),
+        auth: z.string().optional(),
+        endpoint: z.string().optional(),
+        p256dh: z.string().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      await updateUserSettings({ userId: ctx.userLite.id, ...input })
+      await updateUserToken({
+        userToken: ctx.userLite.token,
+        ...input,
+      })
+
       eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-        type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
+        type: SERVER_NOTIFY.USER_TOKEN_UPDATE,
+        skipNotify: true,
+      })
+
+      // update app badge
+      if (input.badgeEnabled || input.endpoint) {
+        webPusher.pushBadgeCountToUser({
+          userId: ctx.userLite.id,
+        })
+      }
+    }),
+  deleteSubscription: publicProcedure
+    .input(
+      z.object({
+        endpoint: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await deleteSubscription({
+        endpoint: input.endpoint,
       })
     }),
+  getBadgeCount: userProcedure.mutation(async ({ ctx }) => {
+    await webPusher.pushBadgeCountToUser({
+      userId: ctx.userLite.id,
+    })
+  }),
+  testPushNotification: userProcedure.mutation(async ({ ctx }) => {
+    const result = await webPusher.pushNotificationToUser({
+      userId: ctx.userLite.id,
+      title: '測試推送通知',
+      message: '有看到就表示通知功能正常',
+      tag: 'test',
+      url: `${settings.WEBSITE_URL}/deposit`,
+    })
+
+    const count = result.filter((r) => r.success)
+    eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+      type: SERVER_NOTIFY.USER_TEST_PUSH_NOTIFICATION,
+      message: `送出 ${count.length} 個推送通知，成功 ${count.length} 個`,
+    })
+  }),
 })

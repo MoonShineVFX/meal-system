@@ -68,7 +68,10 @@ export default function Cart() {
         cartItemsByMenu.set(cartItem.menuId, {
           ...menu,
           cartItems: [cartItem],
-          maxQuantity: menu.limitPerUser - cartItem.quantity,
+          maxQuantity:
+            menu.limitPerUser === 0
+              ? Infinity
+              : menu.limitPerUser - cartItem.quantity,
         })
       } else {
         cartItemsByMenu.get(cartItem.menuId)!.cartItems.push(cartItem)

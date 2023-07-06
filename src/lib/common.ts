@@ -60,6 +60,8 @@ export enum SERVER_NOTIFY {
   SUPPLIER_UPDATE = '店家更新',
   SUPPLIER_DELETE = '店家刪除',
   USER_SETTINGS_UPDATE = '用戶設定已更改',
+  USER_TEST_PUSH_NOTIFICATION = '測試推送通知',
+  USER_TOKEN_UPDATE = '用戶裝置設定已更改',
 }
 
 export enum CurrencyType {
@@ -144,6 +146,8 @@ export const settings = {
         new Date(dateString + 'T00:00:00+08:00').getTime(),
       )
     : [],
+  WEBPUSH_PUBLIC_KEY: process.env.NEXT_PUBLIC_WEBPUSH_PUBLIC_KEY!,
+  WEBPUSH_PRIVATE_KEY: process.env.WEBPUSH_PRIVATE_KEY!,
 
   /* NewebPay */
   NEWEBPAY_API_URL: process.env.NEWEBPAY_API_URL!,
@@ -157,6 +161,7 @@ export const settings = {
   WEBSOCKET_DEV_PORT: process.env.NEXT_PUBLIC_WEBSOCKET_DEV_PORT ?? '3001',
   WEBSOCKET_PROD_HOST: process.env.NEXT_PUBLIC_WEBSOCKET_PROD_HOST,
   HTTP_PORT: process.env.PORT ?? '3000',
+  WEBSITE_URL: process.env.WEBSITE_URL!,
 
   /* Log */
   LOG_BLOCKCHAIN: process.env.LOG_BLOCKCHAIN === 'true',
@@ -165,6 +170,7 @@ export const settings = {
   /* Resource */
   RESOURCE_URL: process.env.NEXT_PUBLIC_RESOURCE_URL ?? '',
   // prefix with image
+  RESOURCE_BADGE: 'asset/badge.png',
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
   RESOURCE_PROFILE_PLACEHOLDER: 'asset/profile-placeholder.png',
   RESOURCE_LOGIN_COVER: 'asset/login-cover.jpg',

@@ -89,6 +89,7 @@ export async function createUserToken(userId: string) {
   const userToken = await prisma.userToken.create({
     data: {
       userId: userId,
+      lastUsedAt: new Date(),
     },
     include: {
       user: {
@@ -98,7 +99,7 @@ export async function createUserToken(userId: string) {
           role: true,
           tokens: {
             orderBy: {
-              createdAt: 'asc',
+              lastUsedAt: 'asc',
             },
           },
         },
@@ -144,7 +145,12 @@ export async function getUserLite({ token }: { token: string }) {
   })
   if (!userToken) return null
 
-  return userToken.user
+  prisma.userToken.update({
+    where: { id: token },
+    data: { lastUsedAt: new Date() },
+  })
+
+  return { ...userToken.user, token: userToken.id }
 }
 
 export async function getUserInfo(userId: string) {
@@ -266,4 +272,85 @@ export async function updateUserSettings(
     },
     data,
   })
+}
+
+export async function updateUserToken(props: {
+  userToken: string
+  notificationEnabled?: boolean
+  badgeEnabled?: boolean
+  endpoint?: string
+  p256dh?: string
+  auth?: string
+}) {
+  const {
+    userToken,
+    endpoint,
+    p256dh,
+    auth,
+    notificationEnabled,
+    badgeEnabled,
+  } = props
+  const userSub = await prisma.userToken.update({
+    where: {
+      id: userToken,
+    },
+    data: {
+      notificationEnabled,
+      badgeEnabled,
+      endpoint,
+      p256dh,
+      auth,
+    },
+  })
+
+  return userSub
+}
+
+export async function deleteSubscription(props: { endpoint: string }) {
+  const userToken = await prisma.userToken.findUnique({
+    where: {
+      endpoint: props.endpoint,
+    },
+  })
+
+  if (!userToken) return
+
+  await prisma.userToken.update({
+    where: {
+      id: userToken.id,
+    },
+    data: {
+      endpoint: null,
+      p256dh: null,
+      auth: null,
+    },
+  })
+}
+
+export async function getUserTokens(userId: string) {
+  const userSubs = await prisma.userToken.findMany({
+    where: {
+      userId,
+    },
+  })
+
+  return userSubs
+}
+
+export async function deleteUserToken(token: string) {
+  await prisma.userToken.delete({
+    where: {
+      id: token,
+    },
+  })
+}
+
+export async function getUserToken(token: string) {
+  const userSub = await prisma.userToken.findUnique({
+    where: {
+      id: token,
+    },
+  })
+
+  return userSub
 }

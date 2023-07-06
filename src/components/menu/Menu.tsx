@@ -25,8 +25,6 @@ import Title from '@/components/core/Title'
 
 const categoriesPlaceholder: string[] = Array(5).fill('主分類')
 const CATEGORY_SCROLL_TOP_TRIGGER = 64
-const UNAVAILABLE_CONFIRM_NAME = (menuId: number) =>
-  `menuconfirm-unavailable-${menuId}`
 
 export default function Menu(props: {
   type?: MenuType
@@ -49,9 +47,19 @@ export default function Menu(props: {
   const [comsByCategory, setComsByCategory] =
     useState<CommoditiesOnMenuByCategory>(new Map())
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const setCurrentMenu = useStore((state) => state.setCurrentMenu)
-  const currentCategory = useStore((state) => state.currentCategory)
-  const setCurrentCategory = useStore((state) => state.setCurrentCategory)
+  const {
+    setCurrentMenu,
+    currentCategory,
+    setCurrentCategory,
+    unavailableConfirms,
+    addUnavailableConfirm,
+  } = useStore((state) => ({
+    setCurrentMenu: state.setCurrentMenu,
+    currentCategory: state.currentCategory,
+    setCurrentCategory: state.setCurrentCategory,
+    unavailableConfirms: state.unavailableConfirms_session,
+    addUnavailableConfirm: state.addUnavailableConfirm,
+  }))
   const gridRef = useRef<HTMLDivElement>(null)
   const [unavailableNotify, setUnavailableNotify] = useState(false)
 
@@ -186,10 +194,11 @@ export default function Menu(props: {
     setCurrentCategory([...result.keys()][0])
 
     // if session storage not have confirmed, show notify
-    if (!sessionStorage.getItem(UNAVAILABLE_CONFIRM_NAME(data.id))) {
+    const idKey = data.id.toString()
+    if (!(idKey in unavailableConfirms) || !unavailableConfirms[idKey]) {
       setUnavailableNotify(data.unavailableReasons.length > 0)
     }
-  }, [data])
+  }, [data, unavailableConfirms])
 
   const handleDialogClose = useCallback(() => {
     const rootPath = router.asPath.split('/').slice(0, -1).join('/')
@@ -298,10 +307,9 @@ export default function Menu(props: {
         <Dialog
           open={unavailableNotify}
           onClose={() => {
-            sessionStorage.setItem(
-              UNAVAILABLE_CONFIRM_NAME(data?.id ?? 0),
-              'true',
-            )
+            if (data) {
+              addUnavailableConfirm(data.id.toString())
+            }
             setUnavailableNotify(false)
           }}
           title='目前無法訂購餐點'

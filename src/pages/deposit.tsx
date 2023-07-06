@@ -28,7 +28,10 @@ export default function DepositPage() {
   const depositCreateMutation = trpc.deposit.create.useMutation()
   const depositDeleteMutation = trpc.deposit.delete.useMutation()
   const { dialog, showDialog } = useDialog()
-  const routeHistory = useStore((state) => state.history)
+  const { routeHistory, setDepositRedirect } = useStore((state) => ({
+    routeHistory: state.history,
+    setDepositRedirect: state.setDepositRedirect,
+  }))
 
   useEffect(() => {
     if (inputRef.current) inputRef.current.focus()
@@ -62,13 +65,10 @@ export default function DepositPage() {
           // save redirect metadata
           const url = routeHistory[routeHistory.length - 2]
           if (url) {
-            localStorage.setItem(
-              'deposit-redirect',
-              JSON.stringify({
-                id: data.depositId,
-                url: url,
-              }),
-            )
+            setDepositRedirect({
+              id: data.depositId,
+              url: url,
+            })
           }
 
           showDialog({
@@ -119,7 +119,7 @@ export default function DepositPage() {
             as: 'form',
             cancel: true,
             onCancel: () => {
-              localStorage.removeItem('deposit-redirect')
+              setDepositRedirect(null)
               depositDeleteMutation.mutate({ id: data.depositId })
               depositCreateMutation.reset()
             },

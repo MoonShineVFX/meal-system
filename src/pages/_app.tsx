@@ -2,7 +2,6 @@ import type { AppType } from 'next/app'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { twMerge } from 'tailwind-merge'
-import { useEffect } from 'react'
 
 import trpc from '@/lib/client/trpc'
 import EventListener from '@/components/overlays/EventListener'
@@ -20,13 +19,6 @@ const PageApp: AppType = ({ Component, pageProps }) => {
   const isComponentFullscreen = FULLSCREEN_COMPONENT_PATHS.includes(
     router.pathname,
   )
-
-  // Register service worker
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/pwa-sw.js')
-    }
-  }, [])
 
   return (
     <>

@@ -7,8 +7,9 @@ import {
   updateOrderStatus,
   updateOrdersStatus,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY, OrderStatus } from '@/lib/common'
+import { SERVER_NOTIFY, OrderStatus, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import webPusher from '@/lib/server/webpush'
 
 function generateOrderNotifyMessage(orderId: number, status: OrderStatus) {
   switch (status) {
@@ -65,9 +66,36 @@ export const POSRouter = router({
         message: generateOrderNotifyMessage(order.id, input.status),
         link: `/order/id/${order.id}`,
       })
+
+      const orderImage = order.items.reduce(
+        (prev: string | undefined, curr) => {
+          if (prev) return prev
+          return curr.image?.path
+        },
+        undefined,
+      )
+
+      if (input.status !== 'timeCompleted') {
+        webPusher.pushNotificationToUser({
+          userId: order.userId,
+          title: '訂單更新',
+          message: generateOrderNotifyMessage(order.id, input.status),
+          icon: `${settings.RESOURCE_URL}/image/${
+            orderImage ?? settings.RESOURCE_FOOD_PLACEHOLDER
+          }?width=64&quality=75`,
+          tag: `order-${order.id}`,
+          url: `${settings.WEBSITE_URL}/order/id/${order.id}`,
+          ignoreIfFocused: true,
+        })
+      }
+
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: SERVER_NOTIFY.POS_UPDATE,
         skipNotify: true,
+      })
+
+      webPusher.pushBadgeCountToUser({
+        userId: order.userId,
       })
     }),
   updateReservation: staffProcedure
@@ -93,6 +121,10 @@ export const POSRouter = router({
               : SERVER_NOTIFY.ORDER_CANCEL,
           message: generateOrderNotifyMessage(order.id, input.status),
           link: `/order/id/${order.id}`,
+        })
+
+        webPusher.pushBadgeCountToUser({
+          userId: order.userId,
         })
       }
 

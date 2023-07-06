@@ -142,7 +142,7 @@ export async function handleTradeNotify(notify: {
 
   const tradeInfo = JSON.parse(decryptAES(notify.TradeInfo))
 
-  await updateDeposit({
+  return await updateDeposit({
     status:
       tradeInfo['Status'] === 'SUCCESS'
         ? DepositStatus.SUCCESS

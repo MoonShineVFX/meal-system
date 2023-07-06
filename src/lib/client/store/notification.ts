@@ -15,6 +15,7 @@ export type NotificationPayload = {
   id: number
   removeTimeout: NodeJS.Timeout
   link?: string
+  tag?: string
 }
 
 export interface NotificationSlice {
@@ -44,7 +45,12 @@ export const createNotificationSlice: StateCreator<
       return {
         notifications: [
           { ...payload, id, removeTimeout: timeOut },
-          ...state.notifications,
+          ...state.notifications.filter((n) => {
+            if (n.tag && payload.tag) {
+              return n.tag !== payload.tag
+            }
+            return true
+          }),
         ],
         notificationIdCounter: state.notificationIdCounter + 1,
       }

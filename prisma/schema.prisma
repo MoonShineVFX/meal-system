@@ -24,6 +24,14 @@ model UserToken {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
+  lastUsedAt          DateTime?
+  // web push notification
+  notificationEnabled Boolean   @default(true)
+  badgeEnabled        Boolean   @default(true)
+  endpoint            String?   @unique
+  p256dh              String?   @unique
+  auth                String?   @unique
+
   user   User   @relation(fields: [userId], references: [id])
   userId String
 }
@@ -35,10 +43,8 @@ model UserSettings {
   userId String @id
   user   User   @relation(fields: [userId], references: [id])
 
-  // user
-  qrcodeAutoCheckout Boolean @default(false)
-  // staff
-  notificationSound  Boolean @default(true)
+  // qrcodeAutoCheckout Boolean @default(false)
+  // notificationSound  Boolean @default(true)
 }
 
 model User {
