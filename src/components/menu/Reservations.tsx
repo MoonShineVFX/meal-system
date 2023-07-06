@@ -205,15 +205,16 @@ export default function Reservations(props: { activeMenuId?: number }) {
                         {/* Date close */}
                         <p className='w-fit whitespace-nowrap rounded-xl text-xs tracking-wider text-stone-400 group-data-loading:skeleton'>
                           {menu?.name && menu.name + ' ‧ '}
-                          {(menu
-                            ?.closedDate!.toLocaleString('zh-TW', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: 'numeric',
-                            })
-                            .replace('午', '午 ') ?? '1月1日 下午 6:00') +
-                            ' 截止'}
+                          {((menu?.closedDate &&
+                            menu.closedDate
+                              .toLocaleString('zh-TW', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: 'numeric',
+                              })
+                              .replace('午', '午 ')) ??
+                            '1月1日 下午 6:00') + ' 截止'}
                         </p>
                       </div>
                       {/*  */}
