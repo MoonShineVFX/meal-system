@@ -90,6 +90,7 @@ export default function MenuTypeDateField<T extends FieldValues>(
       })
       return
     }
+    props.useFormReturns.clearErrors(props.formInput.name)
     props.useFormReturns.setValue(
       props.formInput.name,
       {

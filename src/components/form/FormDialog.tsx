@@ -53,7 +53,6 @@ export default function FormDialog<
     handleSubmit,
     reset,
     formState: { errors, isDirty },
-    watch,
   } = useFormReturns
   const [columns, setColumns] = useState(1)
   const mutation = props.useMutation
@@ -135,8 +134,6 @@ export default function FormDialog<
       props.onClose?.()
     }
   }, [isDirty, props.closeConfirm, props.onClose])
-
-  console.log(watch())
 
   return (
     <Transition show={props.open} as={Fragment} appear={true}>
