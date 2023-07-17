@@ -290,6 +290,11 @@ export async function updateUserToken(props: {
     notificationEnabled,
     badgeEnabled,
   } = props
+
+  if (endpoint) {
+    await deleteSubscription({ endpoint: endpoint })
+  }
+
   const userSub = await prisma.userToken.update({
     where: {
       id: userToken,
