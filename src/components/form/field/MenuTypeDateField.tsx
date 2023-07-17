@@ -72,6 +72,7 @@ export default function MenuTypeDateField<T extends FieldValues>(
   // set rfh value
   useEffect(() => {
     if (!value.type) return
+    console.log('[check value]', value)
     const isReservation = value.type && !['LIVE', 'RETAIL'].includes(value.type)
     if (
       isReservation &&
@@ -88,8 +89,10 @@ export default function MenuTypeDateField<T extends FieldValues>(
         type: 'custom',
         message: '請提供下列日期',
       })
+      console.log('<< set value invalid >>')
       return
     }
+    console.log('<< set value pass >>')
     props.useFormReturns.setValue(
       props.formInput.name,
       {
@@ -100,12 +103,7 @@ export default function MenuTypeDateField<T extends FieldValues>(
       } as Parameters<typeof props.useFormReturns.setValue>[1],
       { shouldDirty: true, shouldValidate: true },
     )
-  }, [
-    value,
-    reservationDateRef.current,
-    publishedDateRef.current,
-    closedDateRef.current,
-  ])
+  }, [value])
 
   // handle date change
   const handleDateChange = useCallback(
@@ -137,6 +135,8 @@ export default function MenuTypeDateField<T extends FieldValues>(
   )
 
   const isReservation = value.type && !['LIVE', 'RETAIL'].includes(value.type)
+
+  console.log('[update] value', value)
 
   return (
     <div className='flex flex-col gap-4'>
