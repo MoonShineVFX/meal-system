@@ -29,6 +29,7 @@ export default function NumberField<T extends FieldValues>(
       }
       {...props.formInput.attributes}
       {...props.useFormReturns.register(props.formInput.name, {
+        // @ts-ignore
         valueAsNumber: true,
         ...props.formInput.options,
       })}
