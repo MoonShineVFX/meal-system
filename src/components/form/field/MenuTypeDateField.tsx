@@ -100,7 +100,12 @@ export default function MenuTypeDateField<T extends FieldValues>(
       } as Parameters<typeof props.useFormReturns.setValue>[1],
       { shouldDirty: true, shouldValidate: true },
     )
-  }, [value])
+  }, [
+    value,
+    reservationDateRef.current,
+    publishedDateRef.current,
+    closedDateRef.current,
+  ])
 
   // handle date change
   const handleDateChange = useCallback(
