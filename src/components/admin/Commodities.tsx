@@ -28,6 +28,7 @@ export default function Commodities() {
   const { data, error, isError, isLoading } = trpc.commodity.getList.useQuery({
     includeMenus: true,
     onlyFromSupplierId: supplierId,
+    includeStatistics: true,
   })
   const supplierQuery = trpc.supplier.getList.useQuery({})
   const [selectedIds, setSelectedIds] = useState<number[]>([])
@@ -631,6 +632,53 @@ export default function Commodities() {
                 cellClassName: 'text-sm',
                 hint: (row) => row.updatedAt.toLocaleString(),
                 sort: (a, b) => a.updatedAt.getTime() - b.updatedAt.getTime(),
+                hideByDefault: true,
+              },
+              {
+                name: '當日銷量',
+                render: (row) => (
+                  <p>
+                    {row.statistics.day?._sum.quantity ?? 0}
+                    <span className='pl-2 text-xs text-yellow-400'>
+                      ${row.statistics.day?._sum.price ?? 0}
+                    </span>
+                  </p>
+                ),
+                cellClassName: 'text-sm',
+                sort: (a, b) =>
+                  (a.statistics.day?._sum.quantity ?? 0) -
+                  (b.statistics.day?._sum.quantity ?? 0),
+              },
+              {
+                name: '當週銷量',
+                render: (row) => (
+                  <p>
+                    {row.statistics.week?._sum.quantity ?? 0}
+                    <span className='pl-2 text-xs text-yellow-400'>
+                      ${row.statistics.week?._sum.price ?? 0}
+                    </span>
+                  </p>
+                ),
+                cellClassName: 'text-sm',
+                sort: (a, b) =>
+                  (a.statistics.week?._sum.quantity ?? 0) -
+                  (b.statistics.week?._sum.quantity ?? 0),
+                hideByDefault: true,
+              },
+              {
+                name: '當月銷量',
+                render: (row) => (
+                  <p>
+                    {row.statistics.month?._sum.quantity ?? 0}
+                    <span className='pl-2 text-xs text-yellow-400'>
+                      ${row.statistics.month?._sum.price ?? 0}
+                    </span>
+                  </p>
+                ),
+                cellClassName: 'text-sm',
+                sort: (a, b) =>
+                  (a.statistics.month?._sum.quantity ?? 0) -
+                  (b.statistics.month?._sum.quantity ?? 0),
                 hideByDefault: true,
               },
             ]}

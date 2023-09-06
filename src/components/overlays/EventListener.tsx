@@ -178,6 +178,7 @@ export default function EventListener() {
         case SERVER_NOTIFY.POS_ADD:
           trpcContext.pos.getLive.invalidate()
           trpcContext.pos.getReservation.invalidate()
+          trpcContext.commodity.getList.invalidate()
           // Check if order is live, 這判斷有點勉強，之後可能需要改
           if (
             notifyPayload.link &&

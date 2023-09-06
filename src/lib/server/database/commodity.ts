@@ -104,11 +104,53 @@ export async function editCommodity({
 }
 
 /* Get Commodities */
-export async function getCommodities(props: {
-  includeMenus?: boolean
+const getCommoditiesArgs = Prisma.validator<Prisma.CommodityArgs>()({
+  include: {
+    categories: true,
+    image: true,
+    supplier: {
+      select: {
+        name: true,
+      },
+    },
+    onMenus: {
+      select: {
+        limitPerUser: true,
+        stock: true,
+        menu: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            date: true,
+          },
+        },
+      },
+    },
+  },
+})
+type CommodityStatistics = Awaited<
+  ReturnType<typeof getCommoditiesStatistics>
+>[number]
+type GetCommoditiesFull = Prisma.CommodityGetPayload<
+  typeof getCommoditiesArgs
+> & {
+  statistics: {
+    day?: CommodityStatistics
+    week?: CommodityStatistics
+    month?: CommodityStatistics
+  }
+}
+
+export async function getCommodities<
+  FMenu extends boolean,
+  FStatistics extends boolean,
+>(props: {
+  includeMenus?: FMenu
   includeIds?: number[]
   onlyFromSupplierId?: number
-}) {
+  includeStatistics?: FStatistics
+}): Promise<ConvertPrismaJson<GetCommoditiesFull[]>> {
   const commodities = await prisma.commodity.findMany({
     where: {
       OR: [
@@ -160,7 +202,39 @@ export async function getCommodities(props: {
     },
   })
 
-  return commodities as ConvertPrismaJson<typeof commodities>
+  if (props.includeStatistics) {
+    const ids = commodities.map((com) => com.id)
+    const dayStatistics = await getCommoditiesStatistics({
+      ids,
+      time: 'day',
+    })
+    const weekStatistics = await getCommoditiesStatistics({
+      ids,
+      time: 'week',
+    })
+    const monthStatistics = await getCommoditiesStatistics({
+      ids,
+      time: 'month',
+    })
+    console.log(dayStatistics, weekStatistics, monthStatistics)
+    const commoditiesWithStatistics = commodities.map((com) => {
+      const statistics = {
+        day: dayStatistics.find((stat) => stat.commodityId === com.id),
+        week: weekStatistics.find((stat) => stat.commodityId === com.id),
+        month: monthStatistics.find((stat) => stat.commodityId === com.id),
+      }
+      return {
+        ...com,
+        statistics,
+      }
+    })
+
+    return commoditiesWithStatistics as ConvertPrismaJson<
+      typeof commoditiesWithStatistics
+    >
+  }
+
+  return commodities as ConvertPrismaJson<GetCommoditiesFull[]>
 }
 
 /* Delete Commodities */
@@ -187,4 +261,46 @@ export async function deleteCommodities(props: { ids: number[] }) {
       },
     }),
   ])
+}
+
+export async function getCommoditiesStatistics(props: {
+  ids: number[]
+  time: 'day' | 'week' | 'month'
+}) {
+  const now = new Date()
+  let dateRange: { gte: Date; lt: Date }
+  switch (props.time) {
+    case 'day':
+      dateRange = {
+        gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+      }
+    case 'week':
+      dateRange = {
+        gte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7),
+        lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+      }
+    case 'month':
+      dateRange = {
+        gte: new Date(now.getFullYear(), now.getMonth(), 1),
+        lt: new Date(now.getFullYear(), now.getMonth() + 1, 1),
+      }
+  }
+
+  return await prisma.orderItem.groupBy({
+    by: ['commodityId'],
+    where: {
+      commodityId: {
+        in: props.ids,
+      },
+      order: {
+        timeCanceled: null,
+      },
+      createdAt: dateRange,
+    },
+    _sum: {
+      quantity: true,
+      price: true,
+    },
+  })
 }
