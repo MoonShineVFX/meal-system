@@ -982,3 +982,32 @@ export async function updateOrdersStatus({
   }
   return orders
 }
+
+export async function completeDishedUpOrders() {
+  return await prisma.$transaction(async (client) => {
+    const thisOrders = await client.order.findMany({
+      where: {
+        timeCompleted: null,
+        timeCanceled: null,
+        timeDishedUp: {
+          // 2 hours ago
+          lt: new Date(new Date().getTime() - 1000 * 60 * 60 * 2),
+        },
+      },
+    })
+
+    const orderIds = thisOrders.map((order) => order.id)
+    await client.order.updateMany({
+      where: {
+        id: {
+          in: orderIds,
+        },
+      },
+      data: {
+        timeCompleted: new Date(),
+      },
+    })
+
+    return thisOrders
+  })
+}

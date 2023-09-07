@@ -6,6 +6,7 @@ import {
   getReservationOrdersForPOS,
   updateOrderStatus,
   updateOrdersStatus,
+  completeDishedUpOrders,
 } from '@/lib/server/database'
 import { SERVER_NOTIFY, OrderStatus, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
@@ -43,6 +44,26 @@ export const POSRouter = router({
     .query(async ({ input }) => {
       return await getReservationOrdersForPOS(input)
     }),
+  completeDishedUps: staffProcedure.mutation(async () => {
+    const orders = await completeDishedUpOrders()
+    console.log('order completed', orders.length)
+
+    eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+      type: SERVER_NOTIFY.POS_UPDATE,
+      skipNotify: true,
+    })
+
+    for (const order of orders) {
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
+        type: SERVER_NOTIFY.ORDER_UPDATE,
+        message: generateOrderNotifyMessage(order.id, 'timeCompleted'),
+        link: `/order/id/${order.id}`,
+      })
+      webPusher.pushBadgeCountToUser({
+        userId: order.userId,
+      })
+    }
+  }),
   update: staffProcedure
     .input(
       z.object({
