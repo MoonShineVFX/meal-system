@@ -5,6 +5,8 @@ import Title from '@/components/core/Title'
 import Tab from '@/components/core/Tab'
 import POSLiveList from '@/components/pos/POSLiveList'
 import POSReservationList from '@/components/pos/POSReservationList'
+import Button from '@/components/core/Button'
+import trpc from '@/lib/client/trpc'
 
 const posArgsSchema = z.array(z.string()).length(1).optional()
 
@@ -59,6 +61,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 export default function POSPage(props: { tabName: TabName }) {
   const currentTabName = props.tabName
+  const completeDishedUpsMutation = trpc.pos.completeDishedUps.useMutation()
 
   return (
     <>
@@ -77,6 +80,19 @@ export default function POSPage(props: { tabName: TabName }) {
             <POSLiveList tabName={currentTabName} />
           ) : (
             <POSReservationList tabName={currentTabName} />
+          )}
+          {currentTabName === '已出餐' && (
+            <div className='absolute right-0 bottom-0 p-8'>
+              <Button
+                label='完成 2 小時前餐點'
+                className='p-3'
+                textClassName='font-bold'
+                theme='secondary'
+                onClick={() => completeDishedUpsMutation.mutate()}
+                isBusy={completeDishedUpsMutation.isLoading}
+                isLoading={completeDishedUpsMutation.isLoading}
+              />
+            </div>
           )}
         </div>
       </div>
