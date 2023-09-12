@@ -433,9 +433,9 @@ function NumberBadge(props: {
   return (
     <motion.div
       animate={controls}
-      className='flex h-4 w-4 justify-center rounded-full bg-yellow-500 -indent-[0.05em] font-mono text-xs tracking-tighter text-yellow-900 group-data-selected:bg-stone-300 group-data-selected:text-stone-600 sm:h-5 sm:w-5 sm:rounded-md sm:text-sm'
+      className='flex h-4 justify-center rounded-full bg-yellow-500 -indent-[0.05em] font-mono text-xs tracking-tighter text-yellow-900 group-data-selected:bg-stone-300 group-data-selected:text-stone-600 sm:h-5 sm:rounded-md sm:text-sm'
     >
-      {number}
+      <span className='px-1'>{number}</span>
     </motion.div>
   )
 }
