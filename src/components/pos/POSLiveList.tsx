@@ -1,4 +1,3 @@
-import { AnimatePresence } from 'framer-motion'
 import { useMemo } from 'react'
 import { ArchiveBoxIcon } from '@heroicons/react/24/outline'
 
@@ -69,7 +68,7 @@ export default function POSLiveList(props: {
               ))}
             </>
           ) : props.tabName !== '已完成' ? (
-            <AnimatePresence key={props.tabName} initial={false}>
+            <>
               {filteredOrders.map((order) => (
                 <POSLiveCard key={order.id} order={order} />
               ))}
@@ -77,7 +76,7 @@ export default function POSLiveList(props: {
                 [...Array(fillerCount).keys()].map((index) => (
                   <div key={`filler-${index}`} />
                 ))}
-            </AnimatePresence>
+            </>
           ) : (
             // Optimize performance for archived orders
             <>
