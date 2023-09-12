@@ -62,7 +62,7 @@ export default function COMCard(props: {
               <span className='skeleton rounded-xl'>分類</span>
             )}
           </p>
-          <h2 className='text indent-[0.1em] font-bold tracking-widest'>
+          <h2 className='text text-center indent-[0.1em] font-bold tracking-widest'>
             {com ? (
               com?.commodity.name
             ) : (
