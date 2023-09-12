@@ -189,7 +189,7 @@ export default function COMField<T extends FieldValues>(
             }`,
           })),
         )
-        .reduce((p, c) => p.filter((e) => c.some((ce) => ce.key === e.key)))
+        .reduce((p, c) => p.filter((e) => c.some((ce) => ce.key === e.key)), [])
 
       const inputs = {
         price: {
