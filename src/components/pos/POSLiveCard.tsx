@@ -20,10 +20,22 @@ export default function POSLiveCard(props: {
     [order],
   )
 
+  // split order id to 3 digits
+  const orderId = order?.id.toString().slice(-3) ?? 123
+  let prefixOrderId = ''
+  if (order?.id.toString().length ?? 0 > 3) {
+    prefixOrderId = order?.id.toString().slice(0, -3).toString() ?? ''
+  }
+
   return (
     <POSCard
       order={order}
-      header={`#${order?.id ?? 123}`}
+      header={
+        <>
+          <span className='text-sm text-stone-400'>#{prefixOrderId}</span>
+          {orderId}
+        </>
+      }
       metadata={
         <div className='flex items-center gap-2'>
           <div className='relative h-6 w-6 overflow-hidden rounded-full group-data-loading:skeleton'>

@@ -70,6 +70,13 @@ export default function OrderCard(props: {
     updateOrderMutation.mutate({ orderId: order.id, type: 'complete' })
   }, [order])
 
+  // split order id to 3 digits
+  const orderId = order?.id.toString().slice(-3) ?? 123
+  let prefixOrderId = ''
+  if (order?.id.toString().length ?? 0 > 3) {
+    prefixOrderId = order?.id.toString().slice(0, -3).toString() ?? ''
+  }
+
   return (
     <div
       className={twMerge(
@@ -84,9 +91,16 @@ export default function OrderCard(props: {
       {/* Title */}
       <header className='flex items-center gap-2'>
         {/* Order id and menu name */}
-        <span className='rounded-xl text-lg font-bold group-data-loading:skeleton'>
-          #{order?.id ?? 123}
-        </span>
+        <Tooltip
+          content={
+            <p className='text-sm text-stone-600'>餐點標籤只會列印後三碼</p>
+          }
+        >
+          <span className='rounded-xl text-lg font-bold group-data-loading:skeleton'>
+            <span className='text-base text-stone-400'>#{prefixOrderId}</span>
+            {orderId}
+          </span>
+        </Tooltip>
         <span className='rounded-xl tracking-wider text-stone-400 group-data-loading:skeleton'>
           {order ? getMenuName(order.menu) : '菜單類別'}
         </span>

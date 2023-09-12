@@ -32,10 +32,13 @@ const STATUS_NAME_TEXT = [
 
 const POSMotionProperties = {
   layout: true,
-  initial: { opacity: 0, scale: 0.5 },
-  animate: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.5 },
-  transition: { duration: 0.3, type: 'spring' },
+  transition: { duration: 0.3, type: 'spring', layout: { type: 'tween' } },
+}
+
+const statusVariants = {
+  initial: { opacity: 0, y: -16 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 16 },
 }
 
 export default function POSCard(props: {
@@ -132,8 +135,7 @@ export default function POSCard(props: {
 
   return (
     <motion.div
-      className='relative flex h-max flex-col gap-4 overflow-hidden rounded-2xl border bg-white p-4 shadow-lg sm:min-h-[26rem] lg:p-6'
-      animate={{ opacity: 1, scale: 1 }}
+      className='relative z-[1] flex h-max flex-col gap-4 overflow-hidden rounded-2xl border bg-white p-4 shadow-lg sm:min-h-[26rem] lg:p-6'
       {...motionProperties}
     >
       {/* Background */}
@@ -186,13 +188,13 @@ export default function POSCard(props: {
         <div className='flex flex-col items-end'>
           <AnimatePresence initial={false} mode='popLayout'>
             <motion.p
-              initial={{ opacity: 0, y: -16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 16 }}
-              transition={{ duration: 0.3, type: 'spring', bounce: 0.75 }}
+              variants={statusVariants}
+              initial='initial'
+              animate='animate'
+              exit='exit'
+              transition={{ duration: 0.1, type: 'easeIn' }}
               className='rounded-xl text-sm font-bold tracking-wider text-stone-600/60 group-data-loading:skeleton'
               key={STATUS_NAME_TEXT[step]}
-              layout
             >
               {STATUS_NAME_TEXT[step]}
             </motion.p>
@@ -210,7 +212,7 @@ export default function POSCard(props: {
       {/* step 5 for canceling command */}
       {((!props.disableInteraction && !props.disableStatusButton) ||
         step === 5) && (
-        <section className='relative -z-10 flex h-16'>
+        <section className='z-1 relative flex h-16'>
           <AnimatePresence initial={false}>
             <POSButton
               key={step}
@@ -226,24 +228,35 @@ export default function POSCard(props: {
   )
 }
 
+const backgroundVariants = {
+  initial: {
+    clipPath: 'circle(0% at 50% calc(100% - 3.5rem))',
+    opacity: 1,
+  },
+  animate: {
+    clipPath: 'circle(150% at 50% calc(100% - 3.5rem))',
+    opacity: 0.4,
+  },
+  exit: { opacity: 0 },
+}
 function POSBackground(props: { className?: string }) {
   return (
     <motion.div
-      className={twMerge('absolute inset-0 -z-10', props.className)}
-      initial={{
-        clipPath: 'circle(0% at 50% calc(100% - 3.5rem))',
-        opacity: 1,
-      }}
-      animate={{
-        clipPath: 'circle(150% at 50% calc(100% - 3.5rem))',
-        opacity: 0.4,
-      }}
-      exit={{ opacity: 0 }}
+      className={twMerge('absolute inset-0 -z-[1]', props.className)}
+      variants={backgroundVariants}
+      initial='initial'
+      animate='animate'
+      exit='exit'
       transition={{ duration: 0.3, ease: 'easeOut' }}
     ></motion.div>
   )
 }
 
+const buttonVariants = {
+  initial: { scale: 0 },
+  animate: { scale: 1, opacity: 1 },
+  exit: { scale: 1.5, opacity: 0 },
+}
 function POSButton(props: {
   label: string
   onClick: () => void
@@ -259,11 +272,12 @@ function POSButton(props: {
       {/* Layout */}
       <motion.button
         type='button'
-        initial={{ scale: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 1.5, opacity: 0 }}
+        variants={buttonVariants}
+        initial='initial'
+        animate='animate'
+        exit='exit'
         onClick={props.onClick}
-        transition={{ duration: 0.3, type: 'spring' }}
+        transition={{ duration: 0.3, type: 'tween' }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.9 }}
         className='relative flex aspect-square h-full grow items-center justify-center drop-shadow-lg'

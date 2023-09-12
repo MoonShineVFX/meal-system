@@ -189,7 +189,7 @@ export const settings = {
   DEPOSITS_PER_QUERY: 40,
   NOTIFICATION_DURATION_MS: 3500,
   MENU_CATEGORY_NULL: '未分類',
-  TITLE: '夢想餐飲',
+  TITLE: '夢想發光吧',
   EMAIL: 'rd@moonshine.tw',
   ZULIP: process.env.NEXT_PUBLIC_ZULIP_URL!,
 }
