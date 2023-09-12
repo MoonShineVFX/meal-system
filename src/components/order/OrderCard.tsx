@@ -97,7 +97,7 @@ export default function OrderCard(props: {
           }
         >
           <span className='rounded-xl text-lg font-bold group-data-loading:skeleton'>
-            #<span className='text-base text-stone-400'>{prefixOrderId}</span>
+            <span className='text-base text-stone-400'>#{prefixOrderId}</span>
             {orderId}
           </span>
         </Tooltip>

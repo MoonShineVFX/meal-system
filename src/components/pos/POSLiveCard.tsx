@@ -32,7 +32,7 @@ export default function POSLiveCard(props: {
       order={order}
       header={
         <>
-          #<span className='text-sm text-stone-400'>{prefixOrderId}</span>
+          <span className='text-sm text-stone-400'>#{prefixOrderId}</span>
           {orderId}
         </>
       }
