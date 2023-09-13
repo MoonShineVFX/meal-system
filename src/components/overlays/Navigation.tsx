@@ -462,7 +462,7 @@ function POSNumberBadge() {
   })
   return (
     <NumberBadge
-      number={data?.length}
+      number={data?.filter((order) => order.timeDishedUp === null).length}
       isLoading={isLoading}
       isError={isError}
     />

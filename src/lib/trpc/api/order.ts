@@ -137,7 +137,9 @@ export const OrderRouter = router({
       })
     }),
   getBadgeCount: userProcedure.query(async ({ ctx }) => {
-    return await getOrdersCount({ userId: ctx.userLite.id })
+    return await getOrdersCount({
+      userId: ctx.userLite.id,
+    })
   }),
 })
 

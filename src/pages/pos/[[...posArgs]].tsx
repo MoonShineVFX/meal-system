@@ -82,10 +82,10 @@ export default function POSPage(props: { tabName: TabName }) {
             <POSReservationList tabName={currentTabName} />
           )}
           {currentTabName === '已出餐' && (
-            <div className='absolute right-0 bottom-0 p-8'>
+            <div className='absolute right-0 bottom-0 z-10 p-8'>
               <Button
                 label='完成 2 小時前餐點'
-                className='p-3'
+                className='p-3 shadow-lg'
                 textClassName='font-bold'
                 theme='secondary'
                 onClick={() => completeDishedUpsMutation.mutate()}
