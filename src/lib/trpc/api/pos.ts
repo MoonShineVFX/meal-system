@@ -46,7 +46,6 @@ export const POSRouter = router({
     }),
   completeDishedUps: staffProcedure.mutation(async () => {
     const orders = await completeDishedUpOrders()
-    console.log('order completed', orders.length)
 
     eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
       type: SERVER_NOTIFY.POS_UPDATE,
