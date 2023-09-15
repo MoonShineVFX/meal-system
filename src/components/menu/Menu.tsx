@@ -36,7 +36,6 @@ export default function Menu(props: {
 }) {
   const { data, isLoading, isError, error } = trpc.menu.get.useQuery({
     type: props.type,
-    date: props.date,
     menuId: props.menuId,
   })
 

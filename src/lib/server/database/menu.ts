@@ -28,9 +28,10 @@ type CreateMenuArgs = {
   supplierId?: number
   isEdit?: boolean
   client?: Prisma.TransactionClient | PrismaClient
+  id?: number
 } & (CommonCreateMenuArgs | ReserveCreateMenuArgs)
 /** Create menu, if type is not main, date required */
-export async function createMenu({
+export async function upsertMenu({
   type,
   name,
   description,
@@ -41,6 +42,7 @@ export async function createMenu({
   client,
   isEdit,
   supplierId,
+  id,
 }: CreateMenuArgs) {
   const thisPrisma = client ?? prisma
 
@@ -50,20 +52,31 @@ export async function createMenu({
   }
 
   // Check menu existence
-  const existMenu = await thisPrisma.menu.findFirst({
-    where: { type, date, isDeleted: false },
-  })
+  let existMenu: Menu | null = null
+  if (isEdit) {
+    if (['LIVE', 'RETAIL'].includes(type)) {
+      existMenu = await thisPrisma.menu.findFirst({
+        where: { type, date, isDeleted: false },
+      })
+    } else {
+      if (!id) {
+        throw new Error('id is required for main menu')
+      }
 
-  if (existMenu && !isEdit) {
-    throw new Error('已經有該設定的菜單')
-  } else if (!existMenu && isEdit) {
+      existMenu = await thisPrisma.menu.findFirst({
+        where: { id: id, isDeleted: false },
+      })
+    }
+  }
+
+  if (!existMenu && isEdit) {
     throw new Error('找不到該菜單')
   }
 
   if (isEdit) {
     return await thisPrisma.menu.update({
       where: {
-        id: existMenu?.id,
+        id: existMenu!.id,
       },
       data: {
         name,
@@ -252,23 +265,8 @@ export async function getReservationMenusSince({
 }
 
 /* Get Menu and COMs */
-type GetMenuFromType = { menuId?: never } & (
-  | {
-      type: Extract<MenuType, 'LIVE' | 'RETAIL'>
-      date?: never
-    }
-  | {
-      type: Exclude<MenuType, 'LIVE' | 'RETAIL'>
-      date: Date
-    }
-)
-type GetMenuFromId = {
-  menuId: number
-  type?: never
-  date?: never
-}
 type GetMenuWithComsArgs = {
-  menu: GetMenuFromId | GetMenuFromType
+  menuId: number
   userId: string
   limitCommodityIds?: number[]
   excludeCartItems?: boolean
@@ -276,30 +274,22 @@ type GetMenuWithComsArgs = {
 }
 /** Get menu and return with unavailableReasons from validation */
 export async function getMenuWithComs({
-  menu: { type, date, menuId },
+  menuId,
   userId,
   limitCommodityIds,
   excludeCartItems,
   client,
 }: GetMenuWithComsArgs) {
-  if (!type && !menuId) {
-    throw new Error('type or menuId is required')
+  if (!menuId) {
+    throw new Error('menuId is required')
   }
 
-  const isGetById = !!menuId
   const thisPrisma = client ?? prisma
-
-  // Validate date and type
-  if (!isGetById && !date && type && !['LIVE', 'RETAIL'].includes(type)) {
-    throw new Error('date is required for non-main menu')
-  }
 
   // Get menu
   const rawMenu = await thisPrisma.menu.findFirst({
     where: {
-      type: !isGetById ? type : undefined,
-      date,
-      id: isGetById ? menuId : undefined,
+      id: menuId,
       isDeleted: false,
     },
     orderBy: {

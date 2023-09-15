@@ -24,7 +24,7 @@ export async function validateCartItemCreatable({
 
   // Validate availability
   const menu = await getMenuWithComs({
-    menu: { menuId: menuId },
+    menuId,
     userId,
     limitCommodityIds: [commodityId],
     client: thisPrisma,
@@ -316,7 +316,7 @@ export async function getCartItemsBase({
     let menu: Awaited<ReturnType<typeof getMenuWithComs>>
     try {
       menu = await getMenuWithComs({
-        menu: { menuId },
+        menuId,
         userId,
         limitCommodityIds: commodityIds,
         client: thisPrisma,

@@ -137,6 +137,7 @@ export default function Menus() {
             createSupplier: formData.intro.createSupplier,
             supplierId: formData.intro.supplierId,
             isEdit: isEdit,
+            id: menu?.id,
           })
         },
         closeConfirm: {
