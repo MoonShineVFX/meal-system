@@ -258,6 +258,82 @@ export function getMenuName(menu?: Pick<Menu, 'date' | 'name' | 'type'>) {
 }
 
 // Options
+export function mergeOptions(source: OptionValue[], target: OptionValue[]) {
+  const mergedOptions: {
+    name: string
+    price: number
+    order: number
+  }[] = []
+
+  for (const sourceOption of source) {
+    const targetOption = target.find(
+      (option) => getOptionName(option) === getOptionName(sourceOption),
+    )
+    if (targetOption) {
+      mergedOptions.push({
+        name: getOptionName(targetOption),
+        price: getOptionPrice(targetOption),
+        order: target.indexOf(targetOption) - 0.1,
+      })
+    } else {
+      mergedOptions.push({
+        name: getOptionName(sourceOption),
+        price: getOptionPrice(sourceOption),
+        order: source.indexOf(sourceOption),
+      })
+    }
+  }
+
+  for (const targetOption of target) {
+    const sourceOption = source.find(
+      (option) => getOptionName(option) === getOptionName(targetOption),
+    )
+    if (!sourceOption) {
+      mergedOptions.push({
+        name: getOptionName(targetOption),
+        price: getOptionPrice(targetOption),
+        order: target.indexOf(targetOption) - 0.1,
+      })
+    }
+  }
+
+  return mergedOptions
+    .sort((a, b) => a.order - b.order)
+    .map((o) => ({
+      name: o.name,
+      price: o.price,
+    })) as OptionValue[]
+}
+
+export function mergeOptionSets(source: OptionSet[], target: OptionSet[]) {
+  const mergedOptionSets: OptionSet[] = []
+
+  for (const sourceOptionSet of source) {
+    const targetOptionSet = target.find(
+      (optionSet) => optionSet.name === sourceOptionSet.name,
+    )
+    if (targetOptionSet) {
+      mergedOptionSets.push({
+        ...sourceOptionSet,
+        options: mergeOptions(sourceOptionSet.options, targetOptionSet.options),
+      })
+    } else {
+      mergedOptionSets.push(sourceOptionSet)
+    }
+  }
+
+  for (const targetOptionSet of target) {
+    const sourceOptionSet = source.find(
+      (optionSet) => optionSet.name === targetOptionSet.name,
+    )
+    if (!sourceOptionSet) {
+      mergedOptionSets.push(targetOptionSet)
+    }
+  }
+
+  return mergedOptionSets
+}
+
 export function generateOptionsKey(options: OrderOptions) {
   return Object.entries(options)
     .sort()

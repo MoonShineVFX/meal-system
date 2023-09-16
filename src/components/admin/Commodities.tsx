@@ -219,7 +219,7 @@ export default function Commodities() {
         .map((c) =>
           c.optionSets.map((os) => ({
             ...os,
-            key: `${os.name}-${os.options.join('-')}-${
+            key: `${os.name}-${os.options.map(getOptionName).join('-')}-${
               os.multiSelect ? 'true' : 'false'
             }`,
           })),
