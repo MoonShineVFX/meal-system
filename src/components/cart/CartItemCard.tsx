@@ -1,6 +1,13 @@
 import { Listbox, Transition } from '@headlessui/react'
 import { twMerge } from 'tailwind-merge'
-import React, { useState, useEffect, Fragment, memo, useRef } from 'react'
+import React, {
+  useState,
+  useEffect,
+  Fragment,
+  memo,
+  useRef,
+  useMemo,
+} from 'react'
 import * as ReactDOM from 'react-dom'
 import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { motion, useAnimationControls } from 'framer-motion'
@@ -10,7 +17,12 @@ import { PencilIcon } from '@heroicons/react/24/outline'
 
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
-import { settings, twData } from '@/lib/common'
+import {
+  settings,
+  twData,
+  getOrderOptionsPrice,
+  getOptionName,
+} from '@/lib/common'
 import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
 import { ScrollFader } from '@/components/cart/ScrollFader'
@@ -141,6 +153,19 @@ function CartItemCard(props: {
     }
   }
 
+  const price = useMemo(() => {
+    const basePrice = cartItem.commodityOnMenu.commodity.price
+
+    if (cartItem.optionsKey === '__skeleton') return basePrice
+
+    const orderOptionsPrice = getOrderOptionsPrice(
+      cartItem.options,
+      cartItem.commodityOnMenu.commodity.optionSets,
+    )
+
+    return basePrice + orderOptionsPrice
+  }, [cartItem])
+
   const quantities = cartItem.invalid
     ? [cartItem.quantity - 1]
     : [
@@ -248,14 +273,23 @@ function CartItemCard(props: {
                             ? option.optionValue
                             : [option.optionValue],
                         )
-                        .map((optionValue) => (
-                          <span
-                            key={optionValue}
-                            className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-hover/options:underline group-data-loading:skeleton @2xl/cart:text-sm'
-                          >
-                            {optionValue}
-                          </span>
-                        ))}
+                        .map((optionValue) => {
+                          const price =
+                            typeof optionValue === 'string'
+                              ? 0
+                              : optionValue.price
+                          return (
+                            <span
+                              key={getOptionName(optionValue)}
+                              className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-hover/options:underline group-data-loading:skeleton @2xl/cart:text-sm'
+                            >
+                              {getOptionName(optionValue)}
+                              {price > 0 && (
+                                <span className='pl-1'>${price}</span>
+                              )}
+                            </span>
+                          )
+                        })}
                     </div>
                     {!props.isInvalid && (
                       <PencilIcon className='h-3 w-3 stroke-1 text-stone-400 transition-transform group-hover/options:rotate-45 group-data-loading:hidden' />
@@ -345,7 +379,7 @@ function CartItemCard(props: {
                 {/* Price */}
                 <div className='flex flex-col @2xl/cart:pt-1'>
                   <h3 className='h-fit whitespace-nowrap rounded-xl text-end font-bold group-data-loading:skeleton'>
-                    ${cartItem.commodityOnMenu.commodity.price}
+                    ${price}
                   </h3>
                 </div>
               </section>

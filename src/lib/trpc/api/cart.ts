@@ -8,7 +8,7 @@ import {
   deleteCartItems,
 } from '@/lib/server/database'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
-import { SERVER_NOTIFY, settings } from '@/lib/common'
+import { SERVER_NOTIFY, settings, optionValueSchema } from '@/lib/common'
 
 export const CartRouter = router({
   add: userProcedure
@@ -17,7 +17,9 @@ export const CartRouter = router({
         menuId: z.number(),
         quantity: z.number().min(1).max(settings.MENU_MAX_QUANTITY_PER_ORDER),
         commodityId: z.number(),
-        options: z.record(z.union([z.string(), z.array(z.string())])),
+        options: z.record(
+          z.union([optionValueSchema, z.array(optionValueSchema)]),
+        ),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -44,7 +46,9 @@ export const CartRouter = router({
         menuId: z.number(),
         quantity: z.number().min(1).max(settings.MENU_MAX_QUANTITY_PER_ORDER),
         commodityId: z.number(),
-        options: z.record(z.union([z.string(), z.array(z.string())])),
+        options: z.record(
+          z.union([optionValueSchema, z.array(optionValueSchema)]),
+        ),
         optionsKey: z.string(),
       }),
     )

@@ -17,7 +17,7 @@ import {
   getRetailCOM,
   createOrUpdateSupplier,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY } from '@/lib/common'
+import { SERVER_NOTIFY, optionValueSchema } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const MenuRouter = router({
@@ -46,7 +46,7 @@ export const MenuRouter = router({
                     z.object({
                       name: z.string(),
                       multiSelect: z.boolean(),
-                      options: z.array(z.string()),
+                      options: z.array(optionValueSchema),
                       order: z.number(),
                     }),
                   ),
@@ -248,7 +248,7 @@ export const MenuRouter = router({
         commodityId: z.number(),
         menuId: z.number(),
         options: z
-          .record(z.union([z.string(), z.array(z.string())]))
+          .record(z.union([optionValueSchema, z.array(optionValueSchema)]))
           .optional(),
       }),
     )

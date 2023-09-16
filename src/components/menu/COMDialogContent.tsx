@@ -5,9 +5,6 @@ import {
   UseFormRegister,
   Control,
   useController,
-  FieldErrors,
-  FieldValues,
-  FieldError,
 } from 'react-hook-form'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { PlusIcon } from '@heroicons/react/24/outline'
@@ -24,6 +21,8 @@ import {
   twData,
   OrderOptions,
   getMenuName,
+  getOptionName,
+  getOrderOptionsPrice,
 } from '@/lib/common'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
@@ -50,28 +49,23 @@ function COMDialogContent(props: {
       addCOMOptionsMemo: state.addCOMOptionsMemo,
     }),
   )
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    setValue,
-    getValues,
-    formState: { errors },
-  } = useForm<FormInputs>({
-    defaultValues: {
-      quantity: 1,
-      options: com.commodity.optionSets
-        ?.filter((optionSet) => optionSet.multiSelect)
-        .reduce(
-          (acc: OrderOptions, optionSet) => ({
-            ...acc,
-            [optionSet.name]: [],
-          }),
-          {},
-        ),
-    },
-  })
+  const { register, handleSubmit, control, reset, setValue, getValues, watch } =
+    useForm<FormInputs>({
+      defaultValues: {
+        quantity: 1,
+        options: com.commodity.optionSets
+          ?.filter((optionSet) => optionSet.multiSelect)
+          .reduce(
+            (acc: OrderOptions, optionSet) => ({
+              ...acc,
+              [optionSet.name]: [],
+            }),
+            {},
+          ),
+      },
+    })
+
+  const currentOptions = watch('options')
 
   // Reset selected option sets when commodity changes
   useEffect(() => {
@@ -112,7 +106,7 @@ function COMDialogContent(props: {
         },
       )
     },
-    [],
+    [com],
   )
 
   // save options to local storage
@@ -127,6 +121,11 @@ function COMDialogContent(props: {
     (currentMenu?.unavailableReasons.length ?? 0) +
       com.unavailableReasons.length >
     0
+
+  const optionsPrice = getOrderOptionsPrice(
+    currentOptions,
+    com.commodity.optionSets,
+  )
 
   return (
     <section
@@ -178,6 +177,9 @@ function COMDialogContent(props: {
           </h1>
           <h2 className='text-xl tracking-wider text-yellow-500'>
             ${com.commodity.price}
+            {optionsPrice > 0 && (
+              <span className='pl-2 text-base'>+{optionsPrice}</span>
+            )}
           </h2>
         </header>
         {/* Scroll on md */}
@@ -212,8 +214,7 @@ function COMDialogContent(props: {
                 <OptionSetForm
                   key={optionSet.name}
                   optionSet={optionSet}
-                  register={register}
-                  errors={errors}
+                  control={control}
                 />
               ))}
           </main>
@@ -274,23 +275,21 @@ function COMDialogContent(props: {
 
 export default memo(COMDialogContent)
 
-export function OptionSetForm<
-  T extends FieldValues & { options: OrderOptions },
->(props: {
+export function OptionSetForm(props: {
   optionSet: OptionSet
-  register: UseFormRegister<T>
-  errors: FieldErrors<T>
+  control: Control<any>
 }) {
-  // react-hook-form typed bug hotfix
-  const typedOptions = props.errors.options as
-    | Record<string, FieldError>
-    | undefined
-  const typedRegister = props.register as unknown as UseFormRegister<{
-    options: OrderOptions
-  }>
-
   const { optionSet } = props
-  const error = typedOptions?.[optionSet.name]
+  const {
+    field,
+    fieldState: { error },
+  } = useController({
+    name: `options.${optionSet.name}`,
+    control: props.control,
+    rules: {
+      required: !optionSet.multiSelect && '請選擇一個選項',
+    },
+  })
 
   return (
     <section className='flex flex-col gap-2'>
@@ -310,21 +309,53 @@ export function OptionSetForm<
         </span>
       </h3>
       <div className='flex flex-wrap gap-2'>
-        {props.optionSet.options.map((optionName) => (
-          <label key={optionName}>
-            <input
-              className='peer hidden'
-              type={optionSet.multiSelect ? 'checkbox' : 'radio'}
-              value={optionName}
-              {...typedRegister(`options.${optionSet.name}`, {
-                required: !optionSet.multiSelect && '請選擇一個選項',
-              })}
-            />
-            <div className='m-[0.0625rem] cursor-pointer rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500 hover:border-stone-400 active:border-stone-400'>
-              {optionName}
-            </div>
-          </label>
-        ))}
+        {props.optionSet.options.map((option) => {
+          const name = getOptionName(option)
+          const price = typeof option === 'string' ? 0 : option.price
+
+          const isChecked = Array.isArray(field.value)
+            ? field.value.map((o) => getOptionName(o)).includes(name)
+            : getOptionName(field.value) === name
+
+          return (
+            <label key={name}>
+              <input
+                className='peer hidden'
+                type={optionSet.multiSelect ? 'checkbox' : 'radio'}
+                value={name}
+                checked={isChecked}
+                onChange={() => {
+                  if (!optionSet.multiSelect) {
+                    field.onChange({
+                      name,
+                      price,
+                    })
+                    return
+                  }
+
+                  const values = Array.isArray(field.value) ? field.value : []
+
+                  if (isChecked) {
+                    field.onChange(
+                      values.filter(
+                        (o) => getOptionName(o) !== getOptionName(option),
+                      ),
+                    )
+                    return
+                  }
+
+                  field.onChange([...values, option])
+                }}
+              />
+              <div className='m-[0.0625rem] cursor-pointer whitespace-nowrap rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500 hover:border-stone-400 active:border-stone-400'>
+                {name}
+                {price > 0 ? (
+                  <span className='pl-1 text-yellow-500'>+{price}</span>
+                ) : null}
+              </div>
+            </label>
+          )
+        })}
       </div>
     </section>
   )

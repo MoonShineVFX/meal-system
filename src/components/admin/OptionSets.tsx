@@ -6,7 +6,7 @@ import SortableList from '@/components/core/SortableList'
 import trpc, { OptionSetsTemplateDatas } from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
-import { OptionSet } from '@/lib/common'
+import { OptionSet, getOptionName } from '@/lib/common'
 import { useDialog } from '@/components/core/Dialog'
 
 export default function OptionSets() {
@@ -148,12 +148,12 @@ export default function OptionSets() {
 
   // Rename Option
   const handleOptionRename = useCallback(
-    (option: { id: string }) => {
+    (option: { id: string; price: number }) => {
       if (!selectedTemplate || !selectedOptionSet) return
       showFormDialog({
-        title: `重新命名 ${option.id}`,
+        title: `編輯 ${option.id}`,
         inputs: {
-          optionSetName: {
+          optionName: {
             label: '選項名稱',
             defaultValue: option.id,
             type: 'text',
@@ -169,6 +169,11 @@ export default function OptionSets() {
             },
             attributes: { placeholder: option.id },
           },
+          optionPrice: {
+            label: '選項價格',
+            type: 'number',
+            defaultValue: option.price,
+          },
         },
         useMutation: trpc.optionSet.update.useMutation,
         onSubmit(formData, mutation) {
@@ -177,7 +182,12 @@ export default function OptionSets() {
               return {
                 ...o,
                 options: o.options.map((op) =>
-                  op === option.id ? formData.optionSetName : op,
+                  getOptionName(op) === option.id
+                    ? {
+                        name: formData.optionName,
+                        price: formData.optionPrice ?? 0,
+                      }
+                    : op,
                 ),
               }
             }
@@ -280,6 +290,13 @@ export default function OptionSets() {
             },
           },
         },
+        optionPrice: {
+          label: '選項價格',
+          type: 'number',
+          attributes: {
+            defaultValue: 0,
+          },
+        },
       },
       useMutation: trpc.optionSet.update.useMutation,
       onSubmit(formData, mutation) {
@@ -287,7 +304,13 @@ export default function OptionSets() {
           if (optionSet.name === selectedOptionSet.name) {
             return {
               ...optionSet,
-              options: [...optionSet.options, formData.optionName],
+              options: [
+                ...optionSet.options,
+                {
+                  name: formData.optionName,
+                  price: formData.optionPrice ?? 0,
+                },
+              ],
             }
           }
           return optionSet
@@ -386,7 +409,10 @@ export default function OptionSets() {
         if (o.name === selectedOptionSet.name) {
           return {
             ...o,
-            options: o.options.filter((op) => !selectedIds.includes(op)),
+            options: o.options.filter((op) => {
+              const name = getOptionName(op)
+              !selectedIds.includes(name)
+            }),
           }
         }
         return o
@@ -488,7 +514,8 @@ export default function OptionSets() {
             selectedOptionSet.multiSelect ? '多選' : '單選'
           }]`}
           items={selectedOptionSet.options.map((option) => ({
-            id: option,
+            id: getOptionName(option),
+            price: typeof option === 'string' ? 0 : option.price,
           }))}
           onCreate={handleOptionCreate}
           onCreateLabel='新增選項'
@@ -502,7 +529,12 @@ export default function OptionSets() {
               isDanger: true,
             },
           ]}
-        ></SortableList>
+        >
+          {(option) => {
+            if (option.price === 0) return <></>
+            return <span className='pl-2'>${option.price}</span>
+          }}
+        </SortableList>
       )}
       {formDialog}
       {dialog}

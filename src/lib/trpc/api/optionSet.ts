@@ -8,7 +8,7 @@ import {
   deleteOptionSets,
   createOptionSetsTemplate,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY } from '@/lib/common'
+import { SERVER_NOTIFY, optionValueSchema } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 const OptionSetSchema = z.array(
@@ -16,7 +16,7 @@ const OptionSetSchema = z.array(
     name: z.string(),
     multiSelect: z.boolean(),
     order: z.number(),
-    options: z.array(z.string()),
+    options: z.array(optionValueSchema),
   }),
 )
 

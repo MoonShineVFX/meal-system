@@ -9,7 +9,12 @@ import Table from '@/components/core/Table'
 import trpc, { CommodityDatas } from '@/lib/client/trpc'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Error from '@/components/core/Error'
-import { settings, getMenuName, OrderOptions } from '@/lib/common'
+import {
+  settings,
+  getMenuName,
+  OrderOptions,
+  getOptionName,
+} from '@/lib/common'
 import { useFormDialog } from '@/components/form/FormDialog'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import SearchBar from '@/components/core/SearchBar'
@@ -509,7 +514,10 @@ export default function Commodities() {
                           c.optionSets.some(
                             (os) =>
                               os.name.includes(searchKeyword) ||
-                              os.options.some((o) => o.includes(searchKeyword)),
+                              os.options.some((o) => {
+                                const name = getOptionName(o)
+                                name.includes(searchKeyword)
+                              }),
                           )
                         )
                       })
@@ -588,7 +596,12 @@ export default function Commodities() {
                 hint: (row) =>
                   row.optionSets
                     ? row.optionSets
-                        .map((o) => `${o.name}: ${o.options.join(', ')}`)
+                        .map(
+                          (o) =>
+                            `${o.name}: ${o.options
+                              .map((ot) => getOptionName(ot))
+                              .join(', ')}`,
+                        )
                         .join('\n')
                     : '無選項',
                 render: (row) =>
@@ -697,14 +710,10 @@ function QRCodeGenerator(props: {
   commodity: CommodityDatas[number]
   width?: number
 }) {
-  const {
-    register,
-    formState: { errors },
-    watch,
-  } = useForm<{ options: OrderOptions }>({
+  const { control, watch } = useForm<{ options: OrderOptions }>({
     defaultValues: {
       options: props.commodity.optionSets.reduce((acc, os) => {
-        acc[os.name] = os.multiSelect ? [] : os.options[0]
+        acc[os.name] = os.multiSelect ? [] : getOptionName(os.options[0])
         return acc
       }, {} as OrderOptions),
     },
@@ -760,8 +769,7 @@ function QRCodeGenerator(props: {
             <OptionSetForm
               key={optionSet.name}
               optionSet={optionSet}
-              register={register}
-              errors={errors}
+              control={control}
             />
           ))}
       </div>

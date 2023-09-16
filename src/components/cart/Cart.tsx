@@ -7,7 +7,7 @@ import { MenuType } from '@prisma/client'
 import Checkout from './Checkout'
 import trpc from '@/lib/client/trpc'
 import type { CartItemsByMenu, CartItemsAndMenus } from '@/lib/client/trpc'
-import { getMenuName, twData } from '@/lib/common'
+import { getMenuName, twData, getOrderOptionsPrice } from '@/lib/common'
 import Button from '@/components/core/Button'
 import CartItemCard from './CartItemCard'
 import Dialog from '@/components/core/Dialog'
@@ -286,7 +286,11 @@ export default function Cart() {
                   ? cartData.cartItems.reduce(
                       (acc: number, cartItem) =>
                         (acc +=
-                          cartItem.commodityOnMenu.commodity.price *
+                          (getOrderOptionsPrice(
+                            cartItem.options,
+                            cartItem.commodityOnMenu.commodity.optionSets,
+                          ) +
+                            cartItem.commodityOnMenu.commodity.price) *
                           cartItem.quantity),
                       0,
                     )

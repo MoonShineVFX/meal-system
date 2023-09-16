@@ -2,8 +2,9 @@ import { MenuType, Prisma, PrismaClient, Menu } from '@prisma/client'
 import lzString from 'lz-string'
 
 import { validateCartItemCreatable } from './cart'
-import { ConvertPrismaJson, OrderOptions } from '@/lib/common'
 import {
+  ConvertPrismaJson,
+  OrderOptions,
   MenuUnavailableReason,
   ComUnavailableReason,
   settings,
@@ -613,8 +614,10 @@ export async function getRetailCOM(args: {
     client: thisClient,
   })
 
+  const parsedCom = com as ConvertPrismaJson<typeof com>
+
   return {
-    ...com,
+    ...parsedCom,
     options: sortedOptions,
   }
 }

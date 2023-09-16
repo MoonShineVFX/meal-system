@@ -11,12 +11,13 @@ import { useDragControls, Reorder } from 'framer-motion'
 
 import trpc from '@/lib/client/trpc'
 import { useStore, NotificationType } from '@/lib/client/store'
-import { OptionSet } from '@/lib/common'
+import { OptionSet, OptionValue, getOptionName } from '@/lib/common'
 import Spinner from '@/components/core/Spinner'
 import { InputFieldProps } from './define'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import TextInput from '../base/TextInput'
 import CheckBox from '../base/CheckBox'
+import NumberInput from '../base/NumberInput'
 
 export default function OptionSetsField<T extends FieldValues>(
   props: InputFieldProps<'optionSets', T>,
@@ -254,7 +255,7 @@ function OptionSetField(props: {
         >
           {props.optionSet.options.map((option, index) => (
             <OptionField
-              key={option}
+              key={getOptionName(option)}
               option={option}
               onChange={(newOption) =>
                 props.onChange({
@@ -293,26 +294,41 @@ function OptionSetField(props: {
 }
 
 function OptionField(props: {
-  option: string
-  onChange: (option: string) => void
+  option: OptionValue
+  onChange: (option: OptionValue) => void
   added?: boolean
 }) {
   const controls = useDragControls()
-  const [isEdit, setIsEdit] = useState(props.added ?? false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [isEditName, setIsEditName] = useState(props.added ?? false)
+  const [isEditPrice, setIsEditPrice] = useState(false)
+  const inputNameRef = useRef<HTMLInputElement>(null)
+  const inputPriceRef = useRef<HTMLInputElement>(null)
 
   // autofocus
   useEffect(() => {
-    if (!isEdit || !inputRef.current) return
-    inputRef.current.focus()
-  }, [isEdit, inputRef.current])
+    if (!isEditName || !inputNameRef.current) return
+    inputNameRef.current.focus()
+  }, [isEditName, inputNameRef.current])
+
+  // autofocus
+  useEffect(() => {
+    if (!isEditPrice || !inputPriceRef.current) return
+    inputPriceRef.current.focus()
+  }, [isEditPrice, inputPriceRef.current])
 
   // applyedit
   const applyEdit = useCallback(() => {
-    if (!inputRef.current) return
-    props.onChange(inputRef.current.value.trim())
-    setIsEdit(false)
-  }, [inputRef.current, props.onChange])
+    if (!inputNameRef.current || !inputPriceRef.current) return
+    props.onChange({
+      name: inputNameRef.current.value.trim(),
+      price: parseInt(inputPriceRef.current.value),
+    })
+    setIsEditName(false)
+    setIsEditPrice(false)
+  }, [inputNameRef.current, inputPriceRef.current, props.onChange])
+
+  const name = getOptionName(props.option)
+  const price = typeof props.option === 'string' ? 0 : props.option.price
 
   return (
     <Reorder.Item
@@ -326,18 +342,43 @@ function OptionField(props: {
         onPointerDown={(e) => controls.start(e)}
       />
       {/* Name */}
-      <div onClick={() => setIsEdit(true)}>
+      <div onClick={() => setIsEditName(true)} className='cursor-text'>
         <TextInput
-          ref={inputRef}
+          ref={inputNameRef}
           className={twMerge(
-            'ml-1 max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300 disabled:pointer-events-auto disabled:opacity-100',
-            !isEdit && 'cursor-text hover:bg-stone-100',
-            isEdit && 'bg-stone-100',
+            'ml-1 max-w-[10ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300 disabled:opacity-100',
+            !isEditName && 'pointer-events-none hover:bg-stone-100',
+            isEditName && 'bg-stone-100',
           )}
-          placeholder={props.option}
-          disabled={!isEdit}
+          placeholder={name}
+          disabled={!isEditName}
           onBlur={applyEdit}
-          defaultValue={props.added ? '' : props.option}
+          defaultValue={props.added ? '' : name}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              applyEdit()
+              e.preventDefault()
+              e.stopPropagation()
+            }
+          }}
+        />
+      </div>
+      {/* Price */}
+      <div
+        onClick={() => setIsEditPrice(true)}
+        className='flex cursor-text items-center'
+      >
+        <span className='text-sm text-stone-300'>$</span>
+        <NumberInput
+          ref={inputPriceRef}
+          className={twMerge(
+            'ml-1 max-w-[6ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300 disabled:opacity-100',
+            !isEditPrice && 'pointer-events-none hover:bg-stone-100',
+            isEditPrice && 'bg-stone-100',
+          )}
+          disabled={!isEditPrice}
+          onBlur={applyEdit}
+          defaultValue={price}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               applyEdit()

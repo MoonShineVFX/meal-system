@@ -20,13 +20,7 @@ export default function CartItemOptionsDialog(props: {
 }) {
   const [cartItem, setCartItem] = useState<CartItems[0]>()
   const com = cartItem?.commodityOnMenu
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-  } = useForm<FormInputs>()
+  const { handleSubmit, setValue, watch, control } = useForm<FormInputs>()
   const updateCartMutation = trpc.cart.update.useMutation()
 
   useEffect(() => {
@@ -112,8 +106,7 @@ export default function CartItemOptionsDialog(props: {
                   <OptionSetForm
                     key={optionSet.name}
                     optionSet={optionSet}
-                    register={register}
-                    errors={errors}
+                    control={control}
                   />
                 ))}
             </main>

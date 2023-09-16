@@ -6,6 +6,7 @@ import {
   OrderOptions,
   generateOptionsKey,
   ConvertPrismaJson,
+  getOptionName,
 } from '@/lib/common'
 import { prisma } from './define'
 
@@ -555,34 +556,67 @@ async function validateAndSortCartOptions({
   )
 
   for (const truthOptionSet of sortedTruthOptionSets) {
-    const optionValue = options[truthOptionSet.name]
+    const optionValues = options[truthOptionSet.name]
 
     // Multi select
     if (truthOptionSet.multiSelect) {
-      if (!Array.isArray(optionValue)) {
+      if (!Array.isArray(optionValues)) {
         throw new Error(`選項不是多選: ${truthOptionSet.name}`)
       }
       if (
-        !optionValue.every((value) => truthOptionSet.options.includes(value))
+        !optionValues.every((optionValue) => {
+          const truthOption = truthOptionSet.options.find(
+            (o) => getOptionName(o) === getOptionName(optionValue),
+          )
+          if (!truthOption) return false
+
+          const price = typeof optionValue === 'string' ? 0 : optionValue.price
+          const truthPrice =
+            typeof truthOption === 'string' ? 0 : truthOption.price
+
+          return price === truthPrice
+        })
       ) {
-        throw new Error(`找不到選項: ${truthOptionSet.name} - ${optionValue}`)
+        throw new Error(
+          `找不到選項或選項不合法: ${truthOptionSet.name} - ${optionValues}`,
+        )
       }
 
-      const sortedOptionValue = optionValue.sort(
+      const sortedOptionValue = optionValues.sort(
         (a, b) =>
-          truthOptionSet.options.indexOf(a) - truthOptionSet.options.indexOf(b),
+          truthOptionSet.options
+            .map((o) => getOptionName(o))
+            .indexOf(getOptionName(a)) -
+          truthOptionSet.options
+            .map((o) => getOptionName(o))
+            .indexOf(getOptionName(b)),
       )
       sortedOptions[truthOptionSet.name] = sortedOptionValue
       // Single select
     } else {
-      if (Array.isArray(optionValue)) {
+      if (Array.isArray(optionValues)) {
         throw new Error(`選項不是單選: ${truthOptionSet.name}`)
       }
-      if (!truthOptionSet.options.includes(optionValue)) {
-        throw new Error(`找不到選項: ${truthOptionSet.name} - ${optionValue}`)
+      if (
+        ![optionValues].every((optionValue) => {
+          const truthOption = truthOptionSet.options.find(
+            (o) => getOptionName(o) === getOptionName(optionValue),
+          )
+          if (!truthOption) return false
+
+          const price = typeof optionValue === 'string' ? 0 : optionValue.price
+          const truthPrice =
+            typeof truthOption === 'string' ? 0 : truthOption.price
+
+          return price === truthPrice
+        })
+      ) {
+        throw new Error(
+          `找不到選項或選項不合法: ${truthOptionSet.name} - ${optionValues}`,
+        )
       }
 
-      sortedOptions[truthOptionSet.name] = optionValue
+      sortedOptions[truthOptionSet.name] = optionValues
     }
   }
 

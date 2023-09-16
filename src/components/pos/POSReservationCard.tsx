@@ -1,6 +1,6 @@
 import { useCallback, useState, useMemo } from 'react'
 
-import { OrderStatus, settings } from '@/lib/common'
+import { OrderStatus, getOptionName, settings } from '@/lib/common'
 import POSCard from './POSCard'
 import Dialog from '@/components/core/Dialog'
 import trpc, { POSReservationDatas } from '@/lib/client/trpc'
@@ -122,7 +122,9 @@ export default function POSReservationCard(props: {
                 ) : (
                   Object.values(optionWithOrders.option).map((value, index) => (
                     <p key={index}>
-                      {Array.isArray(value) ? value.join(', ') : value}
+                      {Array.isArray(value)
+                        ? value.map((v) => getOptionName(v)).join(', ')
+                        : getOptionName(value)}
                     </p>
                   ))
                 )}

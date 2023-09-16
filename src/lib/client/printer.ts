@@ -1,9 +1,9 @@
-import { settings } from '@/lib/common'
+import { settings, OptionValue, getOptionName } from '@/lib/common'
 
 type PrintItem = {
   orderId: number
   name: string
-  options?: string[]
+  options?: OptionValue[]
   user: string
   index: [number, number]
 }
@@ -28,7 +28,15 @@ export async function print(props: {
       date: props.date,
       index: item.index,
       name: item.name,
-      options: item.options ?? [],
+      options: item.options
+        ? item.options.map((o) => {
+            const name = getOptionName(o)
+            const price = typeof o === 'string' ? 0 : o.price
+
+            if (price > 0) return `${name} $${price}`
+            return name
+          })
+        : [],
       user: item.user,
     }))
     const response = await fetch(`${settings.PRINTER_API_URL}/api/print`, {
