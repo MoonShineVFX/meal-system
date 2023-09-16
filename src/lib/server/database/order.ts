@@ -30,11 +30,11 @@ export async function createOrderFromCart({
     const totalPrice = getCartItemsResult.cartItems.reduce(
       (acc, cur) =>
         acc +
-        (getOrderOptionsPrice(
+        getOrderOptionsPrice(
           cur.options,
           cur.commodityOnMenu.commodity.optionSets,
-        ) +
-          cur.commodityOnMenu.commodity.price) *
+          cur.commodityOnMenu.commodity.price,
+        ) *
           cur.quantity,
       0,
     )
@@ -81,11 +81,11 @@ export async function createOrderFromCart({
 
           thisMap.get(cartItem.commodityId)?.push({
             name: cartItem.commodityOnMenu.commodity.name,
-            price:
-              getOrderOptionsPrice(
-                cartItem.options,
-                cartItem.commodityOnMenu.commodity.optionSets,
-              ) + cartItem.commodityOnMenu.commodity.price,
+            price: getOrderOptionsPrice(
+              cartItem.options,
+              cartItem.commodityOnMenu.commodity.optionSets,
+              cartItem.commodityOnMenu.commodity.price,
+            ),
             quantity: cartItem.quantity,
             options: cartItem.options,
             menuId: cartItem.menuId,
@@ -102,11 +102,11 @@ export async function createOrderFromCart({
             acc.get(cartItem.menuId) as Prisma.OrderItemCreateManyOrderInput[]
           ).push({
             name: cartItem.commodityOnMenu.commodity.name,
-            price:
-              getOrderOptionsPrice(
-                cartItem.options,
-                cartItem.commodityOnMenu.commodity.optionSets,
-              ) + cartItem.commodityOnMenu.commodity.price,
+            price: getOrderOptionsPrice(
+              cartItem.options,
+              cartItem.commodityOnMenu.commodity.optionSets,
+              cartItem.commodityOnMenu.commodity.price,
+            ),
             quantity: cartItem.quantity,
             options: cartItem.options,
             menuId: cartItem.menuId,
@@ -194,9 +194,11 @@ export async function createOrderFromRetail(args: {
 
     const { transaction } = await chargeUserBalanceBase({
       userId,
-      amount:
-        getOrderOptionsPrice(com.options, com.commodity.optionSets) +
+      amount: getOrderOptionsPrice(
+        com.options,
+        com.commodity.optionSets,
         com.commodity.price,
+      ),
       client,
     })
 
@@ -209,9 +211,11 @@ export async function createOrderFromRetail(args: {
         items: {
           create: {
             name: com.commodity.name,
-            price:
-              getOrderOptionsPrice(com.options, com.commodity.optionSets) +
+            price: getOrderOptionsPrice(
+              com.options,
+              com.commodity.optionSets,
               com.commodity.price,
+            ),
             quantity: 1,
             options: com.options,
             menuId: com.menuId,

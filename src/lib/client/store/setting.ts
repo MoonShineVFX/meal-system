@@ -37,6 +37,7 @@ export interface SettingSlice {
   setDepositRedirect: (depositRedirect: DepositRedirect | null) => void
   getCOMOptionsMemo: (id: string) => OrderOptions | null
   addCOMOptionsMemo: (id: string, options: OrderOptions) => void
+  removeCOMOptionsMemo: (id: string) => void
   setQRCodeAutoCheckout: (state: boolean) => void
   setPOSNotificationSound: (state: boolean) => void
   setServiceWorkerHandler: (handler: ServiceWorkerHandler) => void
@@ -68,7 +69,7 @@ export const createSettingSlice: StateCreator<
     set((state) => ({
       comOptionsMemo_local: Object.fromEntries(
         Object.entries(state.comOptionsMemo_local).filter(([, value]) => {
-          value.expireTime > Date.now()
+          return value.expireTime > Date.now()
         }),
       ),
     }))
@@ -89,6 +90,12 @@ export const createSettingSlice: StateCreator<
         },
       },
     }))
+  },
+  removeCOMOptionsMemo: (id) => {
+    set((state) => {
+      const { [id]: _, ...rest } = state.comOptionsMemo_local
+      return { comOptionsMemo_local: rest }
+    })
   },
   addToHistory: (path) => {
     // shrink history to 100 items

@@ -148,7 +148,14 @@ export default function POSReservationCard(props: {
                 .filter(
                   ([, value]) => !Array.isArray(value) || value.length > 0,
                 )
-                .map(([key, value]) => `${key}: ${value}`)
+                .map(
+                  ([key, value]) =>
+                    `${key}: ${
+                      Array.isArray(value)
+                        ? value.map(getOptionName)
+                        : getOptionName(value)
+                    }`,
+                )
                 .join(' / ')
             : '無細項'
         }

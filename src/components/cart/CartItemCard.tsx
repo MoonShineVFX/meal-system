@@ -22,12 +22,14 @@ import {
   twData,
   getOrderOptionsPrice,
   getOptionName,
+  getOptionPrice,
 } from '@/lib/common'
 import trpc from '@/lib/client/trpc'
 import Spinner from '@/components/core/Spinner'
 import { ScrollFader } from '@/components/cart/ScrollFader'
 import SwipeToDelete from './SwipeToDelete'
 import Button from '@/components/core/Button'
+import OptionPrice from '../core/OptionPrice'
 
 const COLOR_HIGHLIGHT = colors.yellow[500] + (25).toString(16)
 const COLOR_TRANSPARENT = 'rgba(255, 255, 255, 0)'
@@ -158,12 +160,11 @@ function CartItemCard(props: {
 
     if (cartItem.optionsKey === '__skeleton') return basePrice
 
-    const orderOptionsPrice = getOrderOptionsPrice(
+    return getOrderOptionsPrice(
       cartItem.options,
       cartItem.commodityOnMenu.commodity.optionSets,
+      basePrice,
     )
-
-    return basePrice + orderOptionsPrice
   }, [cartItem])
 
   const quantities = cartItem.invalid
@@ -236,7 +237,7 @@ function CartItemCard(props: {
                     cartItem.commodityOnMenu.commodity.image?.path ??
                     settings.RESOURCE_FOOD_PLACEHOLDER
                   }
-                  sizes='(max-width: 1024px) 640px, 1280px'
+                  sizes='256px'
                   alt={
                     cartItem.commodityOnMenu.commodity.name ??
                     'food placeholder'
@@ -274,19 +275,18 @@ function CartItemCard(props: {
                             : [option.optionValue],
                         )
                         .map((optionValue) => {
-                          const price =
-                            typeof optionValue === 'string'
-                              ? 0
-                              : optionValue.price
+                          const price = getOptionPrice(optionValue)
                           return (
                             <span
                               key={getOptionName(optionValue)}
                               className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-hover/options:underline group-data-loading:skeleton @2xl/cart:text-sm'
                             >
                               {getOptionName(optionValue)}
-                              {price > 0 && (
-                                <span className='pl-1'>${price}</span>
-                              )}
+                              <OptionPrice
+                                className='pl-1 text-stone-400'
+                                price={price}
+                                dollarSign
+                              />
                             </span>
                           )
                         })}
