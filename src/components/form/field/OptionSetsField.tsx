@@ -11,13 +11,20 @@ import { useDragControls, Reorder } from 'framer-motion'
 
 import trpc from '@/lib/client/trpc'
 import { useStore, NotificationType } from '@/lib/client/store'
-import { OptionSet, OptionValue, getOptionName } from '@/lib/common'
+import {
+  OptionSet,
+  OptionValue,
+  getOptionName,
+  getOptionPrice,
+  mergeOptionSets,
+} from '@/lib/common'
 import Spinner from '@/components/core/Spinner'
 import { InputFieldProps } from './define'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import TextInput from '../base/TextInput'
 import CheckBox from '../base/CheckBox'
 import NumberInput from '../base/NumberInput'
+import { useDialog } from '@/components/core/Dialog'
 
 export default function OptionSetsField<T extends FieldValues>(
   props: InputFieldProps<'optionSets', T>,
@@ -27,6 +34,7 @@ export default function OptionSetsField<T extends FieldValues>(
     props.formInput.defaultValue || [],
   )
   const addNotification = useStore((state) => state.addNotification)
+  const { showDialog, dialog } = useDialog()
 
   // set rfh value
   useEffect(() => {
@@ -57,9 +65,16 @@ export default function OptionSetsField<T extends FieldValues>(
     (addedOptionSets: OptionSet[]) => {
       const addedNames = addedOptionSets.map((os) => os.name)
       if (currentOptionSets.some((os) => addedNames.includes(os.name))) {
-        addNotification({
-          type: NotificationType.ERROR,
-          message: '選項集名稱重複',
+        showDialog({
+          title: '選項集名稱重複',
+          content: '有重複的選項，確定要覆蓋嗎',
+          cancel: true,
+          confirmText: '覆蓋',
+          onConfirm() {
+            setCurrentOptionSets(
+              mergeOptionSets(currentOptionSets, addedOptionSets),
+            )
+          },
         })
         return
       }
@@ -147,6 +162,7 @@ export default function OptionSetsField<T extends FieldValues>(
           新增選項集
           <PlusIcon className='h-4 w-4' />
         </button>
+        {dialog}
       </Reorder.Group>
     </>
   )
@@ -160,6 +176,7 @@ function OptionSetField(props: {
   const controls = useDragControls()
   const [isEdit, setIsEdit] = useState(props.added ?? false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const addNotification = useStore((state) => state.addNotification)
 
   // autofocus
   useEffect(() => {
@@ -257,18 +274,34 @@ function OptionSetField(props: {
             <OptionField
               key={getOptionName(option)}
               option={option}
-              onChange={(newOption) =>
+              onChange={(newOption) => {
+                const newOptions = props.optionSet.options
+                  .map((o) =>
+                    getOptionName(o) === getOptionName(option)
+                      ? {
+                          name: getOptionName(newOption),
+                          price: getOptionPrice(newOption),
+                        }
+                      : {
+                          name: getOptionName(o),
+                          price: getOptionPrice(o),
+                        },
+                  )
+                  .filter((o) => o.name !== '')
+
                 props.onChange({
                   ...props.optionSet,
-                  options: [
-                    ...new Set(
-                      props.optionSet.options
-                        .map((o) => (o === option ? newOption : o))
-                        .filter((o) => o !== ''),
-                    ),
-                  ],
+                  options: newOptions.filter((o, i) => {
+                    if (newOptions.findIndex((o2) => o2.name === o.name) === i)
+                      return true
+                    addNotification({
+                      type: NotificationType.ERROR,
+                      message: '選項名稱重複',
+                    })
+                    return false
+                  }),
                 })
-              }
+              }}
               added={
                 option === ' ' && index === props.optionSet.options.length - 1
               }
@@ -319,9 +352,10 @@ function OptionField(props: {
   // applyedit
   const applyEdit = useCallback(() => {
     if (!inputNameRef.current || !inputPriceRef.current) return
+    const newPrice = parseInt(inputPriceRef.current.value)
     props.onChange({
       name: inputNameRef.current.value.trim(),
-      price: parseInt(inputPriceRef.current.value),
+      price: isNaN(newPrice) ? 0 : newPrice,
     })
     setIsEditName(false)
     setIsEditPrice(false)
@@ -372,13 +406,22 @@ function OptionField(props: {
         <NumberInput
           ref={inputPriceRef}
           className={twMerge(
-            'ml-1 max-w-[6ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300 disabled:opacity-100',
+            'ml-1 max-w-[7ch] rounded-md border-transparent bg-white p-1 placeholder:text-stone-300 disabled:opacity-100',
             !isEditPrice && 'pointer-events-none hover:bg-stone-100',
             isEditPrice && 'bg-stone-100',
           )}
           disabled={!isEditPrice}
           onBlur={applyEdit}
-          defaultValue={price}
+          value={price}
+          min={-999}
+          max={999}
+          onChange={(e) => {
+            const newValue = parseInt(e.target.value)
+            props.onChange({
+              name,
+              price: newValue,
+            })
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               applyEdit()
