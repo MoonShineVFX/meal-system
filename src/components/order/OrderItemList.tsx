@@ -5,7 +5,8 @@ import { ChevronRightIcon } from '@heroicons/react/24/outline'
 
 import { OrderItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
-import { settings, getOptionName } from '@/lib/common'
+import { settings, getOptionName, getOptionPrice } from '@/lib/common'
+import OptionPrice from '../core/OptionPrice'
 
 const SCROLL_WIDTH = 256
 
@@ -90,7 +91,7 @@ export default function OrderItemList(props: {
                 <Image
                   className='object-cover group-data-loading:hidden'
                   src={item?.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER}
-                  sizes='(max-width: 1024px) 640px, 1280px'
+                  sizes='256px'
                   alt={item?.name ?? 'food'}
                   fill
                 />
@@ -114,18 +115,18 @@ export default function OrderItemList(props: {
                       )
                     : ([...Array(2).fill(undefined)] as undefined[])
                   ).map((option, index) => {
-                    const price = option
-                      ? typeof option === 'string'
-                        ? 0
-                        : option.price
-                      : 0
+                    const price = option ? getOptionPrice(option) : 0
                     return (
                       <span
                         key={option ? getOptionName(option) : index}
                         className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-data-loading:skeleton lg:text-sm'
                       >
                         {option ? getOptionName(option) : '選項'}
-                        {price > 0 && <span className='pl-1'>${price}</span>}
+                        <OptionPrice
+                          price={price}
+                          dollarSign
+                          className='pl-1 text-xs text-stone-400'
+                        />
                       </span>
                     )
                   })}

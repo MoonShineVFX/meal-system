@@ -48,7 +48,7 @@ export default function COMCard(props: {
               src={
                 com?.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
               }
-              sizes='(max-width: 375px) 50vw, (max-width: 750px) 33vw, 180px'
+              sizes='256px'
               alt={com?.commodity.name ?? '餐點圖片'}
             />
           </div>

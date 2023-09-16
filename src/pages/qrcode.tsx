@@ -70,8 +70,11 @@ export default function PageQRCode() {
             </p>
             <p className='text-lg font-bold text-yellow-500'>
               $
-              {getOrderOptionsPrice(data.options, data.commodity.optionSets) +
-                data.commodity.price}
+              {getOrderOptionsPrice(
+                data.options,
+                data.commodity.optionSets,
+                data.commodity.price,
+              )}
             </p>
             <div className='flex flex-col gap-0.5'>
               {Object.entries(data.options)
@@ -109,10 +112,11 @@ export default function PageQRCode() {
             </label>
             <Checkout
               isLoading={false}
-              totalPrice={
-                getOrderOptionsPrice(data.options, data.commodity.optionSets) +
-                data.commodity.price
-              }
+              totalPrice={getOrderOptionsPrice(
+                data.options,
+                data.commodity.optionSets,
+                data.commodity.price,
+              )}
               retailCipher={cipher}
               onDeposit={() => addToHistory(`/qrcode?key=${cipher}`)}
               autoCheckout={qrcodeAutoCheckout}

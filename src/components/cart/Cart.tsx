@@ -276,6 +276,7 @@ export default function Cart() {
           <section>
             <Checkout
               isLoading={cartIsLoading}
+              isDisabled={!cartData || cartData.cartItems.length === 0}
               className={
                 cartData && cartData.cartItems.length === 0
                   ? 'max-sm:hidden'
@@ -286,12 +287,11 @@ export default function Cart() {
                   ? cartData.cartItems.reduce(
                       (acc: number, cartItem) =>
                         (acc +=
-                          (getOrderOptionsPrice(
+                          getOrderOptionsPrice(
                             cartItem.options,
                             cartItem.commodityOnMenu.commodity.optionSets,
-                          ) +
-                            cartItem.commodityOnMenu.commodity.price) *
-                          cartItem.quantity),
+                            cartItem.commodityOnMenu.commodity.price,
+                          ) * cartItem.quantity),
                       0,
                     )
                   : 0

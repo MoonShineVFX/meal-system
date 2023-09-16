@@ -22,13 +22,16 @@ import {
   OrderOptions,
   getMenuName,
   getOptionName,
+  getOptionPrice,
   getOrderOptionsPrice,
+  validateAndSortOrderOptions,
 } from '@/lib/common'
 import Image from '@/components/core/Image'
 import Button from '@/components/core/Button'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import { useStore } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
+import OptionPrice from '../core/OptionPrice'
 
 type FormInputs = {
   quantity: number
@@ -42,15 +45,19 @@ function COMDialogContent(props: {
   const addCartMutation = trpc.cart.add.useMutation()
   const { com } = props
   const [isLimited, setIsLimited] = useState(false)
-  const { currentMenu, getComOptionsMemo, addCOMOptionsMemo } = useStore(
-    (state) => ({
-      currentMenu: state.currentMenu,
-      getComOptionsMemo: state.getCOMOptionsMemo,
-      addCOMOptionsMemo: state.addCOMOptionsMemo,
-    }),
-  )
-  const { register, handleSubmit, control, reset, setValue, getValues, watch } =
-    useForm<FormInputs>({
+  const {
+    currentMenu,
+    getComOptionsMemo,
+    addCOMOptionsMemo,
+    removeCOMOptionsMemo,
+  } = useStore((state) => ({
+    currentMenu: state.currentMenu,
+    getComOptionsMemo: state.getCOMOptionsMemo,
+    addCOMOptionsMemo: state.addCOMOptionsMemo,
+    removeCOMOptionsMemo: state.removeCOMOptionsMemo,
+  }))
+  const { register, handleSubmit, control, reset, watch } = useForm<FormInputs>(
+    {
       defaultValues: {
         quantity: 1,
         options: com.commodity.optionSets
@@ -63,7 +70,8 @@ function COMDialogContent(props: {
             {},
           ),
       },
-    })
+    },
+  )
 
   const currentOptions = watch('options')
 
@@ -76,22 +84,41 @@ function COMDialogContent(props: {
           (currentMenu?.limitPerUser !== undefined &&
             currentMenu.limitPerUser > 0),
       )
-      reset()
+
+      try {
+        const comOptionsMemo = getComOptionsMemo(com.commodity.id.toString())
+        if (comOptionsMemo) {
+          validateAndSortOrderOptions({
+            options: comOptionsMemo,
+            truthOptionSets: com.commodity.optionSets,
+          })
+          reset({
+            options: comOptionsMemo,
+          })
+          return
+        }
+      } catch (error) {
+        removeCOMOptionsMemo(com.commodity.id.toString())
+        console.debug(error)
+      }
+
+      reset({
+        options: com.commodity.optionSets
+          ?.filter((optionSet) => optionSet.multiSelect)
+          .reduce(
+            (acc: OrderOptions, optionSet) => ({
+              ...acc,
+              [optionSet.name]: [],
+            }),
+            {},
+          ),
+      })
     }
   }, [com])
 
-  // Load options from local storage
-  useEffect(() => {
-    if (com) {
-      const comOptionsMemo = getComOptionsMemo(com.commodity.id.toString())
-      if (comOptionsMemo) {
-        setValue('options', comOptionsMemo)
-      }
-    }
-  }, [com?.commodity.id])
-
   const handleCreateCartItem: SubmitHandler<FormInputs> = useCallback(
     async (formData) => {
+      addCOMOptionsMemo(com.commodity.id.toString(), formData.options)
       addCartMutation.mutate(
         {
           commodityId: com.commodity.id,
@@ -109,23 +136,14 @@ function COMDialogContent(props: {
     [com],
   )
 
-  // save options to local storage
-  const handleOnOptionsChange = useCallback(
-    (options: OrderOptions) => {
-      addCOMOptionsMemo(com.commodity.id.toString(), options)
-    },
-    [currentMenu?.id, com.commodity.id],
-  )
-
   const isUnavailable =
     (currentMenu?.unavailableReasons.length ?? 0) +
       com.unavailableReasons.length >
     0
 
-  const optionsPrice = getOrderOptionsPrice(
-    currentOptions,
-    com.commodity.optionSets,
-  )
+  const optionsPrice = com
+    ? getOrderOptionsPrice(currentOptions, com.commodity.optionSets)
+    : 0
 
   return (
     <section
@@ -154,7 +172,7 @@ function COMDialogContent(props: {
             src={
               com.commodity.image?.path ?? settings.RESOURCE_FOOD_PLACEHOLDER
             }
-            sizes='(max-width: 375px) 100vw, (max-width: 750px) 75vw, 640px'
+            sizes='(max-width: 768px) 640px, 256px'
             alt={com.commodity.name ?? 'food placeholder'}
           />
         </div>
@@ -163,11 +181,6 @@ function COMDialogContent(props: {
       <form
         className='group flex shrink-0 grow flex-col p-4 pb-0 @container/detail sm:p-0'
         onSubmit={handleSubmit(handleCreateCartItem)}
-        onChange={(e) => {
-          if (e.type === 'change' && e.target instanceof HTMLInputElement) {
-            handleOnOptionsChange(getValues().options)
-          }
-        }}
         {...twData({ available: !isUnavailable })}
       >
         {/* Info */}
@@ -177,9 +190,7 @@ function COMDialogContent(props: {
           </h1>
           <h2 className='text-xl tracking-wider text-yellow-500'>
             ${com.commodity.price}
-            {optionsPrice > 0 && (
-              <span className='pl-2 text-base'>+{optionsPrice}</span>
-            )}
+            <OptionPrice className='pl-2 text-base' price={optionsPrice} />
           </h2>
         </header>
         {/* Scroll on md */}
@@ -311,7 +322,7 @@ export function OptionSetForm(props: {
       <div className='flex flex-wrap gap-2'>
         {props.optionSet.options.map((option) => {
           const name = getOptionName(option)
-          const price = typeof option === 'string' ? 0 : option.price
+          const price = getOptionPrice(option)
 
           const isChecked = Array.isArray(field.value)
             ? field.value.map((o) => getOptionName(o)).includes(name)
@@ -344,14 +355,18 @@ export function OptionSetForm(props: {
                     return
                   }
 
-                  field.onChange([...values, option])
+                  field.onChange([
+                    ...values,
+                    {
+                      name,
+                      price,
+                    },
+                  ])
                 }}
               />
               <div className='m-[0.0625rem] cursor-pointer whitespace-nowrap rounded-2xl border border-stone-300 py-2 px-3 indent-[0.05em] text-sm tracking-wider peer-checked:m-0 peer-checked:border-2 peer-checked:border-yellow-500 hover:border-stone-400 active:border-stone-400'>
                 {name}
-                {price > 0 ? (
-                  <span className='pl-1 text-yellow-500'>+{price}</span>
-                ) : null}
+                <OptionPrice className='pl-1' price={price} />
               </div>
             </label>
           )

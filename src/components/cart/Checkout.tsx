@@ -22,6 +22,7 @@ export default function Checkout(props: {
   retailCipher?: string
   onDeposit?: () => void
   autoCheckout?: boolean
+  isDisabled?: boolean
 }) {
   const [isClientOrder, setIsClientOrder] = useState<boolean>(false)
   const [isAutoCheckoutInitial, setIsAutoCheckoutInitial] = useState<
@@ -199,7 +200,7 @@ export default function Checkout(props: {
         <Button
           isLoading={currentMutation.isLoading || currentMutation.isSuccess}
           isBusy={currentMutation.isLoading || currentMutation.isSuccess}
-          isDisabled={(isNotEnough || props.totalPrice === 0) && !isClientOrder}
+          isDisabled={(isNotEnough && !isClientOrder) || props.isDisabled}
           label={
             isNotEnough ? '餘額不足' : isClientOrder ? '確認下單' : '確認付款'
           }

@@ -210,63 +210,6 @@ export function generateCookie(token: string | undefined) {
   return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict`
 }
 
-export function generateOptionsKey(options: OrderOptions) {
-  return Object.entries(options)
-    .sort()
-    .reduce((acc, cur) => {
-      const prefix = acc === '' ? '' : '_'
-      const value = Array.isArray(cur[1])
-        ? cur[1]
-            .map((c) => getOptionName(c))
-            .sort()
-            .join(',')
-        : getOptionName(cur[1])
-      return `${acc}${prefix}${cur[0]}:${value}`
-    }, '')
-}
-
-export function getOptionName(option: OptionValue | null | undefined) {
-  if (option === null || option === undefined) return ''
-  return typeof option === 'string' ? option : option.name
-}
-export function getOrderOptionsPrice(
-  orderOptions: OrderOptions,
-  optionSets: OptionSet[],
-) {
-  let price = 0
-  for (const [optionSetName, optionValues] of Object.entries(orderOptions)) {
-    const optionSet = optionSets.find(
-      (optionSet) => optionSet.name === optionSetName,
-    )
-    if (!optionSet) {
-      console.debug('OptionSet not found', orderOptions, optionSets)
-      continue
-    }
-
-    let names: string[]
-    if (!Array.isArray(optionValues)) {
-      names = [getOptionName(optionValues)]
-    } else {
-      names = optionValues.map((optionValue) => getOptionName(optionValue))
-    }
-
-    names.forEach((name) => {
-      const option = optionSet.options.find(
-        (option) => getOptionName(option) === name,
-      )
-      if (!option) {
-        console.debug('Option not found', name)
-        return
-      }
-      if (typeof option !== 'string') {
-        price += option.price
-      }
-    })
-  }
-
-  return price
-}
-
 export function validateRole(sourceRole: UserRole, targetRole: UserRole) {
   const roleWeight = {
     [UserRole.ADMIN]: 100,
@@ -312,4 +255,168 @@ export function getMenuName(menu?: Pick<Menu, 'date' | 'name' | 'type'>) {
     month: 'long',
     day: 'numeric',
   })} ${typeName}${menu.name !== '' ? ` - ${menu.name}` : ''}`
+}
+
+// Options
+export function generateOptionsKey(options: OrderOptions) {
+  return Object.entries(options)
+    .sort()
+    .reduce((acc, cur) => {
+      const prefix = acc === '' ? '' : '_'
+      const value = Array.isArray(cur[1])
+        ? cur[1]
+            .map((c) => getOptionName(c))
+            .sort()
+            .join(',')
+        : getOptionName(cur[1])
+      return `${acc}${prefix}${cur[0]}:${value}`
+    }, '')
+}
+
+export function getOptionName(option: OptionValue | null | undefined) {
+  if (option === null || option === undefined) return ''
+  return typeof option === 'string' ? option : option.name
+}
+
+export function getOptionPrice(option: OptionValue | null | undefined) {
+  if (option === null || option === undefined) return 0
+  return typeof option === 'string' ? 0 : option.price
+}
+
+export function getOrderOptionsPrice(
+  orderOptions: OrderOptions,
+  optionSets: OptionSet[],
+  basePrice: number | null = null,
+) {
+  let price = 0
+  for (const [optionSetName, optionValues] of Object.entries(orderOptions)) {
+    const optionSet = optionSets.find(
+      (optionSet) => optionSet.name === optionSetName,
+    )
+    if (!optionSet) {
+      console.debug('OptionSet not found', orderOptions, optionSets)
+      continue
+    }
+
+    let names: string[]
+    if (!Array.isArray(optionValues)) {
+      names = [getOptionName(optionValues)]
+    } else {
+      names = optionValues.map((optionValue) => getOptionName(optionValue))
+    }
+
+    names.forEach((name) => {
+      const option = optionSet.options.find(
+        (option) => getOptionName(option) === name,
+      )
+      if (!option) {
+        console.debug('Option not found', name)
+        return
+      }
+      if (typeof option !== 'string') {
+        price += option.price
+      }
+    })
+  }
+
+  if (basePrice === null) return price
+  return Math.max(price + basePrice, 0)
+}
+
+/* Valid Cart Options */
+export function validateAndSortOrderOptions({
+  options,
+  truthOptionSets,
+}: {
+  options: OrderOptions
+  truthOptionSets: OptionSet[]
+}) {
+  // Check same keys
+  const optionsKeys = Object.keys(options)
+  const truthOptionSetsKeys = truthOptionSets.map((optionSet) => optionSet.name)
+  const uniqueKeys = new Set([...optionsKeys, ...truthOptionSetsKeys])
+  const hasSameKeys = uniqueKeys.size === optionsKeys.length
+
+  if (!hasSameKeys) {
+    throw new Error(
+      `選項不同: options: ${optionsKeys}, truth: ${truthOptionSetsKeys}`,
+    )
+  }
+
+  // Sort and valid options
+  const sortedOptions: OrderOptions = {}
+  const sortedTruthOptionSets = truthOptionSets.sort(
+    (a, b) => a.order - b.order,
+  )
+
+  for (const truthOptionSet of sortedTruthOptionSets) {
+    const optionValues = options[truthOptionSet.name]
+
+    // Multi select
+    if (truthOptionSet.multiSelect) {
+      if (!Array.isArray(optionValues)) {
+        throw new Error(`選項不是多選: ${truthOptionSet.name}`)
+      }
+      if (
+        !optionValues.every((optionValue) => {
+          const truthOption = truthOptionSet.options.find(
+            (o) => getOptionName(o) === getOptionName(optionValue),
+          )
+          if (!truthOption) return false
+
+          const price = typeof optionValue === 'string' ? 0 : optionValue.price
+          const truthPrice =
+            typeof truthOption === 'string' ? 0 : truthOption.price
+
+          return price === truthPrice
+        })
+      ) {
+        throw new Error(
+          `找不到選項或選項不合法: ${truthOptionSet.name} - ${optionValues.map(
+            (o) => getOptionName(o),
+          )}`,
+        )
+      }
+
+      const sortedOptionValue = optionValues.sort(
+        (a, b) =>
+          truthOptionSet.options
+            .map((o) => getOptionName(o))
+            .indexOf(getOptionName(a)) -
+          truthOptionSet.options
+            .map((o) => getOptionName(o))
+            .indexOf(getOptionName(b)),
+      )
+      sortedOptions[truthOptionSet.name] = sortedOptionValue
+      // Single select
+    } else {
+      if (Array.isArray(optionValues)) {
+        throw new Error(`選項不是單選: ${truthOptionSet.name}`)
+      }
+      if (
+        ![optionValues].every((optionValue) => {
+          const truthOption = truthOptionSet.options.find(
+            (o) => getOptionName(o) === getOptionName(optionValue),
+          )
+          if (!truthOption) return false
+
+          const price = typeof optionValue === 'string' ? 0 : optionValue.price
+          const truthPrice =
+            typeof truthOption === 'string' ? 0 : truthOption.price
+
+          return price === truthPrice
+        })
+      ) {
+        throw new Error(
+          `找不到選項或選項不合法: ${truthOptionSet.name} - ${getOptionName(
+            optionValues,
+          )}`,
+        )
+      }
+
+      sortedOptions[truthOptionSet.name] = optionValues
+    }
+  }
+
+  return sortedOptions
 }

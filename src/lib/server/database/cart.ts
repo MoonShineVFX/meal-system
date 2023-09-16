@@ -2,13 +2,12 @@ import { Prisma, PrismaClient } from '@prisma/client'
 
 import { getMenuWithComs } from './menu'
 import {
-  OptionSet,
   OrderOptions,
   generateOptionsKey,
   ConvertPrismaJson,
-  getOptionName,
 } from '@/lib/common'
 import { prisma } from './define'
+import { validateAndSortOrderOptions } from '@/lib/common'
 
 /** Check CartItem is creatable */
 export async function validateCartItemCreatable({
@@ -48,7 +47,7 @@ export async function validateCartItemCreatable({
 
   // Validate options
   const comOptionSets = com.commodity.optionSets
-  return await validateAndSortCartOptions({
+  return validateAndSortOrderOptions({
     options,
     truthOptionSets: comOptionSets,
   })
@@ -267,7 +266,7 @@ export async function getCartItemsBase({
     // validate options
     const comOptionSets = cartItem.commodityOnMenu.commodity.optionSets
     try {
-      await validateAndSortCartOptions({
+      validateAndSortOrderOptions({
         options: cartItem.options,
         truthOptionSets: comOptionSets,
       })
@@ -527,98 +526,4 @@ export async function deleteCartItems({
       where: { userId: userId, invalid: invalidOnly },
     })
   }
-}
-
-/* Valid Cart Options */
-async function validateAndSortCartOptions({
-  options,
-  truthOptionSets,
-}: {
-  options: OrderOptions
-  truthOptionSets: OptionSet[]
-}) {
-  // Check same keys
-  const optionsKeys = Object.keys(options)
-  const truthOptionSetsKeys = truthOptionSets.map((optionSet) => optionSet.name)
-  const uniqueKeys = new Set([...optionsKeys, ...truthOptionSetsKeys])
-  const hasSameKeys = uniqueKeys.size === optionsKeys.length
-
-  if (!hasSameKeys) {
-    throw new Error(
-      `選項不同: options: ${optionsKeys}, truth: ${truthOptionSetsKeys}`,
-    )
-  }
-
-  // Sort and valid options
-  const sortedOptions: OrderOptions = {}
-  const sortedTruthOptionSets = truthOptionSets.sort(
-    (a, b) => a.order - b.order,
-  )
-
-  for (const truthOptionSet of sortedTruthOptionSets) {
-    const optionValues = options[truthOptionSet.name]
-
-    // Multi select
-    if (truthOptionSet.multiSelect) {
-      if (!Array.isArray(optionValues)) {
-        throw new Error(`選項不是多選: ${truthOptionSet.name}`)
-      }
-      if (
-        !optionValues.every((optionValue) => {
-          const truthOption = truthOptionSet.options.find(
-            (o) => getOptionName(o) === getOptionName(optionValue),
-          )
-          if (!truthOption) return false
-
-          const price = typeof optionValue === 'string' ? 0 : optionValue.price
-          const truthPrice =
-            typeof truthOption === 'string' ? 0 : truthOption.price
-
-          return price === truthPrice
-        })
-      ) {
-        throw new Error(
-          `找不到選項或選項不合法: ${truthOptionSet.name} - ${optionValues}`,
-        )
-      }
-
-      const sortedOptionValue = optionValues.sort(
-        (a, b) =>
-          truthOptionSet.options
-            .map((o) => getOptionName(o))
-            .indexOf(getOptionName(a)) -
-          truthOptionSet.options
-            .map((o) => getOptionName(o))
-            .indexOf(getOptionName(b)),
-      )
-      sortedOptions[truthOptionSet.name] = sortedOptionValue
-      // Single select
-    } else {
-      if (Array.isArray(optionValues)) {
-        throw new Error(`選項不是單選: ${truthOptionSet.name}`)
-      }
-      if (
-        ![optionValues].every((optionValue) => {
-          const truthOption = truthOptionSet.options.find(
-            (o) => getOptionName(o) === getOptionName(optionValue),
-          )
-          if (!truthOption) return false
-
-          const price = typeof optionValue === 'string' ? 0 : optionValue.price
-          const truthPrice =
-            typeof truthOption === 'string' ? 0 : truthOption.price
-
-          return price === truthPrice
-        })
-      ) {
-        throw new Error(
-          `找不到選項或選項不合法: ${truthOptionSet.name} - ${optionValues}`,
-        )
-      }
-
-      sortedOptions[truthOptionSet.name] = optionValues
-    }
-  }
-
-  return sortedOptions
 }
