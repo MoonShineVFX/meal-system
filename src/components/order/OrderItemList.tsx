@@ -5,7 +5,7 @@ import { ChevronRightIcon } from '@heroicons/react/24/outline'
 
 import { OrderItems } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
-import { settings } from '@/lib/common'
+import { settings, getOptionName } from '@/lib/common'
 
 const SCROLL_WIDTH = 256
 
@@ -113,14 +113,22 @@ export default function OrderItemList(props: {
                         Array.isArray(value) ? value : [value],
                       )
                     : ([...Array(2).fill(undefined)] as undefined[])
-                  ).map((option, index) => (
-                    <span
-                      key={option ?? index}
-                      className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-data-loading:skeleton lg:text-sm'
-                    >
-                      {option ?? '選項'}
-                    </span>
-                  ))}
+                  ).map((option, index) => {
+                    const price = option
+                      ? typeof option === 'string'
+                        ? 0
+                        : option.price
+                      : 0
+                    return (
+                      <span
+                        key={option ? getOptionName(option) : index}
+                        className='w-fit whitespace-nowrap rounded-xl text-xs text-stone-400 group-data-loading:skeleton lg:text-sm'
+                      >
+                        {option ? getOptionName(option) : '選項'}
+                        {price > 0 && <span className='pl-1'>${price}</span>}
+                      </span>
+                    )
+                  })}
                 </div>
               </div>
             </div>

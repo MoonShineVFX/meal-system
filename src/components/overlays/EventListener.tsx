@@ -194,6 +194,7 @@ export default function EventListener() {
         case SERVER_NOTIFY.POS_UPDATE:
           trpcContext.pos.getLive.invalidate()
           trpcContext.pos.getReservation.invalidate()
+          trpcContext.order.getList.invalidate()
           break
         case SERVER_NOTIFY.CATEGORY_ADD:
         case SERVER_NOTIFY.CATEGORY_UPDATE:

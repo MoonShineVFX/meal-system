@@ -6,6 +6,7 @@ import {
   UserAuthority,
   User,
 } from '@prisma/client'
+import { z } from 'zod'
 
 import type { NotificationType } from '@/lib/client/store'
 
@@ -69,14 +70,23 @@ export enum CurrencyType {
   POINT = 'point',
 }
 
+export const optionValueSchema = z.union([
+  z.string(),
+  z.object({
+    name: z.string(),
+    price: z.number(),
+  }),
+])
+export type OptionValue = z.infer<typeof optionValueSchema>
+
 export type OptionSet = {
   name: string
   multiSelect: boolean
   order: number
-  options: string[]
+  options: OptionValue[]
 }
 
-export type OrderOptions = Record<string, string | string[]>
+export type OrderOptions = Record<string, OptionValue | OptionValue[]>
 export const ORDER_STATUS = [
   'timeCanceled',
   'timeCompleted',
@@ -205,9 +215,56 @@ export function generateOptionsKey(options: OrderOptions) {
     .sort()
     .reduce((acc, cur) => {
       const prefix = acc === '' ? '' : '_'
-      const value = Array.isArray(cur[1]) ? cur[1].sort().join(',') : cur[1]
+      const value = Array.isArray(cur[1])
+        ? cur[1]
+            .map((c) => getOptionName(c))
+            .sort()
+            .join(',')
+        : getOptionName(cur[1])
       return `${acc}${prefix}${cur[0]}:${value}`
     }, '')
+}
+
+export function getOptionName(option: OptionValue | null | undefined) {
+  if (option === null || option === undefined) return ''
+  return typeof option === 'string' ? option : option.name
+}
+export function getOrderOptionsPrice(
+  orderOptions: OrderOptions,
+  optionSets: OptionSet[],
+) {
+  let price = 0
+  for (const [optionSetName, optionValues] of Object.entries(orderOptions)) {
+    const optionSet = optionSets.find(
+      (optionSet) => optionSet.name === optionSetName,
+    )
+    if (!optionSet) {
+      console.debug('OptionSet not found', orderOptions, optionSets)
+      continue
+    }
+
+    let names: string[]
+    if (!Array.isArray(optionValues)) {
+      names = [getOptionName(optionValues)]
+    } else {
+      names = optionValues.map((optionValue) => getOptionName(optionValue))
+    }
+
+    names.forEach((name) => {
+      const option = optionSet.options.find(
+        (option) => getOptionName(option) === name,
+      )
+      if (!option) {
+        console.debug('Option not found', name)
+        return
+      }
+      if (typeof option !== 'string') {
+        price += option.price
+      }
+    })
+  }
+
+  return price
 }
 
 export function validateRole(sourceRole: UserRole, targetRole: UserRole) {

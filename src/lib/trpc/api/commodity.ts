@@ -9,7 +9,7 @@ import {
   deleteCommodities,
 } from '@/lib/server/database'
 import { staffProcedure, router } from '../trpc'
-import { SERVER_NOTIFY } from '@/lib/common'
+import { SERVER_NOTIFY, optionValueSchema } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const CommodityRouter = router({
@@ -24,7 +24,7 @@ export const CommodityRouter = router({
             z.object({
               name: z.string(),
               multiSelect: z.boolean(),
-              options: z.array(z.string()),
+              options: z.array(optionValueSchema),
               order: z.number(),
             }),
           )
@@ -69,7 +69,7 @@ export const CommodityRouter = router({
             z.object({
               name: z.string(),
               multiSelect: z.boolean(),
-              options: z.array(z.string()),
+              options: z.array(optionValueSchema),
               order: z.number(),
             }),
           )
@@ -119,7 +119,7 @@ export const CommodityRouter = router({
               z.object({
                 name: z.string(),
                 multiSelect: z.boolean(),
-                options: z.array(z.string()),
+                options: z.array(optionValueSchema),
                 order: z.number(),
               }),
             )

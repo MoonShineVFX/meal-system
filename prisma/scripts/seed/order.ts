@@ -153,3 +153,60 @@ export async function seedLiveOrders() {
     })
   }
 }
+
+export async function seedReserveOrders() {
+  const userCount = 100
+
+  // ensure users
+  for (let i = 0; i < userCount; i++) {
+    console.log('>> Seed user:', i)
+    await ensureUser({
+      userId: `_user_${i}`,
+      name: `使用者${i}`,
+      role: UserRole.USER,
+      pointBalance: 500000,
+      creditBalance: 500000,
+    })
+  }
+
+  // get reserve coms
+  const coms = await prismaCient.commodityOnMenu.findMany({
+    where: {
+      menu: {
+        id: 82,
+      },
+      isDeleted: false,
+    },
+    include: {
+      commodity: {
+        select: {
+          optionSets: true,
+        },
+      },
+    },
+  })
+
+  // add to cart
+  for (let i = 0; i < userCount; i++) {
+    console.log('>> Seed order:', i)
+    const userId = `_user_${i}`
+
+    const itemCount = Math.floor(Math.random() * 2) + 1
+    for (let a = 0; a < itemCount; a++) {
+      const oCom = coms[Math.floor(Math.random() * coms.length)]
+      const com = oCom as ConvertPrismaJson<typeof oCom>
+
+      await createCartItem({
+        userId: userId,
+        menuId: com.menuId,
+        commodityId: com.commodityId,
+        quantity: Math.floor(Math.random() * 2) + 1,
+        options: randomPickOptions(com.commodity.optionSets),
+      })
+    }
+
+    await createOrderFromCart({
+      userId: userId,
+    })
+  }
+}

@@ -126,7 +126,6 @@ export default function Menus() {
         },
         useMutation: trpc.menu.createOrEdit.useMutation,
         onSubmit(formData, mutation) {
-          console.log(formData)
           mutation.mutate({
             ...formData,
             name: formData.intro.name,
@@ -138,6 +137,7 @@ export default function Menus() {
             createSupplier: formData.intro.createSupplier,
             supplierId: formData.intro.supplierId,
             isEdit: isEdit,
+            id: menu?.id,
           })
         },
         closeConfirm: {

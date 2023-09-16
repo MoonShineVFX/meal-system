@@ -5,7 +5,7 @@ import trpc from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Image from '@/components/core/Image'
-import { settings } from '@/lib/common'
+import { settings, getOrderOptionsPrice, getOptionName } from '@/lib/common'
 import Checkout from '@/components/cart/Checkout'
 import Title from '@/components/core/Title'
 import { useStore } from '@/lib/client/store'
@@ -69,7 +69,9 @@ export default function PageQRCode() {
               {data.commodity.name}
             </p>
             <p className='text-lg font-bold text-yellow-500'>
-              ${data.commodity.price}
+              $
+              {getOrderOptionsPrice(data.options, data.commodity.optionSets) +
+                data.commodity.price}
             </p>
             <div className='flex flex-col gap-0.5'>
               {Object.entries(data.options)
@@ -81,7 +83,7 @@ export default function PageQRCode() {
                     key={index}
                     className='whitespace-nowrap text-xs text-stone-400'
                   >
-                    {value}
+                    {getOptionName(value)}
                   </span>
                 ))}
             </div>
@@ -107,7 +109,10 @@ export default function PageQRCode() {
             </label>
             <Checkout
               isLoading={false}
-              totalPrice={data.commodity.price}
+              totalPrice={
+                getOrderOptionsPrice(data.options, data.commodity.optionSets) +
+                data.commodity.price
+              }
               retailCipher={cipher}
               onDeposit={() => addToHistory(`/qrcode?key=${cipher}`)}
               autoCheckout={qrcodeAutoCheckout}

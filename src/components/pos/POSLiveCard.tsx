@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import POSCard from './POSCard'
 import Image from '@/components/core/Image'
 import trpc, { POSLiveDatas } from '@/lib/client/trpc'
-import { settings, OrderStatus } from '@/lib/common'
+import { settings, OrderStatus, getOptionName } from '@/lib/common'
 
 export default function POSLiveCard(props: {
   order?: POSLiveDatas[0]
@@ -107,9 +107,9 @@ export default function POSLiveCard(props: {
                 ).map((optionValue, index) => (
                   <p
                     className='rounded-xl group-data-loading:skeleton'
-                    key={optionValue ?? index}
+                    key={optionValue ? getOptionName(optionValue) : index}
                   >
-                    {optionValue ?? '選項'}
+                    {optionValue ? getOptionName(optionValue) : '選項'}
                   </p>
                 ))}
               </div>

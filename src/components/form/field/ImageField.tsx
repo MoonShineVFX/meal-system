@@ -99,7 +99,6 @@ export default function ImageField<T extends FieldValues>(
       )
     } else {
       // Direct upload if not edited
-      console.log('direct upload')
       const file = validateImageFile(inputFileRef.current!.files!)
       if (!file) {
         console.error('Invalid image file')

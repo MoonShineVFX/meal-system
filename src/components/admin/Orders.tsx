@@ -7,6 +7,7 @@ import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
 import Spinner from '@/components/core/Spinner'
 import { getMenuName } from '@/lib/common'
+import Button from '@/components/core/Button'
 
 export default function Orders() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
@@ -22,7 +23,9 @@ export default function Orders() {
 
   useEffect(() => {
     if (data) {
-      setOrders(data.pages.flatMap((page) => page.orders))
+      setOrders(
+        data.pages.flatMap((page) => page.orders).sort((a, b) => b.id - a.id),
+      )
     }
   }, [data])
 
@@ -123,6 +126,14 @@ export default function Orders() {
                   ''
                 ),
             },
+            {
+              name: '動作',
+              render: (order) => {
+                if (order.timeCanceled !== null || order.timeCompleted !== null)
+                  return <></>
+                return <CancelButton orderId={order.id} />
+              },
+            },
           ]}
           footer={
             hasNextPage ? (
@@ -142,6 +153,29 @@ export default function Orders() {
           }
         />
       </div>
+    </div>
+  )
+}
+
+function CancelButton(props: { orderId: number }) {
+  const updateOrderMutation = trpc.pos.update.useMutation()
+
+  return (
+    <div className='itemshandleUpdateDeposit-center flex gap-2'>
+      <Button
+        textClassName='px-3 py-1 text-sm'
+        className='disabled:opacity-50 hover:bg-stone-200'
+        label={'取消訂單'}
+        theme='secondary'
+        isLoading={updateOrderMutation.isLoading}
+        isDisabled={updateOrderMutation.isLoading}
+        onClick={() =>
+          updateOrderMutation.mutate({
+            orderId: props.orderId,
+            status: 'timeCanceled',
+          })
+        }
+      />
     </div>
   )
 }

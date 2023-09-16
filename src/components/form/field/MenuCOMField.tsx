@@ -156,7 +156,7 @@ export default function MenuCOMField<T extends FieldValues>(
                       }}
                     />
                   </div>
-                  <div className='flex items-center  justify-between gap-2'>
+                  <div className='flex items-center justify-between gap-2'>
                     <label className='whitespace-nowrap text-sm text-stone-400'>
                       每人限購
                     </label>

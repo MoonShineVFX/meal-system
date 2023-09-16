@@ -9,7 +9,7 @@ import {
   getReservationMenusSince,
   getActiveMenus,
   prismaCient,
-  createMenu,
+  upsertMenu,
   createCommodity,
   addCommodityToMenu,
   removeCommoditiesFromMenu,
@@ -17,7 +17,7 @@ import {
   getRetailCOM,
   createOrUpdateSupplier,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY } from '@/lib/common'
+import { SERVER_NOTIFY, optionValueSchema } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 export const MenuRouter = router({
@@ -46,7 +46,7 @@ export const MenuRouter = router({
                     z.object({
                       name: z.string(),
                       multiSelect: z.boolean(),
-                      options: z.array(z.string()),
+                      options: z.array(optionValueSchema),
                       order: z.number(),
                     }),
                   ),
@@ -57,6 +57,7 @@ export const MenuRouter = router({
           .optional(),
         createSupplier: z.boolean().optional(),
         supplierId: z.number().optional(),
+        id: z.number().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -92,9 +93,9 @@ export const MenuRouter = router({
         }
 
         // create menu
-        const menu = await createMenu({
+        const menu = await upsertMenu({
           client,
-          ...(input as Parameters<typeof createMenu>[0]),
+          ...(input as Parameters<typeof upsertMenu>[0]),
           supplierId,
           isEdit: input.isEdit,
         })
@@ -181,7 +182,6 @@ export const MenuRouter = router({
     .input(
       z.object({
         type: z.nativeEnum(MenuType).optional(),
-        date: z.date().optional(),
         menuId: z.number().optional(),
       }),
     )
@@ -189,23 +189,30 @@ export const MenuRouter = router({
       if (!input.menuId && !input.type) {
         throw new Error('menuId or type is required')
       }
-      if (input.type === 'LIVE' && input.date) {
-        throw new Error('LIVE menu does not have a date')
-      } else if (input.type !== 'LIVE' && !input.menuId && !input.date) {
-        throw new Error('Date is required for non MAIN menu')
+
+      let menuId = input.menuId
+      if (
+        input.type &&
+        ['LIVE', 'RETAIL'].includes(input.type) &&
+        !input.menuId
+      ) {
+        const menu = await prismaCient.menu.findFirst({
+          where: {
+            type: input.type,
+            isDeleted: false,
+          },
+        })
+        if (menu) {
+          menuId = menu.id
+        }
+      }
+
+      if (!menuId) {
+        throw new Error('Menu not found')
       }
 
       return await getMenuWithComs({
-        menu: input.menuId
-          ? { menuId: input.menuId! }
-          : input.type === 'LIVE' || input.type === 'RETAIL'
-          ? {
-              type: input.type!,
-            }
-          : {
-              type: input.type!,
-              date: input.date!,
-            },
+        menuId: menuId,
         userId: ctx.userLite.id,
       })
     }),
@@ -241,7 +248,7 @@ export const MenuRouter = router({
         commodityId: z.number(),
         menuId: z.number(),
         options: z
-          .record(z.union([z.string(), z.array(z.string())]))
+          .record(z.union([optionValueSchema, z.array(optionValueSchema)]))
           .optional(),
       }),
     )

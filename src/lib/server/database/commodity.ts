@@ -216,7 +216,7 @@ export async function getCommodities<
       ids,
       time: 'month',
     })
-    console.log(dayStatistics, weekStatistics, monthStatistics)
+
     const commoditiesWithStatistics = commodities.map((com) => {
       const statistics = {
         day: dayStatistics.find((stat) => stat.commodityId === com.id),
@@ -275,16 +275,19 @@ export async function getCommoditiesStatistics(props: {
         gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
         lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
       }
+      break
     case 'week':
       dateRange = {
         gte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7),
         lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
       }
+      break
     case 'month':
       dateRange = {
         gte: new Date(now.getFullYear(), now.getMonth(), 1),
         lt: new Date(now.getFullYear(), now.getMonth() + 1, 1),
       }
+      break
   }
 
   return await prisma.orderItem.groupBy({
@@ -295,8 +298,8 @@ export async function getCommoditiesStatistics(props: {
       },
       order: {
         timeCanceled: null,
+        timeCompleted: dateRange,
       },
-      createdAt: dateRange,
     },
     _sum: {
       quantity: true,
