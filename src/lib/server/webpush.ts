@@ -1,4 +1,9 @@
-import { getUserTokens, deleteSubscription, getOrdersCount } from './database'
+import {
+  getUserTokens,
+  getUsersTokens,
+  deleteSubscription,
+  getManyOrdersCount,
+} from './database'
 import webpush from 'web-push'
 import { settings } from '@/lib/common'
 
@@ -72,18 +77,23 @@ class WebPusher {
       })
   }
 
-  async pushBadgeCountToUser(props: { userId: string }) {
-    const { userId } = props
-    const badgeCount = await getOrdersCount({ userId })
-    const userSubs = await this.getUserSubs(userId)
+  async pushBadgeCountToUser(props: { userIds: string[] }) {
+    const { userIds } = props
+    const badgeCounts = await getManyOrdersCount({ userIds })
+    const usersSubs = await this.getUsersSubs(userIds)
 
-    const promises = userSubs
+    const promises = usersSubs
       .filter((sub) => sub.badgeEnabled)
       .map((sub) => {
+        const { userId, ...rest } = sub
+        const badgeCount = badgeCounts.find((bc) => bc.userId === userId)
+
+        if (!badgeCount) return
+
         return this.push({
-          sub,
+          sub: rest,
           type: 'badge',
-          data: badgeCount,
+          data: badgeCount._count,
         })
       })
 
@@ -124,6 +134,25 @@ class WebPusher {
         endpoint: sub.endpoint!,
         auth: sub.auth!,
         p256dh: sub.p256dh!,
+      }))
+  }
+
+  async getUsersSubs(userIds: string[]) {
+    const usersSubs = await getUsersTokens(userIds)
+    return usersSubs
+      .filter(
+        (sub) =>
+          sub.endpoint !== null &&
+          sub.endpoint !== 'null' &&
+          sub.endpoint !== 'undefined',
+      )
+      .map((sub) => ({
+        notificationEnabled: sub.notificationEnabled,
+        badgeEnabled: sub.badgeEnabled,
+        endpoint: sub.endpoint!,
+        auth: sub.auth!,
+        p256dh: sub.p256dh!,
+        userId: sub.userId,
       }))
   }
 }

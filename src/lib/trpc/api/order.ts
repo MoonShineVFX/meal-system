@@ -47,7 +47,7 @@ export const OrderRouter = router({
       }
 
       webPusher.pushBadgeCountToUser({
-        userId: ctx.userLite.id,
+        userIds: [ctx.userLite.id],
       })
 
       return orders
@@ -133,7 +133,7 @@ export const OrderRouter = router({
       })
 
       webPusher.pushBadgeCountToUser({
-        userId: ctx.userLite.id,
+        userIds: [ctx.userLite.id],
       })
     }),
   getBadgeCount: userProcedure.query(async ({ ctx }) => {

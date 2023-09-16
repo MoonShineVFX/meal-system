@@ -52,16 +52,21 @@ export const POSRouter = router({
       skipNotify: true,
     })
 
+    let userIds: string[] = []
     for (const order of orders) {
       eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
         type: SERVER_NOTIFY.ORDER_UPDATE,
         message: generateOrderNotifyMessage(order.id, 'timeCompleted'),
         link: `/order/id/${order.id}`,
       })
-      webPusher.pushBadgeCountToUser({
-        userId: order.userId,
-      })
+      if (!userIds.includes(order.userId)) {
+        userIds.push(order.userId)
+      }
     }
+
+    webPusher.pushBadgeCountToUser({
+      userIds,
+    })
   }),
   update: staffProcedure
     .input(
@@ -115,7 +120,7 @@ export const POSRouter = router({
       })
 
       webPusher.pushBadgeCountToUser({
-        userId: order.userId,
+        userIds: [order.userId],
       })
     }),
   updateReservation: staffProcedure
@@ -133,6 +138,7 @@ export const POSRouter = router({
     .mutation(async ({ input }) => {
       const orders = await updateOrdersStatus(input)
 
+      let userIds: string[] = []
       for (const order of orders) {
         eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
           type:
@@ -143,10 +149,14 @@ export const POSRouter = router({
           link: `/order/id/${order.id}`,
         })
 
-        webPusher.pushBadgeCountToUser({
-          userId: order.userId,
-        })
+        if (!userIds.includes(order.userId)) {
+          userIds.push(order.userId)
+        }
       }
+
+      webPusher.pushBadgeCountToUser({
+        userIds,
+      })
 
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: SERVER_NOTIFY.POS_UPDATE,

@@ -20,7 +20,7 @@ type ReserveCreateMenuArgs = {
   type: Exclude<MenuType, 'LIVE' | 'RETAIL'>
   date: Date
 }
-type CreateMenuArgs = {
+type UpsertMenuArgs = {
   name?: string
   description?: string
   publishedDate?: Date | null
@@ -44,7 +44,7 @@ export async function upsertMenu({
   isEdit,
   supplierId,
   id,
-}: CreateMenuArgs) {
+}: UpsertMenuArgs) {
   const thisPrisma = client ?? prisma
 
   // Validate date and type

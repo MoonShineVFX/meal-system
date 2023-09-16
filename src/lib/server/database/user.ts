@@ -342,6 +342,18 @@ export async function getUserTokens(userId: string) {
   return userSubs
 }
 
+export async function getUsersTokens(userIds: string[]) {
+  const userSubs = await prisma.userToken.findMany({
+    where: {
+      userId: {
+        in: userIds,
+      },
+    },
+  })
+
+  return userSubs
+}
+
 export async function deleteUserToken(token: string) {
   await prisma.userToken.delete({
     where: {

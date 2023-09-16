@@ -280,6 +280,40 @@ export async function getOrdersCount({ userId }: { userId: string }) {
   })
 }
 
+export async function getManyOrdersCount({ userIds }: { userIds: string[] }) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  return await prisma.order.groupBy({
+    where: {
+      userId: {
+        in: userIds,
+      },
+      timeCanceled: null,
+      timeCompleted: null,
+      OR: [
+        {
+          menu: {
+            type: 'LIVE',
+          },
+        },
+        {
+          menu: {
+            date: {
+              gte: today,
+              lt: tomorrow,
+            },
+          },
+        },
+      ],
+    },
+    by: ['userId'],
+    _count: true,
+  })
+}
+
 // Detect order is cancelable
 function isOrderCancelableByUser({
   order,

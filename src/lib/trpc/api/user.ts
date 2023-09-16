@@ -198,7 +198,7 @@ export const UserRouter = router({
       // update app badge
       if (input.badgeEnabled || input.endpoint) {
         webPusher.pushBadgeCountToUser({
-          userId: ctx.userLite.id,
+          userIds: [ctx.userLite.id],
         })
       }
     }),
@@ -215,7 +215,7 @@ export const UserRouter = router({
     }),
   getBadgeCount: userProcedure.mutation(async ({ ctx }) => {
     await webPusher.pushBadgeCountToUser({
-      userId: ctx.userLite.id,
+      userIds: [ctx.userLite.id],
     })
   }),
   testPushNotification: userProcedure.mutation(async ({ ctx }) => {

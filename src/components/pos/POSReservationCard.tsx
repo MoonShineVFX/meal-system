@@ -153,44 +153,58 @@ export default function POSReservationCard(props: {
             : '無細項'
         }
         contentClassName='w-full pt-4'
+        confirmText='返回'
+        confirmButtonTheme='support'
         content={
-          <div className='ms-scroll flex max-h-[50vh] justify-center overflow-y-auto'>
-            <div className='grid w-fit grid-cols-2 gap-4'>
-              {activeOptionsWithOrders
-                ? activeOptionsWithOrders.orders.map((userOrder, index) => (
-                    <div
-                      key={index}
-                      className='flex items-center justify-between gap-2 whitespace-nowrap text-base'
-                    >
-                      {/* info */}
-                      <div className='flex items-center gap-2'>
-                        <div className='relative h-8 w-8 overflow-hidden rounded-full'>
-                          <Image
-                            className='object-cover'
-                            alt='profile'
-                            src={
-                              userOrder.user.profileImage
-                                ? userOrder.user.profileImage.path
-                                : settings.RESOURCE_PROFILE_PLACEHOLDER
-                            }
-                            sizes='24px'
-                          />
-                        </div>
-                        <h2 className='tracking-wider text-stone-400'>
-                          {userOrder.user.name}
-                        </h2>
-                      </div>
-                      {/* quantity */}
-                      <p className='w-[4ch] font-bold tracking-wider text-stone-400'>
-                        {`x ${userOrder.quantity}`}
-                      </p>
-                    </div>
-                  ))
-                : null}
-            </div>
-          </div>
+          <DialogContent activeOptionsWithOrders={activeOptionsWithOrders} />
         }
       />
     </POSCard>
+  )
+}
+
+function DialogContent(props: {
+  activeOptionsWithOrders:
+    | POSReservationDatas[number]['coms'][number]['optionsWithOrders'][number]
+    | null
+}) {
+  const { activeOptionsWithOrders } = props
+
+  return (
+    <div className='flex max-h-[50vh] flex-col justify-center gap-4 overflow-y-auto'>
+      <div className='ms-scroll grid w-fit grid-cols-2 gap-4'>
+        {activeOptionsWithOrders
+          ? activeOptionsWithOrders.orders.map((userOrder, index) => (
+              <div
+                key={index}
+                className='flex items-center justify-between gap-2 whitespace-nowrap text-base'
+              >
+                {/* info */}
+                <div className='flex items-center gap-2'>
+                  <div className='relative h-8 w-8 overflow-hidden rounded-full'>
+                    <Image
+                      className='object-cover'
+                      alt='profile'
+                      src={
+                        userOrder.user.profileImage
+                          ? userOrder.user.profileImage.path
+                          : settings.RESOURCE_PROFILE_PLACEHOLDER
+                      }
+                      sizes='24px'
+                    />
+                  </div>
+                  <h2 className='tracking-wider text-stone-400'>
+                    {userOrder.user.name}
+                  </h2>
+                </div>
+                {/* quantity */}
+                <p className='w-[4ch] font-bold tracking-wider text-stone-400'>
+                  {`x ${userOrder.quantity}`}
+                </p>
+              </div>
+            ))
+          : null}
+      </div>
+    </div>
   )
 }
