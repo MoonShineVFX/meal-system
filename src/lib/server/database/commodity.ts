@@ -139,6 +139,8 @@ type GetCommoditiesFull = Prisma.CommodityGetPayload<
     day?: CommodityStatistics
     week?: CommodityStatistics
     month?: CommodityStatistics
+    lastWeek?: CommodityStatistics
+    lastMonth?: CommodityStatistics
   }
 }
 
@@ -216,12 +218,26 @@ export async function getCommodities<
       ids,
       time: 'month',
     })
+    const lastWeekStatistics = await getCommoditiesStatistics({
+      ids,
+      time: 'last-week',
+    })
+    const lastMonthStatistics = await getCommoditiesStatistics({
+      ids,
+      time: 'last-month',
+    })
 
     const commoditiesWithStatistics = commodities.map((com) => {
       const statistics = {
         day: dayStatistics.find((stat) => stat.commodityId === com.id),
         week: weekStatistics.find((stat) => stat.commodityId === com.id),
         month: monthStatistics.find((stat) => stat.commodityId === com.id),
+        lastWeek: lastWeekStatistics.find(
+          (stat) => stat.commodityId === com.id,
+        ),
+        lastMonth: lastMonthStatistics.find(
+          (stat) => stat.commodityId === com.id,
+        ),
       }
       return {
         ...com,
@@ -265,7 +281,7 @@ export async function deleteCommodities(props: { ids: number[] }) {
 
 export async function getCommoditiesStatistics(props: {
   ids: number[]
-  time: 'day' | 'week' | 'month'
+  time: 'day' | 'week' | 'month' | 'last-week' | 'last-month'
 }) {
   const now = new Date()
   let dateRange: { gte: Date; lt: Date }
@@ -278,14 +294,42 @@ export async function getCommoditiesStatistics(props: {
       break
     case 'week':
       dateRange = {
-        gte: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7),
-        lt: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+        gte: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - now.getDay() + 1,
+        ),
+        lt: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - now.getDay() + 8,
+        ),
       }
       break
     case 'month':
       dateRange = {
         gte: new Date(now.getFullYear(), now.getMonth(), 1),
         lt: new Date(now.getFullYear(), now.getMonth() + 1, 1),
+      }
+      break
+    case 'last-week':
+      dateRange = {
+        gte: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - now.getDay() - 6,
+        ),
+        lt: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - now.getDay() + 1,
+        ),
+      }
+      break
+    case 'last-month':
+      dateRange = {
+        gte: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+        lt: new Date(now.getFullYear(), now.getMonth(), 1),
       }
       break
   }

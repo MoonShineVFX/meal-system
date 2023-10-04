@@ -41,10 +41,10 @@ export async function createOrderFromCart({
 
     // validate cart items is live only when client order is true
     if (clientOrder) {
-      const isNtoAllLive = getCartItemsResult.cartItems.some(
+      const isNotAllLive = getCartItemsResult.cartItems.some(
         (cartItem) => cartItem.commodityOnMenu.menu.type !== MenuType.LIVE,
       )
-      if (isNtoAllLive) {
+      if (isNotAllLive) {
         throw new Error('購物車含有非即時餐點，無法使用客戶招待下單')
       }
     }
@@ -1006,7 +1006,7 @@ export async function updateOrderStatus({
     // Create refund transaction
     if (creditAmountToRefund > 0 || pointAmountToRefund > 0) {
       const { callback } = await rechargeUserBalanceBase({
-        userId: order.userId,
+        userId: order.forClient ? settings.SERVER_CLIENTORDER_ID : order.userId,
         creditAmount: creditAmountToRefund,
         pointAmount: pointAmountToRefund,
         orderId,

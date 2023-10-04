@@ -676,7 +676,6 @@ export default function Commodities() {
                 sort: (a, b) =>
                   (a.statistics.week?._sum.quantity ?? 0) -
                   (b.statistics.week?._sum.quantity ?? 0),
-                hideByDefault: true,
               },
               {
                 name: '當月銷量',
@@ -692,6 +691,37 @@ export default function Commodities() {
                 sort: (a, b) =>
                   (a.statistics.month?._sum.quantity ?? 0) -
                   (b.statistics.month?._sum.quantity ?? 0),
+              },
+              {
+                name: '上週銷量',
+                render: (row) => (
+                  <p>
+                    {row.statistics.lastWeek?._sum.quantity ?? 0}
+                    <span className='pl-2 text-xs text-yellow-400'>
+                      ${row.statistics.lastWeek?._sum.price ?? 0}
+                    </span>
+                  </p>
+                ),
+                cellClassName: 'text-sm',
+                sort: (a, b) =>
+                  (a.statistics.lastWeek?._sum.quantity ?? 0) -
+                  (b.statistics.lastWeek?._sum.quantity ?? 0),
+                hideByDefault: true,
+              },
+              {
+                name: '上月銷量',
+                render: (row) => (
+                  <p>
+                    {row.statistics.lastMonth?._sum.quantity ?? 0}
+                    <span className='pl-2 text-xs text-yellow-400'>
+                      ${row.statistics.lastMonth?._sum.price ?? 0}
+                    </span>
+                  </p>
+                ),
+                cellClassName: 'text-sm',
+                sort: (a, b) =>
+                  (a.statistics.lastMonth?._sum.quantity ?? 0) -
+                  (b.statistics.lastMonth?._sum.quantity ?? 0),
                 hideByDefault: true,
               },
             ]}
