@@ -20,7 +20,8 @@ export async function rechargeUserBalanceBase({
   orderId,
   client,
 }: RechargeUserBalanceBaseArgs) {
-  if (!pointAmount && !creditAmount) throw new Error('Amount is required')
+  if (pointAmount === undefined && creditAmount === undefined)
+    throw new Error('Amount is required')
   if (depositId && orderId)
     throw new Error('depositId and orderId are exclusive')
 
