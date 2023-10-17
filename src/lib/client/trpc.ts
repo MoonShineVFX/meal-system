@@ -156,8 +156,7 @@ const trpc = createTRPCNext<AppRouter>({
       links: [
         loggerLink({
           enabled: (opts) =>
-            (process.env.NODE_ENV !== 'production' &&
-              typeof window !== 'undefined') ||
+            process.env.NODE_ENV !== 'production' ||
             (opts.direction === 'down' && opts.result instanceof Error),
         }),
         authLink,

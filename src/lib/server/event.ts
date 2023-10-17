@@ -23,3 +23,5 @@ export const eventEmitter: ServerEventEmitter =
 if (process.env.NODE_ENV !== 'production') {
   global.eventEmitter = eventEmitter
 }
+
+eventEmitter.setMaxListeners(100)

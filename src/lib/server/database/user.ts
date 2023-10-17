@@ -234,9 +234,28 @@ export async function getUserInfo(userId: string) {
         },
       })
 
-      if (rechargeAmount === 0 && !isNewMonth) return null
+      // If no recharge amount, return
+      const { lastPointRechargeTime, ...resultUser } = user
+      if (rechargeAmount === 0 && !isNewMonth)
+        return {
+          user: resultUser,
+          isRecharged,
+          callback: thisCallback,
+        }
 
       // Recharge points
+      const rechargePointAmount = isNewMonth
+        ? rechargeAmount - user.pointBalance
+        : rechargeAmount
+
+      // If no recharge amount, return
+      if (rechargePointAmount === 0)
+        return {
+          user: resultUser,
+          isRecharged,
+          callback: thisCallback,
+        }
+
       const { callback, user: newUser } = await rechargeUserBalanceBase({
         userId: user.id,
         pointAmount: isNewMonth
