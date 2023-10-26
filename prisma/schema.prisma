@@ -135,6 +135,7 @@ model Order {
   timeCompleted DateTime?
   timeCanceled  DateTime?
   forClient     Boolean   @default(false)
+  note          String?
 
   user   User        @relation(fields: [userId], references: [id])
   userId String
@@ -149,6 +150,7 @@ model Order {
 
   @@index([userId, menuId, timePreparing(sort: Desc), createdAt(sort: Desc)])
   @@index([menuId, timeCompleted, timeCanceled, createdAt(sort: Desc)])
+  @@index([forClient, createdAt(sort: Desc)])
 }
 
 model OrderItem {

@@ -20,11 +20,18 @@ import { prisma } from './define'
 export async function createOrderFromCart({
   userId,
   clientOrder,
+  note,
 }: {
   userId: string
   clientOrder?: boolean
+  note?: string
 }) {
   const { orders } = await prisma.$transaction(async (client) => {
+    // check if client order and note is empty
+    if (clientOrder && (!note || note.length < 4)) {
+      throw new Error('請填寫詳細備註')
+    }
+
     // Get valid cart items
     const getCartItemsResult = await getCartItemsBase({ userId, client })
     const totalPrice = getCartItemsResult.cartItems.reduce(
@@ -149,6 +156,7 @@ export async function createOrderFromCart({
             },
             menuId: menuId,
             forClient: clientOrder,
+            note,
           },
           select: {
             id: true,
@@ -351,9 +359,11 @@ export async function getOrders({
   userId,
   type,
   keyword,
+  onlyClientOrder,
 }: {
   userId?: string
   cursor?: number
+  onlyClientOrder?: boolean
 } & (
   | { type: 'live' | 'reservation' | 'archived'; keyword?: never }
   | { type: 'search'; keyword: string }
@@ -521,6 +531,13 @@ export async function getOrders({
         ],
       }
       break
+  }
+
+  if (onlyClientOrder) {
+    whereInput = {
+      ...whereInput,
+      forClient: true,
+    }
   }
 
   const rawOrders = await prisma.order.findMany({

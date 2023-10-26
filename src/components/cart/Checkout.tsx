@@ -14,6 +14,7 @@ import { useDialog } from '@/components/core/Dialog'
 import DepositExplanation from '@/components/deposit/DepositExplanation'
 import Toggle from '@/components/form/base/Toggle'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import TextInput from '../form/base/TextInput'
 
 export default function Checkout(props: {
   className?: string
@@ -41,6 +42,7 @@ export default function Checkout(props: {
   const currentMutation = props.retailCipher
     ? createOrderFromRetailMutation
     : createOrderFromCartMutation
+  const [clientOrderNote, setClientOrderNote] = useState<string>('')
 
   const handleCheckout = () => {
     if (props.retailCipher) {
@@ -54,7 +56,7 @@ export default function Checkout(props: {
       )
     } else {
       createOrderFromCartMutation.mutate(
-        { clientOrder: isClientOrder },
+        { clientOrder: isClientOrder, note: clientOrderNote },
         {
           onSuccess: (orders) => {
             if (orders.length === 0) return
@@ -112,17 +114,27 @@ export default function Checkout(props: {
     >
       {/* Client order */}
       {isClientOrder && canClientOrder && (
-        <label className='mb-4 flex w-full cursor-pointer items-center justify-between'>
-          <h2 className='rounded-xl text-lg font-bold tracking-widest group-data-loading:skeleton'>
-            客戶招待
-          </h2>
-          <div className='mr-1 flex items-center'>
-            <Toggle
-              checked={isClientOrder}
-              onChange={(event) => setIsClientOrder(event.target.checked)}
-            />
-          </div>
-        </label>
+        <>
+          <label className='mb-4 flex w-full cursor-pointer items-center justify-between'>
+            <h2 className='rounded-xl text-lg font-bold tracking-widest group-data-loading:skeleton'>
+              客戶招待
+            </h2>
+            <div className='mr-1 flex items-center'>
+              <Toggle
+                checked={isClientOrder}
+                onChange={(event) => setIsClientOrder(event.target.checked)}
+              />
+            </div>
+          </label>
+          <TextInput
+            placeholder='請輸入詳細備註'
+            value={clientOrderNote}
+            onChange={(e) => {
+              setClientOrderNote(e.target.value)
+            }}
+            className='mb-4'
+          />
+        </>
       )}
       {/* Header */}
       {!props.retailCipher && !isClientOrder && (
@@ -200,7 +212,11 @@ export default function Checkout(props: {
         <Button
           isLoading={currentMutation.isLoading || currentMutation.isSuccess}
           isBusy={currentMutation.isLoading || currentMutation.isSuccess}
-          isDisabled={(isNotEnough && !isClientOrder) || props.isDisabled}
+          isDisabled={
+            (isNotEnough && !isClientOrder) ||
+            (isClientOrder && clientOrderNote.length < 4) ||
+            props.isDisabled
+          }
           label={
             isNotEnough ? '餘額不足' : isClientOrder ? '確認下單' : '確認付款'
           }

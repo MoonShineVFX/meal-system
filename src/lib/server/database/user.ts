@@ -141,7 +141,9 @@ export async function validateUserPassword(userId: string, password: string) {
 export async function getUserLite({ token }: { token: string }) {
   const userToken = await prisma.userToken.findUnique({
     where: { id: token },
-    include: { user: { select: { id: true, name: true, role: true } } },
+    include: {
+      user: { select: { id: true, name: true, role: true, authorities: true } },
+    },
   })
   if (!userToken) return null
 
