@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react'
 import { InView } from 'react-intersection-observer'
 
-import trpc, { OrderDatas } from '@/lib/client/trpc'
+import Button from '@/components/core/Button'
 import Error from '@/components/core/Error'
 import SearchBar from '@/components/core/SearchBar'
-import Table from '@/components/core/Table'
 import Spinner from '@/components/core/Spinner'
+import Table from '@/components/core/Table'
+import CheckBox from '@/components/form/base/CheckBox'
+import trpc, { OrderDatas } from '@/lib/client/trpc'
 import { getMenuName } from '@/lib/common'
-import Button from '@/components/core/Button'
 
 export default function Orders() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
+  const [showClientOrderOnly, setShowClientOrderOnly] = useState<boolean>(false)
   const [orders, setOrders] = useState<OrderDatas>([])
 
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.order.getList.useInfiniteQuery(
-      { keyword: searchKeyword },
+      { keyword: searchKeyword, onlyClientOrder: showClientOrderOnly },
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
       },
@@ -36,12 +38,23 @@ export default function Orders() {
       <div className='absolute inset-0 flex flex-col gap-4 p-8'>
         {/* Top */}
         <div className='flex items-center gap-4'>
-          <SearchBar
-            placeholder='搜尋訂單紀錄'
-            isLoading={isLoading}
-            searchKeyword={searchKeyword}
-            setSearchKeyword={setSearchKeyword}
-          />
+          <div className='flex items-center gap-4'>
+            <SearchBar
+              placeholder='搜尋訂單紀錄'
+              isLoading={isLoading}
+              searchKeyword={searchKeyword}
+              setSearchKeyword={setSearchKeyword}
+            />
+          </div>
+          <label className='mr-auto flex cursor-pointer items-center gap-2'>
+            <CheckBox
+              checked={showClientOrderOnly}
+              onChange={(e) => setShowClientOrderOnly(e.target.checked)}
+            />
+            <span className='text-sm font-bold text-stone-500'>
+              只顯示客戶招待
+            </span>
+          </label>
         </div>
         {/* Table */}
         <Table
@@ -114,25 +127,27 @@ export default function Orders() {
               },
             },
             {
-              name: '備註',
-              align: 'left',
-              cellClassName: 'text-sm',
-              render: (order) =>
-                order.forClient ? (
-                  <p className='rounded-lg bg-stone-100 p-1 text-stone-400'>
-                    客戶招待
-                  </p>
-                ) : (
-                  ''
-                ),
-            },
-            {
               name: '動作',
               render: (order) => {
                 if (order.timeCanceled !== null || order.timeCompleted !== null)
                   return <></>
                 return <CancelButton orderId={order.id} />
               },
+            },
+            {
+              name: '備註',
+              align: 'left',
+              cellClassName: 'text-sm',
+              render: (order) => (
+                <p className='flex items-center gap-2'>
+                  {order.forClient && (
+                    <span className='rounded-lg border border-stone-200 bg-stone-100 p-1 text-stone-400'>
+                      客戶招待
+                    </span>
+                  )}
+                  {order.note && <span className='text-xs'>{order.note}</span>}
+                </p>
+              ),
             },
           ]}
           footer={

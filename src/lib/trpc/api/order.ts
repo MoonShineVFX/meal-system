@@ -1,25 +1,35 @@
 import { z } from 'zod'
 
-import { userProcedure, router, staffProcedure } from '../trpc'
+import { SERVER_NOTIFY, settings, validateAuthority } from '@/lib/common'
 import {
   createOrderFromCart,
+  createOrderFromRetail,
   getOrders,
   getOrdersCount,
   updateOrderStatus,
-  createOrderFromRetail,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 import webPusher from '@/lib/server/webpush'
+import { UserAuthority } from '@prisma/client'
+import { router, staffProcedure, userProcedure } from '../trpc'
 
 export const OrderRouter = router({
   addFromCart: userProcedure
     .input(
       z.object({
         clientOrder: z.boolean().optional(),
+        note: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (input.clientOrder) {
+        const canClientOrder = validateAuthority(
+          ctx.userLite,
+          UserAuthority.CLIENT_ORDER,
+        )
+        if (!canClientOrder) throw new Error('權限不足')
+      }
+
       const orders = await createOrderFromCart({
         userId: ctx.userLite.id,
         ...input,
@@ -94,6 +104,7 @@ export const OrderRouter = router({
       z.object({
         cursor: z.number().int().positive().optional(),
         keyword: z.string().optional(),
+        onlyClientOrder: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -101,6 +112,7 @@ export const OrderRouter = router({
         cursor: input.cursor,
         keyword: input.keyword ? input.keyword.trim() : '',
         type: 'search',
+        onlyClientOrder: input.onlyClientOrder,
       })
     }),
   update: userProcedure

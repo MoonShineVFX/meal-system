@@ -124,6 +124,9 @@ export default function OrderCard(props: {
             客戶
           </span>
         )}
+        {order?.note && (
+          <span className='text-xs text-stone-400'>{order.note}</span>
+        )}
         {/* Buttons */}
         <div className='flex grow justify-end gap-2 text-sm text-stone-400'>
           {order?.canCancel && (

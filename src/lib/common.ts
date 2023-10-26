@@ -230,6 +230,7 @@ export function validateAuthority(
   ) {
     return true
   }
+  return false
 }
 
 type TwDataKeys = 'selected' | 'loading' | 'busy' | 'available'
