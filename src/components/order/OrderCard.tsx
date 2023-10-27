@@ -278,9 +278,6 @@ export default function OrderCard(props: {
                 {`即將取消「編號 #${order?.id} - ${getMenuName(order?.menu)}
               」的訂單，此動作無法復原。`}
               </p>
-              <p className='text-red-400'>
-                如果有使用點數付款，該部分不會退還。
-              </p>
             </>
           }
         />
