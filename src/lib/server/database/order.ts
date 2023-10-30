@@ -999,7 +999,7 @@ export async function updateOrderStatus({
       throw new Error('Payment transaction not found for refund')
     }
 
-    // Calculate refund amount, bypass pointAmount if canceled by user
+    // Calculate refund amount
     let creditAmountRemain = detailedOrder.paymentTransaction.creditAmount
     let pointAmountRemain = detailedOrder.paymentTransaction.pointAmount
 
@@ -1015,10 +1015,10 @@ export async function updateOrderStatus({
       return acc + item.price * item.quantity
     }, 0)
     const creditAmountToRefund = Math.min(creditAmountRemain, thisOrderPrice)
-    const pointAmountToRefund = userId
-      ? 0
-      : Math.min(pointAmountRemain, thisOrderPrice - creditAmountToRefund)
-    // If canceled by user, no need to refund point
+    const pointAmountToRefund = Math.min(
+      pointAmountRemain,
+      thisOrderPrice - creditAmountToRefund,
+    )
 
     // Create refund transaction
     if (creditAmountToRefund > 0 || pointAmountToRefund > 0) {

@@ -205,17 +205,6 @@ export async function getUserInfo(userId: string) {
       let isNewMonth = false
 
       while (currentDay.getTime() <= targetDay.getTime()) {
-        // If month changed, reset recharge amount
-        if (currentDay.getMonth() !== targetDay.getMonth()) {
-          isNewMonth = true
-          rechargeAmount = 0
-          currentDay = new Date(
-            currentDay.getFullYear(),
-            currentDay.getMonth() + 1,
-            1,
-          )
-          continue
-        }
         // If day is weekday and not make-up day, recharge
         const isHoliday = settings.HOLIDAYS.includes(currentDay.getTime())
         const isWeekDay =
