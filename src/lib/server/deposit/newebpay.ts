@@ -28,7 +28,7 @@ export async function createMPGRequest(props: {
     ANDROIDPAY: 1,
     SAMSUNGPAY: 1,
     WEBATM: 1,
-    TAIWANPAY: 1,
+    TAIWANPAY: 0,
   }
 
   const tradeInfoParams = new URLSearchParams(
