@@ -13,7 +13,8 @@
     "db-seed": "ts-node prisma/scripts/seed/seed.ts",
     "db-migrate": "prisma migrate dev",
     "db-generate": "prisma generate",
-    "db-reset": "prisma migrate reset"
+    "db-reset": "prisma migrate reset",
+    "db-helper": "ts-node prisma/scripts/helpers/reset-users-points.ts"
   },
   "keywords": [],
   "author": "",
