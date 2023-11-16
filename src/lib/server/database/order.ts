@@ -27,13 +27,25 @@ export async function createOrderFromCart({
   note?: string
 }) {
   const { orders } = await prisma.$transaction(async (client) => {
-    // check if client order and note is empty
+    // Check if client order and note is empty
     if (clientOrder && (!note || note.length < 4)) {
       throw new Error('請填寫詳細備註')
     }
 
     // Get valid cart items
     const getCartItemsResult = await getCartItemsBase({ userId, client })
+
+    // Check cart items is not empty and has valid quantity
+    if (getCartItemsResult.cartItems.length === 0) {
+      throw new Error('購物車是空的')
+    }
+    if (
+      getCartItemsResult.cartItems.some((cartItem) => cartItem.quantity < 1)
+    ) {
+      throw new Error('購物車有無效數量')
+    }
+
+    // Calculate total price
     const totalPrice = getCartItemsResult.cartItems.reduce(
       (acc, cur) =>
         acc +

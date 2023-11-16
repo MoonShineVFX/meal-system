@@ -131,6 +131,12 @@ export default function Cart() {
     }
   }
 
+  // cart item has 0 count bug
+  const isCartItemCountZero = useMemo(() => {
+    if (!cartData) return false
+    return cartData.cartItems.some((cartItem) => cartItem.quantity === 0)
+  }, [cartData])
+
   return (
     <div
       className='group relative h-full w-full @container/cart'
@@ -276,7 +282,11 @@ export default function Cart() {
           <section>
             <Checkout
               isLoading={cartIsLoading}
-              isDisabled={!cartData || cartData.cartItems.length === 0}
+              isDisabled={
+                !cartData ||
+                cartData.cartItems.length === 0 ||
+                isCartItemCountZero
+              }
               className={
                 cartData && cartData.cartItems.length === 0
                   ? 'max-sm:hidden'
