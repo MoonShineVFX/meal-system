@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { MenuType } from '@prisma/client'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import { twMerge } from 'tailwind-merge'
 import {
@@ -199,6 +199,12 @@ export default function Menu(props: {
     }
   }, [data, unavailableConfirms])
 
+  // Check is all commodities unavailable
+  const isAllComsUnavailable = useMemo(() => {
+    if (!data) return false
+    return data.commodities.every((com) => com.unavailableReasons.length > 0)
+  }, [data])
+
   const handleDialogClose = useCallback(() => {
     const rootPath = router.asPath.split('/').slice(0, -1).join('/')
     router.push(rootPath)
@@ -276,21 +282,28 @@ export default function Menu(props: {
                 </div>
               ) : null}
               {/* Warning */}
-              {data && data.unavailableReasons.length > 0 && (
-                <section className='mb-4 flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-stone-500'>
-                  <div className='flex items-center gap-2 text-red-400'>
-                    <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
-                    目前無法訂購餐點
-                  </div>
-                  <ul className='flex flex-col gap-1 text-stone-400'>
-                    {data.unavailableReasons.map((reason) => (
-                      <li className='ml-7 text-sm text-red-300' key={reason}>
-                        {reason}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
+              {data &&
+                (data.unavailableReasons.length > 0 ||
+                  isAllComsUnavailable) && (
+                  <section className='mb-4 flex flex-col gap-1 rounded-2xl bg-red-50 p-4 text-stone-500'>
+                    <div className='flex items-center gap-2 text-red-400'>
+                      <ExclamationTriangleIcon className='h-5 w-5 text-red-400' />
+                      目前無法訂購餐點
+                    </div>
+                    <ul className='flex flex-col gap-1 text-stone-400'>
+                      {data.unavailableReasons.map((reason) => (
+                        <li className='ml-7 text-sm text-red-300' key={reason}>
+                          {reason}
+                        </li>
+                      ))}
+                      {isAllComsUnavailable && (
+                        <li className='ml-7 text-sm text-red-300'>
+                          所有餐點皆無法訂購
+                        </li>
+                      )}
+                    </ul>
+                  </section>
+                )}
               {/* Grid */}
               <COMsGrid comsByCategory={coms} fromReserve={props.fromReserve} />
             </div>
