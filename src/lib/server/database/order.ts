@@ -35,6 +35,14 @@ export async function createOrderFromCart({
     // Get valid cart items
     const getCartItemsResult = await getCartItemsBase({ userId, client })
 
+    // Check if cart items is modified during payment
+    if (
+      getCartItemsResult.isModified &&
+      getCartItemsResult.invalidCartItems.length > 0
+    ) {
+      throw new Error('付款失敗，付款期間購物車餐點已有所更動')
+    }
+
     // Check cart items is not empty and has valid quantity
     if (getCartItemsResult.cartItems.length === 0) {
       throw new Error('購物車是空的')

@@ -314,8 +314,8 @@ export default function Cart() {
       <Dialog
         open={modifiedNotify}
         onClose={() => setModifiedNotify(false)}
-        title='購物車有所更動'
-        content='餐點內容在這段期間有所調整，因此購物車內的餐點數量產生異動或失效。'
+        title='購物車內容更動'
+        content='餐點在這段期間有調整，或有新增的餐點與購物車原本餐點衝突。因此購物車內的餐點有數量異動或失效。'
       />
       {/* Cartitem options */}
       <CartItemOptionsDialog
