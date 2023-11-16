@@ -29,12 +29,15 @@ export default function Checkout(props: {
   const [isAutoCheckoutInitial, setIsAutoCheckoutInitial] = useState<
     boolean | undefined
   >(undefined)
+
+  const trpcContext = trpc.useContext()
   const {
     data: userData,
     isLoading: userIsLoading,
     isError: userIsError,
     error: userError,
   } = trpc.user.get.useQuery(undefined)
+
   const { showDialog, dialog } = useDialog()
   const router = useRouter()
   const createOrderFromCartMutation = trpc.order.addFromCart.useMutation()
@@ -66,6 +69,12 @@ export default function Checkout(props: {
             } else {
               router.push('/order/reservation')
             }
+          },
+          onError: () => {
+            // Invalidate cart and menu when error
+            // Because the cart might be modified due to invalidation
+            trpcContext.menu.get.invalidate()
+            trpcContext.cart.get.invalidate()
           },
         },
       )

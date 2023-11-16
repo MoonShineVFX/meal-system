@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 
 import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
@@ -36,6 +37,7 @@ export default function COMCard(props: {
   category: string
 }) {
   const { com } = props
+  const isUnavailable = (com?.unavailableReasons.length ?? 0) > 0
 
   return (
     <LinkWrapper com={com}>
@@ -51,6 +53,11 @@ export default function COMCard(props: {
               sizes='256px'
               alt={com?.commodity.name ?? '餐點圖片'}
             />
+            {isUnavailable && (
+              <div className='absolute inset-0 grid place-items-center bg-red-200/60'>
+                <ExclamationTriangleIcon className='h-8 w-8 text-red-800' />
+              </div>
+            )}
           </div>
         </section>
         {/* Description */}

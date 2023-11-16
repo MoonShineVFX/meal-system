@@ -406,7 +406,9 @@ export async function getCartItemsBase({
     })
     cartItem.invalid = true
 
-    if (!isModified) isModified = true
+    if (!isModified) {
+      isModified = true
+    }
   }
 
   // update decrement cart items
@@ -425,7 +427,9 @@ export async function getCartItemsBase({
     cartItem.quantity -= cartItem.decrementAmount
     validCartItems.push(cartItem)
 
-    if (!isModified) isModified = true
+    if (!isModified) {
+      isModified = true
+    }
   }
 
   const injectedInvalidCartIems = invalidCartItems.map((cartItem) => ({
