@@ -137,6 +137,7 @@ export const settings = {
   TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
   SERVER_CLIENTORDER_ID: '_client',
+  MENU_LIVE_ID: 1,
   POINT_DAILY_RECHARGE_AMOUNT: process.env.POINT_DAILY_RECHARGE_AMOUNT
     ? parseInt(process.env.POINT_DAILY_RECHARGE_AMOUNT)
     : 50,

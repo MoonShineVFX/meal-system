@@ -342,7 +342,7 @@ export async function getCommoditiesStatistics(props: {
       },
       order: {
         timeCanceled: null,
-        timeCompleted: dateRange,
+        createdAt: dateRange,
       },
     },
     _sum: {

@@ -181,6 +181,7 @@ export async function getReservationMenusForUser({
   userId: string
 }) {
   const now = new Date()
+
   const menus = await prisma.menu.findMany({
     where: {
       date: { not: null },
@@ -286,7 +287,9 @@ export async function getMenuWithComs({
   }
 
   const thisPrisma = client ?? prisma
+  const now = new Date()
 
+  const isLive = settings.MENU_LIVE_ID === menuId
   // Get menu
   const rawMenu = await thisPrisma.menu.findFirst({
     where: {
@@ -358,6 +361,11 @@ export async function getMenuWithComs({
                   },
               orderItems: {
                 where: {
+                  createdAt: isLive // only show today's order for stock validation
+                    ? {
+                        gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                      }
+                    : undefined,
                   order: {
                     timeCanceled: null,
                   },
@@ -449,7 +457,6 @@ export async function getMenuWithComs({
 
   // validate menu
   const menuUnavailableReasons: MenuUnavailableReason[] = []
-  const now = new Date()
   if (menu.publishedDate && menu.publishedDate > now) {
     menuUnavailableReasons.push(MenuUnavailableReason.NOT_PUBLISHED)
   }
