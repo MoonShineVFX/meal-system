@@ -82,6 +82,16 @@ class WebPusher {
     const badgeCounts = await getManyOrdersCount({ userIds })
     const usersSubs = await this.getUsersSubs(userIds)
 
+    // add user id back if count is 0
+    for (const userId of userIds) {
+      if (!badgeCounts.find((bc) => bc.userId === userId)) {
+        badgeCounts.push({
+          userId,
+          _count: 0,
+        })
+      }
+    }
+
     const promises = usersSubs
       .filter((sub) => sub.badgeEnabled)
       .map((sub) => {

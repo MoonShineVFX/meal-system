@@ -58,6 +58,13 @@ export default function EventListener() {
             }
           },
           onError: (error) => {
+            if (error.message.includes('push service error')) {
+              addNotification({
+                type: NotificationType.ERROR,
+                message: '無法訂閱通知服務，將關閉通知設定',
+              })
+              return
+            }
             addNotification({
               type: NotificationType.ERROR,
               message: error.message,

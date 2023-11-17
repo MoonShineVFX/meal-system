@@ -123,6 +123,9 @@ export default class ServiceWorkerHandler {
         if (this.errorCallback) {
           this.errorCallback(err)
         }
+
+        // unsubscribe the user from the server when the subscription fails
+        return this.unsubscribe()
       })
   }
 

@@ -90,7 +90,7 @@ export default function Settings() {
                       })
                     }}
                   >
-                    {userTokenQuery.data.notificationEnabled || true ? (
+                    {userTokenQuery.data.notificationEnabled ? (
                       <Button
                         className='ml-auto mt-2 p-2'
                         label='測試通知'
