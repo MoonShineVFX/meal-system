@@ -58,6 +58,7 @@ export const POSRouter = router({
         type: SERVER_NOTIFY.ORDER_UPDATE,
         message: generateOrderNotifyMessage(order.id, 'timeCompleted'),
         link: `/order/id/${order.id}`,
+        skipNotify: true,
       })
       if (!userIds.includes(order.userId)) {
         userIds.push(order.userId)
@@ -90,6 +91,7 @@ export const POSRouter = router({
             : SERVER_NOTIFY.ORDER_CANCEL,
         message: generateOrderNotifyMessage(order.id, input.status),
         link: `/order/id/${order.id}`,
+        skipNotify: input.status === 'timeCompleted',
       })
 
       const orderImage = order.items.reduce(
@@ -147,6 +149,7 @@ export const POSRouter = router({
               : SERVER_NOTIFY.ORDER_CANCEL,
           message: generateOrderNotifyMessage(order.id, input.status),
           link: `/order/id/${order.id}`,
+          skipNotify: input.status === 'timeCompleted',
         })
 
         if (!userIds.includes(order.userId)) {

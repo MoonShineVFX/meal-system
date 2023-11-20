@@ -64,6 +64,7 @@ export default function POSCard(props: {
   }, [props.disableAnimation])
   const [isCanceling, setIsCanceling] = useState(false)
   const addNotification = useStore((state) => state.addNotification)
+  const printerAPI_local = useStore((state) => state.printerAPI_local)
   const { order } = props
   const { step, date } = useMemo(() => {
     let result: { step: number; date?: Date } | undefined = undefined
@@ -123,6 +124,7 @@ export default function POSCard(props: {
         })
         setIsPrinting(false)
       },
+      apiUrl: printerAPI_local.enabled ? printerAPI_local.url : undefined,
     })
   }, [props.print])
 
