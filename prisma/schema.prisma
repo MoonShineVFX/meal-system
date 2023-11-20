@@ -26,8 +26,8 @@ model UserToken {
 
   lastUsedAt          DateTime?
   // web push notification
-  notificationEnabled Boolean   @default(true)
-  badgeEnabled        Boolean   @default(true)
+  notificationEnabled Boolean   @default(false)
+  badgeEnabled        Boolean   @default(false)
   endpoint            String?   @unique
   p256dh              String?   @unique
   auth                String?   @unique
