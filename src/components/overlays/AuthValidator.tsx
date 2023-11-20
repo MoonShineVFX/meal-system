@@ -22,12 +22,16 @@ export default function AuthValidator() {
 
   /* Validate user and redirect to logout */
   const userInfoQuery = trpc.user.get.useQuery(undefined, {
-    onError() {
-      if (router.pathname !== '/login') {
-        setLoginRedirect(router.asPath)
-        router.push(`/login`)
+    onError(e) {
+      if (e.data?.code === 'UNAUTHORIZED') {
+        if (router.pathname !== '/login') {
+          setLoginRedirect(router.asPath)
+          router.push(`/login`)
+        }
       }
     },
+    retry: true,
+    retryDelay: 3000,
   })
 
   /* Login success notice */

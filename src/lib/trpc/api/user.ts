@@ -39,7 +39,7 @@ export const UserRouter = router({
 
     if (!userInfo) {
       throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
+        code: 'UNAUTHORIZED',
         message: `User not found: ${ctx.userLite.id}`,
       })
     }
