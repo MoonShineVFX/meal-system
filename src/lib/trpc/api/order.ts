@@ -138,10 +138,12 @@ export const OrderRouter = router({
             : SERVER_NOTIFY.ORDER_CANCEL,
         message: `訂單 #${order.id} 已經${typeString}`,
         link: `/order/id/${order.id}`,
+        skipNotify: input.type === 'complete',
       })
       eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
         type: SERVER_NOTIFY.POS_UPDATE,
         message: `${ctx.userLite.name} ${typeString}訂單 #${order.id}`,
+        skipNotify: input.type === 'complete',
       })
 
       webPusher.pushBadgeCountToUser({

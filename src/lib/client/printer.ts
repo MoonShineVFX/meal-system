@@ -13,13 +13,14 @@ export async function print(props: {
   items: PrintItem[]
   onSuccess: () => void
   onError: (error: Error) => void
+  apiUrl?: string
 }) {
   try {
     if (props.items.length === 0) {
       throw new Error('No items to print')
     }
 
-    if (settings.PRINTER_API_URL === undefined) {
+    if (settings.PRINTER_API_URL === undefined && !props.apiUrl) {
       throw new Error('Printer API URL is not set')
     }
 
@@ -39,13 +40,16 @@ export async function print(props: {
         : [],
       user: item.user,
     }))
-    const response = await fetch(`${settings.PRINTER_API_URL}/api/print`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${props.apiUrl ?? settings.PRINTER_API_URL}/api/print`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bodyData),
       },
-      body: JSON.stringify(bodyData),
-    })
+    )
 
     if (response.ok) {
       props.onSuccess()
