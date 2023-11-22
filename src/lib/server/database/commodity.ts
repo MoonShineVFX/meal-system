@@ -280,8 +280,9 @@ export async function deleteCommodities(props: { ids: number[] }) {
 }
 
 export async function getCommoditiesStatistics(props: {
-  ids: number[]
-  time: 'day' | 'week' | 'month' | 'last-week' | 'last-month'
+  ids?: number[]
+  time?: 'day' | 'week' | 'month' | 'last-week' | 'last-month'
+  dateRange?: { gte: Date; lt: Date }
 }) {
   const now = new Date()
   let dateRange: { gte: Date; lt: Date }
@@ -332,14 +333,21 @@ export async function getCommoditiesStatistics(props: {
         lt: new Date(now.getFullYear(), now.getMonth(), 1),
       }
       break
+    default:
+      if (!props.dateRange) {
+        throw new Error('Date range or time must be provided')
+      }
+      dateRange = props.dateRange
   }
 
   return await prisma.orderItem.groupBy({
     by: ['commodityId'],
     where: {
-      commodityId: {
-        in: props.ids,
-      },
+      commodityId: props.ids
+        ? {
+            in: props.ids,
+          }
+        : undefined,
       order: {
         timeCanceled: null,
         createdAt: dateRange,

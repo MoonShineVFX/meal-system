@@ -3,6 +3,8 @@ import { TransactionType, Prisma, PrismaClient } from '@prisma/client'
 import { prisma } from './define'
 import { settings, TransactionName } from '@/lib/common'
 
+import { getCommoditiesStatistics } from './commodity'
+
 /* Recharge */
 type RechargeUserBalanceBaseArgs = {
   userId: string
@@ -421,4 +423,78 @@ export async function getTransactions({
     },
   })
   return transactions
+}
+
+// Sales Report
+export async function getMonthlySalesReport(props: {
+  year: number
+  month: number
+}) {
+  const dateRange = {
+    gte: new Date(props.year, props.month - 1, 1),
+    lt: new Date(props.year, props.month, 1),
+  }
+
+  // get all commodities in this month which has been ordered
+  const statistics = await getCommoditiesStatistics({
+    dateRange,
+  })
+
+  // get all commodities
+  const commodities = await prisma.commodity.findMany({
+    where: {
+      id: {
+        in: statistics.map((stat) => stat.commodityId),
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  })
+
+  // merge
+  const commoditiesWithStatistics = commodities
+    .map((com) => {
+      const stat = statistics.find((stat) => stat.commodityId === com.id)
+      if (!stat) {
+        return null
+      }
+      return {
+        ...com,
+        ...stat._sum,
+      }
+    })
+    .filter((com) => com !== null)
+
+  // get all orders count
+  const ordersCount = await prisma.order.count({
+    where: {
+      createdAt: dateRange,
+      timeCanceled: null,
+    },
+  })
+
+  // get transactions
+  const transactions = await prisma.transaction.groupBy({
+    by: ['type'],
+    where: {
+      createdAt: dateRange,
+    },
+    _sum: {
+      pointAmount: true,
+      creditAmount: true,
+    },
+    _count: {
+      _all: true,
+    },
+  })
+
+  return {
+    commoditiesWithStatistics: commoditiesWithStatistics as NonNullable<
+      typeof commoditiesWithStatistics[number]
+    >[],
+    ordersCount,
+    transactions,
+  }
 }
