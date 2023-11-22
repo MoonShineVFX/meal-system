@@ -490,11 +490,35 @@ export async function getMonthlySalesReport(props: {
     },
   })
 
+  // get client orders
+  const clientOrders = await prisma.order.findMany({
+    where: {
+      createdAt: dateRange,
+      timeCanceled: null,
+      forClient: true,
+    },
+    select: {
+      createdAt: true,
+      note: true,
+      user: {
+        select: {
+          name: true,
+        },
+      },
+      paymentTransaction: {
+        select: {
+          creditAmount: true,
+        },
+      },
+    },
+  })
+
   return {
     commoditiesWithStatistics: commoditiesWithStatistics as NonNullable<
       typeof commoditiesWithStatistics[number]
     >[],
     ordersCount,
     transactions,
+    clientOrders,
   }
 }
