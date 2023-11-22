@@ -67,13 +67,24 @@ export default function Transactions() {
           // Sheet: Transaction
           const workSheet2 = XLSX.utils.json_to_sheet(
             data.transactions.map((t) => ({
-              類別: t.type,
+              類別: TransactionName[t.type],
               數量: t._count._all,
               點數: t._sum.pointAmount,
               夢想幣: t._sum.creditAmount,
             })),
           )
           XLSX.utils.book_append_sheet(workBook, workSheet2, '交易紀錄')
+
+          // Sheet: Client Orders
+          const workSheet3 = XLSX.utils.json_to_sheet(
+            data.clientOrders.map((o) => ({
+              日期: o.createdAt,
+              使用者: o.user.name,
+              金額: o.paymentTransaction?.creditAmount ?? 0,
+              備註: o.note ?? '',
+            })),
+          )
+          XLSX.utils.book_append_sheet(workBook, workSheet3, '客戶招待')
 
           // Make file
           const excelBuffer = XLSX.write(workBook, {
