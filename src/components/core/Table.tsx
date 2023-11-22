@@ -123,7 +123,7 @@ export default function Table<
     tableData.every((row) => selectedIds.includes(row[props.idField!]))
 
   return (
-    <div className='h-full w-fit min-w-full overflow-hidden rounded-2xl border'>
+    <div className='h-full w-fit min-w-full select-text overflow-hidden rounded-2xl border'>
       <TableVirtuoso
         className='ms-scroll'
         data={tableData}

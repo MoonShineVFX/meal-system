@@ -1,6 +1,7 @@
 import { TransactionType, User } from '@prisma/client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { InView } from 'react-intersection-observer'
+import * as XLSX from 'xlsx'
 
 import trpc, { TransactionDatas } from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
@@ -8,11 +9,14 @@ import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
 import Spinner from '@/components/core/Spinner'
 import { TransactionName, settings } from '@/lib/common'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 
 export default function Transactions() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [transactions, setTransactions] = useState<TransactionDatas>([])
 
+  const getMonthlyReportMutation =
+    trpc.transaction.getMonthlyReport.useMutation()
   const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
     trpc.transaction.getListByStaff.useInfiniteQuery(
       { keyword: searchKeyword },
@@ -27,6 +31,73 @@ export default function Transactions() {
     }
   }, [data])
 
+  const recentSixMonths = useMemo(() => {
+    const now = new Date()
+    const months = []
+    for (let i = 0; i < 6; i++) {
+      months.push(new Date(now.getFullYear(), now.getMonth() - i))
+    }
+    return months
+  }, [])
+
+  const handleGetMonthlyReport = useCallback(async (date: Date) => {
+    getMonthlyReportMutation.mutate(
+      {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+      },
+      {
+        onSuccess: (data) => {
+          // Make xlsx
+          const fileType =
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
+          const fileExtension = '.xlsx'
+          const workBook = XLSX.utils.book_new()
+
+          // Sheet: Commodity
+          const workSheet = XLSX.utils.json_to_sheet(
+            data.commoditiesWithStatistics.map((c) => ({
+              名稱: c.name,
+              銷量: c.quantity ?? 0,
+              金額: c.price ?? 0,
+            })),
+          )
+          XLSX.utils.book_append_sheet(workBook, workSheet, '餐點')
+
+          // Sheet: Transaction
+          const workSheet2 = XLSX.utils.json_to_sheet(
+            data.transactions.map((t) => ({
+              類別: t.type,
+              數量: t._count._all,
+              點數: t._sum.pointAmount,
+              夢想幣: t._sum.creditAmount,
+            })),
+          )
+          XLSX.utils.book_append_sheet(workBook, workSheet2, '交易紀錄')
+
+          // Make file
+          const excelBuffer = XLSX.write(workBook, {
+            bookType: 'xlsx',
+            type: 'array',
+          })
+          const fileData = new Blob([excelBuffer], { type: fileType })
+
+          // Download file
+          const fileName = `${date.getFullYear()}年${
+            date.getMonth() + 1
+          }月報表 (訂單數${data.ordersCount})`
+          const url = window.URL.createObjectURL(fileData)
+          const link = document.createElement('a')
+          document.body.appendChild(link)
+          link.href = url
+          link.download = fileName + fileExtension
+          link.click()
+          document.body.removeChild(link)
+        },
+      },
+    )
+  }, [])
+
   if (isError) return <Error description={error.message} />
 
   return (
@@ -40,6 +111,18 @@ export default function Transactions() {
             searchKeyword={searchKeyword}
             setSearchKeyword={setSearchKeyword}
           />
+          <DropdownMenu
+            className='ml-auto whitespace-nowrap py-3 text-base font-bold'
+            label='下載報表'
+          >
+            {recentSixMonths.map((d, i) => (
+              <DropdownMenuItem
+                key={i}
+                label={`${d.getFullYear()} 年 ${d.getMonth() + 1} 月`}
+                onClick={() => handleGetMonthlyReport(d)}
+              />
+            ))}
+          </DropdownMenu>
         </div>
         {/* Table */}
         <Table

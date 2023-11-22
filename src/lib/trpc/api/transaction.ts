@@ -1,6 +1,10 @@
 import { z } from 'zod'
 
-import { getTransaction, getTransactions } from '@/lib/server/database'
+import {
+  getMonthlySalesReport,
+  getTransaction,
+  getTransactions,
+} from '@/lib/server/database'
 import { settings } from '@/lib/common'
 
 import { userProcedure, staffProcedure, router } from '../trpc'
@@ -51,6 +55,16 @@ export const TransactionRouter = router({
       }
 
       return transaction
+    }),
+  getMonthlyReport: staffProcedure
+    .input(
+      z.object({
+        year: z.number(),
+        month: z.number(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      return await getMonthlySalesReport(input)
     }),
 })
 
