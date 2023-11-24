@@ -705,17 +705,30 @@ function EditableField(props: {
   // applyedit
   const applyEdit = useCallback(() => {
     if (!inputRef.current) return
+
     const value = inputRef.current.value.trim()
     props.onChange?.(value)
     setIsEdit(false)
   }, [inputRef.current, props.onChange])
 
+  const enableEdit = useCallback(() => {
+    if (!inputRef.current) return
+
+    setIsEdit(true)
+  }, [])
+
   return (
-    <div onMouseDown={() => setIsEdit(true)} onClick={() => setIsEdit(true)}>
+    <div
+      className={twMerge(
+        'relative rounded-md',
+        !isEdit && 'cursor-text hover:bg-stone-100',
+      )}
+      onClick={enableEdit}
+    >
       {React.cloneElement(props.children, {
         className: twMerge(
           'ml-1 rounded-md border-transparent p-1 placeholder:text-stone-300 bg-transparent',
-          !isEdit && 'cursor-text hover:bg-stone-100',
+          !isEdit && 'pointer-events-none',
           !isEdit && props.nonEditClassName,
           isEdit && 'bg-stone-100',
           isEdit && props.editClassName,
