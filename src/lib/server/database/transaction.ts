@@ -513,6 +513,56 @@ export async function getMonthlySalesReport(props: {
     },
   })
 
+  // get user spendings
+  const userPaids = await prisma.transaction.groupBy({
+    by: ['sourceUserId'],
+    where: {
+      createdAt: dateRange,
+      type: TransactionType.PAYMENT,
+    },
+    _sum: {
+      pointAmount: true,
+      creditAmount: true,
+    },
+  })
+  const userRefunds = await prisma.transaction.groupBy({
+    by: ['targetUserId'],
+    where: {
+      createdAt: dateRange,
+      type: TransactionType.REFUND,
+    },
+    _sum: {
+      pointAmount: true,
+      creditAmount: true,
+    },
+  })
+  const userIds = userPaids.map((paid) => paid.sourceUserId)
+  const users = await prisma.user.findMany({
+    where: {
+      id: {
+        in: userIds,
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  })
+  const userSpendings = users
+    .map((user) => {
+      const paid = userPaids.find((paid) => paid.sourceUserId === user.id)
+      const refund = userRefunds.find(
+        (refund) => refund.targetUserId === user.id,
+      )
+      return {
+        ...user,
+        point: (paid?._sum.pointAmount ?? 0) - (refund?._sum.pointAmount ?? 0),
+        credit:
+          (paid?._sum.creditAmount ?? 0) - (refund?._sum.creditAmount ?? 0),
+      }
+    })
+    .sort((a, b) => b.point - a.point)
+
   return {
     commoditiesWithStatistics: commoditiesWithStatistics as NonNullable<
       typeof commoditiesWithStatistics[number]
@@ -520,5 +570,6 @@ export async function getMonthlySalesReport(props: {
     ordersCount,
     transactions,
     clientOrders,
+    userSpendings,
   }
 }
