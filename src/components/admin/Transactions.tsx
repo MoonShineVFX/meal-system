@@ -86,6 +86,16 @@ export default function Transactions() {
           )
           XLSX.utils.book_append_sheet(workBook, workSheet3, '客戶招待')
 
+          // Sheet: User Spendings
+          const workSheet4 = XLSX.utils.json_to_sheet(
+            data.userSpendings.map((u) => ({
+              使用者: u.name,
+              點數: u.point,
+              金額: u.credit,
+            })),
+          )
+          XLSX.utils.book_append_sheet(workBook, workSheet4, '使用者花費')
+
           // Make file
           const excelBuffer = XLSX.write(workBook, {
             bookType: 'xlsx',
