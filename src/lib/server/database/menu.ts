@@ -489,6 +489,11 @@ export async function getMenuWithComs({
 
 export async function deleteMenu(args: { menuId: number }) {
   const { menuId } = args
+
+  if (menuId === settings.MENU_LIVE_ID || menuId === settings.MENU_RETAIL_ID) {
+    throw new Error('Cannot delete unique menu')
+  }
+
   return await prisma.$transaction(async (client) => {
     // Check menu has been ordered
     const orderCount = await client.orderItem.count({
