@@ -271,10 +271,12 @@ export default function Menus() {
                         }
                       />
                     )}
-                    <DropdownMenuItem
-                      label={<span className='text-red-400'>刪除</span>}
-                      onClick={() => handleMenusDelete([row.id])}
-                    />
+                    {!['LIVE', 'RETAIL'].includes(row.type) && (
+                      <DropdownMenuItem
+                        label={<span className='text-red-400'>刪除</span>}
+                        onClick={() => handleMenusDelete([row.id])}
+                      />
+                    )}
                   </DropdownMenu>
                 )
               },
