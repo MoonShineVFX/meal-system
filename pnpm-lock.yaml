@@ -14,8 +14,8 @@ dependencies:
     specifier: ^2.0.13
     version: 2.0.13(react@18.2.0)
   '@prisma/client':
-    specifier: ^5.6.0
-    version: 5.6.0(prisma@5.6.0)
+    specifier: ^4.15.0
+    version: 4.15.0(prisma@4.15.0)
   '@tailwindcss/container-queries':
     specifier: ^0.1.0
     version: 0.1.0(tailwindcss@3.2.4)
@@ -89,8 +89,8 @@ dependencies:
     specifier: ^8.4.18
     version: 8.4.20
   prisma:
-    specifier: ^5.6.0
-    version: 5.6.0
+    specifier: ^4.15.0
+    version: 4.15.0
   qrcode:
     specifier: ^1.5.1
     version: 1.5.1
@@ -128,8 +128,8 @@ dependencies:
     specifier: ^4.1.0
     version: 4.1.1
   typescript:
-    specifier: ^5.1.6
-    version: 5.1.6
+    specifier: ^5.3.2
+    version: 5.3.2
   usehooks-ts:
     specifier: ^2.9.1
     version: 2.9.1(react-dom@18.2.0)(react@18.2.0)
@@ -158,7 +158,7 @@ devDependencies:
     version: 0.1.13(prettier@2.8.1)
   ts-node:
     specifier: ^10.9.1
-    version: 10.9.1(@types/node@18.11.15)(typescript@5.1.6)
+    version: 10.9.1(@types/node@18.11.15)(typescript@5.3.2)
   tsx:
     specifier: ^3.12.1
     version: 3.12.1
@@ -407,9 +407,9 @@ packages:
       fastq: 1.14.0
     dev: false
 
-  /@prisma/client@5.6.0(prisma@5.6.0):
-    resolution: {integrity: sha512-mUDefQFa1wWqk4+JhKPYq8BdVoFk9NFMBXUI8jAkBfQTtgx8WPx02U2HB/XbAz3GSUJpeJOKJQtNvaAIDs6sug==}
-    engines: {node: '>=16.13'}
+  /@prisma/client@4.15.0(prisma@4.15.0):
+    resolution: {integrity: sha512-xnROvyABcGiwqRNdrObHVZkD9EjkJYHOmVdlKy1yGgI+XOzvMzJ4tRg3dz1pUlsyhKxXGCnjIQjWW+2ur+YXuw==}
+    engines: {node: '>=14.17'}
     requiresBuild: true
     peerDependencies:
       prisma: '*'
@@ -417,16 +417,16 @@ packages:
       prisma:
         optional: true
     dependencies:
-      '@prisma/engines-version': 5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee
-      prisma: 5.6.0
+      '@prisma/engines-version': 4.15.0-28.8fbc245156db7124f997f4cecdd8d1219e360944
+      prisma: 4.15.0
     dev: false
 
-  /@prisma/engines-version@5.6.0-32.e95e739751f42d8ca026f6b910f5a2dc5adeaeee:
-    resolution: {integrity: sha512-UoFgbV1awGL/3wXuUK3GDaX2SolqczeeJ5b4FVec9tzeGbSWJboPSbT0psSrmgYAKiKnkOPFSLlH6+b+IyOwAw==}
+  /@prisma/engines-version@4.15.0-28.8fbc245156db7124f997f4cecdd8d1219e360944:
+    resolution: {integrity: sha512-sVOig4tjGxxlYaFcXgE71f/rtFhzyYrfyfNFUsxCIEJyVKU9rdOWIlIwQ2NQ7PntvGnn+x0XuFo4OC1jvPJKzg==}
     dev: false
 
-  /@prisma/engines@5.6.0:
-    resolution: {integrity: sha512-Mt2q+GNJpU2vFn6kif24oRSBQv1KOkYaterQsi0k2/lA+dLvhRX6Lm26gon6PYHwUM8/h8KRgXIUMU0PCLB6bw==}
+  /@prisma/engines@4.15.0:
+    resolution: {integrity: sha512-FTaOCGs0LL0OW68juZlGxFtYviZa4xdQj/rQEdat2txw0s3Vu/saAPKjNVXfIgUsGXmQ72HPgNr6935/P8FNAA==}
     requiresBuild: true
     dev: false
 
@@ -1591,7 +1591,7 @@ packages:
     dependencies:
       lilconfig: 2.0.6
       postcss: 8.4.20
-      ts-node: 10.9.1(@types/node@18.11.15)(typescript@5.1.6)
+      ts-node: 10.9.1(@types/node@18.11.15)(typescript@5.3.2)
       yaml: 1.10.2
     dev: false
 
@@ -1650,13 +1650,13 @@ packages:
     hasBin: true
     dev: true
 
-  /prisma@5.6.0:
-    resolution: {integrity: sha512-EEaccku4ZGshdr2cthYHhf7iyvCcXqwJDvnoQRAJg5ge2Tzpv0e2BaMCp+CbbDUwoVTzwgOap9Zp+d4jFa2O9A==}
-    engines: {node: '>=16.13'}
+  /prisma@4.15.0:
+    resolution: {integrity: sha512-iKZZpobPl48gTcSZVawLMQ3lEy6BnXwtoMj7hluoGFYu2kQ6F9LBuBrUyF95zRVnNo8/3KzLXJXJ5TEnLSJFiA==}
+    engines: {node: '>=14.17'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@prisma/engines': 5.6.0
+      '@prisma/engines': 4.15.0
     dev: false
 
   /qrcode@1.5.1:
@@ -1956,7 +1956,7 @@ packages:
       is-number: 7.0.0
     dev: false
 
-  /ts-node@10.9.1(@types/node@18.11.15)(typescript@5.1.6):
+  /ts-node@10.9.1(@types/node@18.11.15)(typescript@5.3.2):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -1982,7 +1982,7 @@ packages:
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 5.1.6
+      typescript: 5.3.2
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
@@ -2014,8 +2014,8 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /typescript@5.1.6:
-    resolution: {integrity: sha512-zaWCozRZ6DLEWAWFrVDz1H6FVXzUSfTy5FUMWsQlU8Ym5JP9eO4xkTIROFCQvhQf61z6O/G6ugw3SgAnvvm+HA==}
+  /typescript@5.3.2:
+    resolution: {integrity: sha512-6l+RyNy7oAHDfxC4FzSJcz9vnjTKxrLpDG5M2Vu4SHRVNg6xzqZp6LYSR9zjqQTu8DU/f5xwxUdADOkbrIX2gQ==}
     engines: {node: '>=14.17'}
     hasBin: true
 
