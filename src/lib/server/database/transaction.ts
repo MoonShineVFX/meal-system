@@ -525,11 +525,11 @@ export async function getMonthlySalesReport(props: {
       creditAmount: true,
     },
   })
-  const userRefunds = await prisma.transaction.groupBy({
+  const userCancels = await prisma.transaction.groupBy({
     by: ['targetUserId'],
     where: {
       createdAt: dateRange,
-      type: TransactionType.REFUND,
+      type: TransactionType.CANCELED,
     },
     _sum: {
       pointAmount: true,
@@ -551,8 +551,8 @@ export async function getMonthlySalesReport(props: {
   const userSpendings = users
     .map((user) => {
       const paid = userPaids.find((paid) => paid.sourceUserId === user.id)
-      const refund = userRefunds.find(
-        (refund) => refund.targetUserId === user.id,
+      const refund = userCancels.find(
+        (cancel) => cancel.targetUserId === user.id,
       )
       return {
         ...user,
