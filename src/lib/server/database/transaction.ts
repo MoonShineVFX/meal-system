@@ -13,6 +13,7 @@ type RechargeUserBalanceBaseArgs = {
   depositId?: string
   orderId?: number
   client?: Prisma.TransactionClient | PrismaClient
+  bonusId?: number
 }
 export async function rechargeUserBalanceBase({
   userId,
@@ -21,6 +22,7 @@ export async function rechargeUserBalanceBase({
   depositId,
   orderId,
   client,
+  bonusId,
 }: RechargeUserBalanceBaseArgs) {
   if (pointAmount === undefined && creditAmount === undefined)
     throw new Error('Amount is required')
@@ -53,6 +55,7 @@ export async function rechargeUserBalanceBase({
       creditAmount,
       type,
       depositId,
+      bonusId,
       orderForCanceled: orderId
         ? {
             connect: {
@@ -274,6 +277,12 @@ export async function getTransaction({
         },
       },
       deposit: true,
+      bonus: {
+        select: {
+          note: true,
+          amount: true,
+        },
+      },
     },
   })
   if (!transaction) throw new Error('Transaction not found')

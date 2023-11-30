@@ -17,6 +17,7 @@ import MenuTypeDateField from './MenuTypeDateField'
 import DatetimeField from './DatetimeField'
 import COMField from './COMField'
 import MenuIntroField from './MenuIntroField'
+import UsersField from './UsersField'
 
 export function FormField<TFieldValues extends FieldValues>(props: {
   formInput: FormInput & {
@@ -137,6 +138,12 @@ export function FormField<TFieldValues extends FieldValues>(props: {
     case 'menuIntro':
       content = (
         <MenuIntroField formInput={formInput} useFormReturns={useFormReturns} />
+      )
+      break
+    // Users
+    case 'users':
+      content = (
+        <UsersField formInput={formInput} useFormReturns={useFormReturns} />
       )
       break
     default:

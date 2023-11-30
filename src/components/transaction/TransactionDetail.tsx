@@ -187,6 +187,28 @@ export default function TransactionDetail(props: { transactionId: number }) {
               </dd>
             </dl>
           )}
+          {data && data.bonus && (
+            <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 last:border-none'>
+              <dt className='flex items-center text-sm font-bold tracking-widest text-stone-400'>
+                <CreditCardIcon className='mr-2 inline-block h-4 w-4' />
+                獎勵明細
+              </dt>
+              <dd>
+                <ul className='divide-y rounded-md border'>
+                  {data.bonus.note && (
+                    <li className='grid grid-cols-2 p-2 text-sm'>
+                      <span className='text-stone-400'>備註</span>
+                      <span>{data.bonus.note}</span>
+                    </li>
+                  )}
+                  <li className='grid grid-cols-2 p-2 text-sm'>
+                    <span className='text-stone-400'>金額</span>
+                    <span>${data.bonus.amount}</span>
+                  </li>
+                </ul>
+              </dd>
+            </dl>
+          )}
         </div>
       </div>
     </div>

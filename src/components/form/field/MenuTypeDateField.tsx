@@ -6,25 +6,11 @@ import { twMerge } from 'tailwind-merge'
 import { InputFieldProps, MenuDateTypeData } from './define'
 import Select from '../base/Select'
 import DateInput from '../base/DateInput'
-import { MenuTypeName } from '@/lib/common'
-
-function convertInputDateValueToDate(value: string | null) {
-  if (!value) return null
-  if (value === '') return null
-  if (!value.includes('T')) value += 'T00:00:00'
-
-  return new Date(value)
-}
-
-function convertDateToInputDateValue(
-  date: Date | null | undefined,
-  dateTime: boolean = false,
-) {
-  if (!date) return ''
-  const offsetIsoDate = new Date(date.getTime() + 8 * 60 * 60000)
-  if (dateTime) return offsetIsoDate.toISOString().split('.')[0]
-  return offsetIsoDate.toISOString().split('T')[0]
-}
+import {
+  MenuTypeName,
+  convertDateToInputDateValue,
+  convertInputDateValueToDate,
+} from '@/lib/common'
 
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 type MenuTypeDateInputState = PartialBy<MenuDateTypeData, 'type'>

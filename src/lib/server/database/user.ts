@@ -1,9 +1,9 @@
-import { UserRole, UserSettings } from '@prisma/client'
+import { Prisma, UserRole, UserSettings } from '@prisma/client'
 import CryptoJS from 'crypto-js'
 
 import { prisma, log } from './define'
 import { settings } from '@/lib/common'
-import { rechargeUserBalanceBase } from './transaction'
+import { rechargeUserBalanceBase, rechargeUserBalance } from './transaction'
 
 type EnsureUserArgs = {
   userId: string
@@ -138,6 +138,15 @@ export async function validateUserPassword(userId: string, password: string) {
   return false
 }
 
+export async function getUserList() {
+  return await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+  })
+}
+
 export async function getUserLite({ token }: { token: string }) {
   const userToken = await prisma.userToken.findUnique({
     where: { id: token },
@@ -155,121 +164,205 @@ export async function getUserLite({ token }: { token: string }) {
   return { ...userToken.user, token: userToken.id }
 }
 
+const userInfoSelect = Prisma.validator<Prisma.UserSelect>()({
+  id: true,
+  name: true,
+  role: true,
+  pointBalance: true,
+  creditBalance: true,
+  lastPointRechargeTime: true,
+  lastBonusCheckTime: true,
+  authorities: true,
+  profileImage: {
+    select: {
+      path: true,
+    },
+  },
+  settings: true,
+})
+
 export async function getUserInfo(userId: string) {
-  const result = await prisma.$transaction(async (client) => {
-    let user = await client.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        role: true,
-        pointBalance: true,
-        creditBalance: true,
-        lastPointRechargeTime: true,
-        authorities: true,
-        profileImage: {
-          select: {
-            path: true,
-          },
+  let shouldCheckRecharge = false
+  let shouldCheckBonus = false
+
+  // get today on local date
+  const now = new Date(new Date().toDateString())
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: userInfoSelect,
+  })
+
+  if (!user) return null
+
+  if (
+    !user.lastBonusCheckTime ||
+    now.toDateString() !== user.lastBonusCheckTime.toDateString()
+  ) {
+    try {
+      await prisma.user.update({
+        where: {
+          id: userId,
+          OR: [
+            {
+              lastBonusCheckTime: {
+                not: now,
+              },
+            },
+            {
+              lastBonusCheckTime: null,
+            },
+          ],
         },
-        settings: true,
-      },
-    })
+        data: {
+          lastBonusCheckTime: now,
+        },
+      })
+      shouldCheckBonus = true
+    } catch (e) {
+      // Delay timing
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      return getUserInfo(userId)
+    }
+  }
 
-    if (!user) return null
-
-    // Check if user needs to recharge points
-    let isRecharged = false
-    let thisCallback: (() => void) | undefined = undefined
-    const now = new Date()
-    // if no last recharge time, set yesterday
-    const lastRechargeTime =
-      user.lastPointRechargeTime ??
-      new Date(now.getTime() - 24 * 60 * 60 * 1000)
-
-    // If last recharge time is not today, recharge
-    if (now.toLocaleDateString() !== lastRechargeTime.toLocaleDateString()) {
-      lastRechargeTime.setDate(lastRechargeTime.getDate() + 1)
-      let currentDay = new Date(
-        lastRechargeTime.getFullYear(),
-        lastRechargeTime.getMonth(),
-        lastRechargeTime.getDate(),
-      )
-      const targetDay = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-      )
-
-      let rechargeAmount = 0
-      let isNewMonth = false
-
-      while (currentDay.getTime() <= targetDay.getTime()) {
-        // If day is weekday and not make-up day, recharge
-        const isHoliday = settings.HOLIDAYS.includes(currentDay.getTime())
-        const isWeekDay =
-          !isHoliday && currentDay.getDay() > 0 && currentDay.getDay() < 6
-        const isMakuUpDay = settings.MAKE_UP_DAYS.includes(currentDay.getTime())
-
-        if (isMakuUpDay || isWeekDay) {
-          rechargeAmount += settings.POINT_DAILY_RECHARGE_AMOUNT
-        }
-        currentDay = new Date(currentDay.getTime() + 24 * 60 * 60 * 1000)
-      }
-
-      // Update last recharge time
-      await client.user.update({
-        where: { id: user.id },
+  if (
+    !user.lastPointRechargeTime ||
+    now.toDateString() !== user.lastPointRechargeTime.toDateString()
+  ) {
+    try {
+      await prisma.user.update({
+        where: {
+          id: userId,
+          OR: [
+            {
+              lastPointRechargeTime: {
+                not: now,
+              },
+            },
+            {
+              lastPointRechargeTime: null,
+            },
+          ],
+        },
         data: {
           lastPointRechargeTime: now,
         },
       })
+      shouldCheckRecharge = true
+    } catch (e) {
+      // Delay timing
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      return getUserInfo(userId)
+    }
+  }
 
-      // If no recharge amount, return
-      const { lastPointRechargeTime, ...resultUser } = user
-      if (rechargeAmount === 0 && !isNewMonth)
-        return {
-          user: resultUser,
-          isRecharged,
-          callback: thisCallback,
-        }
+  // Start checking
+  let isRecharged = false
+  let isRedeemed = false
 
-      // Recharge points
-      const rechargePointAmount = isNewMonth
-        ? rechargeAmount - user.pointBalance
-        : rechargeAmount
+  // Check and redeem bonus
+  if (shouldCheckBonus) {
+    const validBonus = await prisma.bonus.findMany({
+      where: {
+        OR: [
+          {
+            validAt: null,
+          },
+          {
+            validAt: {
+              gte: now,
+            },
+          },
+        ],
+        users: {
+          some: {
+            id: userId,
+          },
+        },
+        redeemUsers: {
+          none: {
+            id: userId,
+          },
+        },
+      },
+    })
 
-      // If no recharge amount, return
-      if (rechargePointAmount === 0)
-        return {
-          user: resultUser,
-          isRecharged,
-          callback: thisCallback,
-        }
-
-      const { callback, user: newUser } = await rechargeUserBalanceBase({
-        userId: user.id,
-        pointAmount: isNewMonth
-          ? rechargeAmount - user.pointBalance
-          : rechargeAmount,
-        client,
-      })
-      thisCallback = callback
-
-      user.pointBalance = newUser.pointBalance
-      isRecharged = true
+    for (const b of validBonus) {
+      try {
+        await prisma.$transaction(async (client) => {
+          await rechargeUserBalanceBase({
+            userId: userId,
+            pointAmount: b.amount,
+            bonusId: b.id,
+            client,
+          })
+          await client.bonus.update({
+            where: {
+              id: b.id,
+              redeemUsers: {
+                none: {
+                  id: userId,
+                },
+              },
+            },
+            data: {
+              redeemUsers: {
+                connect: {
+                  id: userId,
+                },
+              },
+            },
+          })
+          user.pointBalance += b.amount
+        })
+      } catch (e) {
+        continue
+      }
     }
 
-    const { lastPointRechargeTime, ...resultUser } = user
-    return { user: resultUser, isRecharged, callback: thisCallback }
-  })
+    isRedeemed = validBonus.length > 0
+  }
 
-  if (result === null) return null
+  // Check and recharge point
+  if (shouldCheckRecharge) {
+    // If no last recharge time, set yesterday
+    const lastRechargeTime =
+      user.lastPointRechargeTime ??
+      new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
-  const { user, isRecharged, callback } = result
-  if (callback) callback()
+    lastRechargeTime.setDate(lastRechargeTime.getDate() + 1)
+    let currentDay = new Date(
+      lastRechargeTime.getFullYear(),
+      lastRechargeTime.getMonth(),
+      lastRechargeTime.getDate(),
+    )
+    const targetDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-  return { user, isRecharged }
+    let rechargeAmount = 0
+    while (currentDay.getTime() <= targetDay.getTime()) {
+      // If day is weekday and not make-up day, recharge
+      const isHoliday = settings.HOLIDAYS.includes(currentDay.getTime())
+      const isWeekDay =
+        !isHoliday && currentDay.getDay() > 0 && currentDay.getDay() < 6
+      const isMakuUpDay = settings.MAKE_UP_DAYS.includes(currentDay.getTime())
+
+      if (isMakuUpDay || isWeekDay) {
+        rechargeAmount += settings.POINT_DAILY_RECHARGE_AMOUNT
+      }
+      currentDay = new Date(currentDay.getTime() + 24 * 60 * 60 * 1000)
+    }
+
+    if (rechargeAmount > 0) {
+      const { user: newUser } = await rechargeUserBalance({
+        userId: user.id,
+        pointAmount: rechargeAmount,
+      })
+      user.pointBalance = newUser.pointBalance
+    }
+  }
+
+  return { user, isRecharged, isRedeemed }
 }
 
 export async function updateUserSettings(

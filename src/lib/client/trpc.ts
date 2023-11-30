@@ -62,6 +62,7 @@ export type OptionSetsTemplateDatas = RouterOutput['optionSet']['get']
 export type DepositData = RouterOutput['deposit']['get']
 export type DepositDatas = RouterOutput['deposit']['getList']['deposits']
 export type SupplierDatas = RouterOutput['supplier']['getList']
+export type BonusDatas = RouterOutput['bonus']['getList']['bonus']
 
 /* WebSocket Client */
 declare global {

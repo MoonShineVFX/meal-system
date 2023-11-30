@@ -39,6 +39,7 @@ export enum SERVER_NOTIFY {
   ORDER_UPDATE = '訂單狀態更新',
   ORDER_CANCEL = '訂單取消',
   DAILY_RECHARGE = '點數已更新',
+  BONUS_REDEEMED = '已取得贈送點數',
   POS_ADD = '待處理點餐新增',
   POS_UPDATE = '待處理點餐更新',
   CATEGORY_ADD = '分類新增',
@@ -60,6 +61,10 @@ export enum SERVER_NOTIFY {
   SUPPLIER_ADD = '店家新增',
   SUPPLIER_UPDATE = '店家更新',
   SUPPLIER_DELETE = '店家刪除',
+  BONUS_ADD = '獎勵新增',
+  BONUS_UPDATE = '獎勵更新',
+  BONUS_DELETE = '獎勵刪除',
+  BONUS_APPLY = '獎勵已發放',
   USER_SETTINGS_UPDATE = '用戶設定已更改',
   USER_TEST_PUSH_NOTIFICATION = '測試推送通知',
   USER_TOKEN_UPDATE = '用戶裝置設定已更改',
@@ -119,7 +124,7 @@ export const MenuTypeName: Record<MenuType, string> = {
 export const TransactionName: Record<TransactionType, string> = {
   [TransactionType.PAYMENT]: '付款',
   [TransactionType.REFUND]: '退款',
-  [TransactionType.RECHARGE]: '贈點/回收',
+  [TransactionType.RECHARGE]: '贈點',
   [TransactionType.CANCELED]: '取消訂單',
   [TransactionType.TRANSFER]: '轉帳',
   [TransactionType.DEPOSIT]: '儲值',
@@ -258,6 +263,25 @@ export function getMenuName(menu?: Pick<Menu, 'date' | 'name' | 'type'>) {
     month: 'long',
     day: 'numeric',
   })} ${typeName}${menu.name !== '' ? ` - ${menu.name}` : ''}`
+}
+
+// Date
+export function convertDateToInputDateValue(
+  date: Date | null | undefined,
+  dateTime: boolean = false,
+) {
+  if (!date) return ''
+  const offsetIsoDate = new Date(date.getTime() + 8 * 60 * 60000)
+  if (dateTime) return offsetIsoDate.toISOString().split('.')[0]
+  return offsetIsoDate.toISOString().split('T')[0]
+}
+
+export function convertInputDateValueToDate(value: string | null) {
+  if (!value) return null
+  if (value === '') return null
+  if (!value.includes('T')) value += 'T00:00:00'
+
+  return new Date(value)
 }
 
 // Options
