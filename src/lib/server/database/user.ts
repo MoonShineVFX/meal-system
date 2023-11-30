@@ -275,6 +275,7 @@ export async function getUserInfo(userId: string) {
             },
           },
         ],
+        isDeleted: false,
         users: {
           some: {
             id: userId,
