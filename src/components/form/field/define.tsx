@@ -150,6 +150,15 @@ type MenuIntroInput = {
   type: 'menuIntro'
   attributes?: never
 }
+type UsersInput = {
+  defaultValue?: string[]
+  data?: {
+    onlyIncrease?: boolean
+    newDialog?: boolean
+  }
+  type: 'users'
+  attributes?: never
+}
 
 export type FormInput = {
   label: string
@@ -175,6 +184,7 @@ export type FormInput = {
   | DatetimeInput
   | COMInput
   | MenuIntroInput
+  | UsersInput
 )
 
 export type InferFormInputData<TFormInput extends FormInput> =
@@ -208,6 +218,8 @@ export type InferFormInputData<TFormInput extends FormInput> =
     ? COMData[]
     : TFormInput['type'] extends 'menuIntro'
     ? MenuIntroData
+    : TFormInput['type'] extends 'users'
+    ? string[]
     : never
 
 export type FormInputsProps = { [key: string]: FormInput }

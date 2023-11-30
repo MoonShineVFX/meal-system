@@ -11,6 +11,7 @@ import { OptionSetRouter } from './optionSet'
 import { ImageRouter } from './image'
 import { DepositRouter } from './deposit'
 import { SupplierRouter } from './supplier'
+import { BonusRouter } from './bonus'
 
 export const appRouter = router({
   user: UserRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
   image: ImageRouter,
   deposit: DepositRouter,
   supplier: SupplierRouter,
+  bonus: BonusRouter,
 })
 
 export type AppRouter = typeof appRouter

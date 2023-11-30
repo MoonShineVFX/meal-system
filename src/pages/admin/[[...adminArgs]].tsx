@@ -11,6 +11,7 @@ import Deposits from '@/components/admin/Deposits'
 import Transactions from '@/components/admin/Transactions'
 import Orders from '@/components/admin/Orders'
 import Suppliers from '@/components/admin/Suppliers'
+import Bonus from '@/components/admin/Bonus'
 
 const TAB_NAMES = [
   '餐點',
@@ -21,6 +22,7 @@ const TAB_NAMES = [
   '訂單',
   '交易',
   '儲值',
+  '獎勵',
 ] as const
 // type TabName = typeof TAB_NAMES[number]
 const TAB_PATHS = [
@@ -32,6 +34,7 @@ const TAB_PATHS = [
   'orders',
   'transactions',
   'deposits',
+  'bonus',
 ] as const
 type TabPath = typeof TAB_PATHS[number]
 const TAB_LINKS = TAB_PATHS.map((path) => `/admin/${path}`)
@@ -86,6 +89,7 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
             {tabName === '訂單' && <Orders />}
             {tabName === '交易' && <Transactions />}
             {tabName === '儲值' && <Deposits />}
+            {tabName === '獎勵' && <Bonus />}
           </div>
         </div>
       </div>

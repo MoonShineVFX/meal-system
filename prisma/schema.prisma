@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["filteredRelationCount"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -59,6 +58,7 @@ model User {
   authorities           UserAuthority[] @default([])
   password              String?
   lastPointRechargeTime DateTime?
+  lastBonusCheckTime    DateTime?
   email                 String?
 
   settings           UserSettings?
@@ -70,6 +70,8 @@ model User {
   Deposit            Deposit[]
   sourceTransactions Transaction[] @relation("source")
   targetTransactions Transaction[] @relation("target")
+  bonus              Bonus[]       @relation("bonusUsers")
+  bonusRedeem        Bonus[]       @relation("bonusRedeem")
 }
 
 // Transaction
@@ -99,6 +101,8 @@ model Transaction {
   depositId        String?
   ordersForPayment Order[]  @relation("orderPayment")
   orderForCanceled Order?   @relation("canceledPayment")
+  bonus            Bonus?   @relation(fields: [bonusId], references: [id])
+  bonusId          Int?
 
   @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
 }
@@ -123,6 +127,23 @@ model Deposit {
   user         User          @relation(fields: [userId], references: [id])
   userId       String
   transactions Transaction[]
+}
+
+// Bonus
+model Bonus {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  note      String?
+  validAt   DateTime?
+  amount    Int
+  isDeleted Boolean   @default(false)
+
+  users        User[]        @relation("bonusUsers")
+  redeemUsers  User[]        @relation("bonusRedeem")
+  transactions Transaction[]
+
+  @@index([id, createdAt])
 }
 
 // Order

@@ -140,7 +140,7 @@ export default function Deposits() {
             {
               name: '動作',
               render: (deposit) => (
-                <div className='itemshandleUpdateDeposit-center flex gap-2'>
+                <div className='flex items-center gap-2'>
                   <Button
                     textClassName='px-3 py-1 text-sm'
                     className='disabled:opacity-50 hover:bg-stone-200'

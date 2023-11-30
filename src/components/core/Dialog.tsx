@@ -28,6 +28,7 @@ type DialogProps<T extends UseMutationResult> = {
   onCancel?: () => void
   as?: 'form' | 'div'
   panelProps?: Parameters<typeof Dialog.Panel>[0]
+  sectionClassName?: string
 }
 
 export default function DialogCore<T extends UseMutationResult>(
@@ -113,7 +114,9 @@ export default function DialogCore<T extends UseMutationResult>(
               )}
               {...panelPropsRest}
             >
-              <section className='sm:flex sm:gap-4'>
+              <section
+                className={twMerge('sm:flex sm:gap-4', props.sectionClassName)}
+              >
                 <div
                   className={twMerge(
                     'mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full',

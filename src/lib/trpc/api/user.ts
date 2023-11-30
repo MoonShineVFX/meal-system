@@ -12,6 +12,7 @@ import {
   deleteSubscription,
   deleteUserToken,
   getUserToken,
+  getUserList,
 } from '@/lib/server/database'
 import {
   settings,
@@ -21,7 +22,7 @@ import {
 } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
-import { userProcedure, publicProcedure, router } from '../trpc'
+import { userProcedure, publicProcedure, router, staffProcedure } from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -50,7 +51,16 @@ export const UserRouter = router({
       })
     }
 
+    if (userInfo.isRedeemed) {
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
+        type: SERVER_NOTIFY.BONUS_REDEEMED,
+      })
+    }
+
     return userInfo.user
+  }),
+  getList: staffProcedure.query(async () => {
+    return await getUserList()
   }),
   onNotify: userProcedure.subscription(async ({ ctx }) => {
     return observable<ServerNotifyPayload>((observer) => {
