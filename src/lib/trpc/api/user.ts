@@ -90,7 +90,8 @@ export const UserRouter = router({
   login: publicProcedure
     .input(
       z.object({
-        username: z.string().min(1),
+        // AD username is case insensitive
+        username: z.string().toLowerCase().min(1),
         password: z.string().min(1),
       }),
     )
