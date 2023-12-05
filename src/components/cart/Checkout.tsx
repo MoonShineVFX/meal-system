@@ -84,7 +84,7 @@ export default function Checkout(props: {
   const pointBalance = userData?.pointBalance ?? 0
   const creditBalance = userData?.creditBalance ?? 0
 
-  const pointBalnceToPay = Math.min(pointBalance, props.totalPrice)
+  const pointBalnceToPay = Math.max(Math.min(pointBalance, props.totalPrice), 0)
   const creditBalanceToPay = props.totalPrice - pointBalnceToPay
   const isNotEnough = creditBalanceToPay > creditBalance && !isClientOrder
 

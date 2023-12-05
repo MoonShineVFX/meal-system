@@ -191,7 +191,7 @@ export async function chargeUserBalanceBase({
   let pointAmountToPay = 0
   let creditAmountToPay = 0
 
-  pointAmountToPay = Math.min(amount, user.pointBalance)
+  pointAmountToPay = Math.max(Math.min(amount, user.pointBalance), 0)
   creditAmountToPay = amount - pointAmountToPay
 
   if (creditAmountToPay > user.creditBalance && !isClientOrder)

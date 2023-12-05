@@ -32,7 +32,7 @@ model UserToken {
   p256dh              String?   @unique
   auth                String?   @unique
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 }
 
@@ -41,7 +41,7 @@ model UserSettings {
   updatedAt DateTime @updatedAt
 
   userId String @id
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // qrcodeAutoCheckout Boolean @default(false)
   // notificationSound  Boolean @default(true)
@@ -204,7 +204,7 @@ model CartItem {
   optionsKey String
   invalid    Boolean @default(false)
 
-  user            User            @relation(fields: [userId], references: [id])
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
   commodityOnMenu CommodityOnMenu @relation(fields: [menuId, commodityId], references: [menuId, commodityId], onDelete: Cascade)
   menuId          Int
