@@ -199,15 +199,21 @@ export async function chargeUserBalanceBase({
 
   /* Operation */
   // Charge user
-  const updatedUser = await thisPrisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      creditBalance: { decrement: creditAmountToPay },
-      pointBalance: { decrement: pointAmountToPay },
-    },
-  })
+  const updatedUser = await thisPrisma.user
+    .update({
+      where: {
+        id: userId,
+        creditBalance: user.creditBalance,
+        pointBalance: user.pointBalance,
+      },
+      data: {
+        creditBalance: { decrement: creditAmountToPay },
+        pointBalance: { decrement: pointAmountToPay },
+      },
+    })
+    .catch(() => {
+      throw new Error('Transaction too fast')
+    })
 
   const transaction = await thisPrisma.transaction.create({
     data: {
