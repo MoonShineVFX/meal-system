@@ -29,7 +29,7 @@ export default function Button(props: {
   title?: string
 }) {
   const themeColor = themes[props.theme ?? 'main']
-  const isBusy = props.isBusy ?? props.isLoading ?? false
+  const isBusy = props.isBusy || props.isLoading
 
   return (
     <motion.button
@@ -39,7 +39,7 @@ export default function Button(props: {
         stiffness: 600,
         damping: 10,
       }}
-      disabled={props.isDisabled ?? isBusy ?? false}
+      disabled={props.isDisabled || isBusy}
       className={twMerge(
         `relative flex items-center justify-center whitespace-nowrap rounded-2xl indent-[0.1em] tracking-widest focus:outline-none disabled:pointer-events-none`,
         themeColor,

@@ -6,9 +6,11 @@ import { IncomingMessage } from 'http'
 import { NodeHTTPCreateContextFnOptions } from '@trpc/server/adapters/node-http'
 import ws from 'ws'
 import { NextApiRequest, NextApiResponse } from 'next'
+import requestIp from 'request-ip'
 
 import { getUserLite } from '@/lib/server/database'
 import { settings, validateRole } from '@/lib/common'
+import { createTRPCStoreLimiter } from './rate-limit/memory'
 
 type UserLite = Awaited<ReturnType<typeof getUserLite>>
 
@@ -52,6 +54,7 @@ export async function createContext(
   }
 
   return {
+    req: opts.req,
     res: isSocket ? undefined : (opts.res as NextApiResponse),
     ws: isSocket ? (opts.res as ws) : undefined,
     userLite: userLite,
@@ -100,3 +103,23 @@ export const userProcedure = t.procedure.use(
 )
 
 export const publicProcedure = t.procedure
+
+/* Rate Limiter */
+const rateSecondLimiter = createTRPCStoreLimiter({
+  root: t,
+  fingerprint(ctx) {
+    return ctx.userLite?.id ?? requestIp.getClientIp(ctx.req) ?? 'unknown'
+  },
+  windowMs: 1000,
+  message: (retryAfter) => `交易過於頻繁，請稍後重試 ${retryAfter}`,
+  max: 1,
+  onLimit: (retryAfter, _ctx, fingerprint) => {
+    console.warn('rate limit', retryAfter, fingerprint)
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: '交易過於頻繁，請稍後重試',
+    })
+  },
+})
+
+export const rateLimitUserProcedure = t.procedure.use(rateSecondLimiter)
