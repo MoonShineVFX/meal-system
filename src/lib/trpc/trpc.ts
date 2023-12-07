@@ -10,7 +10,7 @@ import requestIp from 'request-ip'
 
 import { getUserLite } from '@/lib/server/database'
 import { settings, validateRole } from '@/lib/common'
-import { createTRPCStoreLimiter } from '@trpc-limiter/memory'
+import { createTRPCStoreLimiter } from './rate-limit/memory'
 
 type UserLite = Awaited<ReturnType<typeof getUserLite>>
 

@@ -25,9 +25,6 @@ dependencies:
   '@tanstack/react-query':
     specifier: ^4.13.5
     version: 4.20.4(react-dom@18.2.0)(react@18.2.0)
-  '@trpc-limiter/memory':
-    specifier: ^0.0.3
-    version: 0.0.3(@trpc/client@10.5.0)(@trpc/server@10.5.0)
   '@trpc/client':
     specifier: ^10.4.3
     version: 10.5.0(@trpc/server@10.5.0)
@@ -482,29 +479,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       use-sync-external-store: 1.2.0(react@18.2.0)
-    dev: false
-
-  /@trpc-limiter/core@0.0.8(@trpc/client@10.5.0)(@trpc/server@10.5.0):
-    resolution: {integrity: sha512-ptwRvjmCHIUow4mVh6O5JpDMVcDLMn+k1tpaB55ZLO/2YGFo705gN1KMM4tBWZNzp07hMyGZS7PXzn0MUxbxSQ==}
-    engines: {node: '>=16'}
-    peerDependencies:
-      '@trpc/client': ^10.0.0-proxy-beta.21
-      '@trpc/server': ^10.0.0-proxy-beta.21
-    dependencies:
-      '@trpc/client': 10.5.0(@trpc/server@10.5.0)
-      '@trpc/server': 10.5.0
-    dev: false
-
-  /@trpc-limiter/memory@0.0.3(@trpc/client@10.5.0)(@trpc/server@10.5.0):
-    resolution: {integrity: sha512-D0w81ofA6xF7Jd7mCLciZj47fJilhSUl1UKzqfGKkCq6NsxukCCkR3tOZ0OqgsmWIepo5WVt4FbtGknfjcnjLA==}
-    engines: {node: '>=16'}
-    peerDependencies:
-      '@trpc/client': ^10.0.0-proxy-beta.21
-      '@trpc/server': ^10.0.0-proxy-beta.21
-    dependencies:
-      '@trpc-limiter/core': 0.0.8(@trpc/client@10.5.0)(@trpc/server@10.5.0)
-      '@trpc/client': 10.5.0(@trpc/server@10.5.0)
-      '@trpc/server': 10.5.0
     dev: false
 
   /@trpc/client@10.5.0(@trpc/server@10.5.0):
