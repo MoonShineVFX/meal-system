@@ -14,7 +14,7 @@
     "db-migrate": "prisma migrate dev",
     "db-generate": "prisma generate",
     "db-reset": "prisma migrate reset",
-    "db-helper": "ts-node prisma/scripts/helpers/combine-duplicate-users.ts"
+    "db-helper": "ts-node prisma/scripts/helpers/remove-users-tokens.ts"
   },
   "keywords": [],
   "author": "",
