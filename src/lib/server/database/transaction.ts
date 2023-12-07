@@ -211,7 +211,7 @@ export async function chargeUserBalanceBase({
         pointBalance: { decrement: pointAmountToPay },
       },
     })
-    .catch(() => {
+    .catch((e) => {
       throw new Error('Transaction too fast')
     })
 

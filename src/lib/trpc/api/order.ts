@@ -11,10 +11,15 @@ import {
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 import webPusher from '@/lib/server/webpush'
 import { UserAuthority } from '@prisma/client'
-import { router, staffProcedure, userProcedure } from '../trpc'
+import {
+  rateLimitUserProcedure,
+  router,
+  staffProcedure,
+  userProcedure,
+} from '../trpc'
 
 export const OrderRouter = router({
-  addFromCart: userProcedure
+  addFromCart: rateLimitUserProcedure
     .input(
       z.object({
         clientOrder: z.boolean().optional(),
@@ -22,6 +27,8 @@ export const OrderRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.userLite) throw new Error('未登入')
+
       if (input.clientOrder) {
         const canClientOrder = validateAuthority(
           ctx.userLite,
@@ -62,9 +69,11 @@ export const OrderRouter = router({
 
       return orders
     }),
-  addFromRetail: userProcedure
+  addFromRetail: rateLimitUserProcedure
     .input(z.object({ cipher: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      if (!ctx.userLite) throw new Error('未登入')
+
       const order = await createOrderFromRetail({
         userId: ctx.userLite.id,
         cipher: input.cipher,
