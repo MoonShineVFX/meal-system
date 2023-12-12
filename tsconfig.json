@@ -27,7 +27,7 @@
   "ts-node": {
     "transpileOnly": true,
     "compilerOptions": {
-      "module": "commonjs"
+      "module": "esnext"
     },
     "require": ["tsconfig-paths/register"]
   }
