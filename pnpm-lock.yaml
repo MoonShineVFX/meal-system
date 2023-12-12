@@ -55,9 +55,6 @@ dependencies:
   '@types/react-dom':
     specifier: ^18.0.9
     version: 18.0.9
-  '@types/request-ip':
-    specifier: ^0.0.41
-    version: 0.0.41
   '@types/web-push':
     specifier: ^3.3.2
     version: 3.3.2
@@ -121,9 +118,6 @@ dependencies:
   react-virtuoso:
     specifier: ^3.1.5
     version: 3.1.5(react-dom@18.2.0)(react@18.2.0)
-  request-ip:
-    specifier: ^3.3.0
-    version: 3.3.0
   superjson:
     specifier: ^1.11.0
     version: 1.12.0
@@ -582,12 +576,6 @@ packages:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
       csstype: 3.1.1
-    dev: false
-
-  /@types/request-ip@0.0.41:
-    resolution: {integrity: sha512-Qzz0PM2nSZej4lsLzzNfADIORZhhxO7PED0fXpg4FjXiHuJ/lMyUg+YFF5q8x9HPZH3Gl6N+NOM8QZjItNgGKg==}
-    dependencies:
-      '@types/node': 18.11.15
     dev: false
 
   /@types/scheduler@0.16.2:
@@ -1848,10 +1836,6 @@ packages:
     engines: {node: '>=8.10.0'}
     dependencies:
       picomatch: 2.3.1
-    dev: false
-
-  /request-ip@3.3.0:
-    resolution: {integrity: sha512-cA6Xh6e0fDBBBwH77SLJaJPBmD3nWVAcF9/XAcsrIHdjhFzFiB5aNQFytdjCGPezU3ROwrR11IddKAM08vohxA==}
     dev: false
 
   /require-directory@2.1.1:
