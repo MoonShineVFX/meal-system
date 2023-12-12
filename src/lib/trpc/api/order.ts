@@ -11,6 +11,8 @@ import {
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 import webPusher from '@/lib/server/webpush'
 import { UserAuthority } from '@prisma/client'
+import { queue } from '@/lib/server/queue'
+
 import {
   rateLimitUserProcedure,
   router,
@@ -37,10 +39,14 @@ export const OrderRouter = router({
         if (!canClientOrder) throw new Error('權限不足')
       }
 
-      const orders = await createOrderFromCart({
-        userId: ctx.userLite.id,
-        ...input,
+      const orders = await queue.add(async () => {
+        return await createOrderFromCart({
+          userId: ctx.userLite.id,
+          ...input,
+        })
       })
+
+      if (!orders) throw new Error('訂單新增失敗')
 
       eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
         type: SERVER_NOTIFY.ORDER_ADD,

@@ -1,16 +1,15 @@
+import { UserRole } from '@prisma/client'
 import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
-import { UserRole } from '@prisma/client'
-import superjson from 'superjson'
-import { IncomingMessage } from 'http'
 import { NodeHTTPCreateContextFnOptions } from '@trpc/server/adapters/node-http'
-import ws from 'ws'
+import { IncomingMessage } from 'http'
 import { NextApiRequest, NextApiResponse } from 'next'
-import requestIp from 'request-ip'
+import superjson from 'superjson'
+import ws from 'ws'
 
-import { getUserLite } from '@/lib/server/database'
 import { settings, validateRole } from '@/lib/common'
-import { createTRPCStoreLimiter } from './rate-limit/memory'
+import { getUserLite } from '@/lib/server/database'
+import { rateLimiter } from '@/lib/server/rate-limiter'
 
 type UserLite = Awaited<ReturnType<typeof getUserLite>>
 
@@ -105,21 +104,17 @@ export const userProcedure = t.procedure.use(
 export const publicProcedure = t.procedure
 
 /* Rate Limiter */
-const rateSecondLimiter = createTRPCStoreLimiter({
-  root: t,
-  fingerprint(ctx) {
-    return ctx.userLite?.id ?? requestIp.getClientIp(ctx.req) ?? 'unknown'
-  },
-  windowMs: 1000,
-  message: (retryAfter) => `交易過於頻繁，請稍後重試 ${retryAfter}`,
-  max: 1,
-  onLimit: (retryAfter, _ctx, fingerprint) => {
-    console.warn('rate limit', retryAfter, fingerprint)
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: '交易過於頻繁，請稍後重試',
-    })
-  },
-})
+export const rateLimitUserProcedure = userProcedure.use(
+  async ({ next, ctx }) => {
+    try {
+      await rateLimiter.consume(ctx.userLite.id, 1)
+    } catch (e) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: '交易過於頻繁，請稍後重試',
+      })
+    }
 
-export const rateLimitUserProcedure = t.procedure.use(rateSecondLimiter)
+    return next({ ctx: { userLite: ctx.userLite! } })
+  },
+)
