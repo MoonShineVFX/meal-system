@@ -57,28 +57,28 @@ export default function Checkout(props: {
           },
         },
       )
-    } else {
-      createOrderFromCartMutation.mutate(
-        { clientOrder: isClientOrder, note: clientOrderNote },
-        {
-          onSuccess: (orders) => {
-            if (orders.length === 0) return
-            const referenceOrder = orders[0]
-            if (referenceOrder.menu.type === 'LIVE') {
-              router.push('/order/live')
-            } else {
-              router.push('/order/reservation')
-            }
-          },
-          onError: () => {
-            // Invalidate cart and menu when error
-            // Because the cart might be modified due to invalidation
-            trpcContext.menu.get.invalidate()
-            trpcContext.cart.get.invalidate()
-          },
-        },
-      )
+      return
     }
+    createOrderFromCartMutation.mutate(
+      { clientOrder: isClientOrder, note: clientOrderNote },
+      {
+        onSuccess: (orders) => {
+          if (orders.length === 0) return
+          const referenceOrder = orders[0]
+          if (referenceOrder.menu.type === 'LIVE') {
+            router.push('/order/live')
+          } else {
+            router.push('/order/reservation')
+          }
+        },
+        onError: () => {
+          // Invalidate cart and menu when error
+          // Because the cart might be modified due to invalidation
+          trpcContext.menu.get.invalidate()
+          trpcContext.cart.get.invalidate()
+        },
+      },
+    )
   }
 
   const pointBalance = userData?.pointBalance ?? 0
