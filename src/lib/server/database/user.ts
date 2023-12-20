@@ -475,3 +475,45 @@ export async function getUserToken(token: string) {
 
   return userSub
 }
+
+export async function getUsersStatistics() {
+  const now = new Date()
+  const users = await prisma.user.findMany({
+    where: {
+      id: {
+        notIn: ['_server', '_client'],
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      pointBalance: true,
+      creditBalance: true,
+      authorities: true,
+      profileImage: {
+        select: {
+          path: true,
+        },
+      },
+      _count: {
+        select: {
+          orders: {
+            where: {
+              timeCanceled: null,
+              forClient: false,
+              createdAt: {
+                gte: new Date(now.getFullYear(), now.getMonth(), 1),
+              },
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  })
+
+  return users
+}

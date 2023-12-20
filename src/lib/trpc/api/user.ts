@@ -13,6 +13,7 @@ import {
   deleteUserToken,
   getUserToken,
   getUserList,
+  getUsersStatistics,
 } from '@/lib/server/database'
 import {
   settings,
@@ -243,5 +244,8 @@ export const UserRouter = router({
       type: SERVER_NOTIFY.USER_TEST_PUSH_NOTIFICATION,
       message: `送出 ${count.length} 個推送通知，成功 ${count.length} 個`,
     })
+  }),
+  getStatistics: staffProcedure.query(async () => {
+    return await getUsersStatistics()
   }),
 })
