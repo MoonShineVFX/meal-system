@@ -1,17 +1,18 @@
-import z from 'zod'
 import { GetServerSideProps } from 'next'
+import z from 'zod'
 
-import Tab from '@/components/core/Tab'
-import Title from '@/components/core/Title'
+import Bonus from '@/components/admin/Bonus'
 import Categories from '@/components/admin/Categories'
-import OptionSets from '@/components/admin/OptionSets'
 import Commodities from '@/components/admin/Commodities'
-import Menus from '@/components/admin/Menus'
 import Deposits from '@/components/admin/Deposits'
-import Transactions from '@/components/admin/Transactions'
+import Members from '@/components/admin/Members'
+import Menus from '@/components/admin/Menus'
+import OptionSets from '@/components/admin/OptionSets'
 import Orders from '@/components/admin/Orders'
 import Suppliers from '@/components/admin/Suppliers'
-import Bonus from '@/components/admin/Bonus'
+import Transactions from '@/components/admin/Transactions'
+import Tab from '@/components/core/Tab'
+import Title from '@/components/core/Title'
 
 const TAB_NAMES = [
   '餐點',
@@ -23,6 +24,7 @@ const TAB_NAMES = [
   '交易',
   '儲值',
   '獎勵',
+  '會員'
 ] as const
 // type TabName = typeof TAB_NAMES[number]
 const TAB_PATHS = [
@@ -35,6 +37,7 @@ const TAB_PATHS = [
   'transactions',
   'deposits',
   'bonus',
+  'members'
 ] as const
 type TabPath = typeof TAB_PATHS[number]
 const TAB_LINKS = TAB_PATHS.map((path) => `/admin/${path}`)
@@ -77,7 +80,7 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
           tabNames={TAB_NAMES}
           currentTabName={tabName}
           tabLinks={TAB_LINKS}
-          dividers={[2, 4]}
+          dividers={[2, 4, 8]}
         />
         <div className='relative h-full grow'>
           <div className='absolute inset-0 sm:pt-[2rem] lg:pt-0'>
@@ -90,6 +93,7 @@ export default function PageAdmin(props: { tabPath?: TabPath }) {
             {tabName === '交易' && <Transactions />}
             {tabName === '儲值' && <Deposits />}
             {tabName === '獎勵' && <Bonus />}
+            {tabName === '會員' && <Members />}
           </div>
         </div>
       </div>
