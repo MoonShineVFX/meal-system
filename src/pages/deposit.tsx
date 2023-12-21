@@ -45,11 +45,10 @@ export default function DepositPage() {
 
     const value = parseInt(e.target.value)
     if (isNaN(value)) return
-    if (
-      value > settings.DEPOSIT_MAX_AMOUNT ||
-      value < settings.DEPOSIT_MIN_AMOUNT
-    )
+    if (value > settings.DEPOSIT_MAX_AMOUNT) {
+      setDepositAmount(settings.DEPOSIT_MAX_AMOUNT)
       return
+    }
     setDepositAmount(value)
   }, [])
 
@@ -180,7 +179,6 @@ export default function DepositPage() {
                   hideSpinner={true}
                   className='h-12 w-full rounded-lg pr-10 text-right text-3xl font-bold text-yellow-500'
                   value={depositAmount}
-                  min={settings.DEPOSIT_MIN_AMOUNT}
                   max={settings.DEPOSIT_MAX_AMOUNT}
                   onChange={handleInput}
                 />
