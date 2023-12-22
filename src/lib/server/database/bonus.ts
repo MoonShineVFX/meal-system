@@ -34,6 +34,7 @@ export async function createOrUpdateBonus(props: {
             id,
           })),
         },
+        validAt: props.validAt,
       },
     })
   }
