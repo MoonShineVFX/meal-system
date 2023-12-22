@@ -134,7 +134,7 @@ export default function Bonus() {
               name: '發送日期',
               align: 'left',
               cellClassName: 'text-sm',
-              render: (bonus) => bonus.validAt?.toLocaleString() ?? '即時',
+              render: (bonus) => bonus.validAt?.toLocaleDateString() ?? '即時',
             },
             {
               name: '點數',
