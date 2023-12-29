@@ -66,16 +66,6 @@ export async function createOrderFromCart({
       0,
     )
 
-    // validate cart items is live only when client order is true
-    if (clientOrder) {
-      const isNotAllLive = getCartItemsResult.cartItems.some(
-        (cartItem) => cartItem.commodityOnMenu.menu.type !== MenuType.LIVE,
-      )
-      if (isNotAllLive) {
-        throw new Error('購物車含有非即時餐點，無法使用客戶招待下單')
-      }
-    }
-
     // Charge user balance
     const { transaction } = await chargeUserBalanceBase({
       userId: clientOrder ? settings.SERVER_CLIENTORDER_ID : userId,
