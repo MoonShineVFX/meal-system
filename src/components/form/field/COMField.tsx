@@ -75,7 +75,7 @@ export default function COMField<T extends FieldValues>(
   useEffect(() => {
     if (!data) return
     if (!supplier && !props.formInput.data?.isEdit) {
-      setComDatas([])
+      setComDatas(props.formInput.defaultValue ?? [])
       return
     }
 
@@ -91,7 +91,7 @@ export default function COMField<T extends FieldValues>(
         stock: 0,
       })),
     )
-  }, [data])
+  }, [supplier])
 
   const handleSelectFromExist = useCallback(() => {
     showFormDialog({

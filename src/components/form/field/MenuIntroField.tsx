@@ -123,8 +123,11 @@ export default function MenuIntroField<T extends FieldValues>(
           )
           setIntroData((prev) => ({
             ...prev,
-            name: supplier?.name ?? '',
-            description: supplier?.description ?? '',
+            name: supplier?.name ?? props.formInput.defaultValue?.name ?? '',
+            description:
+              supplier?.description ??
+              props.formInput.defaultValue?.description ??
+              '',
             supplierId:
               e.target.value === '-1' ? undefined : parseInt(e.target.value),
           }))

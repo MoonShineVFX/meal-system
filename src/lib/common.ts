@@ -134,6 +134,7 @@ export const TransactionName: Record<TransactionType, string> = {
 export const settings = {
   /* Auth */
   AUTH_API_URL: process.env.AUTH_API_URL!,
+  AUTH_API_TOKEN: process.env.AUTH_API_TOKEN!,
   COOKIE_TOKEN_NAME: 'meal_token',
   COOKIE_EXPIRE_DAYS: 14,
 
