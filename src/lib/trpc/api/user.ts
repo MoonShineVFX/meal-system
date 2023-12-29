@@ -245,7 +245,13 @@ export const UserRouter = router({
       message: `送出 ${count.length} 個推送通知，成功 ${count.length} 個`,
     })
   }),
-  getStatistics: staffProcedure.query(async () => {
-    return await getUsersStatistics()
-  }),
+  getStatistics: staffProcedure
+    .input(
+      z.object({
+        showDeactivated: z.boolean().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      return await getUsersStatistics(input)
+    }),
 })

@@ -129,9 +129,17 @@ export async function validateUserPassword(userId: string, password: string) {
     where: {
       id: userId,
     },
+    select: {
+      isDeactivated: true,
+      password: true,
+    },
   })
 
   if (user && user.password === CryptoJS.SHA256(password).toString()) {
+    if (user.isDeactivated) {
+      throw new Error('使用者已停用')
+    }
+
     return true
   }
 
@@ -151,10 +159,22 @@ export async function getUserLite({ token }: { token: string }) {
   const userToken = await prisma.userToken.findUnique({
     where: { id: token },
     include: {
-      user: { select: { id: true, name: true, role: true, authorities: true } },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          role: true,
+          authorities: true,
+          isDeactivated: true,
+        },
+      },
     },
   })
   if (!userToken) return null
+
+  if (userToken.user.isDeactivated) {
+    throw new Error('使用者已停用')
+  }
 
   prisma.userToken.update({
     where: { id: token },
@@ -476,13 +496,14 @@ export async function getUserToken(token: string) {
   return userSub
 }
 
-export async function getUsersStatistics() {
+export async function getUsersStatistics(props: { showDeactivated?: boolean }) {
   const now = new Date()
   const users = await prisma.user.findMany({
     where: {
       id: {
         notIn: ['_server', '_client'],
       },
+      isDeactivated: props.showDeactivated ? undefined : false,
     },
     select: {
       id: true,
@@ -496,6 +517,7 @@ export async function getUsersStatistics() {
           path: true,
         },
       },
+      isDeactivated: true,
       _count: {
         select: {
           orders: {
@@ -516,4 +538,23 @@ export async function getUsersStatistics() {
   })
 
   return users
+}
+
+export async function deactivateUsers(userIds: string[]) {
+  const result = await prisma.user.updateMany({
+    where: {
+      id: {
+        notIn: [
+          ...userIds,
+          settings.SERVER_USER_ID,
+          settings.SERVER_CLIENTORDER_ID,
+        ],
+      },
+    },
+    data: {
+      isDeactivated: true,
+    },
+  })
+
+  return result.count
 }

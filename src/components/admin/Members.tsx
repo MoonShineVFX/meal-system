@@ -6,13 +6,17 @@ import Table from '@/components/core/Table'
 import trpc from '@/lib/client/trpc'
 import { settings } from '@/lib/common'
 import SearchBar from '@/components/core/SearchBar'
+import CheckBox from '@/components/form/base/CheckBox'
 
 export default function Members() {
   // State
   const [searchKeyword, setSearchKeyword] = useState<string>('')
+  const [showDeactivated, setShowDeactivated] = useState<boolean>(false)
 
   // Trpc
-  const { data, isError, error } = trpc.user.getStatistics.useQuery()
+  const { data, isError, error } = trpc.user.getStatistics.useQuery({
+    showDeactivated,
+  })
 
   const filteredMembers = useMemo(() => {
     if (!data) return []
@@ -21,7 +25,7 @@ export default function Members() {
     return data.filter((user) =>
       user.name.toLowerCase().includes(searchKeyword.toLowerCase()),
     )
-  }, [searchKeyword])
+  }, [searchKeyword, data])
 
   if (isError) return <Error description={error.message} />
 
@@ -30,12 +34,23 @@ export default function Members() {
       <div className='absolute inset-0 flex flex-col gap-4 p-8'>
         {/* Top */}
         <div className='flex items-center gap-4'>
+          {/* search */}
           <SearchBar
             placeholder='搜尋會員'
             isLoading={false}
             searchKeyword={searchKeyword}
             setSearchKeyword={setSearchKeyword}
           />
+          {/* deactivated */}
+          <label className='mr-auto flex cursor-pointer items-center gap-2'>
+            <CheckBox
+              checked={showDeactivated}
+              onChange={(e) => setShowDeactivated(e.target.checked)}
+            />
+            <span className='text-sm font-bold text-stone-500'>
+              顯示已停用會員
+            </span>
+          </label>
         </div>
         {/* Table */}
         <Table
@@ -58,10 +73,15 @@ export default function Members() {
               ),
             },
             {
-              sort: true,
+              sort: (a, b) => a.name.localeCompare(b.name),
               name: '名稱',
               align: 'left',
-              render: (user) => user.name,
+              render: (user) =>
+                user.isDeactivated ? (
+                  <p className='text-red-400'>{user.name}</p>
+                ) : (
+                  user.name
+                ),
             },
             {
               sort: true,
@@ -93,6 +113,23 @@ export default function Members() {
               align: 'left',
               cellClassName: 'text-sm',
               render: (user) => user.authorities.join(', '),
+            },
+            {
+              hideByDefault: true,
+              name: '狀態',
+              align: 'left',
+              cellClassName: 'text-sm',
+              sort: (a, b) => {
+                if (a.isDeactivated && !b.isDeactivated) return 1
+                if (!a.isDeactivated && b.isDeactivated) return -1
+                return 0
+              },
+              render: (user) =>
+                user.isDeactivated ? (
+                  <p className='text-red-400'>已停用</p>
+                ) : (
+                  '啟用中'
+                ),
             },
           ]}
         />

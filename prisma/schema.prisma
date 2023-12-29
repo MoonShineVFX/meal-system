@@ -61,6 +61,7 @@ model User {
   lastPointRechargeTime DateTime?
   lastBonusCheckTime    DateTime?
   email                 String?
+  isDeactivated         Boolean         @default(false)
 
   settings           UserSettings?
   profileImage       Image?        @relation(fields: [profileImageId], references: [id])
@@ -73,6 +74,8 @@ model User {
   targetTransactions Transaction[] @relation("target")
   bonus              Bonus[]       @relation("bonusUsers")
   bonusRedeem        Bonus[]       @relation("bonusRedeem")
+
+  @@index([id, isDeactivated])
 }
 
 // Transaction
