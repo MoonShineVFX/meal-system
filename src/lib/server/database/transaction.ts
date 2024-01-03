@@ -483,25 +483,57 @@ export async function getMonthlySalesReport(props: {
     .filter((com) => com !== null)
 
   // get all orders count
-  const ordersCount = await prisma.order.count({
+  const orders = await prisma.order.findMany({
     where: {
       createdAt: dateRange,
-      timeCanceled: null,
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+      menu: {
+        select: {
+          name: true,
+          type: true,
+          date: true,
+        },
+      },
+      paymentTransaction: {
+        select: {
+          creditAmount: true,
+          pointAmount: true,
+        },
+      },
+      items: {
+        select: {
+          name: true,
+          quantity: true,
+        },
+      },
     },
   })
 
   // get transactions
-  const transactions = await prisma.transaction.groupBy({
-    by: ['type'],
+  const transactions = await prisma.transaction.findMany({
     where: {
       createdAt: dateRange,
     },
-    _sum: {
-      pointAmount: true,
-      creditAmount: true,
+    include: {
+      sourceUser: {
+        select: {
+          name: true,
+        },
+      },
+      targetUser: {
+        select: {
+          name: true,
+        },
+      },
     },
-    _count: {
-      _all: true,
+    orderBy: {
+      createdAt: 'asc',
     },
   })
 
@@ -582,7 +614,7 @@ export async function getMonthlySalesReport(props: {
     commoditiesWithStatistics: commoditiesWithStatistics as NonNullable<
       typeof commoditiesWithStatistics[number]
     >[],
-    ordersCount,
+    orders,
     transactions,
     clientOrders,
     userSpendings,

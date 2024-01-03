@@ -8,12 +8,16 @@ import Error from '@/components/core/Error'
 import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
 import Spinner from '@/components/core/Spinner'
-import { TransactionName, settings } from '@/lib/common'
+import { TransactionName, getMenuName, settings } from '@/lib/common'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import { twMerge } from 'tailwind-merge'
+
+const DEFAULT_COL_INFO = { wch: 8 }
 
 export default function Transactions() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [transactions, setTransactions] = useState<TransactionDatas>([])
+  const [isGeneratingReport, setIsGeneratingReport] = useState<boolean>(false)
 
   const getMonthlyReportMutation =
     trpc.transaction.getMonthlyReport.useMutation()
@@ -40,84 +44,150 @@ export default function Transactions() {
     return months
   }, [])
 
-  const handleGetMonthlyReport = useCallback(async (date: Date) => {
-    getMonthlyReportMutation.mutate(
-      {
-        year: date.getFullYear(),
-        month: date.getMonth() + 1,
-      },
-      {
-        onSuccess: (data) => {
-          // Make xlsx
-          const fileType =
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
-          const fileExtension = '.xlsx'
-          const workBook = XLSX.utils.book_new()
-
-          // Sheet: Commodity
-          const workSheet = XLSX.utils.json_to_sheet(
-            data.commoditiesWithStatistics.map((c) => ({
-              名稱: c.name,
-              銷量: c.quantity ?? 0,
-              金額: c.price ?? 0,
-            })),
-          )
-          XLSX.utils.book_append_sheet(workBook, workSheet, '餐點')
-
-          // Sheet: Transaction
-          const workSheet2 = XLSX.utils.json_to_sheet(
-            data.transactions.map((t) => ({
-              類別: TransactionName[t.type],
-              數量: t._count._all,
-              點數: t._sum.pointAmount,
-              夢想幣: t._sum.creditAmount,
-            })),
-          )
-          XLSX.utils.book_append_sheet(workBook, workSheet2, '交易紀錄')
-
-          // Sheet: Client Orders
-          const workSheet3 = XLSX.utils.json_to_sheet(
-            data.clientOrders.map((o) => ({
-              日期: o.createdAt,
-              使用者: o.user.name,
-              金額: o.paymentTransaction?.creditAmount ?? 0,
-              備註: o.note ?? '',
-            })),
-          )
-          XLSX.utils.book_append_sheet(workBook, workSheet3, '客戶招待')
-
-          // Sheet: User Spendings
-          const workSheet4 = XLSX.utils.json_to_sheet(
-            data.userSpendings.map((u) => ({
-              使用者: u.name,
-              點數: u.point,
-              金額: u.credit,
-            })),
-          )
-          XLSX.utils.book_append_sheet(workBook, workSheet4, '使用者花費')
-
-          // Make file
-          const excelBuffer = XLSX.write(workBook, {
-            bookType: 'xlsx',
-            type: 'array',
-          })
-          const fileData = new Blob([excelBuffer], { type: fileType })
-
-          // Download file
-          const fileName = `${date.getFullYear()}年${
-            date.getMonth() + 1
-          }月報表 (訂單數${data.ordersCount})`
-          const url = window.URL.createObjectURL(fileData)
-          const link = document.createElement('a')
-          document.body.appendChild(link)
-          link.href = url
-          link.download = fileName + fileExtension
-          link.click()
-          document.body.removeChild(link)
+  const handleGetMonthlyReport = useCallback(
+    async (date: Date) => {
+      if (isGeneratingReport) return
+      setIsGeneratingReport(true)
+      getMonthlyReportMutation.mutate(
+        {
+          year: date.getFullYear(),
+          month: date.getMonth() + 1,
         },
-      },
-    )
-  }, [])
+        {
+          onSuccess: (data) => {
+            // Make xlsx
+            const fileType =
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8'
+            const fileExtension = '.xlsx'
+            const workBook = XLSX.utils.book_new()
+
+            // Sheet: Commodity
+            const workSheet = XLSX.utils.json_to_sheet(
+              data.commoditiesWithStatistics.map((c) => ({
+                名稱: c.name,
+                銷量: c.quantity ?? 0,
+                金額: c.price ?? 0,
+              })),
+            )
+            workSheet['!cols'] = [{ wch: 20 }]
+            XLSX.utils.book_append_sheet(workBook, workSheet, '餐點')
+
+            // Sheet: Transaction
+            const workSheet2 = XLSX.utils.json_to_sheet(
+              data.transactions.map((t) => ({
+                編號: t.id,
+                日期: t.createdAt,
+                來源: t.sourceUser.name,
+                對象: t.targetUser.name,
+                類別: TransactionName[t.type],
+                點數: t.pointAmount,
+                夢想幣: t.creditAmount,
+              })),
+            )
+            workSheet2['!cols'] = [DEFAULT_COL_INFO, { wch: 12 }]
+            XLSX.utils.book_append_sheet(workBook, workSheet2, '交易紀錄')
+
+            // Sheet: Orders
+            const workSheet5 = XLSX.utils.json_to_sheet(
+              data.orders.map((o) => ({
+                編號: o.id,
+                日期: o.createdAt,
+                使用者: o.user.name,
+                夢想幣: o.paymentTransaction?.creditAmount ?? 0,
+                點數: o.paymentTransaction?.pointAmount ?? 0,
+                菜單: getMenuName(o.menu),
+                餐點: Object.entries(
+                  o.items.reduce((acc, item) => {
+                    if (!(item.name in acc)) {
+                      acc[item.name] = 0
+                    }
+                    acc[item.name] += item.quantity
+                    return acc
+                  }, {} as Record<string, number>),
+                )
+                  .map(([name, quantity]) => `${name} x${quantity}`)
+                  .join(', '),
+                狀態:
+                  o.timeCanceled !== null
+                    ? '取消'
+                    : o.timeCompleted !== null
+                    ? '完成'
+                    : o.timeDishedUp !== null
+                    ? '出餐'
+                    : o.timePreparing !== null
+                    ? '準備中'
+                    : '下單',
+                客戶招待: o.forClient ? '是' : '否',
+                備註: o.note ?? '',
+                付款交易編號: o.paymentTransactionId ?? '無',
+                退款交易編號: o.canceledTransactionId ?? '無',
+              })),
+            )
+            workSheet5['!cols'] = [
+              DEFAULT_COL_INFO,
+              { wch: 12 },
+              DEFAULT_COL_INFO,
+              DEFAULT_COL_INFO,
+              DEFAULT_COL_INFO,
+              { wch: 16 },
+              { wch: 20 },
+              DEFAULT_COL_INFO,
+              DEFAULT_COL_INFO,
+              { wch: 16 },
+            ]
+            XLSX.utils.book_append_sheet(workBook, workSheet5, '訂單紀錄')
+
+            // Sheet: Client Orders
+            const workSheet3 = XLSX.utils.json_to_sheet(
+              data.clientOrders.map((o) => ({
+                日期: o.createdAt,
+                使用者: o.user.name,
+                金額: o.paymentTransaction?.creditAmount ?? 0,
+                備註: o.note ?? '',
+              })),
+            )
+            workSheet3['!cols'] = [{ wch: 12 }]
+            XLSX.utils.book_append_sheet(workBook, workSheet3, '客戶招待')
+
+            // Sheet: User Spendings
+            const workSheet4 = XLSX.utils.json_to_sheet(
+              data.userSpendings.map((u) => ({
+                使用者: u.name,
+                點數: u.point,
+                金額: u.credit,
+              })),
+            )
+            XLSX.utils.book_append_sheet(workBook, workSheet4, '使用者花費')
+
+            // Make file
+            const excelBuffer = XLSX.write(workBook, {
+              bookType: 'xlsx',
+              type: 'array',
+            })
+            const fileData = new Blob([excelBuffer], { type: fileType })
+
+            // Download file
+            const fileName = `${date.getFullYear()}年${
+              date.getMonth() + 1
+            }月報表`
+            const url = window.URL.createObjectURL(fileData)
+            const link = document.createElement('a')
+            document.body.appendChild(link)
+            link.href = url
+            link.download = fileName + fileExtension
+            link.click()
+            document.body.removeChild(link)
+
+            setIsGeneratingReport(false)
+          },
+          onError: (error) => {
+            setIsGeneratingReport(false)
+          },
+        },
+      )
+    },
+    [isGeneratingReport],
+  )
 
   if (isError) return <Error description={error.message} />
 
@@ -132,18 +202,29 @@ export default function Transactions() {
             searchKeyword={searchKeyword}
             setSearchKeyword={setSearchKeyword}
           />
-          <DropdownMenu
-            className='ml-auto whitespace-nowrap py-3 text-base font-bold'
-            label='下載報表'
-          >
-            {recentSixMonths.map((d, i) => (
-              <DropdownMenuItem
-                key={i}
-                label={`${d.getFullYear()} 年 ${d.getMonth() + 1} 月`}
-                onClick={() => handleGetMonthlyReport(d)}
-              />
-            ))}
-          </DropdownMenu>
+          <div className='relative ml-auto'>
+            {isGeneratingReport && (
+              <div className='absolute inset-0 grid place-items-center'>
+                <Spinner className='h-6 w-6' />
+              </div>
+            )}
+            <DropdownMenu
+              className={twMerge(
+                'whitespace-nowrap py-3 text-base font-bold',
+                isGeneratingReport && 'opacity-10',
+              )}
+              label='下載報表'
+              disabled={isGeneratingReport}
+            >
+              {recentSixMonths.map((d, i) => (
+                <DropdownMenuItem
+                  key={i}
+                  label={`${d.getFullYear()} 年 ${d.getMonth() + 1} 月`}
+                  onClick={() => handleGetMonthlyReport(d)}
+                />
+              ))}
+            </DropdownMenu>
+          </div>
         </div>
         {/* Table */}
         <Table
