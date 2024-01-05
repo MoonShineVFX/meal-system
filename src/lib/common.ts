@@ -186,7 +186,8 @@ export const settings = {
   LOG_DATABASE: process.env.LOG_DATABASE === 'true',
 
   /* Resource */
-  RESOURCE_URL: process.env.NEXT_PUBLIC_RESOURCE_URL ?? '',
+  RESOURCE_HOST: process.env.NEXT_PUBLIC_RESOURCE_HOST ?? '',
+  RESOURCE_FOLDER: process.env.NEXT_PUBLIC_RESOURCE_FOLDER ?? '',
   // prefix with image
   RESOURCE_BADGE: 'asset/badge.png',
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
@@ -213,6 +214,21 @@ export const settings = {
 }
 
 /* Functions */
+export function getResourceUrlByWidth(width?: number) {
+  if (!width) return getResourceUrl()
+  if (width <= 128) return getResourceUrl('xs')
+  if (width <= 256) return getResourceUrl('sm')
+  if (width <= 512) return getResourceUrl('md')
+  return getResourceUrl('lg')
+}
+
+export function getResourceUrl(type?: 'xs' | 'sm' | 'md' | 'lg') {
+  // 128, 256, 512, 1280
+  if (!type) return `${settings.RESOURCE_HOST}/${settings.RESOURCE_FOLDER}`
+
+  return `${settings.RESOURCE_HOST}/opt/${type}/${settings.RESOURCE_FOLDER}`
+}
+
 export function generateCookie(token: string | undefined) {
   const expireTime = token ? settings.COOKIE_EXPIRE_DAYS * 24 * 60 * 60 : 0
   return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict`

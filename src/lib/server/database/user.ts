@@ -2,7 +2,7 @@ import { Prisma, UserRole, UserSettings } from '@prisma/client'
 import CryptoJS from 'crypto-js'
 
 import { prisma, log } from './define'
-import { settings } from '@/lib/common'
+import { getResourceUrl, settings } from '@/lib/common'
 import { rechargeUserBalanceBase, rechargeUserBalance } from './transaction'
 
 type EnsureUserArgs = {
@@ -60,7 +60,7 @@ export async function ensureUser({
   if (!user.profileImageId) {
     try {
       const response = await fetch(
-        `${settings.RESOURCE_URL}/image/profile/${userId}.jpg`,
+        `${getResourceUrl()}/image/profile/${userId}.jpg`,
         {
           method: 'HEAD',
         },
