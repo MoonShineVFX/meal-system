@@ -5,7 +5,7 @@ import {
   getManyOrdersCount,
 } from './database'
 import webpush from 'web-push'
-import { settings } from '@/lib/common'
+import { getResourceUrl, settings } from '@/lib/common'
 
 type NotificationPayload = {
   type: 'notification'
@@ -44,8 +44,7 @@ class WebPusher {
     switch (type) {
       case 'notification':
         data.badge =
-          data.badge ??
-          `${settings.RESOURCE_URL}/image/${settings.RESOURCE_BADGE}`
+          data.badge ?? `${getResourceUrl()}/image/${settings.RESOURCE_BADGE}`
         break
     }
 

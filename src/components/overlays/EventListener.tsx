@@ -6,7 +6,7 @@ import trpc, {
   onSocketCloseCallbacks,
   onQueryMutationErrorCallbacks,
 } from '@/lib/client/trpc'
-import { SERVER_NOTIFY, settings } from '@/lib/common'
+import { SERVER_NOTIFY, getResourceUrl, settings } from '@/lib/common'
 import ServiceWorkerHandler from '@/lib/client/sw'
 
 export default function EventListener() {
@@ -196,7 +196,7 @@ export default function EventListener() {
             posNotificationSound
           ) {
             const audio = new Audio(
-              `${settings.RESOURCE_URL}/${settings.RESOURCE_NOTIFICATION_SOUND}`,
+              `${getResourceUrl()}/${settings.RESOURCE_NOTIFICATION_SOUND}`,
             )
             audio.play()
           }

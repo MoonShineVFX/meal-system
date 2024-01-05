@@ -8,7 +8,12 @@ import {
   updateOrdersStatus,
   completeDishedUpOrders,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY, OrderStatus, settings } from '@/lib/common'
+import {
+  SERVER_NOTIFY,
+  OrderStatus,
+  settings,
+  getResourceUrl,
+} from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 import webPusher from '@/lib/server/webpush'
 
@@ -107,9 +112,9 @@ export const POSRouter = router({
           userId: order.userId,
           title: '訂單更新',
           message: generateOrderNotifyMessage(order.id, input.status),
-          icon: `${settings.RESOURCE_URL}/image/${
+          icon: `${getResourceUrl('xs')}/image/${
             orderImage ?? settings.RESOURCE_FOOD_PLACEHOLDER
-          }?width=64&quality=75`,
+          }`,
           tag: `order-${order.id}`,
           url: `${settings.WEBSITE_URL}/order/id/${order.id}`,
           ignoreIfFocused: true,

@@ -186,7 +186,8 @@ export const settings = {
   LOG_DATABASE: process.env.LOG_DATABASE === 'true',
 
   /* Resource */
-  RESOURCE_URL: process.env.NEXT_PUBLIC_RESOURCE_URL ?? '',
+  RESOURCE_HOST: process.env.NEXT_PUBLIC_RESOURCE_HOST ?? '',
+  RESOURCE_FOLDER: process.env.NEXT_PUBLIC_RESOURCE_FOLDER ?? '',
   // prefix with image
   RESOURCE_BADGE: 'asset/badge.png',
   RESOURCE_FOOD_PLACEHOLDER: 'asset/food-placeholder.png',
@@ -197,9 +198,11 @@ export const settings = {
   // asset
   RESOURCE_NOTIFICATION_SOUND: 'audio/notification.mp3',
 
-  /* Bunny */
-  BUNNY_API_KEY: process.env.BUNNY_API_KEY!,
-  BUNNY_UPLOAD_URL: process.env.BUNNY_UPLOAD_URL!,
+  /* R2 */
+  R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID!,
+  R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY!,
+  R2_ENDPOINT: process.env.R2_ENDPOINT!,
+  R2_BUCKET_NAME: process.env.R2_BUCKET_NAME!,
 
   /* UI */
   ORDER_TAKE_PER_QUERY: 20,
@@ -213,6 +216,21 @@ export const settings = {
 }
 
 /* Functions */
+export function getResourceUrlByWidth(width?: number) {
+  if (!width) return getResourceUrl()
+  if (width <= 128) return getResourceUrl('xs')
+  if (width <= 256) return getResourceUrl('sm')
+  if (width <= 512) return getResourceUrl('md')
+  return getResourceUrl('lg')
+}
+
+export function getResourceUrl(type?: 'xs' | 'sm' | 'md' | 'lg') {
+  // 128, 256, 512, 1280
+  if (!type) return `${settings.RESOURCE_HOST}/${settings.RESOURCE_FOLDER}`
+
+  return `${settings.RESOURCE_HOST}/opt/${type}/${settings.RESOURCE_FOLDER}`
+}
+
 export function generateCookie(token: string | undefined) {
   const expireTime = token ? settings.COOKIE_EXPIRE_DAYS * 24 * 60 * 60 : 0
   return `${settings.COOKIE_TOKEN_NAME}=${token}; Max-Age=${expireTime}; Path=/; SameSite=Strict`

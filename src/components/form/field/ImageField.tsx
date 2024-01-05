@@ -1,6 +1,5 @@
 import { PhotoIcon } from '@heroicons/react/24/outline'
-import { twMerge } from 'tailwind-merge'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FieldValues } from 'react-hook-form'
 import ReactCrop, {
   PercentCrop,
@@ -8,15 +7,16 @@ import ReactCrop, {
   makeAspectCrop,
 } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
+import { twMerge } from 'tailwind-merge'
 
-import { uploadImage } from '@/lib/client/bunny'
-import trpc from '@/lib/client/trpc'
-import { useStore, NotificationType } from '@/lib/client/store'
-import { settings } from '@/lib/common'
-import Spinner from '@/components/core/Spinner'
-import Image from '@/components/core/Image'
-import { InputFieldProps } from './define'
 import { useDialog } from '@/components/core/Dialog'
+import Image from '@/components/core/Image'
+import Spinner from '@/components/core/Spinner'
+import { upload } from '@/lib/client/r2'
+import { NotificationType, useStore } from '@/lib/client/store'
+import trpc from '@/lib/client/trpc'
+import { settings } from '@/lib/common'
+import { InputFieldProps } from './define'
 
 const MAX_IMAGE_LENGTH = 1280
 const MIN_IMAGE_LENGTH = 100
@@ -104,7 +104,31 @@ export default function ImageField<T extends FieldValues>(
         console.error('Invalid image file')
         return
       }
-      uploadImageFile({ file })
+
+      // Upload if jpeg, otherwise convert to jpeg
+      if (file.type === 'image/jpeg') {
+        uploadImageFile({ file })
+      } else {
+        const img = document.createElement('img')
+        img.src = URL.createObjectURL(file)
+        img.onload = () => {
+          canvasRef.current!.width = img.width
+          canvasRef.current!.height = img.height
+          const ctx = canvasRef.current!.getContext('2d')
+          ctx?.drawImage(img, 0, 0)
+          canvasRef.current!.toBlob(
+            (blob) => {
+              if (!blob) {
+                console.error('Invalid image blob')
+                return
+              }
+              uploadImageFile({ blob })
+            },
+            'image/jpeg',
+            0.9,
+          )
+        }
+      }
     }
 
     cropResolve()
@@ -166,8 +190,8 @@ export default function ImageField<T extends FieldValues>(
 
       const CryptoJS = await import('crypto-js')
       const dataString = await (inputData.blob ?? inputData.file)!.text()
-      const imageId = CryptoJS.SHA256(dataString).toString()
-      const filename = imageId + '.jpg'
+      const hash = CryptoJS.SHA256(dataString).toString()
+      const imageId = hash + '.jpg'
       const checkImageResult = await getImageMutation.mutateAsync({
         id: imageId,
       })
@@ -183,18 +207,16 @@ export default function ImageField<T extends FieldValues>(
         setIsUploading(false)
       } else {
         // Upload
-        const isSuccess = await uploadImage({
-          apiKey: checkImageResult.apiKey!,
-          url: `${checkImageResult.url!}/${settings.RESOURCE_UPLOAD_PATH}`,
-          filename: filename,
-          file: inputData.blob
-            ? new File([inputData.blob], filename)
-            : inputData.file!,
+        const blob = inputData.blob ?? inputData.file!
+        const { isSuccess, message } = await upload({
+          type: blob.type,
+          url: checkImageResult.signedUrl!,
+          filename: imageId,
+          blob: inputData.blob ?? inputData.file!,
         })
         if (isSuccess) {
           const createImageResult = await createImageMutation.mutateAsync({
             id: imageId,
-            path: `${settings.RESOURCE_UPLOAD_PATH}/${filename}`,
           })
           setImagePath(createImageResult.path)
           props.useFormReturns.setValue(
@@ -204,7 +226,7 @@ export default function ImageField<T extends FieldValues>(
         } else {
           addNotification({
             type: NotificationType.ERROR,
-            message: '上傳失敗',
+            message: '上傳失敗: ' + message,
           })
         }
         setIsUploading(false)

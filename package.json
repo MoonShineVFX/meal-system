@@ -20,6 +20,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.485.0",
+    "@aws-sdk/s3-request-presigner": "^3.485.0",
     "@floating-ui/react": "^0.19.1",
     "@headlessui/react": "^1.7.4",
     "@headlessui/tailwindcss": "^0.1.1",

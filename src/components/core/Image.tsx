@@ -1,20 +1,17 @@
 import NextImage, { ImageProps } from 'next/image'
 import { useState } from 'react'
 
-import { settings } from '@/lib/common'
+import { getResourceUrlByWidth } from '@/lib/common'
 
 const imageLoader = ({
   src,
   width,
-  quality,
 }: {
   src: string
   width: number
   quality?: number
 }) => {
-  return `${settings.RESOURCE_URL}/image/${src}?width=${width}&quality=${
-    quality || 75
-  }`
+  return `${getResourceUrlByWidth(width)}/image/${src}`
 }
 
 export default function Image(
