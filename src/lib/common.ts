@@ -221,6 +221,7 @@ export function getResourceUrlByWidth(width?: number) {
   if (width <= 128) return getResourceUrl('xs')
   if (width <= 256) return getResourceUrl('sm')
   if (width <= 512) return getResourceUrl('md')
+  if (width <= 1280) return getResourceUrl('lg')
   return getResourceUrl('lg')
 }
 
