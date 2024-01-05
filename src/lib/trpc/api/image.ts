@@ -1,8 +1,8 @@
 import z from 'zod'
 
-import { staffProcedure, router } from '../trpc'
-import { getImage, createImage } from '@/lib/server/database'
-import { settings } from '@/lib/common'
+import { createImage, getImage } from '@/lib/server/database'
+import { generateSignedUrl } from '@/lib/server/r2'
+import { router, staffProcedure } from '../trpc'
 
 export const ImageRouter = router({
   get: staffProcedure
@@ -22,8 +22,7 @@ export const ImageRouter = router({
       } else {
         return {
           isFound: false,
-          apiKey: settings.BUNNY_API_KEY,
-          url: settings.BUNNY_UPLOAD_URL,
+          signedUrl: await generateSignedUrl(input.id),
         }
       }
     }),
@@ -31,13 +30,11 @@ export const ImageRouter = router({
     .input(
       z.object({
         id: z.string().min(1),
-        path: z.string().min(1),
       }),
     )
     .mutation(async ({ input }) => {
       const image = await createImage({
         id: input.id,
-        path: input.path,
       })
 
       return image
