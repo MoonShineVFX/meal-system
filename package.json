@@ -14,7 +14,7 @@
     "db-migrate": "prisma migrate dev",
     "db-generate": "prisma generate",
     "db-reset": "prisma migrate reset",
-    "db-helper": "tsc prisma/scripts/helpers/remove-users-tokens.ts"
+    "db-helper": "tsx prisma/scripts/helpers/lower-user-profile-paths.ts"
   },
   "keywords": [],
   "author": "",

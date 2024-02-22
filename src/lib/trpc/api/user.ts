@@ -148,6 +148,14 @@ export const UserRouter = router({
 
           const userAdData = (await userAdDataResponse.json()) as UserAdData
 
+          // Filter OU
+          if (userAdData.ou === 'Classroom') {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: '非員工帳號無法登入',
+            })
+          }
+
           // Generate token and set cookie
           await ensureUser({
             userId: input.username,
