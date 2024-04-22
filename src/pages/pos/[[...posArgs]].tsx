@@ -16,6 +16,7 @@ const TAB_NAMES = [
   '已完成',
   '今日預訂',
   '未來預訂',
+  '未完成預訂',
 ] as const
 type TabName = typeof TAB_NAMES[number]
 const TAB_PATHS = [
@@ -24,6 +25,7 @@ const TAB_PATHS = [
   'archived',
   'reservation',
   'future',
+  'incomplete',
 ] as const
 type TabPath = typeof TAB_PATHS[number]
 const TAB_LINKS = TAB_PATHS.map((path) => `/pos/${path}`)
@@ -76,7 +78,9 @@ export default function POSPage(props: { tabName: TabName }) {
         />
         {/* Pos */}
         <div className='relative grow'>
-          {currentTabName !== '未來預訂' && currentTabName !== '今日預訂' ? (
+          {currentTabName !== '未來預訂' &&
+          currentTabName !== '今日預訂' &&
+          currentTabName !== '未完成預訂' ? (
             <POSLiveList tabName={currentTabName} />
           ) : (
             <POSReservationList tabName={currentTabName} />

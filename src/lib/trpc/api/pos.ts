@@ -43,7 +43,11 @@ export const POSRouter = router({
   getReservation: staffProcedure
     .input(
       z.object({
-        type: z.union([z.literal('today'), z.literal('future')]),
+        type: z.union([
+          z.literal('today'),
+          z.literal('future'),
+          z.literal('past'),
+        ]),
       }),
     )
     .query(async ({ input }) => {
