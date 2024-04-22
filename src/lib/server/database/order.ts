@@ -681,7 +681,7 @@ export async function getLiveOrdersForPOS({
 export async function getReservationOrdersForPOS({
   type,
 }: {
-  type: 'today' | 'future'
+  type: 'today' | 'future' | 'past'
 }) {
   const todayDate = new Date(new Date().setHours(0, 0, 0, 0))
 
@@ -690,9 +690,15 @@ export async function getReservationOrdersForPOS({
       ? {
           date: todayDate,
         }
-      : {
+      : type === 'future'
+      ? {
           date: {
             gt: todayDate,
+          },
+        }
+      : {
+          date: {
+            lt: todayDate,
           },
         }
 
@@ -702,6 +708,8 @@ export async function getReservationOrdersForPOS({
       orders: {
         some: {
           timeCanceled: null,
+          // Past: filter out completed orders
+          ...(type === 'past' && { timeCompleted: null }),
         },
       },
     },
@@ -765,7 +773,7 @@ export async function getReservationOrdersForPOS({
   // Summarize orders and sync status
   const ordersSyncQueries: Prisma.OrderUpdateManyArgs[] = []
   const reservationMenus = rawReservationMenus.map((menu) => {
-    const coms = menu.commodities.map((com) => {
+    let coms = menu.commodities.map((com) => {
       let totalQuantity = 0
       const orderIds: number[] = []
       const optionsWithOrdersMap: {
@@ -889,6 +897,13 @@ export async function getReservationOrdersForPOS({
       prisma.$transaction(
         ordersSyncQueries.map((query) => prisma.order.updateMany(query)),
       )
+    }
+
+    // Filter out completed coms if past type
+    if (type === 'past') {
+      coms = coms.filter((com) => {
+        return !com.orderTimes.timeCompleted.value
+      })
     }
 
     return {

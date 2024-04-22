@@ -9,12 +9,12 @@ import POSReservationCard from './POSReservationCard'
 const TOTAL_FILLER_COUNT = 6
 
 export default function POSReservationList(props: {
-  tabName: '今日預訂' | '未來預訂'
+  tabName: '今日預訂' | '未來預訂' | '未完成預訂'
 }) {
   const isFuture = props.tabName === '未來預訂'
 
   const { data, isLoading, isError, error } = trpc.pos.getReservation.useQuery({
-    type: isFuture ? 'future' : 'today',
+    type: props.tabName === '今日預訂' ? 'today' : isFuture ? 'future' : 'past',
   })
 
   if (isError) {
@@ -57,7 +57,9 @@ export default function POSReservationList(props: {
               <Fragment key={`${menu.type}-${menu.date}`}>
                 {/* Menu header */}
                 <h1 className='col-span-full mt-4 w-fit text-lg font-bold first:mt-0 lg:-mb-4'>
-                  {isFuture ? getMenuName(menu) : MenuTypeName[menu.type]}
+                  {props.tabName === '今日預訂'
+                    ? MenuTypeName[menu.type]
+                    : getMenuName(menu)}
                 </h1>
                 {/* COMs */}
                 {menu.coms.map((com) => (
