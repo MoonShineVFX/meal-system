@@ -136,7 +136,7 @@ export const settings = {
   AUTH_API_URL: process.env.AUTH_API_URL!,
   AUTH_API_TOKEN: process.env.AUTH_API_TOKEN!,
   COOKIE_TOKEN_NAME: 'meal_token',
-  COOKIE_EXPIRE_DAYS: 14,
+  COOKIE_EXPIRE_DAYS: 60,
 
   /* Server */
   MENU_MAX_QUANTITY_PER_ORDER: 10,
