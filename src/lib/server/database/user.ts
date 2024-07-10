@@ -13,6 +13,7 @@ type EnsureUserArgs = {
   pointBalance?: number
   creditBalance?: number
   email?: string
+  isIntern?: boolean
 }
 export async function ensureUser({
   userId,
@@ -22,6 +23,7 @@ export async function ensureUser({
   pointBalance,
   creditBalance,
   email,
+  isIntern,
 }: EnsureUserArgs) {
   const updateData = {
     name: name,
@@ -30,7 +32,8 @@ export async function ensureUser({
     creditBalance: creditBalance,
     password: password ? CryptoJS.SHA256(password).toString() : undefined,
     email: email,
-  }
+    isIntern: isIntern ?? false,
+  } satisfies Prisma.UserUpdateInput
 
   const user = await prisma.user.upsert({
     where: {
@@ -199,6 +202,7 @@ const userInfoSelect = Prisma.validator<Prisma.UserSelect>()({
     },
   },
   settings: true,
+  isIntern: true,
 })
 
 export async function getUserInfo(userId: string) {
@@ -247,8 +251,9 @@ export async function getUserInfo(userId: string) {
   }
 
   if (
-    !user.lastPointRechargeTime ||
-    now.toDateString() !== user.lastPointRechargeTime.toDateString()
+    (!user.lastPointRechargeTime ||
+      now.toDateString() !== user.lastPointRechargeTime.toDateString()) &&
+    !user.isIntern
   ) {
     try {
       await prisma.user.update({
@@ -346,7 +351,9 @@ export async function getUserInfo(userId: string) {
   }
 
   // Check and recharge point
-  if (shouldCheckRecharge) {
+  if (shouldCheckRecharge && !user.isIntern) {
+    let rechargeAmount = 0
+
     // If no last recharge time, set yesterday
     const lastRechargeTime =
       user.lastPointRechargeTime ??
@@ -360,7 +367,6 @@ export async function getUserInfo(userId: string) {
     )
     const targetDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-    let rechargeAmount = 0
     while (currentDay.getTime() <= targetDay.getTime()) {
       // If day is weekday and not make-up day, recharge
       const isHoliday = settings.HOLIDAYS.includes(currentDay.getTime())
@@ -375,6 +381,7 @@ export async function getUserInfo(userId: string) {
     }
 
     if (rechargeAmount > 0) {
+      isRecharged = true
       const { user: newUser } = await rechargeUserBalance({
         userId: user.id,
         pointAmount: rechargeAmount,
@@ -384,6 +391,63 @@ export async function getUserInfo(userId: string) {
   }
 
   return { user, isRecharged, isRedeemed }
+}
+
+export async function rechargeInternUserToday(props: { userId: string }) {
+  const { userId } = props
+  const now = new Date()
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      isIntern: true,
+      lastPointRechargeTime: true,
+    },
+  })
+
+  // Validate
+  if (!user) {
+    throw new Error('使用者不存在')
+  }
+
+  if (!user.isIntern) {
+    throw new Error('使用者不是實習生')
+  }
+
+  if (
+    user.lastPointRechargeTime &&
+    now.toDateString() === user.lastPointRechargeTime.toDateString()
+  ) {
+    throw new Error('今日已充值')
+  }
+
+  // Update last recharge time
+  await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      lastPointRechargeTime: now,
+    },
+  })
+
+  // Check is today a work day
+  const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const isHoliday = settings.HOLIDAYS.includes(currentDay.getTime())
+  const isWeekDay =
+    !isHoliday && currentDay.getDay() > 0 && currentDay.getDay() < 6
+  const isMakuUpDay = settings.MAKE_UP_DAYS.includes(currentDay.getTime())
+  if (!isMakuUpDay && !isWeekDay) {
+    throw new Error('今日不是工作日')
+  }
+
+  // Recharge
+  await rechargeUserBalance({
+    userId: userId,
+    pointAmount: settings.POINT_DAILY_RECHARGE_AMOUNT,
+  })
 }
 
 export async function updateUserSettings(
