@@ -62,6 +62,7 @@ model User {
   lastBonusCheckTime    DateTime?
   email                 String?
   isDeactivated         Boolean         @default(false)
+  isIntern              Boolean         @default(false)
 
   settings           UserSettings?
   profileImage       Image?        @relation(fields: [profileImageId], references: [id])
