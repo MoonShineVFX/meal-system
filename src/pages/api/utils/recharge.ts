@@ -2,15 +2,15 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { z } from 'zod'
 
 import { settings } from '@/lib/common'
-import { rechargeInternUserToday } from '@/lib/server/database'
+import { rechargeUserToday } from '@/lib/server/database'
 
 const requestBodySchema = z.object({
   userIds: z.array(z.string()),
 })
 
-async function callRechargeInternUser(userId: string) {
+async function callRechargeUser(userId: string) {
   try {
-    await rechargeInternUserToday({ userId })
+    await rechargeUserToday({ userId })
     return { userId, result: 'SUCCESS' }
   } catch (error) {
     return {
@@ -22,7 +22,7 @@ async function callRechargeInternUser(userId: string) {
   }
 }
 
-export default async function rechargeInternUsers(
+export default async function rechargeUsers(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
@@ -49,7 +49,7 @@ export default async function rechargeInternUsers(
 
   const requestBody = requestBodyParsed.data
   const results = await Promise.all(
-    requestBody.userIds.map((userId) => callRechargeInternUser(userId)),
+    requestBody.userIds.map((userId) => callRechargeUser(userId)),
   )
 
   // Combine to { userId: result }

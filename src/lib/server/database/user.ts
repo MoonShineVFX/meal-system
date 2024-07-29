@@ -206,7 +206,6 @@ const userInfoSelect = Prisma.validator<Prisma.UserSelect>()({
 })
 
 export async function getUserInfo(userId: string) {
-  let shouldCheckRecharge = false
   let shouldCheckBonus = false
 
   // get today on local date
@@ -250,40 +249,7 @@ export async function getUserInfo(userId: string) {
     }
   }
 
-  if (
-    (!user.lastPointRechargeTime ||
-      now.toDateString() !== user.lastPointRechargeTime.toDateString()) &&
-    !user.isIntern
-  ) {
-    try {
-      await prisma.user.update({
-        where: {
-          id: userId,
-          OR: [
-            {
-              lastPointRechargeTime: {
-                not: now,
-              },
-            },
-            {
-              lastPointRechargeTime: null,
-            },
-          ],
-        },
-        data: {
-          lastPointRechargeTime: now,
-        },
-      })
-      shouldCheckRecharge = true
-    } catch (e) {
-      // Delay timing
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      return getUserInfo(userId)
-    }
-  }
-
-  // Start checking
-  let isRecharged = false
+  // Start checking bonus
   let isRedeemed = false
 
   // Check and redeem bonus
@@ -350,50 +316,10 @@ export async function getUserInfo(userId: string) {
     isRedeemed = validBonus.length > 0
   }
 
-  // Check and recharge point
-  if (shouldCheckRecharge && !user.isIntern) {
-    let rechargeAmount = 0
-
-    // If no last recharge time, set yesterday
-    const lastRechargeTime =
-      user.lastPointRechargeTime ??
-      new Date(now.getTime() - 24 * 60 * 60 * 1000)
-
-    lastRechargeTime.setDate(lastRechargeTime.getDate() + 1)
-    let currentDay = new Date(
-      lastRechargeTime.getFullYear(),
-      lastRechargeTime.getMonth(),
-      lastRechargeTime.getDate(),
-    )
-    const targetDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-
-    while (currentDay.getTime() <= targetDay.getTime()) {
-      // If day is weekday and not make-up day, recharge
-      const isHoliday = settings.HOLIDAYS.includes(currentDay.getTime())
-      const isWeekDay =
-        !isHoliday && currentDay.getDay() > 0 && currentDay.getDay() < 6
-      const isMakuUpDay = settings.MAKE_UP_DAYS.includes(currentDay.getTime())
-
-      if (isMakuUpDay || isWeekDay) {
-        rechargeAmount += settings.POINT_DAILY_RECHARGE_AMOUNT
-      }
-      currentDay = new Date(currentDay.getTime() + 24 * 60 * 60 * 1000)
-    }
-
-    if (rechargeAmount > 0) {
-      isRecharged = true
-      const { user: newUser } = await rechargeUserBalance({
-        userId: user.id,
-        pointAmount: rechargeAmount,
-      })
-      user.pointBalance = newUser.pointBalance
-    }
-  }
-
-  return { user, isRecharged, isRedeemed }
+  return { user, isRedeemed }
 }
 
-export async function rechargeInternUserToday(props: { userId: string }) {
+export async function rechargeUserToday(props: { userId: string }) {
   const { userId } = props
   const now = new Date()
 
@@ -402,7 +328,6 @@ export async function rechargeInternUserToday(props: { userId: string }) {
       id: userId,
     },
     select: {
-      isIntern: true,
       lastPointRechargeTime: true,
     },
   })
@@ -410,10 +335,6 @@ export async function rechargeInternUserToday(props: { userId: string }) {
   // Validate
   if (!user) {
     throw new Error('使用者不存在')
-  }
-
-  if (!user.isIntern) {
-    throw new Error('使用者不是實習生')
   }
 
   if (
