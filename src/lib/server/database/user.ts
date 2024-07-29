@@ -329,12 +329,17 @@ export async function rechargeUserToday(props: { userId: string }) {
     },
     select: {
       lastPointRechargeTime: true,
+      isDeactivated: true,
     },
   })
 
   // Validate
   if (!user) {
     throw new Error('使用者不存在')
+  }
+
+  if (user.isDeactivated) {
+    throw new Error('使用者已停用')
   }
 
   if (
