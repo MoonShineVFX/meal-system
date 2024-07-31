@@ -46,12 +46,6 @@ export const UserRouter = router({
       })
     }
 
-    if (userInfo.isRecharged) {
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-        type: SERVER_NOTIFY.DAILY_RECHARGE,
-      })
-    }
-
     if (userInfo.isRedeemed) {
       eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
         type: SERVER_NOTIFY.BONUS_REDEEMED,
