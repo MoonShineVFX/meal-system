@@ -5,13 +5,23 @@ import { settings } from '@/lib/common'
 import { rechargeUserToday } from '@/lib/server/database'
 
 const requestBodySchema = z.object({
-  userIds: z.array(z.string()),
+  // v1 compatibility
+  userIds: z.array(z.string()).optional(),
+  // v2, points: { 100: ['user1', 'user2'], 200: ['user3'] }
+  points: z
+    .record(z.coerce.number().int().positive(), z.array(z.string()))
+    .optional(),
 })
 
-async function callRechargeUser(userId: string) {
+async function callRechargeUser(props: {
+  userId: string
+  pointAmount: number
+}) {
+  const { userId, pointAmount } = props
+
   try {
-    await rechargeUserToday({ userId })
-    return { userId, result: 'SUCCESS' }
+    await rechargeUserToday({ userId, pointAmount })
+    return { userId, result: `SUCCESS (${pointAmount})` }
   } catch (error) {
     return {
       userId,
@@ -48,9 +58,51 @@ export default async function rechargeUsers(
   }
 
   const requestBody = requestBodyParsed.data
-  const results = await Promise.all(
-    requestBody.userIds.map((userId) => callRechargeUser(userId)),
-  )
+
+  const rechargePayloads: { userId: string; pointAmount: number }[] = []
+
+  // v1 compatibility
+  if (requestBody.userIds) {
+    rechargePayloads.push(
+      ...requestBody.userIds.map((userId) => ({
+        userId,
+        pointAmount: settings.POINT_DAILY_RECHARGE_AMOUNT,
+      })),
+    )
+  }
+
+  // v2
+  if (requestBody.points) {
+    for (const [pointAmount, userIds] of Object.entries(requestBody.points)) {
+      const pointAmountNumber = Number(pointAmount)
+      if (isNaN(pointAmountNumber)) {
+        res.status(400).json({
+          error: `Invalid point amount: ${pointAmount}`,
+        })
+        return
+      }
+      rechargePayloads.push(
+        ...userIds.map((userId) => ({
+          userId,
+          pointAmount: pointAmountNumber,
+        })),
+      )
+    }
+  }
+
+  // Check conflict userIds
+  const userIds = new Set<string>()
+  for (const { userId } of rechargePayloads) {
+    if (userIds.has(userId)) {
+      res.status(400).json({
+        error: `Conflict userId: ${userId}`,
+      })
+      return
+    }
+    userIds.add(userId)
+  }
+
+  const results = await Promise.all(rechargePayloads.map(callRechargeUser))
 
   // Combine to { userId: result }
   const resultObject = results.reduce((acc, result) => {

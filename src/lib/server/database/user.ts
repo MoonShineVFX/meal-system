@@ -319,8 +319,11 @@ export async function getUserInfo(userId: string) {
   return { user, isRedeemed }
 }
 
-export async function rechargeUserToday(props: { userId: string }) {
-  const { userId } = props
+export async function rechargeUserToday(props: {
+  userId: string
+  pointAmount: number
+}) {
+  const { userId, pointAmount } = props
   const now = new Date()
 
   const user = await prisma.user.findUnique({
@@ -357,6 +360,9 @@ export async function rechargeUserToday(props: { userId: string }) {
     data: {
       lastPointRechargeTime: now,
     },
+    select: {
+      name: true,
+    },
   })
 
   // Check is today a work day
@@ -372,7 +378,7 @@ export async function rechargeUserToday(props: { userId: string }) {
   // Recharge
   await rechargeUserBalance({
     userId: userId,
-    pointAmount: settings.POINT_DAILY_RECHARGE_AMOUNT,
+    pointAmount: pointAmount,
   })
 }
 
