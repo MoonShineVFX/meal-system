@@ -547,6 +547,7 @@ export async function syncAdUsers(existUserIds: string[]) {
           settings.SERVER_CLIENTORDER_ID,
         ],
       },
+      isDeactivated: false,
     },
     data: {
       isDeactivated: true,
