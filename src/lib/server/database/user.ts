@@ -536,12 +536,13 @@ export async function getUsersStatistics(props: { showDeactivated?: boolean }) {
   return users
 }
 
-export async function deactivateUsers(userIds: string[]) {
-  const result = await prisma.user.updateMany({
+export async function syncAdUsers(existUserIds: string[]) {
+  // Deactivate users that are not in the AD list
+  const deactivateResult = await prisma.user.updateMany({
     where: {
       id: {
         notIn: [
-          ...userIds,
+          ...existUserIds,
           settings.SERVER_USER_ID,
           settings.SERVER_CLIENTORDER_ID,
         ],
@@ -552,5 +553,22 @@ export async function deactivateUsers(userIds: string[]) {
     },
   })
 
-  return result.count
+  // Activate users that are in the AD list
+  const activateResult = await prisma.user.updateMany({
+    where: {
+      id: {
+        in: existUserIds,
+      },
+      isDeactivated: true,
+    },
+    data: {
+      isDeactivated: false,
+      pointBalance: 0,
+    },
+  })
+
+  return {
+    activatedUsers: activateResult.count,
+    deactivatedUsers: deactivateResult.count,
+  }
 }
