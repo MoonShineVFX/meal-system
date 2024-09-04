@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 import { settings } from '@/lib/common'
-import { deactivateUsers } from '@/lib/server/database'
+import { syncAdUsers } from '@/lib/server/database'
 
 export default async function syncUsers(
   req: NextApiRequest,
@@ -22,11 +22,11 @@ export default async function syncUsers(
     const adData = await adDataResponse.json()
     const usernames = adData.map((user: any) => user.username.toLowerCase())
 
-    const deactivatedUsers = await deactivateUsers(usernames)
-    console.log(`[SYNC] Deactivated ${deactivatedUsers} users`)
+    const syncResult = await syncAdUsers(usernames)
+    console.log(`[SYNC] Result: ${syncResult}`)
 
     return res.status(200).json({
-      deactivatedUsers,
+      syncResult,
     })
   } catch (error) {
     if (error instanceof Error) {
