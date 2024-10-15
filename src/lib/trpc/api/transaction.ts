@@ -19,7 +19,7 @@ export const TransactionRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      return await await getTransactionsWithCursor({
+      return await getTransactionsWithCursor({
         userId: ctx.userLite.id,
         cursor: input.cursor,
         keyword: input.keyword ? input.keyword.trim() : undefined,

@@ -16,6 +16,7 @@ const TransactionTypeStyle: Record<TransactionType, string> = {
   [TransactionType.CANCELED]: 'text-red-400 bg-red-50 border-red-200',
   [TransactionType.TRANSFER]: 'text-violet-500 bg-violet-50 border-violet-200',
   [TransactionType.DEPOSIT]: 'text-green-500 bg-green-50 border-green-200',
+  [TransactionType.RECYCLE]: 'text-pink-500 bg-pink-50 border-pink-200',
 }
 
 export default function TransactionCard(props: {

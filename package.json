@@ -14,7 +14,7 @@
     "db-migrate": "prisma migrate dev",
     "db-generate": "prisma generate",
     "db-reset": "prisma migrate reset",
-    "db-helper": "tsx prisma/scripts/helpers/get-user-ids.ts"
+    "cmd": "tsx prisma/cmd.ts"
   },
   "keywords": [],
   "author": "",

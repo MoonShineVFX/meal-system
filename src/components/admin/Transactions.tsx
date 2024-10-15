@@ -277,9 +277,21 @@ export default function Transactions() {
                     return <p className='text-red-300'>{transactionText}</p>
                   case TransactionType.TRANSFER:
                     return <p className='text-blue-400'>{transactionText}</p>
+                  case TransactionType.RECYCLE:
+                    return <p className='text-purple-400'>{transactionText}</p>
                   default:
                     return transactionText
                 }
+              },
+            },
+            {
+              name: '備註',
+              align: 'left',
+              cellClassName: 'text-xs',
+              render: (transaction) => {
+                return (
+                  <p className='text-stone-400'>{transaction.note ?? '-'}</p>
+                )
               },
             },
           ]}
@@ -292,7 +304,7 @@ export default function Transactions() {
                     fetchNextPage()
                   }
                 }}
-                className='flex items-center gap-2 p-4'
+                className='flex items-center gap-2 whitespace-nowrap p-4 pl-16'
               >
                 <Spinner className='h-4 w-4' />
                 <p className='tracking-wider text-stone-400'>讀取更多</p>

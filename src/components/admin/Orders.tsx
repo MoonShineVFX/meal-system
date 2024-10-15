@@ -159,7 +159,7 @@ export default function Orders() {
                     fetchNextPage()
                   }
                 }}
-                className='flex items-center gap-2 p-4'
+                className='flex items-center gap-2 whitespace-nowrap p-4 pl-16'
               >
                 <Spinner className='h-4 w-4' />
                 <p className='tracking-wider text-stone-400'>讀取更多</p>

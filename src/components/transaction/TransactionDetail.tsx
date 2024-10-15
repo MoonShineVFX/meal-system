@@ -1,5 +1,8 @@
 import Link from 'next/link'
-import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
+import {
+  ArrowUturnLeftIcon,
+  ChatBubbleBottomCenterIcon,
+} from '@heroicons/react/24/outline'
 import { Fragment } from 'react'
 import { CircleStackIcon } from '@heroicons/react/24/outline'
 import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
@@ -100,6 +103,17 @@ export default function TransactionDetail(props: { transactionId: number }) {
               ${data?.creditAmount ?? 50}
             </dd>
           </dl>
+          {data?.note && (
+            <dl className='grid grid-cols-[1fr_2fr] items-center border-b py-4 last:border-none'>
+              <dt className='flex w-fit items-center rounded-xl text-sm font-bold tracking-widest text-stone-400'>
+                <ChatBubbleBottomCenterIcon className='mr-2 inline-block h-4 w-4' />
+                備註
+              </dt>
+              <dd className='w-fit rounded-xl text-sm group-data-loading:skeleton'>
+                {data?.note}
+              </dd>
+            </dl>
+          )}
           {orders.length > 0 && (
             <dl className='grid grid-cols-[1fr_2fr] items-baseline border-b py-4 last:border-none'>
               <dt className='flex items-center text-sm font-bold tracking-widest text-stone-400'>
