@@ -3,6 +3,9 @@ import { z } from 'zod'
 
 import { settings } from '@/lib/common'
 import { rechargeUserToday } from '@/lib/server/database'
+import { getLogger } from '@/lib/server/logger'
+
+const log = getLogger('api/utils/recharge')
 
 const requestBodySchema = z.object({
   // v1 compatibility
@@ -61,6 +64,9 @@ export default async function rechargeUsers(
 
   const rechargePayloads: { userId: string; pointAmount: number }[] = []
 
+  // log
+  log('Recharge request:', JSON.stringify(requestBody))
+
   // v1 compatibility
   if (requestBody.userIds) {
     rechargePayloads.push(
@@ -109,5 +115,7 @@ export default async function rechargeUsers(
     acc[result.userId] = result.result
     return acc
   }, {} as Record<string, string>)
+
+  log('Recharge result:', JSON.stringify(resultObject))
   res.status(200).json(resultObject)
 }

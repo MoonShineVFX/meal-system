@@ -408,7 +408,13 @@ export async function getTransactions({
           OR: [
             {
               sourceUserId: userId,
-              type: { in: [TransactionType.PAYMENT, TransactionType.TRANSFER] },
+              type: {
+                in: [
+                  TransactionType.PAYMENT,
+                  TransactionType.TRANSFER,
+                  TransactionType.RECYCLE,
+                ],
+              },
             },
             {
               targetUserId: userId,

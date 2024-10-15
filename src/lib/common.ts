@@ -128,6 +128,7 @@ export const TransactionName: Record<TransactionType, string> = {
   [TransactionType.CANCELED]: '取消訂單',
   [TransactionType.TRANSFER]: '轉帳',
   [TransactionType.DEPOSIT]: '儲值',
+  [TransactionType.RECYCLE]: '回收',
 }
 
 /* Settings */

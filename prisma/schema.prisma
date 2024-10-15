@@ -87,6 +87,7 @@ enum TransactionType {
   TRANSFER // User transfer balance to another user
   REFUND // User ask for refund (not implemented)
   DEPOSIT // User deposit from 3rd party
+  RECYCLE // Recycle point back server for reason
 }
 
 model Transaction {
@@ -96,6 +97,7 @@ model Transaction {
   type         TransactionType
   pointAmount  Int             @default(0)
   creditAmount Int             @default(0)
+  note         String?
 
   sourceUser   User   @relation("source", fields: [sourceUserId], references: [id])
   sourceUserId String

@@ -352,18 +352,23 @@ export async function rechargeUserToday(props: {
     throw new Error('今日已充值')
   }
 
-  // Update last recharge time
-  await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      lastPointRechargeTime: now,
-    },
-    select: {
-      name: true,
-    },
-  })
+  // Update last recharge time to today and prevent time attack
+  try {
+    await prisma.user.update({
+      where: {
+        id: userId,
+        lastPointRechargeTime: user.lastPointRechargeTime,
+      },
+      data: {
+        lastPointRechargeTime: now,
+      },
+      select: {
+        name: true,
+      },
+    })
+  } catch (e) {
+    throw new Error('已有充值動作正在進行中')
+  }
 
   // Check is today a work day
   const currentDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())

@@ -181,3 +181,4 @@ dist
 *.p12
 
 prisma/dbml/
+temp/
