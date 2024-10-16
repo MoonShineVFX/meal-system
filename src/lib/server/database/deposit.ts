@@ -49,74 +49,80 @@ export async function updateDeposit(props: {
   paymentType: string
   id: string
 }) {
-  return await prisma.$transaction(async (client) => {
-    const deposit = await client.deposit.findUnique({
-      where: { id: props.id },
-      include: {
-        transactions: true,
-      },
-    })
-
-    if (!deposit) {
-      throw new Error(`找不到訂單 ${props.id}`)
-    }
-
-    if (deposit.status === props.status) {
-      log(`訂單 ${props.id} 狀態已更新過同狀態`)
-      return deposit
-    }
-
-    if (
-      // Recharge
-      props.status === DepositStatus.SUCCESS &&
-      deposit.status === DepositStatus.PENDING
-    ) {
-      await rechargeUserBalanceBase({
-        userId: deposit.userId,
-        creditAmount: deposit.amount * settings.DEPOSIT_RATIO,
-        depositId: deposit.id,
-        client,
-      })
-    } else if (
-      // Refund
-      props.status === DepositStatus.REFUND &&
-      deposit.status === DepositStatus.SUCCESS
-    ) {
-      const chargeTransaction = await client.transaction.findFirst({
-        where: {
-          depositId: deposit.id,
-          type: 'DEPOSIT',
+  return await prisma.$transaction(
+    async (client) => {
+      const deposit = await client.deposit.findUnique({
+        where: { id: props.id },
+        include: {
+          transactions: true,
         },
       })
 
-      if (!chargeTransaction) {
-        throw new Error(`找不到訂單 ${props.id} 的儲值紀錄，無法退款`)
+      if (!deposit) {
+        throw new Error(`找不到訂單 ${props.id}`)
       }
 
-      await refundUserBalanceBase({
-        userId: deposit.userId,
-        amount: chargeTransaction.creditAmount,
-        depositId: deposit.id,
-        client,
-      })
-    } else {
-      log(
-        `沒有對應的訂單狀態更新 ${props.id} ${deposit.status} -> ${props.status}`,
-      )
-    }
+      if (deposit.status === props.status) {
+        log(`訂單 ${props.id} 狀態已更新過同狀態`)
+        return deposit
+      }
 
-    return client.deposit.update({
-      where: { id: props.id },
-      data: {
-        status: props.status,
-        payTime: props.payTime,
-        paymentType: props.paymentType,
-      },
-      include: {
-        transactions: true,
-      },
-    })
-  })
+      if (
+        // Recharge
+        props.status === DepositStatus.SUCCESS &&
+        deposit.status === DepositStatus.PENDING
+      ) {
+        await rechargeUserBalanceBase({
+          userId: deposit.userId,
+          creditAmount: deposit.amount * settings.DEPOSIT_RATIO,
+          depositId: deposit.id,
+          client,
+        })
+      } else if (
+        // Refund
+        props.status === DepositStatus.REFUND &&
+        deposit.status === DepositStatus.SUCCESS
+      ) {
+        const chargeTransaction = await client.transaction.findFirst({
+          where: {
+            depositId: deposit.id,
+            type: 'DEPOSIT',
+          },
+        })
+
+        if (!chargeTransaction) {
+          throw new Error(`找不到訂單 ${props.id} 的儲值紀錄，無法退款`)
+        }
+
+        await refundUserBalanceBase({
+          userId: deposit.userId,
+          amount: chargeTransaction.creditAmount,
+          depositId: deposit.id,
+          client,
+        })
+      } else {
+        log(
+          `沒有對應的訂單狀態更新 ${props.id} ${deposit.status} -> ${props.status}`,
+        )
+      }
+
+      return client.deposit.update({
+        where: { id: props.id },
+        data: {
+          status: props.status,
+          payTime: props.payTime,
+          paymentType: props.paymentType,
+        },
+        include: {
+          transactions: true,
+        },
+      })
+    },
+    {
+      maxWait: 5000,
+      timeout: 10000,
+    },
+  )
 }
 
 export async function getDeposit(id: string) {
