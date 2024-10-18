@@ -135,7 +135,7 @@ export default function DepositPage() {
   if (isError) return <Error description={error.message} />
 
   return (
-    <div className='relatve h-full w-full'>
+    <div className='relative h-full w-full'>
       <div className='ms-scroll absolute inset-0 p-4 lg:p-8'>
         <div className='mx-auto flex h-full max-w-md flex-col gap-4'>
           <Title prefix='儲值' />
@@ -217,20 +217,23 @@ export default function DepositPage() {
             <h3 className='text-sm font-bold text-stone-500'>注意事項與說明</h3>
             <DepositExplanation />
           </section>
-          <Button
-            isDisabled={
-              depositAmount < settings.DEPOSIT_MIN_AMOUNT ||
-              depositAmount > settings.DEPOSIT_MAX_AMOUNT ||
-              isLoading
-            }
-            isLoading={
-              depositCreateMutation.isLoading || depositCreateMutation.isSuccess
-            }
-            className='mt-auto h-12 w-full shrink-0 group-data-loading:skeleton'
-            textClassName='font-bold text-lg'
-            label='下一步'
-            onClick={handleClick}
-          />
+          <div className='sticky bottom-0 mt-auto bg-white'>
+            <Button
+              isDisabled={
+                depositAmount < settings.DEPOSIT_MIN_AMOUNT ||
+                depositAmount > settings.DEPOSIT_MAX_AMOUNT ||
+                isLoading
+              }
+              isLoading={
+                depositCreateMutation.isLoading ||
+                depositCreateMutation.isSuccess
+              }
+              className='h-12 w-full shrink-0 group-data-loading:skeleton'
+              textClassName='font-bold text-lg'
+              label='下一步'
+              onClick={handleClick}
+            />
+          </div>
           {dialog}
         </div>
       </div>
