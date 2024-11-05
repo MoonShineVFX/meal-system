@@ -68,6 +68,7 @@ export enum SERVER_NOTIFY {
   USER_SETTINGS_UPDATE = '用戶設定已更改',
   USER_TEST_PUSH_NOTIFICATION = '測試推送通知',
   USER_TOKEN_UPDATE = '用戶裝置設定已更改',
+  USER_AUTHORIY_UPDATE = '用戶權限已更改',
 }
 
 export enum CurrencyType {
@@ -119,6 +120,10 @@ export const MenuTypeName: Record<MenuType, string> = {
   [MenuType.TEA]: '下午茶',
   [MenuType.LIVE]: '即時',
   [MenuType.RETAIL]: '自助',
+}
+
+export const UserAuthorityName: Record<UserAuthority, string> = {
+  [UserAuthority.CLIENT_ORDER]: '客戶招待',
 }
 
 export const TransactionName: Record<TransactionType, string> = {

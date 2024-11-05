@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import Error from '@/components/core/Error'
 import Image from '@/components/core/Image'
@@ -7,6 +7,8 @@ import trpc from '@/lib/client/trpc'
 import { settings } from '@/lib/common'
 import SearchBar from '@/components/core/SearchBar'
 import CheckBox from '@/components/form/base/CheckBox'
+import Button from '../core/Button'
+import { twMerge } from 'tailwind-merge'
 
 export default function Members() {
   // State
@@ -17,6 +19,7 @@ export default function Members() {
   const { data, isError, error } = trpc.user.getStatistics.useQuery({
     showDeactivated,
   })
+  const updateUserAuthority = trpc.user.updateAuthority.useMutation()
 
   const filteredMembers = useMemo(() => {
     if (!data) return []
@@ -26,6 +29,17 @@ export default function Members() {
       user.name.toLowerCase().includes(searchKeyword.toLowerCase()),
     )
   }, [searchKeyword, data])
+
+  const handleMemberClientOrder = useCallback(
+    async (userId: string, enabled: boolean) => {
+      updateUserAuthority.mutate({
+        userId,
+        authority: 'CLIENT_ORDER',
+        enabled,
+      })
+    },
+    [updateUserAuthority],
+  )
 
   if (isError) return <Error description={error.message} />
 
@@ -109,10 +123,33 @@ export default function Members() {
               render: (user) => user.role,
             },
             {
-              name: '權限',
+              name: '客戶招待權限',
               align: 'left',
               cellClassName: 'text-sm',
-              render: (user) => user.authorities.join(', '),
+              render: (user) => {
+                const canClientOrder = user.authorities.includes('CLIENT_ORDER')
+
+                return (
+                  <Button
+                    textClassName='px-3 py-1 text-sm'
+                    className={twMerge(
+                      'disabled:opacity-50 hover:bg-stone-200',
+                      canClientOrder
+                        ? 'bg-amber-400 text-amber-800 hover:bg-amber-500'
+                        : 'bg-stone-100 text-stone-400',
+                    )}
+                    label={canClientOrder ? '已開通' : '未開通'}
+                    theme='secondary'
+                    onClick={() =>
+                      handleMemberClientOrder(user.id, !canClientOrder)
+                    }
+                    isLoading={
+                      updateUserAuthority.isLoading &&
+                      updateUserAuthority.variables?.userId === user.id
+                    }
+                  />
+                )
+              },
             },
             {
               hideByDefault: true,
