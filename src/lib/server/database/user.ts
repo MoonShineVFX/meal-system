@@ -1,4 +1,4 @@
-import { Prisma, UserRole, UserSettings } from '@prisma/client'
+import { Prisma, UserAuthority, UserRole, UserSettings } from '@prisma/client'
 import CryptoJS from 'crypto-js'
 
 import { prisma, log } from './define'
@@ -577,4 +577,47 @@ export async function syncAdUsers(existUserIds: string[]) {
     activatedUsers: activateResult.count,
     deactivatedUsers: deactivateResult.count,
   }
+}
+
+export async function updateUserAuthority(props: {
+  userId: string
+  authority: UserAuthority
+  enabled: boolean
+}) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: props.userId,
+    },
+    select: {
+      authorities: true,
+    },
+  })
+
+  if (!user) {
+    throw new Error('使用者不存在')
+  }
+
+  if (props.enabled && user.authorities.includes(props.authority)) {
+    return null
+  }
+
+  if (!props.enabled && !user.authorities.includes(props.authority)) {
+    return null
+  }
+
+  return await prisma.user.update({
+    where: {
+      id: props.userId,
+    },
+    data: {
+      authorities: {
+        set: props.enabled
+          ? [...user.authorities, props.authority]
+          : user.authorities.filter((a) => a !== props.authority),
+      },
+    },
+    select: {
+      name: true,
+    },
+  })
 }

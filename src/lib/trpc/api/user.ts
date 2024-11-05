@@ -14,16 +14,19 @@ import {
   getUserToken,
   getUserList,
   getUsersStatistics,
+  updateUserAuthority,
 } from '@/lib/server/database'
 import {
   settings,
   generateCookie,
   ServerNotifyPayload,
   SERVER_NOTIFY,
+  UserAuthorityName,
 } from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 
 import { userProcedure, publicProcedure, router, staffProcedure } from '../trpc'
+import { UserAuthority } from '@prisma/client'
 
 type UserAdData = {
   group: string[]
@@ -251,5 +254,32 @@ export const UserRouter = router({
     )
     .query(async ({ input }) => {
       return await getUsersStatistics(input)
+    }),
+  updateAuthority: staffProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        authority: z.nativeEnum(UserAuthority),
+        enabled: z.boolean(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const user = await updateUserAuthority(input)
+      console.log(user)
+
+      if (!user) return
+
+      const updateMessage = `的${UserAuthorityName[input.authority]}權限已${
+        input.enabled ? '啟用' : '停用'
+      }`
+
+      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+        type: SERVER_NOTIFY.USER_AUTHORIY_UPDATE,
+        message: `用戶 ${user.name} ${updateMessage}`,
+      })
+      eventEmitter.emit(ServerChannelName.USER_NOTIFY(input.userId), {
+        type: SERVER_NOTIFY.USER_AUTHORIY_UPDATE,
+        message: `您${updateMessage}`,
+      })
     }),
 })

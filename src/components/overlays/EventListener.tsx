@@ -183,6 +183,9 @@ export default function EventListener() {
         case SERVER_NOTIFY.BONUS_APPLY:
           trpcContext.user.get.invalidate()
           break
+        case SERVER_NOTIFY.USER_SETTINGS_UPDATE:
+          trpcContext.user.get.invalidate()
+          break
 
         // Staff & Admin
         case SERVER_NOTIFY.POS_ADD:
@@ -237,8 +240,9 @@ export default function EventListener() {
           trpcContext.supplier.getList.invalidate()
           trpcContext.commodity.getList.invalidate()
           break
-        case SERVER_NOTIFY.USER_SETTINGS_UPDATE:
+        case SERVER_NOTIFY.USER_AUTHORIY_UPDATE:
           trpcContext.user.get.invalidate()
+          trpcContext.user.getStatistics.invalidate()
           break
         case SERVER_NOTIFY.BONUS_ADD:
         case SERVER_NOTIFY.BONUS_UPDATE:
