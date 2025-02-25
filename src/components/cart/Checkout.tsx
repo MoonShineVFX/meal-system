@@ -1,19 +1,19 @@
-import { UserAuthority } from '@prisma/client'
-import { twMerge } from 'tailwind-merge'
-import { useState } from 'react'
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
+import { UserAuthority } from '@prisma/client'
+import { useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 import Button from '@/components/core/Button'
-import trpc from '@/lib/client/trpc'
-import { twData, validateAuthority } from '@/lib/common'
-import Error from '@/components/core/Error'
-import { useRouter } from 'next/router'
-import PriceNumber from '@/components/core/PriceNumber'
-import { useEffect } from 'react'
 import { useDialog } from '@/components/core/Dialog'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import Error from '@/components/core/Error'
+import PriceNumber from '@/components/core/PriceNumber'
 import DepositExplanation from '@/components/deposit/DepositExplanation'
 import Toggle from '@/components/form/base/Toggle'
-import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import trpc from '@/lib/client/trpc'
+import { twData, validateAuthority } from '@/lib/common'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 import TextInput from '../form/base/TextInput'
 
 export default function Checkout(props: {
@@ -219,8 +219,8 @@ export default function Checkout(props: {
       {/* Checkout button */}
       <div className='grid grid-rows-2 gap-4 @xs/checkout:grid-cols-2 @xs/checkout:grid-rows-none'>
         <Button
-          isLoading={currentMutation.isLoading || currentMutation.isSuccess}
-          isBusy={currentMutation.isLoading || currentMutation.isSuccess}
+          isLoading={currentMutation.isPending || currentMutation.isSuccess}
+          isBusy={currentMutation.isPending || currentMutation.isSuccess}
           isDisabled={
             (isNotEnough && !isClientOrder) ||
             (isClientOrder && clientOrderNote.length < 4) ||

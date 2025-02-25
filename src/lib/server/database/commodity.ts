@@ -1,7 +1,7 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
+import { ConvertPrismaJson, OptionSet } from '@/lib/common'
 import { prisma } from './define'
-import { OptionSet, ConvertPrismaJson } from '@/lib/common'
 
 /* Create Commodity */
 type CreateCommodityArgs = {
@@ -104,7 +104,7 @@ export async function editCommodity({
 }
 
 /* Get Commodities */
-const getCommoditiesArgs = Prisma.validator<Prisma.CommodityArgs>()({
+const getCommoditiesArgs = Prisma.validator<Prisma.CommodityDefaultArgs>()({
   include: {
     categories: true,
     image: true,

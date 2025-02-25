@@ -1,15 +1,15 @@
-import { MenuType, Prisma, PrismaClient, Menu } from '@prisma/client'
+import { Menu, MenuType, Prisma, PrismaClient } from '@prisma/client'
 import lzString from 'lz-string'
 
-import { validateCartItemCreatable } from './cart'
 import {
-  ConvertPrismaJson,
-  OrderOptions,
-  MenuUnavailableReason,
   ComUnavailableReason,
+  ConvertPrismaJson,
+  MenuUnavailableReason,
+  OrderOptions,
   settings,
 } from '@/lib/common'
-import { prisma, log } from './define'
+import { validateCartItemCreatable } from './cart'
+import { log, prisma } from './define'
 
 /* Create Menu */
 type CommonCreateMenuArgs = {
@@ -105,7 +105,7 @@ export async function upsertMenu({
 }
 
 /* Get active menus */
-const GetActiveMenusDetailArgs = Prisma.validator<Prisma.MenuArgs>()({
+const GetActiveMenusDetailArgs = Prisma.validator<Prisma.MenuDefaultArgs>()({
   include: {
     commodities: {
       where: {
@@ -274,6 +274,67 @@ type GetMenuWithComsArgs = {
   excludeCartItems?: boolean
   client?: Prisma.TransactionClient | PrismaClient
 }
+type MenuWithComs = Prisma.MenuGetPayload<{
+  select: {
+    id: true
+    date: true
+    name: true
+    type: true
+    description: true
+    limitPerUser: true
+    publishedDate: true
+    closedDate: true
+    commodities: {
+      select: {
+        limitPerUser: true
+        stock: true
+        commodity: {
+          select: {
+            id: true
+            name: true
+            description: true
+            price: true
+            optionSets: true
+            image: {
+              select: {
+                path: true
+              }
+            }
+            categories: {
+              select: {
+                name: true
+                order: true
+                rootCategory: {
+                  select: {
+                    name: true
+                    order: true
+                  }
+                }
+              }
+            }
+          }
+        }
+        cartItems:
+          | {
+              select: {
+                quantity: true
+              }
+            }
+          | undefined
+        orderItems: {
+          select: {
+            order: {
+              select: {
+                userId: true
+              }
+            }
+            quantity: true
+          }
+        }
+      }
+    }
+  }
+}>
 /** Get menu and return with unavailableReasons from validation */
 export async function getMenuWithComs({
   menuId,
@@ -388,7 +449,8 @@ export async function getMenuWithComs({
   if (!rawMenu) {
     throw new Error('menu not found')
   }
-  const menu = rawMenu as ConvertPrismaJson<typeof rawMenu>
+  // XXX: onditional select hotfix, need to find a better way
+  const menu = rawMenu as unknown as ConvertPrismaJson<MenuWithComs>
 
   // Validate menu and coms status
   let menuOrderedCount = 0

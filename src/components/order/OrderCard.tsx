@@ -1,14 +1,14 @@
-import { twMerge } from 'tailwind-merge'
 import { motion } from 'framer-motion'
-import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useCallback, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 
+import Button from '@/components/core/Button'
+import Dialog from '@/components/core/Dialog'
+import Tooltip from '@/components/core/Tooltip'
 import trpc, { OrderDatas } from '@/lib/client/trpc'
 import { getMenuName, twData } from '@/lib/common'
 import OrderItemList from './OrderItemList'
-import Tooltip from '@/components/core/Tooltip'
-import Button from '@/components/core/Button'
-import Dialog from '@/components/core/Dialog'
 
 const ORDER_STEPS = ['付款', '處理中', '可取餐', '完成']
 const CANCEL_STEPS = ['付款', '已取消', '']
@@ -136,8 +136,8 @@ export default function OrderCard(props: {
           {order?.canCancel && (
             <Button
               label='取消'
-              isDisabled={updateOrderMutation.isLoading}
-              isLoading={updateOrderMutation.isLoading}
+              isDisabled={updateOrderMutation.isPending}
+              isLoading={updateOrderMutation.isPending}
               className='p-2 group-data-loading:skeleton'
               textClassName='text-red-400'
               theme='support'
@@ -172,8 +172,8 @@ export default function OrderCard(props: {
               className='p-2 group-data-loading:skeleton'
               theme='main'
               spinnerClassName='w-4 h-4'
-              isDisabled={updateOrderMutation.isLoading}
-              isLoading={updateOrderMutation.isLoading}
+              isDisabled={updateOrderMutation.isPending}
+              isLoading={updateOrderMutation.isPending}
               onClick={handleCompleteClick}
             />
           )}

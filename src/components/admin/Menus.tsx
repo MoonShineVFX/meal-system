@@ -1,17 +1,17 @@
-import { useCallback, useState } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
+import { useCallback, useState } from 'react'
 
-import trpc, { MenuActiveDatas } from '@/lib/client/trpc'
-import { SpinnerBlock } from '@/components/core/Spinner'
-import Error from '@/components/core/Error'
-import SearchBar from '@/components/core/SearchBar'
-import Table from '@/components/core/Table'
 import Button from '@/components/core/Button'
-import { getMenuName } from '@/lib/common'
-import { useFormDialog } from '@/components/form/FormDialog'
-import CheckBox from '@/components/form/base/CheckBox'
 import { useDialog } from '@/components/core/Dialog'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import Error from '@/components/core/Error'
+import SearchBar from '@/components/core/SearchBar'
+import { SpinnerBlock } from '@/components/core/Spinner'
+import Table from '@/components/core/Table'
+import { useFormDialog } from '@/components/form/FormDialog'
+import CheckBox from '@/components/form/base/CheckBox'
+import trpc, { MenuActiveDatas } from '@/lib/client/trpc'
+import { getMenuName } from '@/lib/common'
 
 function getSortWeight(menu: MenuActiveDatas[number]) {
   let weight = 0
@@ -218,9 +218,9 @@ export default function Menus() {
         {/* Table */}
         <Table
           data={
-            data.sort((a, b) => {
+            data?.sort((a, b) => {
               return getSortWeight(b) - getSortWeight(a)
-            }) as Extract<typeof data[number], { _count: any }>[]
+            }) as Extract<NonNullable<typeof data>[number], { _count: any }>[]
           }
           idField='id'
           onSelectedIdsChange={setSelectedIds}

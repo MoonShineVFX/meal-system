@@ -1,32 +1,31 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { observable } from '@trpc/server/observable'
 
-import webPusher from '@/lib/server/webpush'
 import {
-  createUserToken,
-  ensureUser,
-  getUserInfo,
-  validateUserPassword,
-  updateUserToken,
-  deleteSubscription,
-  deleteUserToken,
-  getUserToken,
-  getUserList,
-  getUsersStatistics,
-  updateUserAuthority,
-} from '@/lib/server/database'
-import {
-  settings,
   generateCookie,
-  ServerNotifyPayload,
   SERVER_NOTIFY,
+  ServerNotifyPayload,
+  settings,
   UserAuthorityName,
 } from '@/lib/common'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import {
+  createUserToken,
+  deleteSubscription,
+  deleteUserToken,
+  ensureUser,
+  getUserInfo,
+  getUserList,
+  getUsersStatistics,
+  getUserToken,
+  updateUserAuthority,
+  updateUserToken,
+  validateUserPassword,
+} from '@/lib/server/database'
+import { eventEmitter, ServerChannelName } from '@/lib/server/event'
+import webPusher from '@/lib/server/webpush'
 
-import { userProcedure, publicProcedure, router, staffProcedure } from '../trpc'
 import { UserAuthority } from '@prisma/client'
+import { publicProcedure, router, staffProcedure, userProcedure } from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -60,30 +59,42 @@ export const UserRouter = router({
   getList: staffProcedure.query(async () => {
     return await getUserList()
   }),
-  onNotify: userProcedure.subscription(async ({ ctx }) => {
-    return observable<ServerNotifyPayload>((observer) => {
-      const listener = (notifyPayload: ServerNotifyPayload) => {
-        observer.next(notifyPayload)
-      }
+  onNotify: userProcedure.subscription(async function* ({ ctx, signal }) {
+    const listener = (notifyPayload: ServerNotifyPayload) => {
+      queue.push(notifyPayload)
+      resolveNext()
+    }
 
-      const channelNames: string[] = []
-      channelNames.push(
-        ServerChannelName.USER_NOTIFY(ctx.userLite.id),
-        ServerChannelName.PUBLIC_NOTIFY,
-      )
-      if (ctx.userLite.role === 'STAFF' || ctx.userLite.role === 'ADMIN') {
-        channelNames.push(ServerChannelName.STAFF_NOTIFY)
-      }
+    const queue: ServerNotifyPayload[] = []
+    let resolveNext: () => void
+    const nextPromise = () =>
+      new Promise<void>((resolve) => (resolveNext = resolve))
 
-      for (const channelName of channelNames) {
-        eventEmitter.on(channelName, listener)
-      }
-      return () => {
-        for (const channelName of channelNames) {
-          eventEmitter.off(channelName, listener)
+    const channelNames: string[] = [
+      ServerChannelName.USER_NOTIFY(ctx.userLite.id),
+      ServerChannelName.PUBLIC_NOTIFY,
+    ]
+
+    if (ctx.userLite.role === 'STAFF' || ctx.userLite.role === 'ADMIN') {
+      channelNames.push(ServerChannelName.STAFF_NOTIFY)
+    }
+
+    for (const channelName of channelNames) {
+      eventEmitter.on(channelName, listener)
+    }
+
+    try {
+      while (!signal || !signal.aborted) {
+        while (queue.length > 0) {
+          yield queue.shift()!
         }
+        await nextPromise()
       }
-    })
+    } finally {
+      for (const channelName of channelNames) {
+        eventEmitter.off(channelName, listener)
+      }
+    }
   }),
   login: publicProcedure
     .input(

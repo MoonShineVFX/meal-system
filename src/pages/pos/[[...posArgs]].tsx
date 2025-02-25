@@ -1,11 +1,11 @@
 import { GetServerSideProps } from 'next'
 import z from 'zod'
 
-import Title from '@/components/core/Title'
+import Button from '@/components/core/Button'
 import Tab from '@/components/core/Tab'
+import Title from '@/components/core/Title'
 import POSLiveList from '@/components/pos/POSLiveList'
 import POSReservationList from '@/components/pos/POSReservationList'
-import Button from '@/components/core/Button'
 import trpc from '@/lib/client/trpc'
 
 const posArgsSchema = z.array(z.string()).length(1).optional()
@@ -93,8 +93,8 @@ export default function POSPage(props: { tabName: TabName }) {
                 textClassName='font-bold'
                 theme='secondary'
                 onClick={() => completeDishedUpsMutation.mutate()}
-                isBusy={completeDishedUpsMutation.isLoading}
-                isLoading={completeDishedUpsMutation.isLoading}
+                isBusy={completeDishedUpsMutation.isPending}
+                isLoading={completeDishedUpsMutation.isPending}
               />
             </div>
           )}

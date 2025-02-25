@@ -2,13 +2,13 @@ import { useCallback, useMemo, useState } from 'react'
 
 import Error from '@/components/core/Error'
 import Image from '@/components/core/Image'
+import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
+import CheckBox from '@/components/form/base/CheckBox'
 import trpc from '@/lib/client/trpc'
 import { settings } from '@/lib/common'
-import SearchBar from '@/components/core/SearchBar'
-import CheckBox from '@/components/form/base/CheckBox'
-import Button from '../core/Button'
 import { twMerge } from 'tailwind-merge'
+import Button from '../core/Button'
 
 export default function Members() {
   // State
@@ -144,7 +144,7 @@ export default function Members() {
                       handleMemberClientOrder(user.id, !canClientOrder)
                     }
                     isLoading={
-                      updateUserAuthority.isLoading &&
+                      updateUserAuthority.isPending &&
                       updateUserAuthority.variables?.userId === user.id
                     }
                   />

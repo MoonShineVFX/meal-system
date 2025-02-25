@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { FieldValues } from 'react-hook-form'
 
-import { InputFieldProps } from './define'
-import trpc from '@/lib/client/trpc'
-import Spinner from '@/components/core/Spinner'
 import SearchBar from '@/components/core/SearchBar'
+import Spinner from '@/components/core/Spinner'
+import trpc from '@/lib/client/trpc'
 import CheckBox from '../base/CheckBox'
+import { InputFieldProps } from './define'
 
 export default function CommoditiesField<T extends FieldValues>(
   props: InputFieldProps<'commodities', T>,
@@ -15,7 +15,11 @@ export default function CommoditiesField<T extends FieldValues>(
   )
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [onlyShowSelected, setOnlyShowSelected] = useState<boolean>(false)
-  const { data, isError, isLoading } = trpc.commodity.getList.useQuery({
+  const {
+    data = [],
+    isError,
+    isLoading,
+  } = trpc.commodity.getList.useQuery({
     includeIds: props.formInput.defaultValue ?? undefined,
     onlyFromSupplierId: props.formInput.data?.onlyFromSupplierId,
   })

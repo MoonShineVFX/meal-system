@@ -1,21 +1,21 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   CurrencyDollarIcon,
   PlusCircleIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/router'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-import trpc from '@/lib/client/trpc'
-import Error from '@/components/core/Error'
 import Button from '@/components/core/Button'
-import Spinner from '@/components/core/Spinner'
-import NumberInput from '@/components/form/base/NumberInput'
-import { settings } from '@/lib/common'
 import { useDialog } from '@/components/core/Dialog'
+import Error from '@/components/core/Error'
+import Spinner from '@/components/core/Spinner'
 import Title from '@/components/core/Title'
-import { useStore } from '@/lib/client/store'
 import DepositExplanation from '@/components/deposit/DepositExplanation'
+import NumberInput from '@/components/form/base/NumberInput'
+import { useStore } from '@/lib/client/store'
+import trpc from '@/lib/client/trpc'
+import { settings } from '@/lib/common'
 
 const DEPOSIT_PRESET_AMOUNTS = [100, 300, 500, 1000]
 
@@ -225,7 +225,7 @@ export default function DepositPage() {
                 isLoading
               }
               isLoading={
-                depositCreateMutation.isLoading ||
+                depositCreateMutation.isPending ||
                 depositCreateMutation.isSuccess
               }
               className='h-12 w-full shrink-0 group-data-loading:skeleton'

@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 
-import POSCard from './POSCard'
 import Image from '@/components/core/Image'
 import trpc, { POSLiveDatas } from '@/lib/client/trpc'
-import { settings, OrderStatus, getOptionName } from '@/lib/common'
+import { OrderStatus, getOptionName, settings } from '@/lib/common'
+import POSCard from './POSCard'
 
 export default function POSLiveCard(props: {
   order?: POSLiveDatas[0]
@@ -58,7 +58,7 @@ export default function POSLiveCard(props: {
       disableAnimation={props.isArchived}
       disableInteraction={props.isArchived}
       onStatusModify={handleStatusModify}
-      isLoading={updateOrderMutation.isLoading}
+      isLoading={updateOrderMutation.isPending}
       print={
         order && order.timePreparing !== null
           ? {

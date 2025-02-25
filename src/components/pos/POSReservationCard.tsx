@@ -1,10 +1,10 @@
-import { useCallback, useState, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
+import Dialog from '@/components/core/Dialog'
+import Image from '@/components/core/Image'
+import trpc, { POSReservationDatas } from '@/lib/client/trpc'
 import { OrderStatus, getOptionName, settings } from '@/lib/common'
 import POSCard from './POSCard'
-import Dialog from '@/components/core/Dialog'
-import trpc, { POSReservationDatas } from '@/lib/client/trpc'
-import Image from '@/components/core/Image'
 
 export default function POSReservationCard(props: {
   com?: POSReservationDatas[number]['coms'][number]
@@ -93,7 +93,7 @@ export default function POSReservationCard(props: {
         </div>
       }
       onStatusModify={handleStatusModify}
-      isLoading={updateOrdersMutation.isLoading}
+      isLoading={updateOrdersMutation.isPending}
       disableAnimation={true}
       disableStatusButton={props.isFuture}
       print={printProps}

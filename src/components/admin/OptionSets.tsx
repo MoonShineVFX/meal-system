@@ -1,13 +1,13 @@
-import { useCallback, useState, useEffect } from 'react'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import { useCallback, useEffect, useState } from 'react'
 
-import { useFormDialog } from '@/components/form/FormDialog'
-import SortableList from '@/components/core/SortableList'
-import trpc, { OptionSetsTemplateDatas } from '@/lib/client/trpc'
-import { SpinnerBlock } from '@/components/core/Spinner'
-import Error from '@/components/core/Error'
-import { OptionSet, getOptionName } from '@/lib/common'
 import { useDialog } from '@/components/core/Dialog'
+import Error from '@/components/core/Error'
+import SortableList from '@/components/core/SortableList'
+import { SpinnerBlock } from '@/components/core/Spinner'
+import { useFormDialog } from '@/components/form/FormDialog'
+import trpc, { OptionSetsTemplateDatas } from '@/lib/client/trpc'
+import { OptionSet, getOptionName } from '@/lib/common'
 
 export default function OptionSets() {
   const { data, isError, error, isLoading } = trpc.optionSet.get.useQuery()
@@ -441,7 +441,7 @@ export default function OptionSets() {
       {/* Root */}
       <SortableList
         header='選項集樣本'
-        items={data}
+        items={data ?? []}
         childrenClassName={(template) =>
           selectedTemplate?.id === template.id ? 'bg-stone-100' : ''
         }
@@ -449,7 +449,7 @@ export default function OptionSets() {
         onCreateLabel='新增選項集樣本'
         onRename={handleTemplateRename}
         onReorder={handleTemplateReorder}
-        onReordering={updateTemplateOrdersMutation.isLoading}
+        onReordering={updateTemplateOrdersMutation.isPending}
         batchEditButtons={[
           {
             label: '刪除',
@@ -485,7 +485,7 @@ export default function OptionSets() {
           onCreateLabel='新增選項集'
           onRename={handleOptionSetRename}
           onReorder={handleOptionSetReorder}
-          onReordering={updateOptionSetOrdersMutation.isLoading}
+          onReordering={updateOptionSetOrdersMutation.isPending}
           batchEditButtons={[
             {
               label: '刪除',
@@ -521,7 +521,7 @@ export default function OptionSets() {
           onCreateLabel='新增選項'
           onRename={handleOptionRename}
           onReorder={handleOptionReorder}
-          onReordering={updateOptionOrdersMutation.isLoading}
+          onReordering={updateOptionOrdersMutation.isPending}
           batchEditButtons={[
             {
               label: '刪除',

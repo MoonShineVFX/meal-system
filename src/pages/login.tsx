@@ -1,20 +1,20 @@
+import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { useEffect } from 'react'
 import {
-  useForm,
-  SubmitHandler,
-  UseFormRegister,
-  Path,
   FieldErrorsImpl,
+  Path,
+  SubmitHandler,
+  useForm,
+  UseFormRegister,
 } from 'react-hook-form'
-import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
+import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
+import Logo from '@/components/core/Logo'
 import Title from '@/components/core/Title'
+import TextInput from '@/components/form/base/TextInput'
 import trpc from '@/lib/client/trpc'
 import { generateCookie, settings, twData } from '@/lib/common'
-import Logo from '@/components/core/Logo'
-import Button from '@/components/core/Button'
-import TextInput from '@/components/form/base/TextInput'
 
 type FormInputs = {
   username: string
@@ -48,7 +48,7 @@ export default function PageLogin() {
     )
   }
 
-  const isBusy = loginMutation.isLoading || loginMutation.isSuccess
+  const isBusy = loginMutation.isPending || loginMutation.isSuccess
 
   return (
     <div className='fixed inset-0 flex'>
@@ -87,7 +87,7 @@ export default function PageLogin() {
             className='h-12'
             textClassName='text-lg font-bold'
             isBusy={isBusy}
-            isLoading={loginMutation.isLoading}
+            isLoading={loginMutation.isPending}
             isSuccess={loginMutation.isSuccess}
             type='submit'
             label='登入'

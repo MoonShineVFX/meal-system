@@ -1,14 +1,14 @@
 import { UserRole } from '@prisma/client'
 import { useEffect, useState } from 'react'
 
-import Toggle from '@/components/form/base/Toggle'
-import TextInput from '@/components/form/base/TextInput'
+import Button from '@/components/core/Button'
+import { useDialog } from '@/components/core/Dialog'
 import { SpinnerBlock } from '@/components/core/Spinner'
+import TextInput from '@/components/form/base/TextInput'
+import Toggle from '@/components/form/base/Toggle'
+import { useStore } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
 import { validateRole } from '@/lib/common'
-import { useStore } from '@/lib/client/store'
-import { useDialog } from '@/components/core/Dialog'
-import Button from '@/components/core/Button'
 
 export default function Settings() {
   const userQuery = trpc.user.get.useQuery(undefined)
@@ -82,7 +82,7 @@ export default function Settings() {
                   <OptionField
                     title='背景通知'
                     description='當您訂單有更新時，就算 App 不在前景也會收到通知。'
-                    loading={updateUserTokenMutation.isLoading}
+                    loading={updateUserTokenMutation.isPending}
                     checked={userTokenQuery.data.notificationEnabled}
                     onChange={(checked) => {
                       updateUserTokenMutation.mutate({
@@ -96,8 +96,8 @@ export default function Settings() {
                         label='測試通知'
                         textClassName='text-sm'
                         onClick={() => testPushMutation.mutate()}
-                        isBusy={testPushMutation.isLoading}
-                        isLoading={testPushMutation.isLoading}
+                        isBusy={testPushMutation.isPending}
+                        isLoading={testPushMutation.isPending}
                       />
                     ) : null}
                   </OptionField>

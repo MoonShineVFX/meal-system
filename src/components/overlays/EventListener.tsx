@@ -1,16 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
-import { useStore, NotificationType } from '@/lib/client/store'
-import trpc, {
-  onSocketOpenCallbacks,
-  onSocketCloseCallbacks,
-  onQueryMutationErrorCallbacks,
-} from '@/lib/client/trpc'
-import { SERVER_NOTIFY, getResourceUrl, settings } from '@/lib/common'
+import { NotificationType, useStore } from '@/lib/client/store'
 import ServiceWorkerHandler from '@/lib/client/sw'
+import trpc, { onQueryMutationErrorCallbacks } from '@/lib/client/trpc'
+import { SERVER_NOTIFY, getResourceUrl, settings } from '@/lib/common'
 
 export default function EventListener() {
-  const trpcContext = trpc.useContext()
+  const utils = trpc.useUtils()
   const {
     addNotification,
     posNotificationSound,
@@ -22,7 +18,6 @@ export default function EventListener() {
     serviceWorkerHandler: state.serviceWorkerHandler,
     setServiceWorkerHandler: state.setServiceWorkerHandler,
   }))
-  const [hasDisconnected, setHasDisconnected] = useState(false)
   const userInfoQuery = trpc.user.get.useQuery(undefined)
   const userSub = trpc.user.getToken.useQuery(undefined)
   const addUserSubscriptionMutation = trpc.user.updateToken.useMutation()
@@ -98,45 +93,15 @@ export default function EventListener() {
         message: error.message,
       })
     }
-    const handleSocketOpen = async () => {
-      if (!hasDisconnected) return
-      console.warn('TRPC Socket Reopened')
-      // Revalidate due to tanstack query not support websocket refetchOnReconnect
-      trpcContext.invalidate()
-      addNotification({
-        type: NotificationType.INFO,
-        message: '恢復連線',
-        tag: 'connection',
-      })
-    }
-    const handleSocketClose = async () => {
-      console.warn('TRPC Socket Closed')
-      setHasDisconnected(true)
-      addNotification({
-        type: NotificationType.ERROR,
-        message: '連線中斷',
-        tag: 'connection',
-      })
-    }
-    onSocketCloseCallbacks.push(handleSocketClose)
-    onSocketOpenCallbacks.push(handleSocketOpen)
     onQueryMutationErrorCallbacks.push(handleError)
 
     return () => {
-      onSocketCloseCallbacks.splice(
-        onSocketCloseCallbacks.indexOf(handleSocketClose),
-        1,
-      )
-      onSocketOpenCallbacks.splice(
-        onSocketOpenCallbacks.indexOf(handleSocketOpen),
-        1,
-      )
       onQueryMutationErrorCallbacks.splice(
         onQueryMutationErrorCallbacks.indexOf(handleError),
         1,
       )
     }
-  }, [hasDisconnected, userInfoQuery.isSuccess, addNotification])
+  }, [userInfoQuery.isSuccess, addNotification])
 
   /* Server Notification */
   trpc.user.onNotify.useSubscription(undefined, {
@@ -154,44 +119,44 @@ export default function EventListener() {
         case SERVER_NOTIFY.CART_ADD:
         case SERVER_NOTIFY.CART_DELETE:
         case SERVER_NOTIFY.CART_UPDATE:
-          trpcContext.menu.get.invalidate()
-          trpcContext.cart.get.invalidate()
+          utils.menu.get.invalidate()
+          utils.cart.get.invalidate()
           break
         case SERVER_NOTIFY.ORDER_ADD:
-          trpcContext.menu.get.invalidate()
-          trpcContext.cart.get.invalidate()
-          trpcContext.user.get.invalidate()
-          trpcContext.order.get.invalidate()
-          trpcContext.order.getBadgeCount.invalidate()
-          trpcContext.transaction.getListByUser.invalidate()
+          utils.menu.get.invalidate()
+          utils.cart.get.invalidate()
+          utils.user.get.invalidate()
+          utils.order.get.invalidate()
+          utils.order.getBadgeCount.invalidate()
+          utils.transaction.getListByUser.invalidate()
           break
         case SERVER_NOTIFY.ORDER_UPDATE:
-          trpcContext.order.get.invalidate()
-          trpcContext.order.getBadgeCount.invalidate()
+          utils.order.get.invalidate()
+          utils.order.getBadgeCount.invalidate()
           break
         case SERVER_NOTIFY.ORDER_CANCEL:
-          trpcContext.order.get.invalidate()
-          trpcContext.user.get.invalidate()
-          trpcContext.order.getBadgeCount.invalidate()
-          trpcContext.transaction.getListByUser.invalidate()
+          utils.order.get.invalidate()
+          utils.user.get.invalidate()
+          utils.order.getBadgeCount.invalidate()
+          utils.transaction.getListByUser.invalidate()
           break
         case SERVER_NOTIFY.DEPOSIT_RECHARGE:
-          trpcContext.user.get.invalidate()
+          utils.user.get.invalidate()
         case SERVER_NOTIFY.USER_TOKEN_UPDATE:
-          trpcContext.user.getToken.invalidate()
+          utils.user.getToken.invalidate()
           break
         case SERVER_NOTIFY.BONUS_APPLY:
-          trpcContext.user.get.invalidate()
+          utils.user.get.invalidate()
           break
         case SERVER_NOTIFY.USER_SETTINGS_UPDATE:
-          trpcContext.user.get.invalidate()
+          utils.user.get.invalidate()
           break
 
         // Staff & Admin
         case SERVER_NOTIFY.POS_ADD:
-          trpcContext.pos.getLive.invalidate()
-          trpcContext.pos.getReservation.invalidate()
-          trpcContext.commodity.getList.invalidate()
+          utils.pos.getLive.invalidate()
+          utils.pos.getReservation.invalidate()
+          utils.commodity.getList.invalidate()
           // Check if order is live, 這判斷有點勉強，之後可能需要改
           if (
             notifyPayload.link &&
@@ -205,49 +170,49 @@ export default function EventListener() {
           }
           break
         case SERVER_NOTIFY.POS_UPDATE:
-          trpcContext.pos.getLive.invalidate()
-          trpcContext.pos.getReservation.invalidate()
-          trpcContext.order.getList.invalidate()
+          utils.pos.getLive.invalidate()
+          utils.pos.getReservation.invalidate()
+          utils.order.getList.invalidate()
           break
         case SERVER_NOTIFY.CATEGORY_ADD:
         case SERVER_NOTIFY.CATEGORY_UPDATE:
         case SERVER_NOTIFY.CATEGORY_DELETE:
-          trpcContext.category.get.invalidate()
+          utils.category.get.invalidate()
           break
         case SERVER_NOTIFY.COMMODITY_ADD:
         case SERVER_NOTIFY.COMMODITY_UPDATE:
         case SERVER_NOTIFY.COMMODITY_DELETE:
-          trpcContext.commodity.getList.invalidate()
+          utils.commodity.getList.invalidate()
           break
         case SERVER_NOTIFY.OPTION_SETS_ADD:
         case SERVER_NOTIFY.OPTION_SETS_UPDATE:
         case SERVER_NOTIFY.OPTION_SETS_DELETE:
-          trpcContext.optionSet.get.invalidate()
+          utils.optionSet.get.invalidate()
           break
         case SERVER_NOTIFY.MENU_ADD:
         case SERVER_NOTIFY.MENU_UPDATE:
         case SERVER_NOTIFY.MENU_DELETE:
-          trpcContext.menu.get.invalidate()
-          trpcContext.menu.getActives.invalidate()
-          trpcContext.menu.getReservationsForUser.invalidate()
+          utils.menu.get.invalidate()
+          utils.menu.getActives.invalidate()
+          utils.menu.getReservationsForUser.invalidate()
           break
         case SERVER_NOTIFY.DEPOSIT_UPDATE:
-          trpcContext.deposit.getList.invalidate()
+          utils.deposit.getList.invalidate()
           break
         case SERVER_NOTIFY.SUPPLIER_ADD:
         case SERVER_NOTIFY.SUPPLIER_UPDATE:
         case SERVER_NOTIFY.SUPPLIER_DELETE:
-          trpcContext.supplier.getList.invalidate()
-          trpcContext.commodity.getList.invalidate()
+          utils.supplier.getList.invalidate()
+          utils.commodity.getList.invalidate()
           break
         case SERVER_NOTIFY.USER_AUTHORIY_UPDATE:
-          trpcContext.user.get.invalidate()
-          trpcContext.user.getStatistics.invalidate()
+          utils.user.get.invalidate()
+          utils.user.getStatistics.invalidate()
           break
         case SERVER_NOTIFY.BONUS_ADD:
         case SERVER_NOTIFY.BONUS_UPDATE:
         case SERVER_NOTIFY.BONUS_DELETE:
-          trpcContext.bonus.getList.invalidate()
+          utils.bonus.getList.invalidate()
           break
       }
     },

@@ -26,7 +26,7 @@ export default function Image(
       <NextImage
         {...rest}
         className={className}
-        onLoadingComplete={() => setIsLoaded(true)}
+        onLoad={() => setIsLoaded(true)}
         loader={imageLoader}
         fill={true}
       />

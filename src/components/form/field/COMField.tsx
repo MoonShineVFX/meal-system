@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { FieldValues } from 'react-hook-form'
 import {
-  XMarkIcon,
-  PlusIcon,
-  LinkIcon,
   DocumentDuplicateIcon,
+  LinkIcon,
+  PlusIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FieldValues } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 
-import { InputFieldProps, COMData } from './define'
-import { useFormDialog } from '@/components/form/FormDialog'
-import NumberInput from '../base/NumberInput'
-import trpc from '@/lib/client/trpc'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import Spinner from '@/components/core/Spinner'
 import Table from '@/components/core/Table'
-import { OptionSet } from '@/lib/common'
-import TextInput from '../base/TextInput'
-import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import type { FormInput } from '@/components/form/field'
+import { useFormDialog } from '@/components/form/FormDialog'
 import { useStore } from '@/lib/client/store'
+import trpc from '@/lib/client/trpc'
+import { OptionSet } from '@/lib/common'
+import NumberInput from '../base/NumberInput'
+import TextInput from '../base/TextInput'
+import { COMData, InputFieldProps } from './define'
 
 type ExistCOMData = Extract<COMData, { commodityId: number }>
 type NewCOMData = Extract<COMData, { commodity: { name: string } }>
@@ -39,13 +39,18 @@ export default function COMField<T extends FieldValues>(
       .filter((comData) => !('commodity' in comData))
       .map((comData) => (comData as ExistCOMData).commodityId)
   }, [comDatas])
-  const { data, isError, isLoading } = trpc.commodity.getList.useQuery({
+  const {
+    data: dataQuery,
+    isError,
+    isLoading,
+  } = trpc.commodity.getList.useQuery({
     includeIds:
       props.formInput.defaultValue
         ?.filter((comData) => 'commodityId' in comData)
         .map((comData) => (comData as ExistCOMData).commodityId) ?? undefined,
     onlyFromSupplierId: supplier?.id,
   })
+  const data = dataQuery ?? []
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [newComDataId, setNewComDataId] = useState(Number.MAX_SAFE_INTEGER)
 

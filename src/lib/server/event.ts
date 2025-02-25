@@ -24,4 +24,4 @@ if (process.env.NODE_ENV !== 'production') {
   global.eventEmitter = eventEmitter
 }
 
-eventEmitter.setMaxListeners(100)
+eventEmitter.setMaxListeners(1024)
