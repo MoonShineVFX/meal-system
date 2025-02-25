@@ -170,7 +170,6 @@ export const CommodityRouter = router({
   getList: staffProcedure
     .input(
       z.object({
-        includeMenus: z.boolean().optional(),
         includeIds: z.array(z.number()).optional(),
         onlyFromSupplierId: z.number().optional(),
         includeStatistics: z.boolean().optional(),

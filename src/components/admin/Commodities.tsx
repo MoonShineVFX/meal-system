@@ -31,7 +31,6 @@ export default function Commodities() {
   const { showFormDialog, formDialog } = useFormDialog()
   const [supplierId, setSupplierId] = useState<number | undefined>(undefined)
   const { data, error, isError, isLoading } = trpc.commodity.getList.useQuery({
-    includeMenus: true,
     onlyFromSupplierId: supplierId,
     includeStatistics: true,
   })
