@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
 import { FieldValues } from 'react-hook-form'
-import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline'
 
-import { InputFieldProps } from './define'
-import trpc from '@/lib/client/trpc'
-import Spinner from '@/components/core/Spinner'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import Spinner from '@/components/core/Spinner'
+import trpc from '@/lib/client/trpc'
+import { InputFieldProps } from './define'
 
 export default function CategoriesField<T extends FieldValues>(
   props: InputFieldProps<'categories', T>,
@@ -34,7 +34,7 @@ export default function CategoriesField<T extends FieldValues>(
     // Category list
     <div className='flex w-full flex-wrap gap-2'>
       {categoriesIds.map((id) => {
-        const category = data
+        const category = (data ?? [])
           .find((category) =>
             category.childCategories.some(
               (subCategory) => subCategory.id === id,
@@ -71,7 +71,7 @@ export default function CategoriesField<T extends FieldValues>(
         }
         className='text-stone-400'
       >
-        {data.map((category) =>
+        {(data ?? []).map((category) =>
           category.childCategories.filter(
             (subCategory) => !categoriesIds.includes(subCategory.id),
           ).length === 0 ? null : (

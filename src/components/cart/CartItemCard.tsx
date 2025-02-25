@@ -1,35 +1,30 @@
 import { Listbox, Transition } from '@headlessui/react'
-import { twMerge } from 'tailwind-merge'
-import React, {
-  useState,
-  useEffect,
-  Fragment,
-  memo,
-  useRef,
-  useMemo,
-} from 'react'
-import * as ReactDOM from 'react-dom'
-import { ChevronDownIcon } from '@heroicons/react/24/outline'
-import { motion, useAnimationControls } from 'framer-motion'
-import colors from 'tailwindcss/colors'
-import { TrashIcon } from '@heroicons/react/24/outline'
-import { PencilIcon } from '@heroicons/react/24/outline'
-
-import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
-import Image from '@/components/core/Image'
 import {
-  settings,
-  twData,
-  getOrderOptionsPrice,
+  ChevronDownIcon,
+  PencilIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline'
+import { motion, useAnimationControls } from 'framer-motion'
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
+import * as ReactDOM from 'react-dom'
+import { twMerge } from 'tailwind-merge'
+import colors from 'tailwindcss/colors'
+
+import { ScrollFader } from '@/components/cart/ScrollFader'
+import Button from '@/components/core/Button'
+import Image from '@/components/core/Image'
+import Spinner from '@/components/core/Spinner'
+import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
+import trpc from '@/lib/client/trpc'
+import {
   getOptionName,
   getOptionPrice,
+  getOrderOptionsPrice,
+  settings,
+  twData,
 } from '@/lib/common'
-import trpc from '@/lib/client/trpc'
-import Spinner from '@/components/core/Spinner'
-import { ScrollFader } from '@/components/cart/ScrollFader'
-import SwipeToDelete from './SwipeToDelete'
-import Button from '@/components/core/Button'
 import OptionPrice from '../core/OptionPrice'
+import SwipeToDelete from './SwipeToDelete'
 
 const COLOR_HIGHLIGHT = colors.yellow[500] + (25).toString(16)
 const COLOR_TRANSPARENT = 'rgba(255, 255, 255, 0)'
@@ -55,7 +50,7 @@ function CartItemCard(props: {
   // Variables
   const cartItemId = `cart-item-${cartItem.menuId}-${cartItem.commodityId}-${cartItem.optionsKey}`
   const isChangingQuantity = selectedQauntity !== cartItem.quantity
-  const isLoading = isChangingQuantity || updateCartMutation.isLoading
+  const isLoading = isChangingQuantity || updateCartMutation.isPending
 
   // Change quantity
   useEffect(() => {

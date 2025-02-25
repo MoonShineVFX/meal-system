@@ -2,8 +2,8 @@ import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 
 import Spinner from '@/components/core/Spinner'
+import { NotificationType, useStore } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
-import { useStore, NotificationType } from '@/lib/client/store'
 
 /* Component */
 export default function AuthValidator() {
@@ -21,23 +21,10 @@ export default function AuthValidator() {
   }))
 
   /* Validate user and redirect to logout */
-  const userInfoQuery = trpc.user.get.useQuery(undefined, {
-    onError(e) {
-      if (e.data?.code === 'UNAUTHORIZED') {
-        if (router.pathname !== '/login') {
-          setLoginRedirect(router.asPath)
-          router.push(`/login`)
-        }
-      }
-    },
-    retry: true,
-    retryDelay: 3000,
-  })
+  const userInfoQuery = trpc.user.get.useQuery()
 
   /* Login success notice */
   useEffect(() => {
-    if (!userInfoQuery.isSuccess) return
-
     if (loginSuccessNotify) {
       addNotification({
         type: NotificationType.SUCCESS,
@@ -47,6 +34,16 @@ export default function AuthValidator() {
       setLoginSuccessNotify(false)
     }
   }, [userInfoQuery.isSuccess, loginSuccessNotify])
+
+  /* Redirect to login if not logged in */
+  useEffect(() => {
+    if (userInfoQuery.isError) {
+      if (router.pathname !== '/login') {
+        setLoginRedirect(router.asPath)
+        router.push(`/login`)
+      }
+    }
+  }, [userInfoQuery.isError, router])
 
   if (userInfoQuery.status !== 'success' && router.pathname !== '/login')
     return (

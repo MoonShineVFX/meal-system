@@ -1,13 +1,12 @@
-import { useEffect, useState, useCallback } from 'react'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import { useCallback, useEffect, useState } from 'react'
 
 import { useDialog } from '@/components/core/Dialog'
 import Error from '@/components/core/Error'
-import trpc from '@/lib/client/trpc'
-import { SpinnerBlock } from '@/components/core/Spinner'
-import { CategoryDatas } from '@/lib/client/trpc'
-import { useFormDialog } from '../form/FormDialog'
 import SortableList from '@/components/core/SortableList'
+import { SpinnerBlock } from '@/components/core/Spinner'
+import trpc, { CategoryDatas } from '@/lib/client/trpc'
+import { useFormDialog } from '../form/FormDialog'
 
 type UniformCategories =
   | CategoryDatas
@@ -215,12 +214,12 @@ export default function Categories() {
       {/* Root Categories */}
       <SortableList
         header='主分類'
-        items={categoryQuery.data}
+        items={categoryQuery.data ?? []}
         childrenClassName={(category) =>
           category.id === selectedRootCategory?.id ? 'bg-stone-100' : ''
         }
         onReorder={handleReorder}
-        onReordering={rootOrdersMutation.isLoading}
+        onReordering={rootOrdersMutation.isPending}
         onCreate={() => handleCategoryCreate(true)}
         onCreateLabel='新增主分類'
         onRename={handleCategoryRename}
@@ -250,7 +249,7 @@ export default function Categories() {
           header={`${selectedRootCategory.name} (${selectedRootCategory.childCategories.length})`}
           items={selectedRootCategory.childCategories}
           onReorder={handleReorder}
-          onReordering={subOrdersMutation.isLoading}
+          onReordering={subOrdersMutation.isPending}
           onCreate={() => handleCategoryCreate(false)}
           onCreateLabel='新增子分類'
           onRename={handleCategoryRename}

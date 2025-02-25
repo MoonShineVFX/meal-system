@@ -18,8 +18,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ENV PORT 3000
 
 RUN pnpm run db-generate
-RUN pnpm run build-next
-RUN pnpm run build-server
+RUN pnpm run build
 
 EXPOSE 3000
-CMD ["yarn", "run", "start"]
+CMD ["pnpm", "run", "start"]

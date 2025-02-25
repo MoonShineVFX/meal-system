@@ -1,13 +1,13 @@
 import { Transition } from '@headlessui/react'
-import { Fragment, useCallback, useEffect, useState } from 'react'
-import { useForm, SubmitHandler } from 'react-hook-form'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { Fragment, useCallback, useEffect, useState } from 'react'
+import { SubmitHandler, useForm } from 'react-hook-form'
 
-import { OptionSetForm } from '@/components/menu/COMDialogContent'
-import { OrderOptions, generateOptionsKey } from '@/lib/common'
-import type { CartItems } from '@/lib/client/trpc'
 import Button from '@/components/core/Button'
+import { OptionSetForm } from '@/components/menu/COMDialogContent'
+import type { CartItems } from '@/lib/client/trpc'
 import trpc from '@/lib/client/trpc'
+import { OrderOptions, generateOptionsKey } from '@/lib/common'
 
 type FormInputs = {
   options: OrderOptions
@@ -115,10 +115,10 @@ export default function CartItemOptionsDialog(props: {
               <Button
                 isDisabled={CurrentOptionsKey === props.cartItem?.optionsKey}
                 isBusy={
-                  updateCartMutation.isLoading || updateCartMutation.isSuccess
+                  updateCartMutation.isPending || updateCartMutation.isSuccess
                 }
                 isLoading={
-                  updateCartMutation.isLoading || updateCartMutation.isSuccess
+                  updateCartMutation.isPending || updateCartMutation.isSuccess
                 }
                 className='h-12 grow @2xl/cart:basis-3/5'
                 type='submit'

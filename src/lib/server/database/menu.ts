@@ -1,15 +1,15 @@
-import { MenuType, Prisma, PrismaClient, Menu } from '@prisma/client'
+import { Menu, MenuType, Prisma, PrismaClient } from '@prisma/client'
 import lzString from 'lz-string'
 
-import { validateCartItemCreatable } from './cart'
 import {
-  ConvertPrismaJson,
-  OrderOptions,
-  MenuUnavailableReason,
   ComUnavailableReason,
+  ConvertPrismaJson,
+  MenuUnavailableReason,
+  OrderOptions,
   settings,
 } from '@/lib/common'
-import { prisma, log } from './define'
+import { validateCartItemCreatable } from './cart'
+import { log, prisma } from './define'
 
 /* Create Menu */
 type CommonCreateMenuArgs = {
@@ -105,7 +105,7 @@ export async function upsertMenu({
 }
 
 /* Get active menus */
-const GetActiveMenusDetailArgs = Prisma.validator<Prisma.MenuArgs>()({
+const GetActiveMenusDetailArgs = Prisma.validator<Prisma.MenuDefaultArgs>()({
   include: {
     commodities: {
       where: {
@@ -308,86 +308,85 @@ export async function getMenuWithComs({
       limitPerUser: true,
       publishedDate: true,
       closedDate: true,
-      commodities: userId
-        ? {
-            where: {
-              commodityId: limitCommodityIds
-                ? { in: limitCommodityIds }
-                : undefined,
-              isDeleted: false,
-              commodity: {
-                isDeleted: false,
-              },
-            },
+      commodities: {
+        where: {
+          commodityId: limitCommodityIds
+            ? { in: limitCommodityIds }
+            : undefined,
+          isDeleted: false,
+          commodity: {
+            isDeleted: false,
+          },
+        },
+        select: {
+          limitPerUser: true,
+          stock: true,
+          commodity: {
             select: {
-              limitPerUser: true,
-              stock: true,
-              commodity: {
+              id: true,
+              name: true,
+              description: true,
+              price: true,
+              optionSets: true,
+              image: {
                 select: {
-                  id: true,
+                  path: true,
+                },
+              },
+              categories: {
+                select: {
                   name: true,
-                  description: true,
-                  price: true,
-                  optionSets: true,
-                  image: {
-                    select: {
-                      path: true,
-                    },
-                  },
-                  categories: {
+                  order: true,
+                  rootCategory: {
                     select: {
                       name: true,
                       order: true,
-                      rootCategory: {
-                        select: {
-                          name: true,
-                          order: true,
-                        },
-                      },
                     },
                   },
-                },
-              },
-              cartItems: excludeCartItems
-                ? undefined
-                : {
-                    where: {
-                      userId,
-                      invalid: false,
-                    },
-                    select: {
-                      quantity: true,
-                    },
-                  },
-              orderItems: {
-                where: {
-                  createdAt: isLive // only show today's order for stock validation
-                    ? {
-                        gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                      }
-                    : undefined,
-                  order: {
-                    timeCanceled: null,
-                  },
-                },
-                select: {
-                  order: {
-                    select: {
-                      userId: true,
-                    },
-                  },
-                  quantity: true,
                 },
               },
             },
-          }
-        : undefined,
+          },
+          cartItems: excludeCartItems
+            ? undefined
+            : {
+                where: {
+                  userId,
+                  invalid: false,
+                },
+                select: {
+                  quantity: true,
+                },
+              },
+          orderItems: {
+            where: {
+              createdAt: isLive // only show today's order for stock validation
+                ? {
+                    gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                  }
+                : undefined,
+              order: {
+                timeCanceled: null,
+              },
+            },
+            select: {
+              order: {
+                select: {
+                  userId: true,
+                },
+              },
+              quantity: true,
+            },
+          },
+        },
+      },
     },
   })
 
   if (!rawMenu) {
     throw new Error('menu not found')
   }
+
   const menu = rawMenu as ConvertPrismaJson<typeof rawMenu>
 
   // Validate menu and coms status

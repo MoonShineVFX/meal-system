@@ -1,36 +1,36 @@
-import { memo, useState, useCallback, useEffect } from 'react'
 import {
-  useForm,
+  ExclamationTriangleIcon,
+  Square3Stack3DIcon,
+  UserPlusIcon,
+} from '@heroicons/react/20/solid'
+import { MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { motion } from 'framer-motion'
+import { memo, useCallback, useEffect, useState } from 'react'
+import {
+  Control,
   SubmitHandler,
   UseFormRegister,
-  Control,
   useController,
+  useForm,
 } from 'react-hook-form'
-import { XMarkIcon } from '@heroicons/react/24/outline'
-import { PlusIcon } from '@heroicons/react/24/outline'
-import { MinusIcon } from '@heroicons/react/24/outline'
-import { UserPlusIcon } from '@heroicons/react/20/solid'
-import { Square3Stack3DIcon } from '@heroicons/react/20/solid'
-import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
-import { motion } from 'framer-motion'
 
+import Button from '@/components/core/Button'
+import Image from '@/components/core/Image'
 import Title from '@/components/core/Title'
+import { useStore } from '@/lib/client/store'
+import type { CommodityOnMenu } from '@/lib/client/trpc'
+import trpc from '@/lib/client/trpc'
 import {
-  settings,
   OptionSet,
-  twData,
   OrderOptions,
   getMenuName,
   getOptionName,
   getOptionPrice,
   getOrderOptionsPrice,
+  settings,
+  twData,
   validateAndSortOrderOptions,
 } from '@/lib/common'
-import Image from '@/components/core/Image'
-import Button from '@/components/core/Button'
-import type { CommodityOnMenu } from '@/lib/client/trpc'
-import { useStore } from '@/lib/client/store'
-import trpc from '@/lib/client/trpc'
 import OptionPrice from '../core/OptionPrice'
 
 type FormInputs = {
@@ -264,8 +264,8 @@ function COMDialogContent(props: {
         {/* Submit */}
         <footer className='flex shrink-0 flex-col gap-4 bg-white sm:flex-row-reverse'>
           <Button
-            isBusy={addCartMutation.isLoading || addCartMutation.isSuccess}
-            isLoading={addCartMutation.isLoading || addCartMutation.isSuccess}
+            isBusy={addCartMutation.isPending || addCartMutation.isSuccess}
+            isLoading={addCartMutation.isPending || addCartMutation.isSuccess}
             isDisabled={isUnavailable}
             className='h-12 grow sm:basis-3/5'
             type='submit'

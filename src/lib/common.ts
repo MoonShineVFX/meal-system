@@ -1,27 +1,29 @@
 import {
-  TransactionType,
-  UserRole,
   Menu,
   MenuType,
-  UserAuthority,
+  TransactionType,
   User,
+  UserAuthority,
+  UserRole,
 } from '@prisma/client'
 import { z } from 'zod'
 
 import type { NotificationType } from '@/lib/client/store'
 
 /* Types */
-export type ConvertPrismaJson<T extends object> = {
-  [key in keyof T]: key extends 'optionSets'
-    ? OptionSet[]
-    : key extends 'options'
-    ? OrderOptions
-    : T[key] extends Date
-    ? Date
-    : T[key] extends object
-    ? ConvertPrismaJson<T[key]>
-    : T[key]
-}
+export type ConvertPrismaJson<T> = T extends Date
+  ? Date
+  : T extends object
+  ? {
+      [key in keyof T]: key extends 'optionSets'
+        ? OptionSet[]
+        : key extends 'options'
+        ? OrderOptions
+        : T[key] extends object
+        ? ConvertPrismaJson<T[key]>
+        : T[key]
+    }
+  : T
 
 export type ServerNotifyPayload = {
   type: SERVER_NOTIFY

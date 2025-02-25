@@ -1,28 +1,28 @@
-import { useCallback, useState, useEffect } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
 import QRCode from 'qrcode'
+import { useCallback, useEffect, useState } from 'react'
 
-import TabHeader from '@/components/core/TabHeader'
 import Button from '@/components/core/Button'
-import Image from '@/components/core/Image'
-import Table from '@/components/core/Table'
-import trpc, { CommodityDatas } from '@/lib/client/trpc'
-import { SpinnerBlock } from '@/components/core/Spinner'
-import Error from '@/components/core/Error'
-import {
-  settings,
-  getMenuName,
-  OrderOptions,
-  getOptionName,
-} from '@/lib/common'
-import { useFormDialog } from '@/components/form/FormDialog'
-import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
-import SearchBar from '@/components/core/SearchBar'
-import type { FormInput } from '@/components/form/field'
 import { useDialog } from '@/components/core/Dialog'
-import { OptionSetForm } from '@/components/menu/COMDialogContent'
-import { useForm } from 'react-hook-form'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import Error from '@/components/core/Error'
+import Image from '@/components/core/Image'
+import SearchBar from '@/components/core/SearchBar'
+import { SpinnerBlock } from '@/components/core/Spinner'
+import TabHeader from '@/components/core/TabHeader'
+import Table from '@/components/core/Table'
 import Select from '@/components/form/base/Select'
+import type { FormInput } from '@/components/form/field'
+import { useFormDialog } from '@/components/form/FormDialog'
+import { OptionSetForm } from '@/components/menu/COMDialogContent'
+import trpc, { CommodityDatas } from '@/lib/client/trpc'
+import {
+  getMenuName,
+  getOptionName,
+  OrderOptions,
+  settings,
+} from '@/lib/common'
+import { useForm } from 'react-hook-form'
 
 const BatchEditProps = ['價錢', '分類', '選項', '菜單'] as const
 const TabNames = ['全部', '即時', '自助', '預訂'] as const
@@ -31,7 +31,6 @@ export default function Commodities() {
   const { showFormDialog, formDialog } = useFormDialog()
   const [supplierId, setSupplierId] = useState<number | undefined>(undefined)
   const { data, error, isError, isLoading } = trpc.commodity.getList.useQuery({
-    includeMenus: true,
     onlyFromSupplierId: supplierId,
     includeStatistics: true,
   })
@@ -414,6 +413,8 @@ export default function Commodities() {
     )
   if (supplierQuery.isLoading) return <SpinnerBlock />
 
+  const suppliers = supplierQuery.data ?? []
+
   return (
     <div className='relative h-full min-h-full w-full'>
       <div className='absolute inset-0 flex flex-col gap-4 p-8'>
@@ -439,7 +440,7 @@ export default function Commodities() {
             value={supplierId ? supplierId.toString() : ''}
             data={[
               { label: '無指定店家', value: '' },
-              ...supplierQuery.data.map((s) => ({
+              ...suppliers.map((s) => ({
                 label: s.name,
                 value: s.id.toString(),
               })),
@@ -487,7 +488,7 @@ export default function Commodities() {
           <SpinnerBlock />
         ) : (
           <Table
-            data={data}
+            data={data ?? []}
             onDataFilter={
               searchKeyword === '' && tabName === '全部'
                 ? undefined

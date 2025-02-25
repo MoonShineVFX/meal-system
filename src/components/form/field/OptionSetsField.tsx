@@ -1,16 +1,19 @@
 import {
   Bars3Icon,
-  TrashIcon,
   PlusIcon,
+  TrashIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
-import { twMerge } from 'tailwind-merge'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { Reorder, useDragControls } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FieldValues } from 'react-hook-form'
-import { useDragControls, Reorder } from 'framer-motion'
+import { twMerge } from 'tailwind-merge'
 
+import { useDialog } from '@/components/core/Dialog'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import Spinner from '@/components/core/Spinner'
+import { NotificationType, useStore } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
-import { useStore, NotificationType } from '@/lib/client/store'
 import {
   OptionSet,
   OptionValue,
@@ -18,18 +21,15 @@ import {
   getOptionPrice,
   mergeOptionSets,
 } from '@/lib/common'
-import Spinner from '@/components/core/Spinner'
-import { InputFieldProps } from './define'
-import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
-import TextInput from '../base/TextInput'
 import CheckBox from '../base/CheckBox'
 import NumberInput from '../base/NumberInput'
-import { useDialog } from '@/components/core/Dialog'
+import TextInput from '../base/TextInput'
+import { InputFieldProps } from './define'
 
 export default function OptionSetsField<T extends FieldValues>(
   props: InputFieldProps<'optionSets', T>,
 ) {
-  const { data, isError, isLoading } = trpc.optionSet.get.useQuery()
+  const { data = [], isError, isLoading } = trpc.optionSet.get.useQuery()
   const [currentOptionSets, setCurrentOptionSets] = useState<OptionSet[]>(
     props.formInput.defaultValue || [],
   )

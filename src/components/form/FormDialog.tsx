@@ -1,14 +1,14 @@
-import { twMerge } from 'tailwind-merge'
-import { Fragment, useEffect, useState, useCallback } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { useForm, SubmitHandler, Path, DeepPartial } from 'react-hook-form'
+import { Fragment, useCallback, useEffect, useState } from 'react'
+import { DeepPartial, Path, SubmitHandler, useForm } from 'react-hook-form'
+import { twMerge } from 'tailwind-merge'
 
+import Button from '@/components/core/Button'
 import { useDialog } from '@/components/core/Dialog'
 import { UseMutationResult } from '@/lib/client/trpc'
-import Button from '@/components/core/Button'
 import { OptionSet } from '@/lib/common'
 
-import type { FormInput, FormInputsProps, FormData } from './field'
+import type { FormData, FormInput, FormInputsProps } from './field'
 import { FormField } from './field'
 
 type ExpandRecursively<T> = T extends object
@@ -207,7 +207,7 @@ export default function FormDialog<
                 {/* Buttons */}
                 <section className='flex justify-end gap-6'>
                   {(mutation === undefined ||
-                    (!mutation.isLoading && !mutation.isSuccess)) && (
+                    (!mutation.isPending && !mutation.isSuccess)) && (
                     <Button
                       label='取消'
                       textClassName='text-lg font-bold p-2 px-4'
@@ -218,8 +218,8 @@ export default function FormDialog<
                   )}
                   <Button
                     isDisabled={errors && Object.keys(errors).length > 0}
-                    isLoading={mutation?.isLoading || mutation?.isSuccess}
-                    isBusy={mutation?.isLoading || mutation?.isSuccess}
+                    isLoading={mutation?.isPending || mutation?.isSuccess}
+                    isBusy={mutation?.isPending || mutation?.isSuccess}
                     label='確定'
                     textClassName='text-lg font-bold p-2 px-4'
                     theme='main'

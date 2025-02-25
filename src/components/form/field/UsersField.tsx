@@ -6,10 +6,10 @@ import { useDialog } from '@/components/core/Dialog'
 import SearchBar from '@/components/core/SearchBar'
 import Spinner from '@/components/core/Spinner'
 import trpc from '@/lib/client/trpc'
-import CheckBox from '../base/CheckBox'
-import { InputFieldProps } from './define'
 import { settings } from '@/lib/common'
 import { twMerge } from 'tailwind-merge'
+import CheckBox from '../base/CheckBox'
+import { InputFieldProps } from './define'
 
 export default function UsersField<T extends FieldValues>(
   props: InputFieldProps<'users', T>,
@@ -65,7 +65,7 @@ export function UsersFieldBase<T extends FieldValues>(
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [onlyShowSelected, setOnlyShowSelected] = useState<boolean>(false)
 
-  const { data, isError, isLoading } = trpc.user.getList.useQuery()
+  const { data = [], isError, isLoading } = trpc.user.getList.useQuery()
 
   // set rfh value
   useEffect(() => {

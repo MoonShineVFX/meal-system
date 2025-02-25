@@ -1,11 +1,7 @@
 import { UserRole } from '@prisma/client'
 import { inferAsyncReturnType, initTRPC, TRPCError } from '@trpc/server'
 import * as trpcNext from '@trpc/server/adapters/next'
-import { NodeHTTPCreateContextFnOptions } from '@trpc/server/adapters/node-http'
-import { IncomingMessage } from 'http'
-import { NextApiRequest, NextApiResponse } from 'next'
 import superjson from 'superjson'
-import ws from 'ws'
 
 import { settings, validateRole } from '@/lib/common'
 import { getUserLite } from '@/lib/server/database'
@@ -14,37 +10,11 @@ import { rateLimiter } from '@/lib/server/rate-limiter'
 type UserLite = Awaited<ReturnType<typeof getUserLite>>
 
 /* Context */
-function parseCookies(request: IncomingMessage) {
-  const cookies: { [key: string]: string } = {}
-  const cookieHeader = request.headers?.cookie
-  if (!cookieHeader) return cookies
-
-  cookieHeader.split(`;`).forEach(function (cookie) {
-    let [name, ...rest] = cookie.split(`=`)
-    name = name?.trim()
-    if (!name) return
-    const value = rest.join(`=`).trim()
-    if (!value) return
-    cookies[name] = decodeURIComponent(value)
-  })
-
-  return cookies
-}
-
-export async function createContext(
-  opts:
-    | trpcNext.CreateNextContextOptions
-    | NodeHTTPCreateContextFnOptions<IncomingMessage, ws>,
-) {
+export async function createContext(opts: trpcNext.CreateNextContextOptions) {
   let userLite = null
-  const isSocket = opts.res instanceof ws
   let cookies: Partial<{ [key: string]: string }> = {}
 
-  if (isSocket) {
-    cookies = parseCookies(opts.req)
-  } else {
-    cookies = (opts.req as NextApiRequest).cookies
-  }
+  cookies = opts.req.cookies
 
   if (settings.COOKIE_TOKEN_NAME in cookies) {
     userLite = await getUserLite({
@@ -54,8 +24,7 @@ export async function createContext(
 
   return {
     req: opts.req,
-    res: isSocket ? undefined : (opts.res as NextApiResponse),
-    ws: isSocket ? (opts.res as ws) : undefined,
+    res: opts.res,
     userLite: userLite,
     host: opts.req.headers.origin!,
   }

@@ -1,45 +1,44 @@
-import Link from 'next/link'
-import { memo, useEffect, useState, MouseEventHandler } from 'react'
-import { useRouter } from 'next/router'
-import { motion, useAnimationControls } from 'framer-motion'
 import { Popover, Transition } from '@headlessui/react'
 import {
-  HomeIcon,
+  ArrowRightOnRectangleIcon,
   CalendarDaysIcon,
+  ChatBubbleBottomCenterIcon,
+  CircleStackIcon,
+  Cog6ToothIcon,
+  CurrencyDollarIcon,
   DocumentTextIcon,
-  WalletIcon,
+  EnvelopeIcon,
+  ExclamationCircleIcon,
+  HomeIcon,
+  PhoneIcon,
   ShoppingCartIcon,
   SquaresPlusIcon,
-  ExclamationCircleIcon,
-  CircleStackIcon,
-  CurrencyDollarIcon,
-  ArrowRightOnRectangleIcon,
-  Cog6ToothIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  ChatBubbleBottomCenterIcon,
+  WalletIcon,
   WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline'
 import {
-  HomeIcon as HomeIconSolid,
   CalendarDaysIcon as CalendarDaysIconSolid,
+  Cog6ToothIcon as Cog6ToothIconSolid,
   DocumentTextIcon as DocumentTextIconSolid,
-  WalletIcon as WalletIconSolid,
+  HomeIcon as HomeIconSolid,
   ShoppingCartIcon as ShoppingCartIconSolid,
   SquaresPlusIcon as SquaresPlusIconSolid,
-  Cog6ToothIcon as Cog6ToothIconSolid,
+  WalletIcon as WalletIconSolid,
   WrenchScrewdriverIcon as WrenchScrewdriverIconSolid,
 } from '@heroicons/react/24/solid'
+import { motion, useAnimationControls } from 'framer-motion'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { memo, MouseEventHandler, useEffect, useState } from 'react'
 
-import PriceNumber from '@/components/core/PriceNumber'
 import Error from '@/components/core/Error'
 import Image from '@/components/core/Image'
-import { generateCookie } from '@/lib/common'
-import { settings, twData } from '@/lib/common'
 import Logo from '@/components/core/Logo'
-import { twMerge } from 'tailwind-merge'
-import trpc from '@/lib/client/trpc'
+import PriceNumber from '@/components/core/PriceNumber'
 import Spinner from '@/components/core/Spinner'
+import trpc from '@/lib/client/trpc'
+import { generateCookie, settings, twData } from '@/lib/common'
+import { twMerge } from 'tailwind-merge'
 import { DropdownMenu, DropdownMenuItem } from '../core/DropdownMenu'
 
 function Navigation() {
@@ -198,7 +197,9 @@ function ProfileButton(props: { className?: string }) {
     )
 
   const isLiveMenuClosed =
-    menuQuery.data.closedDate !== null && menuQuery.data.closedDate < new Date()
+    menuQuery.data &&
+    menuQuery.data.closedDate !== null &&
+    menuQuery.data.closedDate < new Date()
 
   return (
     <Popover className={`${props.className} relative z-40 sm:w-full`} as='ul'>
@@ -209,7 +210,7 @@ function ProfileButton(props: { className?: string }) {
             <Image
               alt='profile'
               src={
-                user.profileImage
+                user?.profileImage
                   ? user.profileImage.path
                   : settings.RESOURCE_PROFILE_PLACEHOLDER
               }

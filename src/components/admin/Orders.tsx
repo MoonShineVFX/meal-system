@@ -182,8 +182,8 @@ function CancelButton(props: { orderId: number }) {
         className='disabled:opacity-50 hover:bg-stone-200'
         label={'取消訂單'}
         theme='secondary'
-        isLoading={updateOrderMutation.isLoading}
-        isDisabled={updateOrderMutation.isLoading}
+        isLoading={updateOrderMutation.isPending}
+        isDisabled={updateOrderMutation.isPending}
         onClick={() =>
           updateOrderMutation.mutate({
             orderId: props.orderId,

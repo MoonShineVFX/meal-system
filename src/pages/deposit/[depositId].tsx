@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
-import { DepositStatus } from '@prisma/client'
 import {
   CheckCircleIcon,
-  InformationCircleIcon,
   ExclamationCircleIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline'
+import { DepositStatus } from '@prisma/client'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 
-import trpc, { DepositData } from '@/lib/client/trpc'
+import Button from '@/components/core/Button'
 import Error from '@/components/core/Error'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Title from '@/components/core/Title'
-import Button from '@/components/core/Button'
 import { useStore } from '@/lib/client/store'
+import trpc, { DepositData } from '@/lib/client/trpc'
 
 export default function PageDepositDetail() {
   const router = useRouter()
@@ -50,8 +50,8 @@ export default function PageDepositDetail() {
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />
 
-  const isSuccess = data.status === DepositStatus.SUCCESS
-  const isPending = data.status === DepositStatus.PENDING
+  const isSuccess = data?.status === DepositStatus.SUCCESS
+  const isPending = data?.status === DepositStatus.PENDING
 
   return (
     <div className='flex h-full w-full flex-col items-center justify-center'>
@@ -59,7 +59,7 @@ export default function PageDepositDetail() {
       <div className='flex flex-col items-center justify-center rounded-2xl border p-4 shadow-lg sm:p-8'>
         <p className='mb-1 font-mono font-bold text-stone-400'>{depositId}</p>
         <p className='mb-4 text-xs text-stone-400'>
-          {data.createdAt.toLocaleString()}
+          {data?.createdAt.toLocaleString()}
         </p>
         {/* deposit status with icon on full page */}
         {isSuccess ? (
@@ -92,7 +92,7 @@ export default function PageDepositDetail() {
             '付款手續出現錯誤，如有問題請聯繫公司財務。'
           )}
         </p>
-        <p className='text-stone-400'>儲值 {data.amount} 元</p>
+        <p className='text-stone-400'>儲值 {data?.amount} 元</p>
       </div>
       {typeof redirectUrl === 'string' && (
         <Button

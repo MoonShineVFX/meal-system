@@ -1,19 +1,22 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
-import { AnimatePresence, motion } from 'framer-motion'
 import { MenuType } from '@prisma/client'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import Checkout from './Checkout'
-import trpc from '@/lib/client/trpc'
-import type { CartItemsByMenu, CartItemsAndMenus } from '@/lib/client/trpc'
-import { getMenuName, twData, getOrderOptionsPrice } from '@/lib/common'
 import Button from '@/components/core/Button'
-import CartItemCard from './CartItemCard'
 import Dialog from '@/components/core/Dialog'
-import CartItemOptionsDialog from './CartItemOptionsDialog'
-import type { CartItems } from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
+import type {
+  CartItems,
+  CartItemsAndMenus,
+  CartItemsByMenu,
+} from '@/lib/client/trpc'
+import trpc from '@/lib/client/trpc'
+import { getMenuName, getOrderOptionsPrice, twData } from '@/lib/common'
+import CartItemCard from './CartItemCard'
+import CartItemOptionsDialog from './CartItemOptionsDialog'
+import Checkout from './Checkout'
 
 type CartDeleteType = 'ALL' | 'INVALID'
 
@@ -120,7 +123,7 @@ export default function Cart() {
 
   // Detect type of delete
   let deleteCartType: CartDeleteType | undefined = undefined
-  if (deleteCartMutation.isLoading) {
+  if (deleteCartMutation.isPending) {
     if (
       deleteCartMutation.variables &&
       deleteCartMutation.variables.invalidOnly
@@ -149,8 +152,8 @@ export default function Cart() {
           <div className='col-start-1 row-start-1 flex justify-end'>
             {cartData && cartData.cartItems.length > 0 && (
               <Button
-                isBusy={deleteCartMutation.isLoading}
-                isLoading={deleteCartMutation.isLoading}
+                isBusy={deleteCartMutation.isPending}
+                isLoading={deleteCartMutation.isPending}
                 label='清空購物車'
                 theme='support'
                 className='h-7 w-[11ch] self-end border border-stone-100'
@@ -201,7 +204,7 @@ export default function Cart() {
                   <Button
                     isLoading={deleteCartType === 'INVALID'}
                     isBusy={
-                      deleteCartMutation.isLoading ||
+                      deleteCartMutation.isPending ||
                       deleteCartMutation.isSuccess
                     }
                     isSuccess={deleteCartMutation.isSuccess}

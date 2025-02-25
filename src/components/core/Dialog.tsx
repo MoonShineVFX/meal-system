@@ -1,15 +1,15 @@
-import { Fragment, useState, useCallback, useEffect } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import {
+  CheckCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-  CheckCircleIcon,
 } from '@heroicons/react/24/outline'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 
 import Button from '@/components/core/Button'
-import type { UseMutationResult } from '@/lib/client/trpc'
 import { useStore } from '@/lib/client/store'
+import type { UseMutationResult } from '@/lib/client/trpc'
 
 type DialogProps<T extends UseMutationResult> = {
   open: boolean
@@ -70,7 +70,7 @@ export default function DialogCore<T extends UseMutationResult>(
   }, [props.open])
 
   const isLoading =
-    mutation?.isLoading ||
+    mutation?.isPending ||
     mutation?.isSuccess ||
     buttonState === 'loading' ||
     buttonState === 'success'

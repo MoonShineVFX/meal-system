@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { FieldValues } from 'react-hook-form'
 
-import { InputFieldProps, MenuIntroData } from './define'
-import TextInput from '../base/TextInput'
-import TextArea from '../base/TextArea'
-import CheckBox from '../base/CheckBox'
+import { SpinnerBlock } from '@/components/core/Spinner'
 import { useStore } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
+import CheckBox from '../base/CheckBox'
 import Select from '../base/Select'
-import { SpinnerBlock } from '@/components/core/Spinner'
+import TextArea from '../base/TextArea'
+import TextInput from '../base/TextInput'
+import { InputFieldProps, MenuIntroData } from './define'
 
 export default function MenuIntroField<T extends FieldValues>(
   props: InputFieldProps<'menuIntro', T>,
@@ -112,13 +112,13 @@ export default function MenuIntroField<T extends FieldValues>(
             label: introData.supplierId ? '無店家' : '讀取店家',
             value: '-1',
           },
-          ...supplierQuery.data.map((supplier) => ({
+          ...(supplierQuery.data ?? []).map((supplier) => ({
             label: supplier.name,
             value: supplier.id.toString(),
           })),
         ]}
         onChange={(e) => {
-          const supplier = supplierQuery.data.find(
+          const supplier = (supplierQuery.data ?? []).find(
             (s) => s.id === parseInt(e.target.value),
           )
           setIntroData((prev) => ({

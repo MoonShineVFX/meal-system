@@ -1,14 +1,14 @@
-import { FieldValues } from 'react-hook-form'
-import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Menu } from '@prisma/client'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { FieldValues } from 'react-hook-form'
 
-import { InputFieldProps, MenuCOMData } from './define'
-import trpc from '@/lib/client/trpc'
-import Spinner from '@/components/core/Spinner'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import Spinner from '@/components/core/Spinner'
+import trpc from '@/lib/client/trpc'
 import { getMenuName } from '@/lib/common'
 import NumberInput from '../base/NumberInput'
+import { InputFieldProps, MenuCOMData } from './define'
 
 export default function MenuCOMField<T extends FieldValues>(
   props: InputFieldProps<'menucom', T>,
@@ -16,7 +16,11 @@ export default function MenuCOMField<T extends FieldValues>(
   const [comDatas, setComDatas] = useState<MenuCOMData[]>(
     props.formInput.defaultValue ?? [],
   )
-  const { data, isError, isLoading } = trpc.menu.getActives.useQuery({
+  const {
+    data = [],
+    isError,
+    isLoading,
+  } = trpc.menu.getActives.useQuery({
     includeIds:
       props.formInput.defaultValue?.map((comData) => comData.menuId) ??
       undefined,

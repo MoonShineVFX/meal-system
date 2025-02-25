@@ -1,7 +1,7 @@
-import { PrismaClient, Prisma } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
+import { ConvertPrismaJson, OptionSet } from '@/lib/common'
 import { prisma } from './define'
-import { OptionSet, ConvertPrismaJson } from '@/lib/common'
 
 /* Create Commodity */
 type CreateCommodityArgs = {
@@ -104,7 +104,7 @@ export async function editCommodity({
 }
 
 /* Get Commodities */
-const getCommoditiesArgs = Prisma.validator<Prisma.CommodityArgs>()({
+const getCommoditiesArgs = Prisma.validator<Prisma.CommodityDefaultArgs>()({
   include: {
     categories: true,
     image: true,
@@ -144,11 +144,7 @@ type GetCommoditiesFull = Prisma.CommodityGetPayload<
   }
 }
 
-export async function getCommodities<
-  FMenu extends boolean,
-  FStatistics extends boolean,
->(props: {
-  includeMenus?: FMenu
+export async function getCommodities<FStatistics extends boolean>(props: {
   includeIds?: number[]
   onlyFromSupplierId?: number
   includeStatistics?: FStatistics
@@ -179,25 +175,23 @@ export async function getCommodities<
           name: true,
         },
       },
-      onMenus: props.includeMenus
-        ? {
+      onMenus: {
+        select: {
+          limitPerUser: true,
+          stock: true,
+          menu: {
             select: {
-              limitPerUser: true,
-              stock: true,
-              menu: {
-                select: {
-                  id: true,
-                  name: true,
-                  type: true,
-                  date: true,
-                },
-              },
+              id: true,
+              name: true,
+              type: true,
+              date: true,
             },
-            where: {
-              isDeleted: false,
-            },
-          }
-        : undefined,
+          },
+        },
+        where: {
+          isDeleted: false,
+        },
+      },
     },
     orderBy: {
       id: 'asc',
