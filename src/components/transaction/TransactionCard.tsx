@@ -30,9 +30,12 @@ export default function TransactionCard(props: {
   return (
     <div
       className={twMerge(
-        'mx-4 border-b py-1 group-data-loading:pointer-events-none lg:mx-8',
+        'group mx-4 border-b py-1 group-data-loading:pointer-events-none lg:mx-8',
         props.isLast && 'border-none',
       )}
+      {...twData({
+        loading: !transaction,
+      })}
     >
       <Link
         href={{ query: { t: transaction?.id } }}
@@ -95,7 +98,7 @@ export default function TransactionCard(props: {
               <p className='rounded-xl font-bold text-stone-500 group-data-loading:skeleton'>
                 {transaction?.type === 'PAYMENT' && transaction?.pointAmount > 0
                   ? '-' + transaction?.pointAmount
-                  : transaction?.pointAmount ?? 50}
+                  : transaction?.pointAmount ?? 0}
               </p>
             </div>
             <div className='flex items-center gap-1'>
@@ -104,7 +107,7 @@ export default function TransactionCard(props: {
                 {transaction?.type === 'PAYMENT' &&
                 transaction?.creditAmount > 0
                   ? '-' + transaction?.creditAmount
-                  : transaction?.creditAmount ?? 50}
+                  : transaction?.creditAmount ?? 0}
               </p>
             </div>
           </div>
