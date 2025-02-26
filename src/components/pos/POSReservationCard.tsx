@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react'
 import Dialog from '@/components/core/Dialog'
 import Image from '@/components/core/Image'
 import trpc, { POSReservationDatas } from '@/lib/client/trpc'
-import { OrderStatus, getOptionName, settings } from '@/lib/common'
+import { OrderTimeStatus, getOptionName, settings } from '@/lib/common'
 import POSCard from './POSCard'
 
 export default function POSReservationCard(props: {
@@ -64,7 +64,7 @@ export default function POSReservationCard(props: {
   }, [com, props.isFuture, com?.orderTimes.timePreparing.value])
 
   const handleStatusModify = useCallback(
-    (status: OrderStatus) => {
+    (status: OrderTimeStatus) => {
       if (com === undefined) return
       updateOrdersMutation.mutate({
         orderIds: com.orderIds,

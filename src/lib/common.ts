@@ -1,6 +1,7 @@
 import {
   Menu,
   MenuType,
+  OrderStatus,
   TransactionType,
   User,
   UserAuthority,
@@ -95,13 +96,21 @@ export type OptionSet = {
 }
 
 export type OrderOptions = Record<string, OptionValue | OptionValue[]>
-export const ORDER_STATUS = [
+export const ORDER_TIME_STATUS = [
   'timeCanceled',
   'timeCompleted',
   'timeDishedUp',
   'timePreparing',
 ] as const
-export type OrderStatus = typeof ORDER_STATUS[number]
+export type OrderTimeStatus = typeof ORDER_TIME_STATUS[number]
+export const ORDER_STATUS_MAP = {
+  timePreparing: 'PREPARING',
+  timeDishedUp: 'DISHED_UP',
+  timeCompleted: 'COMPLETED',
+  timeCanceled: 'CANCELED',
+} as const satisfies {
+  [key in OrderTimeStatus]: OrderStatus
+}
 
 export enum MenuUnavailableReason {
   NOT_PUBLISHED = '尚未到達開放訂購時間',

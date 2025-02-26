@@ -1,20 +1,21 @@
-import { Prisma, Order, MenuType, Menu } from '@prisma/client'
+import { Menu, MenuType, Order, Prisma } from '@prisma/client'
 import { logError } from './define'
 
 import {
   ConvertPrismaJson,
-  settings,
   MenuTypeName,
-  generateOptionsKey,
+  ORDER_STATUS_MAP,
+  ORDER_TIME_STATUS,
   OrderOptions,
-  OrderStatus,
-  ORDER_STATUS,
+  OrderTimeStatus,
+  generateOptionsKey,
   getOrderOptionsPrice,
+  settings,
 } from '@/lib/common'
 import { getCartItemsBase } from './cart'
+import { prisma } from './define'
 import { getRetailCOM } from './menu'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
-import { prisma } from './define'
 
 /* Validate and create orders by menu with transaction */
 export async function createOrderFromCart({
@@ -281,8 +282,9 @@ export async function getOrdersCount({ userId }: { userId: string }) {
   return await prisma.order.count({
     where: {
       userId: userId,
-      timeCanceled: null,
-      timeCompleted: null,
+      status: {
+        notIn: ['CANCELED', 'COMPLETED'],
+      },
       OR: [
         {
           menu: {
@@ -313,8 +315,9 @@ export async function getManyOrdersCount({ userIds }: { userIds: string[] }) {
       userId: {
         in: userIds,
       },
-      timeCanceled: null,
-      timeCompleted: null,
+      status: {
+        notIn: ['CANCELED', 'COMPLETED'],
+      },
       OR: [
         {
           menu: {
@@ -340,7 +343,7 @@ export async function getManyOrdersCount({ userIds }: { userIds: string[] }) {
 function isOrderCancelableByUser({
   order,
 }: {
-  order: Pick<Order, OrderStatus> & {
+  order: Pick<Order, OrderTimeStatus> & {
     menu: Pick<Menu, 'closedDate' | 'type' | 'date'>
   }
 }) {
@@ -387,8 +390,9 @@ export async function getOrders({
     case 'live':
       whereInput = {
         userId: userId,
-        timeCanceled: null,
-        timeCompleted: null,
+        status: {
+          notIn: ['CANCELED', 'COMPLETED'],
+        },
         menu: {
           type: 'LIVE',
         },
@@ -397,8 +401,9 @@ export async function getOrders({
     case 'reservation':
       whereInput = {
         userId: userId,
-        timeCanceled: null,
-        timeCompleted: null,
+        status: {
+          notIn: ['CANCELED', 'COMPLETED'],
+        },
         menu: {
           type: { not: 'LIVE' },
         },
@@ -422,7 +427,9 @@ export async function getOrders({
     case 'archived':
       whereInput = {
         userId: userId,
-        OR: [{ timeCanceled: { not: null } }, { timeCompleted: { not: null } }],
+        status: {
+          in: ['CANCELED', 'COMPLETED'],
+        },
       }
       break
     case 'search':
@@ -623,8 +630,9 @@ export async function getLiveOrdersForPOS({
         menu: {
           type: 'LIVE',
         },
-        timeCanceled: null,
-        timeCompleted: null,
+        status: {
+          notIn: ['CANCELED', 'COMPLETED'],
+        },
       }
       break
     case 'archived':
@@ -707,9 +715,10 @@ export async function getReservationOrdersForPOS({
       ...whereInput,
       orders: {
         some: {
-          timeCanceled: null,
-          // Past: filter out completed orders
-          ...(type === 'past' && { timeCompleted: null }),
+          status: {
+            // Past: filter out completed orders
+            notIn: type === 'past' ? ['CANCELED', 'COMPLETED'] : ['CANCELED'],
+          },
         },
       },
     },
@@ -787,7 +796,7 @@ export async function getReservationOrdersForPOS({
         }
       } = {}
       const orderTimes: Record<
-        OrderStatus,
+        OrderTimeStatus,
         { value: Date | null; isNeedSync: boolean }
       > = {
         timeDishedUp: {
@@ -839,7 +848,7 @@ export async function getReservationOrdersForPOS({
           })
         }
         // Sync status
-        ORDER_STATUS.forEach((statusName) => {
+        ORDER_TIME_STATUS.forEach((statusName) => {
           const status = item.order[statusName]
           const referenceStatus = orderTimes[statusName]
           // Check if need sync
@@ -861,7 +870,7 @@ export async function getReservationOrdersForPOS({
       })
 
       // Push sync query when needed
-      ORDER_STATUS.forEach((statusName) => {
+      ORDER_TIME_STATUS.forEach((statusName) => {
         const referenceStatus = orderTimes[statusName]
         if (referenceStatus.isNeedSync) {
           ordersSyncQueries.push({
@@ -874,6 +883,7 @@ export async function getReservationOrdersForPOS({
             },
             data: {
               [statusName]: referenceStatus.value,
+              status: ORDER_STATUS_MAP[statusName],
             },
           })
         }
@@ -924,7 +934,7 @@ export async function updateOrderStatus({
   userId,
 }: {
   orderId: number
-  status: Extract<keyof Order, OrderStatus>
+  status: Extract<keyof Order, OrderTimeStatus>
   userId?: string
 }) {
   const { order, callback } = await prisma.$transaction(async (client) => {
@@ -977,6 +987,7 @@ export async function updateOrderStatus({
       },
       data: {
         [status]: new Date(),
+        status: ORDER_STATUS_MAP[status],
       },
       include: {
         items: {
@@ -1068,7 +1079,7 @@ export async function updateOrdersStatus({
   status,
 }: {
   orderIds: number[]
-  status: OrderStatus
+  status: OrderTimeStatus
 }) {
   let orders: Order[] = []
   for (const orderId of orderIds) {
@@ -1087,11 +1098,12 @@ export async function completeDishedUpOrders() {
   return await prisma.$transaction(async (client) => {
     const thisOrders = await client.order.findMany({
       where: {
-        timeCompleted: null,
-        timeCanceled: null,
+        status: {
+          notIn: ['CANCELED', 'COMPLETED'],
+        },
         timeDishedUp: {
-          // 2 hours ago
-          lt: new Date(new Date().getTime() - 1000 * 60 * 60 * 2),
+          // 1 hours ago
+          lt: new Date(new Date().getTime() - 1000 * 60 * 60 * 1),
         },
       },
     })
@@ -1105,6 +1117,7 @@ export async function completeDishedUpOrders() {
       },
       data: {
         timeCompleted: new Date(),
+        status: 'COMPLETED',
       },
     })
 

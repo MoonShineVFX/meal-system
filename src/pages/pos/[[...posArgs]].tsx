@@ -1,12 +1,10 @@
 import { GetServerSideProps } from 'next'
 import z from 'zod'
 
-import Button from '@/components/core/Button'
 import Tab from '@/components/core/Tab'
 import Title from '@/components/core/Title'
 import POSLiveList from '@/components/pos/POSLiveList'
 import POSReservationList from '@/components/pos/POSReservationList'
-import trpc from '@/lib/client/trpc'
 
 const posArgsSchema = z.array(z.string()).length(1).optional()
 
@@ -63,7 +61,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 export default function POSPage(props: { tabName: TabName }) {
   const currentTabName = props.tabName
-  const completeDishedUpsMutation = trpc.pos.completeDishedUps.useMutation()
+  // const completeDishedUpsMutation = trpc.pos.completeDishedUps.useMutation()
 
   return (
     <>
@@ -85,10 +83,10 @@ export default function POSPage(props: { tabName: TabName }) {
           ) : (
             <POSReservationList tabName={currentTabName} />
           )}
-          {currentTabName === '已出餐' && (
+          {/* {currentTabName === '已出餐' && (
             <div className='absolute right-0 bottom-0 z-10 p-8'>
               <Button
-                label='完成 2 小時前餐點'
+                label='完成所有 1 小時前餐點'
                 className='p-3 shadow-lg'
                 textClassName='font-bold'
                 theme='secondary'
@@ -97,7 +95,7 @@ export default function POSPage(props: { tabName: TabName }) {
                 isLoading={completeDishedUpsMutation.isPending}
               />
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </>
