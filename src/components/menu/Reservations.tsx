@@ -1,18 +1,17 @@
-import { useMemo, useRef, useEffect, useState } from 'react'
+import { CalendarDaysIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { MenuType } from '@prisma/client'
-import Link from 'next/link'
-import { twMerge } from 'tailwind-merge'
 import { motion } from 'framer-motion'
-import { CalendarDaysIcon } from '@heroicons/react/24/outline'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 import { useDebounce } from 'usehooks-ts'
 
-import Title from '@/components/core/Title'
-import trpc, { ReservationDatas } from '@/lib/client/trpc'
 import Error from '@/components/core/Error'
-import { MenuTypeName, settings, twData } from '@/lib/common'
 import Image from '@/components/core/Image'
+import Title from '@/components/core/Title'
 import { useStore } from '@/lib/client/store'
+import trpc, { ReservationDatas } from '@/lib/client/trpc'
+import { MenuTypeName, settings, twData } from '@/lib/common'
 
 const MENU_TYPE_ORDER = [
   MenuType.BREAKFAST,
@@ -153,7 +152,8 @@ export default function Reservations(props: { activeMenuId?: number }) {
                     <Link
                       id={`reserve-menu-${menu?.id ?? 'placeholder-' + index}`}
                       key={menu?.id ?? `placeholder-${index}`}
-                      href={`/reserve/${menu?.id}`}
+                      href={{ query: { m: menu?.id } }}
+                      shallow
                       className={twMerge(
                         'group/card relative flex cursor-pointer gap-4 rounded-2xl p-2 data-selected:pointer-events-none hover:bg-stone-50 active:scale-[98%]',
                       )}

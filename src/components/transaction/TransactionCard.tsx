@@ -1,13 +1,15 @@
+import {
+  ChevronRightIcon,
+  CircleStackIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline'
 import { TransactionType } from '@prisma/client'
-import Link from 'next/link'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
-import { CircleStackIcon } from '@heroicons/react/24/outline'
-import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 import { TransactionDatas } from '@/lib/client/trpc'
-import { twMerge } from 'tailwind-merge'
 import { TransactionName, twData } from '@/lib/common'
+import { twMerge } from 'tailwind-merge'
 
 const TransactionTypeStyle: Record<TransactionType, string> = {
   [TransactionType.PAYMENT]: 'text-violet-500 bg-violet-50 border-violet-200',
@@ -33,7 +35,8 @@ export default function TransactionCard(props: {
       )}
     >
       <Link
-        href={`/transaction/${transaction?.id}`}
+        href={{ query: { t: transaction?.id } }}
+        shallow
         className='relative flex gap-4 rounded-2xl p-4 data-selected:pointer-events-none hover:bg-stone-50 active:scale-95 active:bg-stone-50'
         {...twData({
           selected: props.isSelected,

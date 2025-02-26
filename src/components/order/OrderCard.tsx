@@ -146,7 +146,7 @@ export default function OrderCard(props: {
             />
           )}
           {order?.paymentTransactionId && !order?.forClient && (
-            <Link href={`/transaction/${order?.paymentTransactionId ?? 123}`}>
+            <Link href={`/transaction?t=${order?.paymentTransactionId ?? 123}`}>
               <Button
                 label='付款紀錄'
                 className='p-2 group-data-loading:skeleton'
@@ -156,7 +156,9 @@ export default function OrderCard(props: {
             </Link>
           )}
           {order?.canceledTransactionId && (
-            <Link href={`/transaction/${order?.canceledTransactionId ?? 123}`}>
+            <Link
+              href={`/transaction?t=${order?.canceledTransactionId ?? 123}`}
+            >
               <Button
                 label='退款紀錄'
                 className='p-2 group-data-loading:skeleton'

@@ -1,56 +1,17 @@
-import z from 'zod'
-import { AnimatePresence, motion } from 'framer-motion'
-import { useMediaQuery } from 'usehooks-ts'
 import { ReceiptPercentIcon } from '@heroicons/react/24/outline'
-import { GetServerSideProps } from 'next'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
-import { useIsomorphicLayoutEffect } from 'usehooks-ts'
+import { useIsomorphicLayoutEffect, useMediaQuery } from 'usehooks-ts'
 
-import Menu from '@/components/menu/Menu'
 import Cart from '@/components/cart/Cart'
+import Menu from '@/components/menu/Menu'
 import Reservations from '@/components/menu/Reservations'
+import { useMenuNavigation } from '@/components/menu/menu.navigation'
 
-const reserveArgsSchema = z
-  .array(z.string().regex(/^\d+$/))
-  .min(1)
-  .max(2)
-  .optional()
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { reserveArgs } = context.params as {
-    reserveArgs?: string[]
-  }
-
-  const result = reserveArgsSchema.safeParse(reserveArgs)
-  if (!result.success) {
-    return {
-      notFound: true,
-    }
-  }
-
-  let reservationMenuId: number | undefined
-  let comId: number | undefined
-  if (reserveArgs) {
-    reservationMenuId = parseInt(reserveArgs[0])
-    if (reserveArgs.length === 2) {
-      comId = parseInt(reserveArgs[1])
-    }
-  }
-
-  return {
-    props: {
-      reservationMenuId,
-      comId,
-    },
-  }
-}
-
-export default function PageReserve(props: {
-  reservationMenuId?: number
-  comId?: number
-}) {
+export default function PageReserve() {
   const [isLg, setIsLg] = useState<boolean | undefined>(undefined)
   const matches = useMediaQuery('(min-width: 1024px)')
+  const { menuId } = useMenuNavigation()
 
   useIsomorphicLayoutEffect(() => {
     setIsLg(matches)
@@ -60,7 +21,7 @@ export default function PageReserve(props: {
     <>
       <div className='flex h-full w-full'>
         <AnimatePresence initial={false} mode='popLayout'>
-          {(isLg || !props.reservationMenuId) && (
+          {(isLg || !menuId) && (
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
@@ -69,25 +30,21 @@ export default function PageReserve(props: {
               className='w-full lg:max-w-sm'
               key='reservation-list'
             >
-              <Reservations activeMenuId={props.reservationMenuId} />
+              <Reservations activeMenuId={menuId ?? undefined} />
             </motion.div>
           )}
-          {(isLg || props.reservationMenuId) && (
+          {(isLg || menuId) && (
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ duration: isLg ? 0 : 0.3, type: 'spring' }}
               className='w-full flex-1 lg:relative lg:z-[1] lg:min-w-[32rem] lg:shadow-lg'
-              key={`reservation-menu-${props.reservationMenuId}`}
+              key={`reservation-menu-${menuId}`}
             >
-              {props.reservationMenuId ? (
+              {menuId ? (
                 // Menu
-                <Menu
-                  menuId={props.reservationMenuId}
-                  comId={props.comId}
-                  fromReserve
-                />
+                <Menu menuId={menuId} fromReserve />
               ) : (
                 // Empty
                 <div className='flex h-full flex-col items-center justify-center gap-4'>

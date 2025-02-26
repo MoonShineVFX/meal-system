@@ -1,17 +1,17 @@
+import { DepositStatus, UserRole } from '@prisma/client'
 import { z } from 'zod'
-import { UserRole, DepositStatus } from '@prisma/client'
 
-import { userProcedure, staffProcedure, router } from '../trpc'
+import { NotificationType } from '@/lib/client/store'
+import { SERVER_NOTIFY, settings } from '@/lib/common'
 import {
   createDeposit,
   deleteDeposit,
   getDeposit,
   getDeposits,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY, settings } from '@/lib/common'
 import { getAndUpdateTradeInfo } from '@/lib/server/deposit/newebpay'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
-import { NotificationType } from '@/lib/client/store'
+import { router, staffProcedure, userProcedure } from '../trpc'
 
 export const DepositRouter = router({
   create: userProcedure
@@ -76,7 +76,7 @@ export const DepositRouter = router({
         if (result.status === DepositStatus.SUCCESS) {
           eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
             type: SERVER_NOTIFY.DEPOSIT_RECHARGE,
-            link: `/transaction/${
+            link: `/transaction?t=${
               result.transactions[result.transactions.length - 1].id
             }`,
           })

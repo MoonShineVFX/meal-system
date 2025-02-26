@@ -1,27 +1,27 @@
-import Link from 'next/link'
-import type { MenuType } from '@prisma/client'
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
-import { useRouter } from 'next/router'
-import { twMerge } from 'tailwind-merge'
 import {
-  ExclamationTriangleIcon,
   DocumentArrowUpIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/20/solid'
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
+import type { MenuType } from '@prisma/client'
+import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 
-import Tab from '@/components/core/Tab'
 import Dialog from '@/components/core/Dialog'
-import { twData, settings, getMenuName } from '@/lib/common'
-import trpc from '@/lib/client/trpc'
+import Error from '@/components/core/Error'
+import Tab from '@/components/core/Tab'
+import Title from '@/components/core/Title'
+import { useStore } from '@/lib/client/store'
 import type {
   CommoditiesOnMenu,
   CommoditiesOnMenuByCategory,
 } from '@/lib/client/trpc'
-import COMsGrid from './COMsGrid'
+import trpc from '@/lib/client/trpc'
+import { getMenuName, settings, twData } from '@/lib/common'
 import COMDialog from './COMDialog'
-import { useStore } from '@/lib/client/store'
-import Error from '@/components/core/Error'
-import Title from '@/components/core/Title'
+import COMsGrid from './COMsGrid'
+import { useMenuNavigation } from './menu.navigation'
 
 const categoriesPlaceholder: string[] = Array(5).fill('主分類')
 const CATEGORY_SCROLL_TOP_TRIGGER = 64
@@ -31,15 +31,14 @@ export default function Menu(props: {
   date?: Date
   menuId?: number
   className?: string
-  comId?: number
   fromReserve?: boolean
 }) {
   const { data, isLoading, isError, error } = trpc.menu.get.useQuery({
     type: props.type,
     menuId: props.menuId,
   })
+  const { comId, setComId } = useMenuNavigation()
 
-  const router = useRouter()
   const [selectedCom, setSelectedCom] = useState<CommoditiesOnMenu[0] | null>(
     null,
   )
@@ -109,18 +108,16 @@ export default function Menu(props: {
 
   // Detect commodityId from query and open
   useEffect(() => {
-    if (props.comId && data) {
-      const com = data.commodities.find(
-        (com) => com.commodity.id === props.comId,
-      )
+    if (comId !== null && data) {
+      const com = data.commodities.find((com) => com.commodity.id === comId)
       if (com) {
         setSelectedCom(com)
         setIsDialogOpen(true)
       }
-    } else if (!props.comId && isDialogOpen) {
+    } else if (comId === null && isDialogOpen) {
       setIsDialogOpen(false)
     }
-  }, [props.comId, data])
+  }, [comId, data])
 
   // On data change
   useEffect(() => {
@@ -206,9 +203,8 @@ export default function Menu(props: {
   }, [data])
 
   const handleDialogClose = useCallback(() => {
-    const rootPath = router.asPath.split('/').slice(0, -1).join('/')
-    router.push(rootPath)
-  }, [router.asPath])
+    setComId(null)
+  }, [setComId])
 
   const handleCategoryClick = useCallback((category: string) => {
     document.getElementById(category)?.scrollIntoView({
