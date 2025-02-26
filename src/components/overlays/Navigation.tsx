@@ -315,12 +315,16 @@ function ProfileButton(props: { className?: string }) {
 }
 export default memo(Navigation)
 
+type HeroIcon = React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<React.SVGProps<SVGSVGElement>> & {
+    title?: string
+    titleId?: string
+  } & React.RefAttributes<SVGSVGElement>
+>
+
 function NavButton(props: {
   label: string
-  icons: [
-    React.FC<React.ComponentProps<'svg'>>,
-    React.FC<React.ComponentProps<'svg'>>,
-  ]
+  icons: [HeroIcon, HeroIcon]
   path: string
   rememberQuery?: boolean
   className?: string
@@ -382,10 +386,7 @@ function NavButton(props: {
 function NavIcon(props: {
   className?: string
   isSelected: boolean
-  icons: [
-    React.FC<React.ComponentProps<'svg'>>,
-    React.FC<React.ComponentProps<'svg'>>,
-  ]
+  icons: [HeroIcon, HeroIcon]
   numberBadge?: JSX.Element
 }) {
   const Icon = props.isSelected ? props.icons[1] : props.icons[0]
