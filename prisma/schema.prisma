@@ -33,6 +33,8 @@ model UserToken {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
+
+  @@index([userId, createdAt])
 }
 
 model UserSettings {
@@ -185,8 +187,8 @@ model Order {
   canceledTransaction   Transaction? @relation("canceledPayment", fields: [canceledTransactionId], references: [id])
   canceledTransactionId Int?         @unique
 
-  @@index([userId, menuId, timePreparing(sort: Desc), createdAt(sort: Desc)])
-  @@index([menuId, timeCompleted, timeCanceled, createdAt])
+  @@index([userId, menuId, status, timePreparing(sort: Desc), createdAt(sort: Desc)])
+  @@index([menuId, status, timeCompleted, timeCanceled, createdAt])
   @@index([forClient, createdAt(sort: Desc)])
   @@index([menuId, status, createdAt])
 }
