@@ -77,7 +77,7 @@ export default function PageDepositDetail() {
             <span className='mb-8'>
               付款已成功到帳，請至{' '}
               <Link
-                href={`/transaction/${
+                href={`/transaction?t=${
                   data.transactions[data.transactions.length - 1].id
                 }`}
                 className='font-bold text-yellow-500'

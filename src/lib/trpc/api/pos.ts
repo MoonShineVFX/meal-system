@@ -1,23 +1,23 @@
 import z from 'zod'
 
-import { staffProcedure, router } from '../trpc'
 import {
+  OrderTimeStatus,
+  SERVER_NOTIFY,
+  getResourceUrl,
+  settings,
+} from '@/lib/common'
+import {
+  completeDishedUpOrders,
   getLiveOrdersForPOS,
   getReservationOrdersForPOS,
   updateOrderStatus,
   updateOrdersStatus,
-  completeDishedUpOrders,
 } from '@/lib/server/database'
-import {
-  SERVER_NOTIFY,
-  OrderStatus,
-  settings,
-  getResourceUrl,
-} from '@/lib/common'
 import { ServerChannelName, eventEmitter } from '@/lib/server/event'
 import webPusher from '@/lib/server/webpush'
+import { router, staffProcedure } from '../trpc'
 
-function generateOrderNotifyMessage(orderId: number, status: OrderStatus) {
+function generateOrderNotifyMessage(orderId: number, status: OrderTimeStatus) {
   switch (status) {
     case 'timePreparing':
       return `訂單 #${orderId} 已經開始製作`

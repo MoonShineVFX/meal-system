@@ -55,13 +55,13 @@ function Navigation() {
         label='即時點餐'
         path='/live'
         icons={[HomeIcon, HomeIconSolid]}
-        rememberSubpath={true}
+        rememberQuery={true}
       />
       <NavButton
         label='預訂'
         path='/reserve'
         icons={[CalendarDaysIcon, CalendarDaysIconSolid]}
-        rememberSubpath={true}
+        rememberQuery={true}
       />
       <NavButton
         label='購物車'
@@ -74,21 +74,21 @@ function Navigation() {
         path='/order'
         icons={[DocumentTextIcon, DocumentTextIconSolid]}
         numberBadge={<OrderNumberBadge />}
-        rememberSubpath={true}
+        rememberQuery={true}
       />
       <NavButton
         className='hidden sm:block'
         label='交易紀錄'
         path='/transaction'
         icons={[WalletIcon, WalletIconSolid]}
-        rememberSubpath={true}
+        rememberQuery={true}
       />
       <NavButton
         className='hidden sm:block'
         label='設定'
         path='/settings'
         icons={[Cog6ToothIcon, Cog6ToothIconSolid]}
-        rememberSubpath={true}
+        rememberQuery={true}
       />
       {data && ['ADMIN', 'STAFF'].includes(data.role) && (
         <>
@@ -99,14 +99,14 @@ function Navigation() {
             label='處理訂單'
             icons={[SquaresPlusIcon, SquaresPlusIconSolid]}
             numberBadge={<POSNumberBadge />}
-            rememberSubpath={true}
+            rememberQuery={true}
           />
           <NavButton
             className='hidden sm:block'
             label='管理後台'
             path='/admin'
             icons={[WrenchScrewdriverIcon, WrenchScrewdriverIconSolid]}
-            rememberSubpath={true}
+            rememberQuery={true}
           />
         </>
       )}
@@ -315,28 +315,35 @@ function ProfileButton(props: { className?: string }) {
 }
 export default memo(Navigation)
 
+type HeroIcon = React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<React.SVGProps<SVGSVGElement>> & {
+    title?: string
+    titleId?: string
+  } & React.RefAttributes<SVGSVGElement>
+>
+
 function NavButton(props: {
   label: string
-  icons: [
-    React.FC<React.ComponentProps<'svg'>>,
-    React.FC<React.ComponentProps<'svg'>>,
-  ]
+  icons: [HeroIcon, HeroIcon]
   path: string
-  rememberSubpath?: boolean
+  rememberQuery?: boolean
   className?: string
   numberBadge?: JSX.Element
   onClick?: MouseEventHandler<HTMLDivElement>
 }) {
-  const [subpath, setSubpath] = useState<string | undefined>(undefined)
+  const [pathWithQuery, setPathWithQuery] = useState<string | undefined>(
+    undefined,
+  )
   const router = useRouter()
 
-  const isSelected = router.asPath.split('/')[1] === props.path.replace('/', '')
+  const isSelected =
+    router.asPath.split('?')[0].split('/')[1] === props.path.replace('/', '')
 
   const NormalIcon = props.icons[0]
 
   useEffect(() => {
-    if (isSelected && props.rememberSubpath) {
-      setSubpath(router.asPath)
+    if (isSelected && props.rememberQuery) {
+      setPathWithQuery(router.asPath)
     }
   }, [router.asPath])
 
@@ -347,7 +354,7 @@ function NavButton(props: {
     >
       <Link
         className='group inline-flex items-center justify-center sm:w-full sm:justify-start'
-        href={isSelected ? props.path : subpath ?? props.path}
+        href={isSelected ? props.path : pathWithQuery ?? props.path}
         {...twData({ selected: isSelected })}
       >
         {/* Mobile icon */}
@@ -379,10 +386,7 @@ function NavButton(props: {
 function NavIcon(props: {
   className?: string
   isSelected: boolean
-  icons: [
-    React.FC<React.ComponentProps<'svg'>>,
-    React.FC<React.ComponentProps<'svg'>>,
-  ]
+  icons: [HeroIcon, HeroIcon]
   numberBadge?: JSX.Element
 }) {
   const Icon = props.isSelected ? props.icons[1] : props.icons[0]

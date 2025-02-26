@@ -1,16 +1,16 @@
-import { useMemo, useState, useCallback, useEffect } from 'react'
-import { twMerge } from 'tailwind-merge'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
-  TrashIcon,
   ArrowUturnLeftIcon,
   PrinterIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 import Spinner from '@/components/core/Spinner'
-import { OrderStatus } from '@/lib/common'
 import { print } from '@/lib/client/printer'
-import { useStore, NotificationType } from '@/lib/client/store'
+import { NotificationType, useStore } from '@/lib/client/store'
+import { OrderTimeStatus } from '@/lib/common'
 
 const STATUS_BUTTON_TEXT = ['製作', '出餐', '完成', '', '', '取消']
 const STATUS_BACKGROUND_COLOR = [
@@ -42,7 +42,7 @@ const statusVariants = {
 }
 
 export default function POSCard(props: {
-  order?: Record<OrderStatus, Date | null> & { createdAt?: Date }
+  order?: Record<OrderTimeStatus, Date | null> & { createdAt?: Date }
   header?: JSX.Element | string
   metadata?: JSX.Element | JSX.Element[]
   children?:
@@ -52,7 +52,7 @@ export default function POSCard(props: {
   disableAnimation?: boolean
   disableInteraction?: boolean
   disableStatusButton?: boolean
-  onStatusModify: (status: OrderStatus) => void
+  onStatusModify: (status: OrderTimeStatus) => void
   isLoading?: boolean
   print?: Omit<Parameters<typeof print>[0], 'onSuccess' | 'onError'>
 }) {

@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -33,6 +33,8 @@ model UserToken {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
+
+  @@index([userId, createdAt])
 }
 
 model UserSettings {
@@ -155,6 +157,13 @@ model Bonus {
 }
 
 // Order
+enum OrderStatus {
+  PREPARING
+  DISHED_UP
+  COMPLETED
+  CANCELED
+}
+
 model Order {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -163,7 +172,8 @@ model Order {
   timeDishedUp  DateTime?
   timeCompleted DateTime?
   timeCanceled  DateTime?
-  forClient     Boolean   @default(false)
+  status        OrderStatus @default(PREPARING)
+  forClient     Boolean     @default(false)
   note          String?
 
   user   User        @relation(fields: [userId], references: [id])
@@ -177,9 +187,10 @@ model Order {
   canceledTransaction   Transaction? @relation("canceledPayment", fields: [canceledTransactionId], references: [id])
   canceledTransactionId Int?         @unique
 
-  @@index([userId, menuId, timePreparing(sort: Desc), createdAt(sort: Desc)])
-  @@index([menuId, timeCompleted, timeCanceled, createdAt(sort: Desc)])
+  @@index([userId, menuId, status, timePreparing(sort: Desc), createdAt(sort: Desc)])
+  @@index([menuId, status, timeCompleted, timeCanceled, createdAt])
   @@index([forClient, createdAt(sort: Desc)])
+  @@index([menuId, status, createdAt])
 }
 
 model OrderItem {

@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 
 import Image from '@/components/core/Image'
 import trpc, { POSLiveDatas } from '@/lib/client/trpc'
-import { OrderStatus, getOptionName, settings } from '@/lib/common'
+import { OrderTimeStatus, getOptionName, settings } from '@/lib/common'
 import POSCard from './POSCard'
 
 export default function POSLiveCard(props: {
@@ -13,7 +13,7 @@ export default function POSLiveCard(props: {
   const updateOrderMutation = trpc.pos.update.useMutation()
 
   const handleStatusModify = useCallback(
-    (status: OrderStatus) => {
+    (status: OrderTimeStatus) => {
       if (order === undefined) return
       updateOrderMutation.mutate({ orderId: order.id, status })
     },

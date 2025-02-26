@@ -1,42 +1,22 @@
-import { GetServerSideProps } from 'next'
 import { BanknotesIcon } from '@heroicons/react/24/outline'
-import z from 'zod'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useRef, useState } from 'react'
-import { useMediaQuery } from 'usehooks-ts'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useIsomorphicLayoutEffect } from 'usehooks-ts'
+import { useIsomorphicLayoutEffect, useMediaQuery } from 'usehooks-ts'
 
-import Wallet from '@/components/transaction/Wallet'
-import TransactionList from '@/components/transaction/TransactionList'
-import TransactionDetail from '@/components/transaction/TransactionDetail'
 import Title from '@/components/core/Title'
+import TransactionDetail from '@/components/transaction/TransactionDetail'
+import TransactionList from '@/components/transaction/TransactionList'
+import Wallet from '@/components/transaction/Wallet'
+import { parseAsInteger, useQueryState } from 'nuqs'
 
-const transactionArgsSchema = z
-  .array(z.string().regex(/^\d+$/))
-  .length(1)
-  .optional()
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { transactionArgs } = context.params as { transactionArgs?: string[] }
-
-  const result = transactionArgsSchema.safeParse(transactionArgs)
-  if (!result.success) {
-    return {
-      notFound: true,
-    }
-  }
-
-  return {
-    props: {
-      transactionId: transactionArgs ? parseInt(transactionArgs[0]) : undefined,
-    },
-  }
-}
-
-export default function PageTransaction(props: { transactionId?: number }) {
+export default function PageTransaction() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isLg, setIsLg] = useState<boolean | undefined>(undefined)
   const matches = useMediaQuery('(min-width: 1024px)')
+  const [transactionId] = useQueryState(
+    't',
+    parseAsInteger.withOptions({ history: 'push' }),
+  )
 
   useIsomorphicLayoutEffect(() => {
     setIsLg(matches)
@@ -48,7 +28,7 @@ export default function PageTransaction(props: { transactionId?: number }) {
       <div className='group flex h-full'>
         <AnimatePresence initial={false} mode='popLayout'>
           {/* Transaction List */}
-          {(isLg || !props.transactionId) && (
+          {(isLg || !transactionId) && (
             <motion.section
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
@@ -64,7 +44,7 @@ export default function PageTransaction(props: { transactionId?: number }) {
                 >
                   <Wallet />
                   <TransactionList
-                    activeTransactionId={props.transactionId}
+                    activeTransactionId={transactionId ?? undefined}
                     scrollRef={scrollRef}
                   />
                 </div>
@@ -72,17 +52,17 @@ export default function PageTransaction(props: { transactionId?: number }) {
             </motion.section>
           )}
           {/* Transaction Detail */}
-          {(isLg || props.transactionId) && (
+          {(isLg || transactionId) && (
             <motion.section
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ duration: isLg ? 0 : 0.3, type: 'spring' }}
               className='relative z-[1] w-full shadow-lg lg:w-1/2'
-              key={`transaction-detail-${props.transactionId}`}
+              key={`transaction-detail-${transactionId}`}
             >
-              {props.transactionId ? (
-                <TransactionDetail transactionId={props.transactionId} />
+              {transactionId ? (
+                <TransactionDetail transactionId={transactionId} />
               ) : (
                 <div className='flex h-full flex-col items-center justify-center gap-4'>
                   <div className='flex h-24 w-24 items-center justify-center rounded-full bg-stone-100'>

@@ -22,8 +22,8 @@
     "@floating-ui/react": "^0.19.1",
     "@headlessui/react": "^1.7.4",
     "@headlessui/tailwindcss": "^0.1.1",
-    "@heroicons/react": "^2.0.13",
-    "@prisma/client": "^6.3.1",
+    "@heroicons/react": "^2.2.0",
+    "@prisma/client": "^6.4.1",
     "@tailwindcss/container-queries": "^0.1.0",
     "@tailwindcss/forms": "^0.5.3",
     "@tanstack/react-query": "^5.62.8",
@@ -46,9 +46,10 @@
     "next": "^14.2.24",
     "next-superjson-plugin": "^0.6.3",
     "nprogress": "^0.2.0",
+    "nuqs": "^2.4.0",
     "p-queue": "^8.0.0",
     "postcss": "^8.4.18",
-    "prisma": "^6.3.1",
+    "prisma": "^6.4.1",
     "qrcode": "^1.5.1",
     "rate-limiter-flexible": "^3.0.6",
     "react": "^18.2.0",
@@ -69,9 +70,9 @@
     "zustand": "^4.3.8"
   },
   "devDependencies": {
-    "tsc-alias": "^1.8.8",
     "prettier": "^2.7.1",
     "prettier-plugin-tailwindcss": "^0.1.13",
+    "tsc-alias": "^1.8.8",
     "tsx": "^3.12.1"
   },
   "type": "module"

@@ -1,32 +1,25 @@
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 
-import type { CommodityOnMenu } from '@/lib/client/trpc'
 import Image from '@/components/core/Image'
+import type { CommodityOnMenu } from '@/lib/client/trpc'
 import { settings } from '@/lib/common'
+import { useMenuNavigation } from './menu.navigation'
 
 function LinkWrapper(props: {
   children: React.ReactNode
   com?: CommodityOnMenu
 }) {
-  const [pathName, setPathName] = useState<string>('')
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (!props.com) return
-    const pathNames = window.location.pathname.split('/')
-    const navName = pathNames[1]
-
-    if (navName === 'live') {
-      setPathName(`/live/${props.com.commodity.id}`)
-    } else if (navName === 'reserve') {
-      setPathName(`/reserve/${pathNames[2]}/${props.com.commodity.id}`)
-    }
-  }, [props.com])
+  const { menuId } = useMenuNavigation()
 
   return (
-    <Link className='group-data-loading:pointer-events-none' href={pathName}>
+    <Link
+      className='group-data-loading:pointer-events-none'
+      href={{
+        query: { c: props.com?.commodity.id, ...(menuId && { m: menuId }) },
+      }}
+      shallow
+    >
       {props.children}
     </Link>
   )

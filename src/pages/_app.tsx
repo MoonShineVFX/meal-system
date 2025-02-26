@@ -1,16 +1,17 @@
 import type { AppType } from 'next/app'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 import { twMerge } from 'tailwind-merge'
 
-import trpc from '@/lib/client/trpc'
-import EventListener from '@/components/overlays/EventListener'
-import AuthValidator from '@/components/overlays/AuthValidator'
-import Notification from '@/components/overlays/Notification'
-import Navigation from '@/components/overlays/Navigation'
-import RouterProgress from '@/components/overlays/RouteProgress'
-import '@/styles/globals.css'
 import Title from '@/components/core/Title'
+import AuthValidator from '@/components/overlays/AuthValidator'
+import EventListener from '@/components/overlays/EventListener'
+import Navigation from '@/components/overlays/Navigation'
+import Notification from '@/components/overlays/Notification'
+import RouterProgress from '@/components/overlays/RouteProgress'
+import trpc from '@/lib/client/trpc'
+import '@/styles/globals.css'
 
 const FULLSCREEN_COMPONENT_PATHS = ['/login']
 
@@ -21,7 +22,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
   )
 
   return (
-    <>
+    <NuqsAdapter>
       <Head>
         <meta
           name='viewport'
@@ -53,7 +54,7 @@ const PageApp: AppType = ({ Component, pageProps }) => {
       <RouterProgress />
       <AuthValidator />
       <Notification />
-    </>
+    </NuqsAdapter>
   )
 }
 

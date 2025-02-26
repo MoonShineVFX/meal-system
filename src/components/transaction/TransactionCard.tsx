@@ -1,13 +1,15 @@
+import {
+  ChevronRightIcon,
+  CircleStackIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/react/24/outline'
 import { TransactionType } from '@prisma/client'
-import Link from 'next/link'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
-import { CircleStackIcon } from '@heroicons/react/24/outline'
-import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 import { TransactionDatas } from '@/lib/client/trpc'
-import { twMerge } from 'tailwind-merge'
 import { TransactionName, twData } from '@/lib/common'
+import { twMerge } from 'tailwind-merge'
 
 const TransactionTypeStyle: Record<TransactionType, string> = {
   [TransactionType.PAYMENT]: 'text-violet-500 bg-violet-50 border-violet-200',
@@ -28,12 +30,16 @@ export default function TransactionCard(props: {
   return (
     <div
       className={twMerge(
-        'mx-4 border-b py-1 group-data-loading:pointer-events-none lg:mx-8',
+        'group mx-4 border-b py-1 group-data-loading:pointer-events-none lg:mx-8',
         props.isLast && 'border-none',
       )}
+      {...twData({
+        loading: !transaction,
+      })}
     >
       <Link
-        href={`/transaction/${transaction?.id}`}
+        href={{ query: { t: transaction?.id } }}
+        shallow
         className='relative flex gap-4 rounded-2xl p-4 data-selected:pointer-events-none hover:bg-stone-50 active:scale-95 active:bg-stone-50'
         {...twData({
           selected: props.isSelected,
@@ -92,7 +98,7 @@ export default function TransactionCard(props: {
               <p className='rounded-xl font-bold text-stone-500 group-data-loading:skeleton'>
                 {transaction?.type === 'PAYMENT' && transaction?.pointAmount > 0
                   ? '-' + transaction?.pointAmount
-                  : transaction?.pointAmount ?? 50}
+                  : transaction?.pointAmount ?? 0}
               </p>
             </div>
             <div className='flex items-center gap-1'>
@@ -101,7 +107,7 @@ export default function TransactionCard(props: {
                 {transaction?.type === 'PAYMENT' &&
                 transaction?.creditAmount > 0
                   ? '-' + transaction?.creditAmount
-                  : transaction?.creditAmount ?? 50}
+                  : transaction?.creditAmount ?? 0}
               </p>
             </div>
           </div>
