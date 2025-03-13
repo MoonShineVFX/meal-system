@@ -29,17 +29,4 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma
-
-  prisma.$use(async (params, next) => {
-    const before = Date.now()
-    const result = await next(params)
-    const after = Date.now()
-
-    console.log(
-      `[Database] Query ${params.model}.${params.action} took ${
-        after - before
-      }ms`,
-    )
-    return result
-  })
 }

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { NotificationType, useStore } from '@/lib/client/store'
 import ServiceWorkerHandler from '@/lib/client/sw'
@@ -104,7 +104,7 @@ export default function EventListener() {
   }, [userInfoQuery.isSuccess, addNotification])
 
   /* Server Notification */
-  trpc.user.onNotify.useSubscription(undefined, {
+  const result = trpc.user.onNotify.useSubscription(undefined, {
     onData: async (notifyPayload) => {
       if (!notifyPayload.skipNotify) {
         addNotification({
@@ -216,7 +216,41 @@ export default function EventListener() {
           break
       }
     },
+    onError: (error) => {
+      console.error('[EventListener] onNotify error', error)
+      addNotification({
+        type: NotificationType.ERROR,
+        message: `伺服器連線錯誤`,
+      })
+    },
   })
+
+  const isDisconnected = useMemo(() => {
+    return result.status !== 'pending'
+  }, [result.status])
+
+  if (isDisconnected) {
+    return (
+      <div className='fixed inset-x-6 bottom-20 z-50 flex items-center justify-center md:left-auto md:right-6 md:bottom-6'>
+        <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white p-3 shadow-lg'>
+          <div className='h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-stone-700' />
+          <div>
+            <p className='text-stone-700'>
+              {result.status === 'error' && '連線錯誤'}
+              {result.status === 'idle' && '閒置中'}
+              {result.status === 'connecting' && '連線中...'}
+              {result.status === 'pending' && '等待中...'}
+            </p>
+            {result.error !== null && (
+              <p className='text-sm text-stone-500'>
+                伺服器連線發生更新問題，您仍可持續操作，不過必須重新整理介面才會更新
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return null
 }
