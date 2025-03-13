@@ -62,7 +62,7 @@ export default function DialogCore<T extends UseMutationResult>(
     } else {
       props.onClose()
     }
-  }, [mutation, props.mutationOptions])
+  }, [mutation, props.mutationOptions, props.onClose, setButtonState])
 
   useEffect(() => {
     mutation?.reset()

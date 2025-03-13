@@ -51,9 +51,8 @@ export const useStore = create<StoreState>()(
         printerAPI_local: state.printerAPI_local,
         depositRedirect_local: state.depositRedirect_local,
         comOptionsMemo_local: state.comOptionsMemo_local,
-        loginSuccessNotify_session: state.loginSuccessNotify_session,
         loginRedirect_session: state.loginRedirect_session,
-        unavailableConfirms_session: state.unavailableConfirms_session,
+        unavailableConfirms_local: state.unavailableConfirms_local,
         reservationsScrollPosition_session:
           state.reservationsScrollPosition_session,
         transactionListScrollPosition_session:

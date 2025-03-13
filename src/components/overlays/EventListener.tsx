@@ -2,10 +2,19 @@ import { useEffect, useMemo } from 'react'
 
 import { NotificationType, useStore } from '@/lib/client/store'
 import ServiceWorkerHandler from '@/lib/client/sw'
-import trpc, { onQueryMutationErrorCallbacks } from '@/lib/client/trpc'
+import trpc from '@/lib/client/trpc'
 import { SERVER_NOTIFY, getResourceUrl, settings } from '@/lib/common'
+import { WithAuth } from './AuthValidator'
 
 export default function EventListener() {
+  return (
+    <WithAuth>
+      <EventListenerBase />
+    </WithAuth>
+  )
+}
+
+export function EventListenerBase() {
   const utils = trpc.useUtils()
   const {
     addNotification,
@@ -77,34 +86,14 @@ export default function EventListener() {
     }
   }, [userSub.data, serviceWorkerHandler, userSub.isError])
 
-  /* Socket management */
-  useEffect(() => {
-    const handleError = async (error: Omit<Error, 'name'>) => {
-      // Catch socket closed error
-      if (error.message === 'WebSocket closed prematurely') {
-        return
-      }
-      // Ignore error when not login
-      if (!userInfoQuery.isSuccess) {
-        return
-      }
-      addNotification({
-        type: NotificationType.ERROR,
-        message: error.message,
-      })
-    }
-    onQueryMutationErrorCallbacks.push(handleError)
-
-    return () => {
-      onQueryMutationErrorCallbacks.splice(
-        onQueryMutationErrorCallbacks.indexOf(handleError),
-        1,
-      )
-    }
-  }, [userInfoQuery.isSuccess, addNotification])
-
   /* Server Notification */
   const result = trpc.user.onNotify.useSubscription(undefined, {
+    onStarted: () => {
+      // Wait for the subscription to be established
+      setTimeout(() => {
+        utils.user.getConnectedUsers.invalidate()
+      }, 100)
+    },
     onData: async (notifyPayload) => {
       if (!notifyPayload.skipNotify) {
         addNotification({
@@ -230,6 +219,10 @@ export default function EventListener() {
   const isDisconnected = useMemo(() => {
     return result.status !== 'pending'
   }, [result.status])
+
+  if (!userInfoQuery.isSuccess) {
+    return null
+  }
 
   if (isDisconnected) {
     return (

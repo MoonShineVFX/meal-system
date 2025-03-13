@@ -1,21 +1,16 @@
 import {
-  TRPCLink,
   httpBatchLink,
   loggerLink,
   splitLink,
+  retryLink,
   unstable_httpSubscriptionLink,
 } from '@trpc/client'
 import { createTRPCNext } from '@trpc/next'
 import type { UseTRPCMutationResult } from '@trpc/react-query/shared'
 import type { inferRouterOutputs } from '@trpc/server'
-import { observable } from '@trpc/server/observable'
 import superjson from 'superjson'
 
-import { generateCookie } from '@/lib/common'
 import type { AppRouter } from '@/lib/trpc'
-import { useStore } from './store'
-
-export const onQueryMutationErrorCallbacks: ((error: Error) => void)[] = []
 
 /* Types */
 type RouterOutput = inferRouterOutputs<AppRouter>
@@ -62,48 +57,6 @@ export type DepositDatas = RouterOutput['deposit']['getList']['deposits']
 export type SupplierDatas = RouterOutput['supplier']['getList']
 export type BonusDatas = RouterOutput['bonus']['getList']['bonus']
 
-/* Links */
-const authLink: TRPCLink<AppRouter> = () => {
-  return ({ next, op }) => {
-    return observable((observer) => {
-      const unsubscribe = next(op).subscribe({
-        next(value) {
-          // Detect login mutation, redirect to index if success
-          if (
-            op.type === 'mutation' &&
-            op.path === 'user.login' &&
-            value.result.type === 'data'
-          ) {
-            // On login success, set cookie and notify
-            const cookie = generateCookie(
-              (value.result.data as { token: string }).token,
-            )
-            useStore.setState({ loginSuccessNotify_session: true })
-            document.cookie = cookie
-
-            const loginRedirect = useStore.getState().loginRedirect_session
-            if (loginRedirect !== null) {
-              useStore.setState({ loginRedirect_session: null })
-            }
-
-            window.location.href =
-              loginRedirect === null ? '/live' : loginRedirect
-          }
-          observer.next(value)
-        },
-        error(err) {
-          onQueryMutationErrorCallbacks.forEach((cb) => cb(err))
-          observer.error(err)
-        },
-        complete() {
-          observer.complete()
-        },
-      })
-      return unsubscribe
-    })
-  }
-}
-
 /* TRPC */
 const trpc = createTRPCNext<AppRouter>({
   config() {
@@ -114,11 +67,28 @@ const trpc = createTRPCNext<AppRouter>({
             process.env.NODE_ENV !== 'production' ||
             (opts.direction === 'down' && opts.result instanceof Error),
         }),
-        authLink,
         splitLink({
           // uses the httpSubscriptionLink for subscriptions
           condition: (op) => op.type === 'subscription',
           true: [
+            retryLink({
+              retry: (opts) => {
+                const code = opts.error.data?.code
+                if (opts.attempts > 10) {
+                  return false
+                }
+                if (!code) {
+                  // This shouldn't happen as our httpSubscriptionLink will automatically retry within when there's a non-parsable response
+                  console.error('No error code found, retrying', opts)
+                  return true
+                }
+                if (code === 'UNAUTHORIZED' || code === 'FORBIDDEN') {
+                  console.log('Retrying due to 401/403 error')
+                  return true
+                }
+                return false
+              },
+            }),
             unstable_httpSubscriptionLink({
               url: `/api/trpc`,
               transformer: superjson,

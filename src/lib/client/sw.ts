@@ -47,6 +47,11 @@ export default class ServiceWorkerHandler {
   }
 
   private async getSubscription() {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      console.warn('Notifications are not supported in this environment')
+      return
+    }
+
     if (Notification.permission !== 'granted') {
       console.warn('Notifications are not granted')
       return
@@ -68,6 +73,11 @@ export default class ServiceWorkerHandler {
   }
 
   public async updateSubscription() {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      console.warn('Notifications are not supported in this environment')
+      return
+    }
+
     if (Notification.permission !== 'granted') {
       console.warn('Notifications are not granted')
       return

@@ -51,31 +51,45 @@ export default function Settings() {
           <h1 className='mb-4 text-xl font-bold lg:mb-8'>設定</h1>
           <div className='flex flex-col gap-4 lg:gap-6'>
             {/* 開啟通知 */}
-            {isPushApiSupported && Notification.permission !== 'granted' && (
-              <OptionField
-                title='開啟通知權限'
-                description='允許通知權限，當您訂單有更新時，會收到通知，以及顯示即時數字在圖示上。'
-                loading={false}
-                checked={false}
-                onChange={(checked) => {
-                  if (checked) {
-                    if (Notification.permission === 'denied') {
-                      showDialog({
-                        title: '無法開啟通知',
-                        content: '您已經拒絕了通知權限，請至瀏覽器設定開啟。',
-                      })
-                      return
-                    }
-                    Notification.requestPermission().then((permission) => {
-                      if (permission === 'granted') {
-                        window.location.reload()
-                      }
-                    })
-                  }
-                }}
-              />
-            )}
             {isPushApiSupported &&
+              typeof window !== 'undefined' &&
+              'Notification' in window &&
+              Notification.permission !== 'granted' && (
+                <OptionField
+                  title='開啟通知權限'
+                  description='允許通知權限，當您訂單有更新時，會收到通知，以及顯示即時數字在圖示上。'
+                  loading={false}
+                  checked={false}
+                  onChange={(checked) => {
+                    if (checked) {
+                      if (
+                        typeof window !== 'undefined' &&
+                        'Notification' in window &&
+                        Notification.permission === 'denied'
+                      ) {
+                        showDialog({
+                          title: '無法開啟通知',
+                          content: '您已經拒絕了通知權限，請至瀏覽器設定開啟。',
+                        })
+                        return
+                      }
+                      if (
+                        typeof window !== 'undefined' &&
+                        'Notification' in window
+                      ) {
+                        Notification.requestPermission().then((permission) => {
+                          if (permission === 'granted') {
+                            window.location.reload()
+                          }
+                        })
+                      }
+                    }
+                  }}
+                />
+              )}
+            {isPushApiSupported &&
+              typeof window !== 'undefined' &&
+              'Notification' in window &&
               Notification.permission === 'granted' &&
               userTokenQuery.data && (
                 <>
