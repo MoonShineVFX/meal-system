@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+import { EventEmitter } from 'events'
 
 import {
   generateCookie,
@@ -21,11 +22,24 @@ import {
   updateUserToken,
   validateUserPassword,
 } from '@/lib/server/database'
-import { eventEmitter, ServerChannelName } from '@/lib/server/event'
+import {
+  eventEmitter,
+  ServerChannelName,
+  incrementConnectedUsers,
+  decrementConnectedUsers,
+  onServerEvent,
+  getConnectedUsers,
+} from '@/lib/server/event'
 import webPusher from '@/lib/server/webpush'
 
 import { UserAuthority } from '@prisma/client'
-import { publicProcedure, router, staffProcedure, userProcedure } from '../trpc'
+import {
+  adminProcedure,
+  publicProcedure,
+  router,
+  staffProcedure,
+  userProcedure,
+} from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -60,16 +74,6 @@ export const UserRouter = router({
     return await getUserList()
   }),
   onNotify: userProcedure.subscription(async function* ({ ctx, signal }) {
-    const listener = (notifyPayload: ServerNotifyPayload) => {
-      queue.push(notifyPayload)
-      resolveNext()
-    }
-
-    const queue: ServerNotifyPayload[] = []
-    let resolveNext: () => void
-    const nextPromise = () =>
-      new Promise<void>((resolve) => (resolveNext = resolve))
-
     const channelNames: string[] = [
       ServerChannelName.USER_NOTIFY(ctx.userLite.id),
       ServerChannelName.PUBLIC_NOTIFY,
@@ -79,19 +83,40 @@ export const UserRouter = router({
       channelNames.push(ServerChannelName.STAFF_NOTIFY)
     }
 
-    for (const channelName of channelNames) {
-      eventEmitter.on(channelName, listener)
-    }
+    incrementConnectedUsers(ctx.userLite.id)
+
+    // Define listeners outside the try block so it's accessible in finally
+    const listenerMap: Array<{
+      channelName: string
+      listener: (payload: ServerNotifyPayload) => void
+    }> = []
 
     try {
-      while (!signal || !signal.aborted) {
-        while (queue.length > 0) {
-          yield queue.shift()!
+      // Create a merged event emitter that combines all channels
+      const mergedEmitter = new EventEmitter()
+      const mergedEventName = 'merged-notify'
+
+      // Set up listeners for all channels that forward to the merged emitter
+      channelNames.forEach((channelName) => {
+        const listener = (payload: ServerNotifyPayload) => {
+          mergedEmitter.emit(mergedEventName, payload)
         }
-        await nextPromise()
+        eventEmitter.on(channelName, listener)
+        listenerMap.push({ channelName, listener })
+      })
+
+      // Use the on() utility with the merged emitter
+      for await (const [payload] of onServerEvent<ServerNotifyPayload>(
+        mergedEmitter,
+        mergedEventName,
+        { signal },
+      )) {
+        yield payload
       }
     } finally {
-      for (const channelName of channelNames) {
+      decrementConnectedUsers(ctx.userLite.id)
+      // Clean up all listeners
+      for (const { channelName, listener } of listenerMap) {
         eventEmitter.off(channelName, listener)
       }
     }
@@ -293,4 +318,7 @@ export const UserRouter = router({
         message: `您${updateMessage}`,
       })
     }),
+  getConnectedUsers: adminProcedure.query(async () => {
+    return getConnectedUsers()
+  }),
 })

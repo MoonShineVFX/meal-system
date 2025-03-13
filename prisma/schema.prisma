@@ -77,7 +77,7 @@ model User {
   bonus              Bonus[]       @relation("bonusUsers")
   bonusRedeem        Bonus[]       @relation("bonusRedeem")
 
-  @@index([id, isDeactivated])
+  @@index([isDeactivated])
 }
 
 // Transaction
@@ -113,8 +113,7 @@ model Transaction {
   bonusId          Int?
 
   @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
-  @@index([depositId])
-  @@index([bonusId])
+  @@index([depositId, bonusId])
 }
 
 // Deposit
@@ -190,7 +189,7 @@ model Order {
   @@index([userId, menuId, status, timePreparing(sort: Desc), createdAt(sort: Desc)])
   @@index([menuId, status, timeCompleted, timeCanceled, createdAt])
   @@index([forClient, createdAt(sort: Desc)])
-  @@index([menuId, status, createdAt])
+  @@index([status, menuId, createdAt])
 }
 
 model OrderItem {
@@ -210,7 +209,7 @@ model OrderItem {
   image           Image?          @relation(fields: [imageId], references: [id])
   imageId         String?
 
-  @@index([orderId, menuId, commodityId])
+  @@index([orderId])
 }
 
 model CartItem {
@@ -229,7 +228,7 @@ model CartItem {
   commodityId     Int
 
   @@id([userId, menuId, commodityId, optionsKey])
-  @@index([userId, menuId, commodityId, invalid])
+  @@index([invalid])
 }
 
 // Commodity
@@ -289,7 +288,7 @@ model Commodity {
   supplier   Supplier?           @relation(fields: [supplierId], references: [id])
   supplierId Int?
 
-  @@index([id, isDeleted])
+  @@index([isDeleted])
 }
 
 // Menu
@@ -309,7 +308,7 @@ model CommodityOnMenu {
   orderItems  OrderItem[]
 
   @@id([menuId, commodityId])
-  @@index([menuId, commodityId, isDeleted])
+  @@index([isDeleted])
 }
 
 enum MenuType {
@@ -341,7 +340,8 @@ model Menu {
   supplierId  Int?
 
   @@index([date, type, isDeleted, createdAt(sort: Desc)])
-  @@index([id, isDeleted, createdAt(sort: Desc)])
+  @@index([isDeleted, createdAt(sort: Desc)])
+  @@index([type, isDeleted])
 }
 
 model Supplier {
@@ -356,7 +356,7 @@ model Supplier {
   commodities Commodity[]
   menus       Menu[]
 
-  @@index([id, isDeleted])
+  @@index([isDeleted])
 }
 
 // Resource

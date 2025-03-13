@@ -33,7 +33,9 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 export type Context = inferAsyncReturnType<typeof createContext>
 
 /* Procedures */
-const t = initTRPC.context<Context>().create({ transformer: superjson })
+const t = initTRPC.context<Context>().create({
+  transformer: superjson,
+})
 export const router = t.router
 
 async function validateUserLite(

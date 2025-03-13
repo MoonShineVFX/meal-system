@@ -118,10 +118,12 @@ const trpc = createTRPCNext<AppRouter>({
         splitLink({
           // uses the httpSubscriptionLink for subscriptions
           condition: (op) => op.type === 'subscription',
-          true: unstable_httpSubscriptionLink({
-            url: `/api/trpc`,
-            transformer: superjson,
-          }),
+          true: [
+            unstable_httpSubscriptionLink({
+              url: `/api/trpc`,
+              transformer: superjson,
+            }),
+          ],
           false: httpBatchLink({
             url: `/api/trpc`,
             transformer: superjson,
