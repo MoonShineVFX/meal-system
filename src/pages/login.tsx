@@ -15,7 +15,8 @@ import Title from '@/components/core/Title'
 import TextInput from '@/components/form/base/TextInput'
 import trpc from '@/lib/client/trpc'
 import { generateCookie, settings, twData } from '@/lib/common'
-
+import { NotificationType, useStore } from '@/lib/client/store'
+import { useRouter } from 'next/router'
 type FormInputs = {
   username: string
   password: string
@@ -23,7 +24,13 @@ type FormInputs = {
 
 export default function PageLogin() {
   const loginMutation = trpc.user.login.useMutation()
-  const trpcContext = trpc.useContext()
+  const utils = trpc.useUtils()
+
+  const addNotification = useStore((state) => state.addNotification)
+  const loginRedirect = useStore((state) => state.loginRedirect_session)
+  const setLoginRedirect = useStore((state) => state.setLoginRedirect)
+
+  const router = useRouter()
   const {
     register,
     handleSubmit,
@@ -33,7 +40,7 @@ export default function PageLogin() {
   useEffect(() => {
     // Logout the user when enter the page
     document.cookie = generateCookie(undefined) // Remove the cookie
-    trpcContext.user.get.invalidate()
+    utils.user.get.invalidate()
   }, [])
 
   const handleLogin: SubmitHandler<FormInputs> = async (formData) => {
@@ -43,7 +50,27 @@ export default function PageLogin() {
         password: formData.password,
       },
       {
-        // If the login is successful, reload to the home page at @/lib/client/trpc.ts [authLink]
+        onSuccess: async (data) => {
+          // Set authentication token in cookie
+          document.cookie = generateCookie(data.token)
+
+          // Get and clear any saved redirect path from login
+          if (loginRedirect !== null) {
+            setLoginRedirect(null)
+          }
+
+          // Invalidate all queries to refetch fresh data
+          await utils.invalidate()
+
+          // Redirect user to saved path or default live page
+          router.push(loginRedirect === null ? '/live' : loginRedirect)
+
+          // Show success notification
+          addNotification({
+            type: NotificationType.SUCCESS,
+            message: '登入成功',
+          })
+        },
       },
     )
   }

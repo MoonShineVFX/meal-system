@@ -29,7 +29,13 @@ import {
 import { motion, useAnimationControls } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { memo, MouseEventHandler, useEffect, useState } from 'react'
+import {
+  memo,
+  MouseEventHandler,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 
 import Error from '@/components/core/Error'
 import Image from '@/components/core/Image'
@@ -42,9 +48,29 @@ import { generateCookie, settings, twData } from '@/lib/common'
 import { twMerge } from 'tailwind-merge'
 import { DropdownMenu, DropdownMenuItem } from '../core/DropdownMenu'
 
+function useLogout() {
+  const logoutMutation = trpc.user.logout.useMutation()
+  const utils = trpc.useUtils()
+  const router = useRouter()
+
+  const logout = useCallback(() => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: async () => {
+        const cookie = generateCookie(undefined)
+        document.cookie = cookie
+
+        await utils.invalidate()
+        router.push('/login')
+      },
+    })
+  }, [logoutMutation, router, utils])
+
+  return { logout }
+}
+
 function Navigation() {
   const { data } = trpc.user.get.useQuery(undefined)
-  const logoutMutation = trpc.user.logout.useMutation()
+  const { logout } = useLogout()
 
   return (
     <div className='relative z-40 flex h-full items-center justify-evenly bg-white pb-[env(safe-area-inset-bottom)] shadow shadow-stone-300 sm:flex-col sm:items-start sm:justify-start sm:gap-6 sm:bg-stone-100 sm:p-4 sm:shadow-none lg:p-8'>
@@ -159,7 +185,7 @@ function Navigation() {
       {/* 登出 */}
       <div
         className='hidden w-full cursor-pointer items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 hover:bg-stone-200 active:scale-95 sm:flex'
-        onClick={() => handleLogout(logoutMutation)}
+        onClick={logout}
       >
         <ArrowRightOnRectangleIcon className='h-5 w-5' />
         <span className='ml-4'>登出</span>
@@ -167,18 +193,6 @@ function Navigation() {
       <ProfileButton className='sm:-order-1' />
     </div>
   )
-}
-
-function handleLogout(
-  logoutMutation: ReturnType<typeof trpc.user.logout.useMutation>,
-) {
-  logoutMutation.mutate(undefined, {
-    onSuccess: () => {
-      const cookie = generateCookie(undefined)
-      document.cookie = cookie
-      window.location.reload()
-    },
-  })
 }
 
 function ProfileButton(props: { className?: string }) {
@@ -192,7 +206,7 @@ function ProfileButton(props: { className?: string }) {
     type: 'LIVE',
   })
   const menuUpdateMutation = trpc.menu.createOrEdit.useMutation()
-  const logoutMutation = trpc.user.logout.useMutation()
+  const { logout } = useLogout()
 
   if (isLoading || menuQuery.isLoading) return <Spinner className='h-8 w-8' />
   if (isError || menuQuery.isError)
@@ -311,7 +325,7 @@ function ProfileButton(props: { className?: string }) {
               </Link>
               <div
                 className='w-full cursor-pointer py-2 px-4 text-red-500 hover:bg-stone-100 active:bg-stone-100'
-                onClick={() => handleLogout(logoutMutation)}
+                onClick={logout}
               >
                 登出
               </div>

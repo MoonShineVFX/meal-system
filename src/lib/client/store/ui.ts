@@ -12,17 +12,16 @@ export interface UISlice {
   formMenuSupplier: Supplier | null
   formMenuCreateSupplier: boolean
   dialogButtonState: DialogButtonState
-  loginSuccessNotify_session: boolean
-  unavailableConfirms_session: Record<string, boolean>
+  unavailableConfirms_local: string[]
   reservationsScrollPosition_session: number
   transactionListScrollPosition_session: number
-  setLoginSuccessNotify: (state: boolean) => void
   setCurrentMenu: (menu: MenuData | null) => void
   setCurrentCategory: (category: string | null) => void
   setFormMenuSupplier: (supplier: Supplier | null) => void
   setFormMenuCreateSupplier: (isSupplier: boolean) => void
   setDialogButtonState: (state: DialogButtonState) => void
   addUnavailableConfirm: (id: string) => void
+  removeUnavailableConfirm: (id: string) => void
   setReservationsScrollPosition: (position: number) => void
   setTransactionListScrollPosition: (position: number) => void
 }
@@ -35,13 +34,9 @@ export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (
   formMenuSupplier: null,
   formMenuCreateSupplier: false,
   dialogButtonState: 'null',
-  loginSuccessNotify_session: false,
-  unavailableConfirms_session: {},
+  unavailableConfirms_local: [],
   reservationsScrollPosition_session: 0,
   transactionListScrollPosition_session: 0,
-  setLoginSuccessNotify: (state: boolean) => {
-    set({ loginSuccessNotify_session: state })
-  },
   setFormMenuSupplier: (supplier: Supplier | null) => {
     set({ formMenuSupplier: supplier })
   },
@@ -55,10 +50,17 @@ export const createUISlice: StateCreator<StoreState, [], [], UISlice> = (
   setCurrentCategory: (category) => set({ currentCategory: category }),
   addUnavailableConfirm: (id) => {
     set((state) => ({
-      unavailableConfirms_session: {
-        ...state.unavailableConfirms_session,
-        [id]: true,
-      },
+      unavailableConfirms_local: [
+        ...state.unavailableConfirms_local.slice(-19),
+        id,
+      ],
+    }))
+  },
+  removeUnavailableConfirm: (id) => {
+    set((state) => ({
+      unavailableConfirms_local: state.unavailableConfirms_local.filter(
+        (confirmId) => confirmId !== id,
+      ),
     }))
   },
   setReservationsScrollPosition: (position) => {

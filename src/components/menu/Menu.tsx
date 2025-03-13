@@ -51,12 +51,14 @@ export default function Menu(props: {
     setCurrentCategory,
     unavailableConfirms,
     addUnavailableConfirm,
+    removeUnavailableConfirm,
   } = useStore((state) => ({
     setCurrentMenu: state.setCurrentMenu,
     currentCategory: state.currentCategory,
     setCurrentCategory: state.setCurrentCategory,
-    unavailableConfirms: state.unavailableConfirms_session,
+    unavailableConfirms: state.unavailableConfirms_local,
     addUnavailableConfirm: state.addUnavailableConfirm,
+    removeUnavailableConfirm: state.removeUnavailableConfirm,
   }))
   const gridRef = useRef<HTMLDivElement>(null)
   const [unavailableNotify, setUnavailableNotify] = useState(false)
@@ -191,10 +193,14 @@ export default function Menu(props: {
 
     // if session storage not have confirmed, show notify
     const idKey = data.id.toString()
-    if (!(idKey in unavailableConfirms) || !unavailableConfirms[idKey]) {
-      setUnavailableNotify(data.unavailableReasons.length > 0)
+    if (data.unavailableReasons.length > 0) {
+      if (!unavailableConfirms.includes(idKey)) {
+        setUnavailableNotify(true)
+      }
+    } else {
+      removeUnavailableConfirm(idKey)
     }
-  }, [data, unavailableConfirms])
+  }, [data])
 
   // Check is all commodities unavailable
   const isAllComsUnavailable = useMemo(() => {
@@ -311,24 +317,26 @@ export default function Menu(props: {
           com={selectedCom ?? undefined}
           onClose={handleDialogClose}
         />
-        {/* Warning for unavailables */}
-        <Dialog
-          open={unavailableNotify}
-          onClose={() => {
-            if (data) {
-              addUnavailableConfirm(data.id.toString())
+        {/* Warning for unavailables (Disabled) */}
+        {false && (
+          <Dialog
+            open={unavailableNotify}
+            onClose={() => {
+              if (data) {
+                addUnavailableConfirm(data.id.toString())
+              }
+              setUnavailableNotify(false)
+            }}
+            title='目前無法訂購餐點'
+            content={
+              <ul className='flex flex-col gap-1'>
+                {data?.unavailableReasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
             }
-            setUnavailableNotify(false)
-          }}
-          title='目前無法訂購餐點'
-          content={
-            <ul className='flex flex-col gap-1'>
-              {data?.unavailableReasons.map((reason) => (
-                <li key={reason}>{reason}</li>
-              ))}
-            </ul>
-          }
-        />
+          />
+        )}
       </div>
     </>
   )

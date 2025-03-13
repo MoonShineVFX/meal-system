@@ -2,38 +2,18 @@ import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 
 import Spinner from '@/components/core/Spinner'
-import { NotificationType, useStore } from '@/lib/client/store'
+import { useStore } from '@/lib/client/store'
 import trpc from '@/lib/client/trpc'
 
 /* Component */
 export default function AuthValidator() {
   const router = useRouter()
-  const {
-    addNotification,
-    loginSuccessNotify,
-    setLoginRedirect,
-    setLoginSuccessNotify,
-  } = useStore((state) => ({
-    addNotification: state.addNotification,
-    loginSuccessNotify: state.loginSuccessNotify_session,
+  const { setLoginRedirect } = useStore((state) => ({
     setLoginRedirect: state.setLoginRedirect,
-    setLoginSuccessNotify: state.setLoginSuccessNotify,
   }))
 
   /* Validate user and redirect to logout */
   const userInfoQuery = trpc.user.get.useQuery()
-
-  /* Login success notice */
-  useEffect(() => {
-    if (loginSuccessNotify) {
-      addNotification({
-        type: NotificationType.SUCCESS,
-        message: '登入成功',
-      })
-
-      setLoginSuccessNotify(false)
-    }
-  }, [userInfoQuery.isSuccess, loginSuccessNotify])
 
   /* Redirect to login if not logged in */
   useEffect(() => {
@@ -61,4 +41,14 @@ export default function AuthValidator() {
     )
 
   return null
+}
+
+export function WithAuth(props: { children: React.ReactNode }) {
+  const userInfoQuery = trpc.user.get.useQuery()
+
+  if (userInfoQuery.status !== 'success') {
+    return null
+  }
+
+  return <>{props.children}</>
 }

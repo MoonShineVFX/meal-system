@@ -119,8 +119,6 @@ export default function Cart() {
     deleteCartMutation.mutate({})
   }, [cartData?.cartItems.length, deleteCartMutation])
 
-  if (cartIsError) return <Error description={cartError.message} />
-
   // Detect type of delete
   let deleteCartType: CartDeleteType | undefined = undefined
   if (deleteCartMutation.isPending) {
@@ -139,6 +137,8 @@ export default function Cart() {
     if (!cartData) return false
     return cartData.cartItems.some((cartItem) => cartItem.quantity === 0)
   }, [cartData])
+
+  if (cartIsError) return <Error description={cartError.message} />
 
   return (
     <div
