@@ -143,20 +143,6 @@ export function EventListenerBase() {
 
       switch (eventPayload.type) {
         // User
-        case PUSHER_EVENT.CART_ADD:
-        case PUSHER_EVENT.CART_DELETE:
-        case PUSHER_EVENT.CART_UPDATE:
-          utils.menu.get.invalidate()
-          utils.cart.get.invalidate()
-          break
-        case PUSHER_EVENT.ORDER_ADD:
-          utils.menu.get.invalidate()
-          utils.cart.get.invalidate()
-          utils.user.get.invalidate()
-          utils.order.get.invalidate()
-          utils.order.getBadgeCount.invalidate()
-          utils.transaction.getListByUser.invalidate()
-          break
         case PUSHER_EVENT.ORDER_UPDATE:
           utils.order.get.invalidate()
           utils.order.getBadgeCount.invalidate()
@@ -167,16 +153,9 @@ export function EventListenerBase() {
           utils.order.getBadgeCount.invalidate()
           utils.transaction.getListByUser.invalidate()
           break
-        case PUSHER_EVENT.DEPOSIT_RECHARGE:
-          utils.user.get.invalidate()
-        case PUSHER_EVENT.USER_TOKEN_UPDATE:
-          utils.user.getToken.invalidate()
-          break
         case PUSHER_EVENT.BONUS_APPLY:
           utils.user.get.invalidate()
           break
-        case PUSHER_EVENT.USER_SETTINGS_UPDATE:
-          utils.user.get.invalidate()
         case PUSHER_EVENT.MENU_LIVE_UPDATE:
           utils.menu.get.invalidate({
             type: 'LIVE',

@@ -66,3 +66,4 @@ export const useStore = create<StoreState>()(
 
 export { NotificationType } from './notification'
 export type { NotificationPayload } from './notification'
+export const addNotification = useStore.getState().addNotification

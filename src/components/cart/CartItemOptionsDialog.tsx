@@ -6,7 +6,7 @@ import { SubmitHandler, useForm } from 'react-hook-form'
 import Button from '@/components/core/Button'
 import { OptionSetForm } from '@/components/menu/COMDialogContent'
 import type { CartItems } from '@/lib/client/trpc'
-import trpc from '@/lib/client/trpc'
+import { useUpdateCartMutation } from '@/lib/client/trpc.hooks'
 import { OrderOptions, generateOptionsKey } from '@/lib/common'
 
 type FormInputs = {
@@ -21,7 +21,7 @@ export default function CartItemOptionsDialog(props: {
   const [cartItem, setCartItem] = useState<CartItems[0]>()
   const com = cartItem?.commodityOnMenu
   const { handleSubmit, setValue, watch, control } = useForm<FormInputs>()
-  const updateCartMutation = trpc.cart.update.useMutation()
+  const updateCartMutation = useUpdateCartMutation()
 
   useEffect(() => {
     if (props.cartItem) {

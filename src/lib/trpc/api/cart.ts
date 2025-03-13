@@ -1,15 +1,13 @@
 import z from 'zod'
 
-import { userProcedure, router } from '../trpc'
+import { optionValueSchema, settings } from '@/lib/common'
 import {
   createCartItem,
-  updateCartItem,
-  getCartItems,
   deleteCartItems,
+  getCartItems,
+  updateCartItem,
 } from '@/lib/server/database'
-import { emitPusherEvent } from '@/lib/server/pusher'
-import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
-import { settings, optionValueSchema } from '@/lib/common'
+import { router, userProcedure } from '../trpc'
 
 export const CartRouter = router({
   add: userProcedure
@@ -24,18 +22,12 @@ export const CartRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const cartItem = await createCartItem({
+      return await createCartItem({
         userId: ctx.userLite.id,
         menuId: input.menuId,
         commodityId: input.commodityId,
         quantity: input.quantity,
         options: input.options,
-      })
-
-      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
-        type: PUSHER_EVENT.CART_ADD,
-        message: `新增 ${cartItem.commodityOnMenu.commodity.name} 至購物車`,
-        link: '/cart',
       })
     }),
   get: userProcedure.query(async ({ ctx }) => {
@@ -54,18 +46,13 @@ export const CartRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const cartItem = await updateCartItem({
+      await updateCartItem({
         userId: ctx.userLite.id,
         menuId: input.menuId,
         commodityId: input.commodityId,
         quantity: input.quantity,
         options: input.options,
         previousOptionsKey: input.optionsKey,
-      })
-
-      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
-        type: PUSHER_EVENT.CART_UPDATE,
-        message: `購物車的 ${cartItem.commodityOnMenu.commodity.name} 已更新`,
       })
     }),
   delete: userProcedure
@@ -89,8 +76,5 @@ export const CartRouter = router({
           ? { ids: input.ids }
           : { invalidOnly: input.invalidOnly }
       await deleteCartItems({ userId: ctx.userLite.id, ...deleteArgs })
-      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
-        type: PUSHER_EVENT.CART_DELETE,
-      })
     }),
 })

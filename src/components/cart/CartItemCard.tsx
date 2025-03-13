@@ -15,7 +15,10 @@ import Button from '@/components/core/Button'
 import Image from '@/components/core/Image'
 import Spinner from '@/components/core/Spinner'
 import type { CartItems, InvalidCartItems } from '@/lib/client/trpc'
-import trpc from '@/lib/client/trpc'
+import {
+  useDeleteCartMutation,
+  useUpdateCartMutation,
+} from '@/lib/client/trpc.hooks'
 import {
   getOptionName,
   getOptionPrice,
@@ -38,8 +41,8 @@ function CartItemCard(props: {
   isInvalid?: boolean
 }) {
   const { cartItem } = props
-  const deleteCartMutation = trpc.cart.delete.useMutation()
-  const updateCartMutation = trpc.cart.update.useMutation()
+  const deleteCartMutation = useDeleteCartMutation()
+  const updateCartMutation = useUpdateCartMutation()
   const [selectedQauntity, setSelectedQuantity] = useState(cartItem.quantity)
   const motionControls = useAnimationControls()
   const [isInitialRender, setIsInitialRender] = useState(false)

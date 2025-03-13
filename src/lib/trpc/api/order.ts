@@ -49,11 +49,6 @@ export const OrderRouter = router({
 
       if (!orders) throw new Error('訂單新增失敗')
 
-      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
-        type: PUSHER_EVENT.ORDER_ADD,
-        link: `/order/id/${orders[0].id}`,
-      })
-
       for (const order of orders) {
         // notify when menu type is main
         if (order.menu.type === 'LIVE') {
@@ -81,17 +76,10 @@ export const OrderRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.userLite) throw new Error('未登入')
 
-      const order = await createOrderFromRetail({
+      return await createOrderFromRetail({
         userId: ctx.userLite.id,
         cipher: input.cipher,
       })
-
-      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
-        type: PUSHER_EVENT.ORDER_ADD,
-        link: `/order/id/${order.id}`,
-      })
-
-      return order
     }),
   get: userProcedure
     .input(

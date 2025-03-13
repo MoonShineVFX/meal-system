@@ -11,9 +11,14 @@ import trpc from '@/lib/client/trpc'
 import { validateRole } from '@/lib/common'
 
 export default function Settings() {
+  const utils = trpc.useUtils()
   const userQuery = trpc.user.get.useQuery(undefined)
   const userTokenQuery = trpc.user.getToken.useQuery(undefined)
-  const updateUserTokenMutation = trpc.user.updateToken.useMutation()
+  const updateUserTokenMutation = trpc.user.updateToken.useMutation({
+    onSuccess: () => {
+      utils.user.getToken.invalidate()
+    },
+  })
   const testPushMutation = trpc.user.testPushNotification.useMutation()
   const {
     printerApi,
