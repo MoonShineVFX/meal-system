@@ -237,9 +237,7 @@ export function EventListenerBase() {
               {result.status === 'pending' && '等待中...'}
             </p>
             {result.error !== null && (
-              <p className='text-sm text-stone-500'>
-                伺服器連線發生更新問題，您仍可持續操作，不過必須重新整理介面才會更新
-              </p>
+              <p className='text-sm text-stone-500'>網頁狀態目前不會更新</p>
             )}
           </div>
         </div>
