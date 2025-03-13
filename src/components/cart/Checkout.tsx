@@ -15,6 +15,10 @@ import { twData, validateAuthority } from '@/lib/common'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import TextInput from '../form/base/TextInput'
+import {
+  useCreateOrderFromCartMutation,
+  useCreateOrderFromRetailMutation,
+} from '@/lib/client/trpc.hooks'
 
 export default function Checkout(props: {
   className?: string
@@ -40,8 +44,8 @@ export default function Checkout(props: {
 
   const { showDialog, dialog } = useDialog()
   const router = useRouter()
-  const createOrderFromCartMutation = trpc.order.addFromCart.useMutation()
-  const createOrderFromRetailMutation = trpc.order.addFromRetail.useMutation()
+  const createOrderFromCartMutation = useCreateOrderFromCartMutation()
+  const createOrderFromRetailMutation = useCreateOrderFromRetailMutation()
   const currentMutation = props.retailCipher
     ? createOrderFromRetailMutation
     : createOrderFromCartMutation

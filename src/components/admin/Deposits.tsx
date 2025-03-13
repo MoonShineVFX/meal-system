@@ -38,7 +38,6 @@ export default function Deposits() {
       setFetchingDepositId(depositId)
       const result = await context.deposit.get.fetch({
         id: depositId,
-        notification: false,
       })
       setFetchingDepositId(null)
 

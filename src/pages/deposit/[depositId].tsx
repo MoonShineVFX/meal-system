@@ -12,22 +12,25 @@ import Button from '@/components/core/Button'
 import Error from '@/components/core/Error'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import Title from '@/components/core/Title'
-import { useStore } from '@/lib/client/store'
+import { addNotification, NotificationType, useStore } from '@/lib/client/store'
 import trpc, { DepositData } from '@/lib/client/trpc'
 
 export default function PageDepositDetail() {
   const router = useRouter()
   const { depositId, notify } = router.query
+
   const [deposit, setDeposit] = useState<DepositData | undefined>(undefined)
+
   const { data, isError, error, isLoading } = trpc.deposit.get.useQuery(
     {
       id: depositId as string,
-      notification: notify === 'true',
     },
     {
       refetchInterval: deposit?.status === DepositStatus.PENDING ? 5000 : false,
     },
   )
+  const utils = trpc.useUtils()
+
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null)
   const { depositRedirect, setDepositRedirect } = useStore((state) => ({
     depositRedirect: state.depositRedirect_local,
@@ -46,6 +49,27 @@ export default function PageDepositDetail() {
     }
     setDepositRedirect(null)
   }, [depositId, depositRedirect])
+
+  useEffect(() => {
+    if (!data) return
+    if (notify === 'true') {
+      if (data.resultStatus === DepositStatus.SUCCESS) {
+        utils.user.get.invalidate()
+        addNotification({
+          type: NotificationType.SUCCESS,
+          message: '儲值成功',
+          link: `/transaction?t=${
+            data.transactions[data.transactions.length - 1].id
+          }`,
+        })
+      } else if (data.resultStatus === DepositStatus.FAILED) {
+        addNotification({
+          type: NotificationType.ERROR,
+          message: '儲值失敗',
+        })
+      }
+    }
+  }, [data])
 
   if (isError) return <Error description={error.message} />
   if (isLoading) return <SpinnerBlock />

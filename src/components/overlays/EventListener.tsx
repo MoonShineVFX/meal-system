@@ -14,7 +14,7 @@ import {
   PUSHER_EVENT_NOTIFY,
   PusherEventPayload,
 } from '@/lib/common/pusher'
-import { twMerge } from 'tailwind-merge'
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { WithAuth } from './AuthValidator'
 
 export default function EventListener() {
@@ -47,7 +47,7 @@ export function EventListenerBase() {
   // Connection status state
   const [connectionStatus, setConnectionStatus] = useState<
     'connected' | 'connecting' | 'error' | 'disconnected'
-  >('disconnected')
+  >('connecting')
 
   /* Pusher Push Notifications Initialize */
   useEffect(() => {
@@ -108,6 +108,7 @@ export function EventListenerBase() {
     if (!userInfoQuery.isSuccess || !userInfoQuery.data) return
 
     // Get the Pusher client
+    setConnectionStatus('connecting')
     const pusher = createPusherClient()
 
     // Setup error and connection handlers
@@ -143,20 +144,6 @@ export function EventListenerBase() {
 
       switch (eventPayload.type) {
         // User
-        case PUSHER_EVENT.CART_ADD:
-        case PUSHER_EVENT.CART_DELETE:
-        case PUSHER_EVENT.CART_UPDATE:
-          utils.menu.get.invalidate()
-          utils.cart.get.invalidate()
-          break
-        case PUSHER_EVENT.ORDER_ADD:
-          utils.menu.get.invalidate()
-          utils.cart.get.invalidate()
-          utils.user.get.invalidate()
-          utils.order.get.invalidate()
-          utils.order.getBadgeCount.invalidate()
-          utils.transaction.getListByUser.invalidate()
-          break
         case PUSHER_EVENT.ORDER_UPDATE:
           utils.order.get.invalidate()
           utils.order.getBadgeCount.invalidate()
@@ -167,16 +154,9 @@ export function EventListenerBase() {
           utils.order.getBadgeCount.invalidate()
           utils.transaction.getListByUser.invalidate()
           break
-        case PUSHER_EVENT.DEPOSIT_RECHARGE:
-          utils.user.get.invalidate()
-        case PUSHER_EVENT.USER_TOKEN_UPDATE:
-          utils.user.getToken.invalidate()
-          break
         case PUSHER_EVENT.BONUS_APPLY:
           utils.user.get.invalidate()
           break
-        case PUSHER_EVENT.USER_SETTINGS_UPDATE:
-          utils.user.get.invalidate()
         case PUSHER_EVENT.MENU_LIVE_UPDATE:
           utils.menu.get.invalidate({
             type: 'LIVE',
@@ -288,15 +268,18 @@ export function EventListenerBase() {
   // Show connection status indicator when not connected
   if (connectionStatus !== 'connected') {
     return (
-      <div className='fixed inset-x-6 bottom-20 z-50 flex items-center justify-center sm:left-auto sm:right-6 sm:bottom-6'>
+      <div className='fixed bottom-20 right-6 z-50 flex items-center justify-center sm:bottom-6'>
         <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white px-4 py-3 shadow-lg'>
+          {connectionStatus === 'connecting' ? (
+            <div className='h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-stone-700 sm:mx-1' />
+          ) : (
+            <ExclamationCircleIcon className='h-8 w-8 font-bold text-red-400' />
+          )}
           <div
-            className={twMerge(
-              'mx-1 h-4 w-4 rounded-full border-t-2 border-b-2 border-stone-700',
-              connectionStatus === 'connecting' && 'animate-spin',
-            )}
-          />
-          <div>
+            className={
+              connectionStatus === 'connecting' ? 'hidden sm:block' : undefined
+            }
+          >
             <p className='text-stone-700'>
               {(connectionStatus === 'error' ||
                 connectionStatus === 'disconnected') &&
@@ -305,7 +288,9 @@ export function EventListenerBase() {
             </p>
             {(connectionStatus === 'error' ||
               connectionStatus === 'disconnected') && (
-              <p className='text-sm text-stone-500'>網頁狀態目前不會更新</p>
+              <p className='hidden text-sm text-stone-500 sm:block'>
+                請重新整理取得最新資料
+              </p>
             )}
           </div>
         </div>

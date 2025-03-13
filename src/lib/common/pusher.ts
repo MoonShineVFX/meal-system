@@ -33,13 +33,8 @@ export type PusherEventPayload = {
 }
 
 export enum PUSHER_EVENT {
-  CART_ADD = '加入餐點至購物車',
-  CART_DELETE = '移除購物車餐點',
-  CART_UPDATE = '修改購物車餐點',
-  ORDER_ADD = '結帳完成',
   ORDER_UPDATE = '訂單狀態更新',
   ORDER_CANCEL = '訂單取消',
-  DAILY_RECHARGE = '點數已更新',
   BONUS_REDEEMED = '已取得贈送點數',
   POS_ADD = '待處理點餐新增',
   POS_UPDATE = '待處理點餐更新',
@@ -67,7 +62,6 @@ export enum PUSHER_EVENT {
   BONUS_UPDATE = '獎勵更新',
   BONUS_DELETE = '獎勵刪除',
   BONUS_APPLY = '獎勵已發放',
-  USER_SETTINGS_UPDATE = '用戶設定已更改',
   USER_TEST_PUSH_NOTIFICATION = '測試推送通知',
   USER_TOKEN_UPDATE = '用戶裝置設定已更改',
   USER_AUTHORIY_UPDATE = '用戶權限已更改',

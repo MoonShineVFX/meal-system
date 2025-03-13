@@ -171,11 +171,6 @@ export const UserRouter = router({
         ...input,
       })
 
-      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
-        type: PUSHER_EVENT.USER_TOKEN_UPDATE,
-        skipNotify: true,
-      })
-
       // update app badge
       if (input.badgeEnabled || input.endpoint) {
         webPusher.pushBadgeCountToUser({

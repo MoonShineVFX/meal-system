@@ -17,7 +17,7 @@ import { getMenuName, getOrderOptionsPrice, twData } from '@/lib/common'
 import CartItemCard from './CartItemCard'
 import CartItemOptionsDialog from './CartItemOptionsDialog'
 import Checkout from './Checkout'
-
+import { useDeleteCartMutation } from '@/lib/client/trpc.hooks'
 type CartDeleteType = 'ALL' | 'INVALID'
 
 const CARTITEM_SKELETON = {
@@ -52,11 +52,7 @@ export default function Cart() {
     isError: cartIsError,
     error: cartError,
   } = trpc.cart.get.useQuery()
-  const deleteCartMutation = trpc.cart.delete.useMutation({
-    onSuccess: () => {
-      deleteCartMutation.reset()
-    },
-  })
+  const deleteCartMutation = useDeleteCartMutation()
   const [modifiedNotify, setModifiedNotify] = useState(false)
   const [cartItemInOptionsDialog, setCartItemInOptionsDialog] =
     useState<CartItems[0]>()

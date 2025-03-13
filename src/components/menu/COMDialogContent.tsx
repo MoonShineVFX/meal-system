@@ -19,7 +19,7 @@ import Image from '@/components/core/Image'
 import Title from '@/components/core/Title'
 import { useStore } from '@/lib/client/store'
 import type { CommodityOnMenu } from '@/lib/client/trpc'
-import trpc from '@/lib/client/trpc'
+import { useAddCartMutation } from '@/lib/client/trpc.hooks'
 import {
   OptionSet,
   OrderOptions,
@@ -32,7 +32,6 @@ import {
   validateAndSortOrderOptions,
 } from '@/lib/common'
 import OptionPrice from '../core/OptionPrice'
-
 type FormInputs = {
   quantity: number
   options: OrderOptions
@@ -42,8 +41,10 @@ function COMDialogContent(props: {
   onClose: () => void
   com: CommodityOnMenu
 }) {
-  const addCartMutation = trpc.cart.add.useMutation()
   const { com } = props
+
+  const addCartMutation = useAddCartMutation()
+
   const [isLimited, setIsLimited] = useState(false)
   const {
     currentMenu,
