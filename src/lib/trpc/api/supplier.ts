@@ -1,13 +1,13 @@
 import { z } from 'zod'
 
-import { staffProcedure, router } from '../trpc'
+import { PUSHER_CHANNEL, PUSHER_EVENT } from '@/lib/common/pusher'
 import {
   createOrUpdateSupplier,
-  getSuppliers,
   deleteSuppliers,
+  getSuppliers,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY } from '@/lib/common'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { emitPusherEvent } from '@/lib/server/pusher'
+import { router, staffProcedure } from '../trpc'
 
 export const SupplierRouter = router({
   createOrEdit: staffProcedure
@@ -21,10 +21,10 @@ export const SupplierRouter = router({
     .mutation(async ({ input }) => {
       const supplier = await createOrUpdateSupplier(input)
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
         type: input.id
-          ? SERVER_NOTIFY.SUPPLIER_UPDATE
-          : SERVER_NOTIFY.SUPPLIER_ADD,
+          ? PUSHER_EVENT.SUPPLIER_UPDATE
+          : PUSHER_EVENT.SUPPLIER_ADD,
         skipNotify: true,
       })
 
@@ -48,8 +48,8 @@ export const SupplierRouter = router({
     .mutation(async ({ input }) => {
       const deleted = await deleteSuppliers(input)
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.SUPPLIER_DELETE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.SUPPLIER_DELETE,
         skipNotify: true,
       })
 

@@ -2,7 +2,7 @@ import { DepositStatus, UserRole } from '@prisma/client'
 import { z } from 'zod'
 
 import { NotificationType } from '@/lib/client/store'
-import { SERVER_NOTIFY, settings } from '@/lib/common'
+import { settings } from '@/lib/common'
 import {
   createDeposit,
   deleteDeposit,
@@ -10,8 +10,9 @@ import {
   getDeposits,
 } from '@/lib/server/database'
 import { getAndUpdateTradeInfo } from '@/lib/server/deposit/newebpay'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { emitPusherEvent } from '@/lib/server/pusher'
 import { router, staffProcedure, userProcedure } from '../trpc'
+import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
 
 export const DepositRouter = router({
   create: userProcedure
@@ -50,14 +51,14 @@ export const DepositRouter = router({
     .query(async ({ ctx, input }) => {
       const deposit = await getDeposit(input.id)
       if (!deposit) {
-        throw new Error(`找不到儲值紀錄: ${input.id}`)
+        throw new Error(`?��??�儲?��??? ${input.id}`)
       }
 
       if (
         deposit.userId !== ctx.userLite.id &&
         ctx.userLite.role === UserRole.USER
       ) {
-        throw new Error(`沒有讀取此儲值紀錄的權限`)
+        throw new Error(`沒�?讀?�此?�值�??��?權�?`)
       }
 
       const result = await getAndUpdateTradeInfo({
@@ -66,23 +67,23 @@ export const DepositRouter = router({
       })
 
       if (result && result.status !== deposit.status) {
-        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-          type: SERVER_NOTIFY.DEPOSIT_UPDATE,
+        emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+          type: PUSHER_EVENT.DEPOSIT_UPDATE,
           skipNotify: true,
         })
       }
 
       if (result && input.notification) {
         if (result.status === DepositStatus.SUCCESS) {
-          eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-            type: SERVER_NOTIFY.DEPOSIT_RECHARGE,
+          emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
+            type: PUSHER_EVENT.DEPOSIT_RECHARGE,
             link: `/transaction?t=${
               result.transactions[result.transactions.length - 1].id
             }`,
           })
         } else if (result.status === DepositStatus.FAILED) {
-          eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-            type: SERVER_NOTIFY.DEPOSIT_FAILED,
+          emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
+            type: PUSHER_EVENT.DEPOSIT_FAILED,
             notificationType: NotificationType.ERROR,
           })
         }
