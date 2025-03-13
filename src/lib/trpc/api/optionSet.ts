@@ -8,8 +8,9 @@ import {
   deleteOptionSets,
   createOptionSetsTemplate,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY, optionValueSchema } from '@/lib/common'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { optionValueSchema } from '@/lib/common'
+import { emitPusherEvent } from '@/lib/server/pusher'
+import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
 
 const OptionSetSchema = z.array(
   z.object({
@@ -34,8 +35,8 @@ export const OptionSetRouter = router({
     )
     .mutation(async ({ input }) => {
       await createOptionSetsTemplate(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.OPTION_SETS_ADD,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.OPTION_SETS_ADD,
         skipNotify: true,
       })
     }),
@@ -49,8 +50,8 @@ export const OptionSetRouter = router({
     )
     .mutation(async ({ input }) => {
       await updateOptionSetsTemplate(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.OPTION_SETS_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.OPTION_SETS_UPDATE,
         skipNotify: true,
       })
     }),
@@ -71,8 +72,8 @@ export const OptionSetRouter = router({
     )
     .mutation(async ({ input }) => {
       await deleteOptionSets(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.OPTION_SETS_DELETE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.OPTION_SETS_DELETE,
         skipNotify: true,
       })
     }),

@@ -1,6 +1,6 @@
 import z from 'zod'
 
-import { SERVER_NOTIFY, optionValueSchema } from '@/lib/common'
+import { optionValueSchema } from '@/lib/common'
 import {
   addCommodityToMenu,
   createCommodity,
@@ -9,8 +9,9 @@ import {
   getCommodities,
   removeCommodityFromMenus,
 } from '@/lib/server/database'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { emitPusherEvent } from '@/lib/server/pusher'
 import { router, staffProcedure } from '../trpc'
+import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
 
 export const CommodityRouter = router({
   create: staffProcedure
@@ -52,8 +53,8 @@ export const CommodityRouter = router({
           ),
         )
       }
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.COMMODITY_ADD,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.COMMODITY_ADD,
         skipNotify: false,
       })
     }),
@@ -101,8 +102,8 @@ export const CommodityRouter = router({
         commodityId: commodity.id,
         excludeMenuIds: input.menus?.map((menu) => menu.menuId) ?? [],
       })
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.COMMODITY_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.COMMODITY_UPDATE,
         skipNotify: false,
       })
     }),
@@ -162,8 +163,8 @@ export const CommodityRouter = router({
         }),
       )
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.COMMODITY_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.COMMODITY_UPDATE,
         skipNotify: false,
       })
     }),
@@ -186,8 +187,8 @@ export const CommodityRouter = router({
     )
     .mutation(async ({ input }) => {
       await deleteCommodities(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.COMMODITY_DELETE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.COMMODITY_DELETE,
         skipNotify: false,
       })
     }),

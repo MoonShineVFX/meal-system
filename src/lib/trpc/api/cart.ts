@@ -7,8 +7,9 @@ import {
   getCartItems,
   deleteCartItems,
 } from '@/lib/server/database'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
-import { SERVER_NOTIFY, settings, optionValueSchema } from '@/lib/common'
+import { emitPusherEvent } from '@/lib/server/pusher'
+import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
+import { settings, optionValueSchema } from '@/lib/common'
 
 export const CartRouter = router({
   add: userProcedure
@@ -31,8 +32,8 @@ export const CartRouter = router({
         options: input.options,
       })
 
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-        type: SERVER_NOTIFY.CART_ADD,
+      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
+        type: PUSHER_EVENT.CART_ADD,
         message: `新增 ${cartItem.commodityOnMenu.commodity.name} 至購物車`,
         link: '/cart',
       })
@@ -62,9 +63,9 @@ export const CartRouter = router({
         previousOptionsKey: input.optionsKey,
       })
 
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-        type: SERVER_NOTIFY.CART_UPDATE,
-        message: `購物車的 ${cartItem.commodityOnMenu.commodity.name} 已經更新`,
+      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
+        type: PUSHER_EVENT.CART_UPDATE,
+        message: `購物車的 ${cartItem.commodityOnMenu.commodity.name} 已更新`,
       })
     }),
   delete: userProcedure
@@ -88,8 +89,8 @@ export const CartRouter = router({
           ? { ids: input.ids }
           : { invalidOnly: input.invalidOnly }
       await deleteCartItems({ userId: ctx.userLite.id, ...deleteArgs })
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-        type: SERVER_NOTIFY.CART_DELETE,
+      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
+        type: PUSHER_EVENT.CART_DELETE,
       })
     }),
 })

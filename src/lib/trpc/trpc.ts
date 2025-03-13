@@ -35,16 +35,6 @@ export type Context = inferAsyncReturnType<typeof createContext>
 /* Procedures */
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
-  sse: {
-    maxDurationMs: 5 * 60 * 1000, // 5 minutes
-    ping: {
-      enabled: true,
-      intervalMs: 10 * 1000, // 10 seconds
-    },
-    client: {
-      reconnectAfterInactivityMs: 60 * 1000, // 1 minute
-    },
-  },
 })
 export const router = t.router
 

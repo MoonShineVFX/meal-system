@@ -1,10 +1,4 @@
-import {
-  httpBatchLink,
-  loggerLink,
-  splitLink,
-  retryLink,
-  unstable_httpSubscriptionLink,
-} from '@trpc/client'
+import { httpBatchLink, loggerLink } from '@trpc/client'
 import { createTRPCNext } from '@trpc/next'
 import type { UseTRPCMutationResult } from '@trpc/react-query/shared'
 import type { inferRouterOutputs } from '@trpc/server'
@@ -67,37 +61,9 @@ const trpc = createTRPCNext<AppRouter>({
             process.env.NODE_ENV !== 'production' ||
             (opts.direction === 'down' && opts.result instanceof Error),
         }),
-        splitLink({
-          // uses the httpSubscriptionLink for subscriptions
-          condition: (op) => op.type === 'subscription',
-          true: [
-            retryLink({
-              retry: (opts) => {
-                const code = opts.error.data?.code
-                if (opts.attempts > 10) {
-                  return false
-                }
-                if (!code) {
-                  // This shouldn't happen as our httpSubscriptionLink will automatically retry within when there's a non-parsable response
-                  console.error('No error code found, retrying', opts)
-                  return true
-                }
-                if (code === 'UNAUTHORIZED' || code === 'FORBIDDEN') {
-                  console.log('Retrying due to 401/403 error')
-                  return true
-                }
-                return false
-              },
-            }),
-            unstable_httpSubscriptionLink({
-              url: `/api/trpc`,
-              transformer: superjson,
-            }),
-          ],
-          false: httpBatchLink({
-            url: `/api/trpc`,
-            transformer: superjson,
-          }),
+        httpBatchLink({
+          url: `/api/trpc`,
+          transformer: superjson,
         }),
       ],
       queryClientConfig: {

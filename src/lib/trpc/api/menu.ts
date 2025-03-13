@@ -17,8 +17,9 @@ import {
   getRetailCOM,
   createOrUpdateSupplier,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY, optionValueSchema } from '@/lib/common'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { optionValueSchema } from '@/lib/common'
+import { emitPusherEvent } from '@/lib/server/pusher'
+import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
 
 export const MenuRouter = router({
   createOrEdit: staffProcedure
@@ -150,15 +151,20 @@ export const MenuRouter = router({
       const hasCreateCommodity =
         input.coms && input.coms.some((com) => 'commodity' in com)
       if (hasCreateCommodity) {
-        eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-          type: SERVER_NOTIFY.COMMODITY_ADD,
+        emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+          type: PUSHER_EVENT.COMMODITY_ADD,
           skipNotify: true,
         })
       }
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: input.isEdit ? SERVER_NOTIFY.MENU_UPDATE : SERVER_NOTIFY.MENU_ADD,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: input.isEdit ? PUSHER_EVENT.MENU_UPDATE : PUSHER_EVENT.MENU_ADD,
         skipNotify: false,
+      })
+
+      emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
+        type: PUSHER_EVENT.MENU_LIVE_UPDATE,
+        skipNotify: true,
       })
     }),
   deleteMany: staffProcedure
@@ -173,8 +179,8 @@ export const MenuRouter = router({
           await deleteMenu({ menuId: id })
         }),
       )
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.MENU_DELETE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.MENU_DELETE,
         skipNotify: false,
       })
     }),

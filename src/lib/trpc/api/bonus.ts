@@ -5,8 +5,8 @@ import {
   deleteBonus,
   getBonus,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY } from '@/lib/common'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
+import { emitPusherEvent } from '@/lib/server/pusher'
 
 import { router, staffProcedure } from '../trpc'
 
@@ -24,14 +24,14 @@ export const BonusRouter = router({
     .mutation(async ({ input }) => {
       await createOrUpdateBonus(input)
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: input.id ? SERVER_NOTIFY.BONUS_UPDATE : SERVER_NOTIFY.BONUS_ADD,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: input.id ? PUSHER_EVENT.BONUS_UPDATE : PUSHER_EVENT.BONUS_ADD,
         skipNotify: true,
       })
 
       for (const userId of input.userIds) {
-        eventEmitter.emit(ServerChannelName.USER_NOTIFY(userId), {
-          type: SERVER_NOTIFY.BONUS_APPLY,
+        emitPusherEvent(PUSHER_CHANNEL.USER(userId), {
+          type: PUSHER_EVENT.BONUS_APPLY,
           skipNotify: true,
         })
       }
@@ -45,8 +45,8 @@ export const BonusRouter = router({
     .mutation(async ({ input }) => {
       await deleteBonus(input.id)
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.BONUS_DELETE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.BONUS_DELETE,
         skipNotify: true,
       })
     }),

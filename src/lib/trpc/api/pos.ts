@@ -1,11 +1,7 @@
 import z from 'zod'
 
-import {
-  OrderTimeStatus,
-  SERVER_NOTIFY,
-  getResourceUrl,
-  settings,
-} from '@/lib/common'
+import { OrderTimeStatus, getResourceUrl, settings } from '@/lib/common'
+import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
 import {
   completeDishedUpOrders,
   getLiveOrdersForPOS,
@@ -13,7 +9,7 @@ import {
   updateOrderStatus,
   updateOrdersStatus,
 } from '@/lib/server/database'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { emitPusherEvent } from '@/lib/server/pusher'
 import webPusher from '@/lib/server/webpush'
 import { router, staffProcedure } from '../trpc'
 
@@ -56,15 +52,15 @@ export const POSRouter = router({
   completeDishedUps: staffProcedure.mutation(async () => {
     const orders = await completeDishedUpOrders()
 
-    eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-      type: SERVER_NOTIFY.POS_UPDATE,
+    emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+      type: PUSHER_EVENT.POS_UPDATE,
       skipNotify: true,
     })
 
     let userIds: string[] = []
     for (const order of orders) {
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
-        type: SERVER_NOTIFY.ORDER_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.USER(order.userId), {
+        type: PUSHER_EVENT.ORDER_UPDATE,
         message: generateOrderNotifyMessage(order.id, 'timeCompleted'),
         link: `/order/id/${order.id}`,
         skipNotify: true,
@@ -93,11 +89,11 @@ export const POSRouter = router({
     .mutation(async ({ input }) => {
       const order = await updateOrderStatus(input)
 
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
+      emitPusherEvent(PUSHER_CHANNEL.USER(order.userId), {
         type:
           input.status !== 'timeCanceled'
-            ? SERVER_NOTIFY.ORDER_UPDATE
-            : SERVER_NOTIFY.ORDER_CANCEL,
+            ? PUSHER_EVENT.ORDER_UPDATE
+            : PUSHER_EVENT.ORDER_CANCEL,
         message: generateOrderNotifyMessage(order.id, input.status),
         link: `/order/id/${order.id}`,
         skipNotify: input.status === 'timeCompleted',
@@ -125,8 +121,8 @@ export const POSRouter = router({
         })
       }
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.POS_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.POS_UPDATE,
         skipNotify: true,
       })
 
@@ -151,11 +147,11 @@ export const POSRouter = router({
 
       let userIds: string[] = []
       for (const order of orders) {
-        eventEmitter.emit(ServerChannelName.USER_NOTIFY(order.userId), {
+        emitPusherEvent(PUSHER_CHANNEL.USER(order.userId), {
           type:
             input.status !== 'timeCanceled'
-              ? SERVER_NOTIFY.ORDER_UPDATE
-              : SERVER_NOTIFY.ORDER_CANCEL,
+              ? PUSHER_EVENT.ORDER_UPDATE
+              : PUSHER_EVENT.ORDER_CANCEL,
           message: generateOrderNotifyMessage(order.id, input.status),
           link: `/order/id/${order.id}`,
           skipNotify: input.status === 'timeCompleted',
@@ -170,8 +166,8 @@ export const POSRouter = router({
         userIds,
       })
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.POS_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.POS_UPDATE,
         skipNotify: true,
       })
     }),

@@ -1,9 +1,20 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 
+import {
+  createPusherClient,
+  subscribeToPusherChannel,
+} from '@/lib/client/pusher'
 import { NotificationType, useStore } from '@/lib/client/store'
 import ServiceWorkerHandler from '@/lib/client/sw'
 import trpc from '@/lib/client/trpc'
-import { SERVER_NOTIFY, getResourceUrl, settings } from '@/lib/common'
+import { getResourceUrl, settings } from '@/lib/common'
+import {
+  PUSHER_CHANNEL,
+  PUSHER_EVENT,
+  PUSHER_EVENT_NOTIFY,
+  PusherEventPayload,
+} from '@/lib/common/pusher'
+import { twMerge } from 'tailwind-merge'
 import { WithAuth } from './AuthValidator'
 
 export default function EventListener() {
@@ -32,6 +43,11 @@ export function EventListenerBase() {
   const addUserSubscriptionMutation = trpc.user.updateToken.useMutation()
   const deleteUserSubscriptionMutation =
     trpc.user.deleteSubscription.useMutation()
+
+  // Connection status state
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connected' | 'connecting' | 'error' | 'disconnected'
+  >('disconnected')
 
   /* Pusher Push Notifications Initialize */
   useEffect(() => {
@@ -86,32 +102,54 @@ export function EventListenerBase() {
     }
   }, [userSub.data, serviceWorkerHandler, userSub.isError])
 
-  /* Server Notification */
-  const result = trpc.user.onNotify.useSubscription(undefined, {
-    onStarted: () => {
-      // Wait for the subscription to be established
-      setTimeout(() => {
-        utils.user.getConnectedUsers.invalidate()
-      }, 100)
-    },
-    onData: async (notifyPayload) => {
-      if (!notifyPayload.skipNotify) {
+  /* Pusher Event Subscription */
+  useEffect(() => {
+    // Don't subscribe until user info is loaded
+    if (!userInfoQuery.isSuccess || !userInfoQuery.data) return
+
+    // Get the Pusher client
+    const pusher = createPusherClient()
+
+    // Setup error and connection handlers
+    pusher.connection.bind('error', (err: any) => {
+      console.error('[Pusher] Connection error', err)
+      setConnectionStatus('error')
+    })
+
+    pusher.connection.bind('connected', () => {
+      console.debug('[Pusher] Connected')
+      setConnectionStatus('connected')
+    })
+
+    pusher.connection.bind('disconnected', () => {
+      console.debug('[Pusher] Disconnected')
+      setConnectionStatus('disconnected')
+    })
+
+    pusher.connection.bind('connecting', () => {
+      console.debug('[Pusher] Connecting...')
+      setConnectionStatus('connecting')
+    })
+
+    // Handle pusher events
+    const handleEvent = (eventPayload: PusherEventPayload) => {
+      if (!eventPayload.skipNotify) {
         addNotification({
-          type: notifyPayload.notificationType ?? NotificationType.SUCCESS,
-          message: notifyPayload.message ?? notifyPayload.type,
-          link: notifyPayload.link,
+          type: eventPayload.notificationType ?? NotificationType.SUCCESS,
+          message: eventPayload.message ?? eventPayload.type,
+          link: eventPayload.link,
         })
       }
 
-      switch (notifyPayload.type) {
+      switch (eventPayload.type) {
         // User
-        case SERVER_NOTIFY.CART_ADD:
-        case SERVER_NOTIFY.CART_DELETE:
-        case SERVER_NOTIFY.CART_UPDATE:
+        case PUSHER_EVENT.CART_ADD:
+        case PUSHER_EVENT.CART_DELETE:
+        case PUSHER_EVENT.CART_UPDATE:
           utils.menu.get.invalidate()
           utils.cart.get.invalidate()
           break
-        case SERVER_NOTIFY.ORDER_ADD:
+        case PUSHER_EVENT.ORDER_ADD:
           utils.menu.get.invalidate()
           utils.cart.get.invalidate()
           utils.user.get.invalidate()
@@ -119,37 +157,41 @@ export function EventListenerBase() {
           utils.order.getBadgeCount.invalidate()
           utils.transaction.getListByUser.invalidate()
           break
-        case SERVER_NOTIFY.ORDER_UPDATE:
+        case PUSHER_EVENT.ORDER_UPDATE:
           utils.order.get.invalidate()
           utils.order.getBadgeCount.invalidate()
           break
-        case SERVER_NOTIFY.ORDER_CANCEL:
+        case PUSHER_EVENT.ORDER_CANCEL:
           utils.order.get.invalidate()
           utils.user.get.invalidate()
           utils.order.getBadgeCount.invalidate()
           utils.transaction.getListByUser.invalidate()
           break
-        case SERVER_NOTIFY.DEPOSIT_RECHARGE:
+        case PUSHER_EVENT.DEPOSIT_RECHARGE:
           utils.user.get.invalidate()
-        case SERVER_NOTIFY.USER_TOKEN_UPDATE:
+        case PUSHER_EVENT.USER_TOKEN_UPDATE:
           utils.user.getToken.invalidate()
           break
-        case SERVER_NOTIFY.BONUS_APPLY:
+        case PUSHER_EVENT.BONUS_APPLY:
           utils.user.get.invalidate()
           break
-        case SERVER_NOTIFY.USER_SETTINGS_UPDATE:
+        case PUSHER_EVENT.USER_SETTINGS_UPDATE:
           utils.user.get.invalidate()
+        case PUSHER_EVENT.MENU_LIVE_UPDATE:
+          utils.menu.get.invalidate({
+            type: 'LIVE',
+          })
           break
 
         // Staff & Admin
-        case SERVER_NOTIFY.POS_ADD:
+        case PUSHER_EVENT.POS_ADD:
           utils.pos.getLive.invalidate()
           utils.pos.getReservation.invalidate()
           utils.commodity.getList.invalidate()
           // Check if order is live, 這判斷有點勉強，之後可能需要改
           if (
-            notifyPayload.link &&
-            notifyPayload.link.startsWith('/pos/live') &&
+            eventPayload.link &&
+            eventPayload.link.startsWith('/pos/live') &&
             posNotificationSound
           ) {
             const audio = new Audio(
@@ -158,85 +200,111 @@ export function EventListenerBase() {
             audio.play()
           }
           break
-        case SERVER_NOTIFY.POS_UPDATE:
+        case PUSHER_EVENT.POS_UPDATE:
           utils.pos.getLive.invalidate()
           utils.pos.getReservation.invalidate()
           utils.order.getList.invalidate()
           break
-        case SERVER_NOTIFY.CATEGORY_ADD:
-        case SERVER_NOTIFY.CATEGORY_UPDATE:
-        case SERVER_NOTIFY.CATEGORY_DELETE:
+        case PUSHER_EVENT.CATEGORY_ADD:
+        case PUSHER_EVENT.CATEGORY_UPDATE:
+        case PUSHER_EVENT.CATEGORY_DELETE:
           utils.category.get.invalidate()
           break
-        case SERVER_NOTIFY.COMMODITY_ADD:
-        case SERVER_NOTIFY.COMMODITY_UPDATE:
-        case SERVER_NOTIFY.COMMODITY_DELETE:
+        case PUSHER_EVENT.COMMODITY_ADD:
+        case PUSHER_EVENT.COMMODITY_UPDATE:
+        case PUSHER_EVENT.COMMODITY_DELETE:
           utils.commodity.getList.invalidate()
           break
-        case SERVER_NOTIFY.OPTION_SETS_ADD:
-        case SERVER_NOTIFY.OPTION_SETS_UPDATE:
-        case SERVER_NOTIFY.OPTION_SETS_DELETE:
+        case PUSHER_EVENT.OPTION_SETS_ADD:
+        case PUSHER_EVENT.OPTION_SETS_UPDATE:
+        case PUSHER_EVENT.OPTION_SETS_DELETE:
           utils.optionSet.get.invalidate()
           break
-        case SERVER_NOTIFY.MENU_ADD:
-        case SERVER_NOTIFY.MENU_UPDATE:
-        case SERVER_NOTIFY.MENU_DELETE:
+        case PUSHER_EVENT.MENU_ADD:
+        case PUSHER_EVENT.MENU_UPDATE:
+        case PUSHER_EVENT.MENU_DELETE:
           utils.menu.get.invalidate()
           utils.menu.getActives.invalidate()
           utils.menu.getReservationsForUser.invalidate()
           break
-        case SERVER_NOTIFY.DEPOSIT_UPDATE:
+        case PUSHER_EVENT.DEPOSIT_UPDATE:
           utils.deposit.getList.invalidate()
           break
-        case SERVER_NOTIFY.SUPPLIER_ADD:
-        case SERVER_NOTIFY.SUPPLIER_UPDATE:
-        case SERVER_NOTIFY.SUPPLIER_DELETE:
+        case PUSHER_EVENT.SUPPLIER_ADD:
+        case PUSHER_EVENT.SUPPLIER_UPDATE:
+        case PUSHER_EVENT.SUPPLIER_DELETE:
           utils.supplier.getList.invalidate()
           utils.commodity.getList.invalidate()
           break
-        case SERVER_NOTIFY.USER_AUTHORIY_UPDATE:
+        case PUSHER_EVENT.USER_AUTHORIY_UPDATE:
           utils.user.get.invalidate()
           utils.user.getStatistics.invalidate()
           break
-        case SERVER_NOTIFY.BONUS_ADD:
-        case SERVER_NOTIFY.BONUS_UPDATE:
-        case SERVER_NOTIFY.BONUS_DELETE:
+        case PUSHER_EVENT.BONUS_ADD:
+        case PUSHER_EVENT.BONUS_UPDATE:
+        case PUSHER_EVENT.BONUS_DELETE:
           utils.bonus.getList.invalidate()
-        case SERVER_NOTIFY.SERVER_CONNECTED_USERS_UPDATE:
-          utils.user.getConnectedUsers.invalidate()
           break
       }
-    },
-    onError: (error) => {
-      console.error('[EventListener] onNotify error', error)
-      addNotification({
-        type: NotificationType.ERROR,
-        message: `伺服器連線錯誤`,
-      })
-    },
-  })
+    }
 
-  const isDisconnected = useMemo(() => {
-    return result.status !== 'pending'
-  }, [result.status])
+    // Subscribe to public channel
+    subscribeToPusherChannel(
+      pusher,
+      PUSHER_CHANNEL.PUBLIC,
+      PUSHER_EVENT_NOTIFY,
+      handleEvent,
+    )
+
+    // Subscribe to user-specific channel if user is authenticated
+    subscribeToPusherChannel(
+      pusher,
+      PUSHER_CHANNEL.USER(userInfoQuery.data.id),
+      PUSHER_EVENT_NOTIFY,
+      handleEvent,
+    )
+
+    // Subscribe to staff channel if user is staff
+    if (['STAFF', 'ADMIN'].includes(userInfoQuery.data.role)) {
+      subscribeToPusherChannel(
+        pusher,
+        PUSHER_CHANNEL.STAFF,
+        PUSHER_EVENT_NOTIFY,
+        handleEvent,
+      )
+    }
+
+    // Cleanup all subscriptions on unmount
+    return () => {
+      pusher.disconnect()
+      pusher.unbind_all()
+    }
+  }, [userInfoQuery.data?.id, userInfoQuery.data?.role])
 
   if (!userInfoQuery.isSuccess) {
     return null
   }
 
-  if (isDisconnected) {
+  // Show connection status indicator when not connected
+  if (connectionStatus !== 'connected') {
     return (
       <div className='fixed inset-x-6 bottom-20 z-50 flex items-center justify-center sm:left-auto sm:right-6 sm:bottom-6'>
-        <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white p-3 shadow-lg'>
-          <div className='h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-stone-700' />
+        <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white px-4 py-3 shadow-lg'>
+          <div
+            className={twMerge(
+              'mx-1 h-4 w-4 rounded-full border-t-2 border-b-2 border-stone-700',
+              connectionStatus === 'connecting' && 'animate-spin',
+            )}
+          />
           <div>
             <p className='text-stone-700'>
-              {result.status === 'error' && '連線錯誤'}
-              {result.status === 'idle' && '閒置中'}
-              {result.status === 'connecting' && '連線中...'}
-              {result.status === 'pending' && '等待中...'}
+              {(connectionStatus === 'error' ||
+                connectionStatus === 'disconnected') &&
+                '頻道連線錯誤'}
+              {connectionStatus === 'connecting' && '連線中...'}
             </p>
-            {result.error !== null && (
+            {(connectionStatus === 'error' ||
+              connectionStatus === 'disconnected') && (
               <p className='text-sm text-stone-500'>網頁狀態目前不會更新</p>
             )}
           </div>

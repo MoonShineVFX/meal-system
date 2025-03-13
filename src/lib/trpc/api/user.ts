@@ -1,14 +1,5 @@
-import { TRPCError } from '@trpc/server'
-import { z } from 'zod'
-import { EventEmitter } from 'events'
-
-import {
-  generateCookie,
-  SERVER_NOTIFY,
-  ServerNotifyPayload,
-  settings,
-  UserAuthorityName,
-} from '@/lib/common'
+import { generateCookie, settings, UserAuthorityName } from '@/lib/common'
+import { PUSHER_CHANNEL, PUSHER_EVENT } from '@/lib/common/pusher'
 import {
   createUserToken,
   deleteSubscription,
@@ -22,24 +13,13 @@ import {
   updateUserToken,
   validateUserPassword,
 } from '@/lib/server/database'
-import {
-  eventEmitter,
-  ServerChannelName,
-  incrementConnectedUsers,
-  decrementConnectedUsers,
-  onServerEvent,
-  getConnectedUsers,
-} from '@/lib/server/event'
+import { emitPusherEvent } from '@/lib/server/pusher'
 import webPusher from '@/lib/server/webpush'
+import { TRPCError } from '@trpc/server'
+import { z } from 'zod'
 
 import { UserAuthority } from '@prisma/client'
-import {
-  adminProcedure,
-  publicProcedure,
-  router,
-  staffProcedure,
-  userProcedure,
-} from '../trpc'
+import { publicProcedure, router, staffProcedure, userProcedure } from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -63,8 +43,8 @@ export const UserRouter = router({
     }
 
     if (userInfo.isRedeemed) {
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-        type: SERVER_NOTIFY.BONUS_REDEEMED,
+      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
+        type: PUSHER_EVENT.BONUS_REDEEMED,
       })
     }
 
@@ -72,54 +52,6 @@ export const UserRouter = router({
   }),
   getList: staffProcedure.query(async () => {
     return await getUserList()
-  }),
-  onNotify: userProcedure.subscription(async function* ({ ctx, signal }) {
-    const channelNames: string[] = [
-      ServerChannelName.USER_NOTIFY(ctx.userLite.id),
-      ServerChannelName.PUBLIC_NOTIFY,
-    ]
-
-    if (ctx.userLite.role === 'STAFF' || ctx.userLite.role === 'ADMIN') {
-      channelNames.push(ServerChannelName.STAFF_NOTIFY)
-    }
-
-    incrementConnectedUsers(ctx.userLite.id)
-
-    // Define listeners outside the try block so it's accessible in finally
-    const listenerMap: Array<{
-      channelName: string
-      listener: (payload: ServerNotifyPayload) => void
-    }> = []
-
-    try {
-      // Create a merged event emitter that combines all channels
-      const mergedEmitter = new EventEmitter()
-      const mergedEventName = 'merged-notify'
-
-      // Set up listeners for all channels that forward to the merged emitter
-      channelNames.forEach((channelName) => {
-        const listener = (payload: ServerNotifyPayload) => {
-          mergedEmitter.emit(mergedEventName, payload)
-        }
-        eventEmitter.on(channelName, listener)
-        listenerMap.push({ channelName, listener })
-      })
-
-      // Use the on() utility with the merged emitter
-      for await (const [payload] of onServerEvent<ServerNotifyPayload>(
-        mergedEmitter,
-        mergedEventName,
-        { signal },
-      )) {
-        yield payload
-      }
-    } finally {
-      decrementConnectedUsers(ctx.userLite.id)
-      // Clean up all listeners
-      for (const { channelName, listener } of listenerMap) {
-        eventEmitter.off(channelName, listener)
-      }
-    }
   }),
   login: publicProcedure
     .input(
@@ -219,8 +151,8 @@ export const UserRouter = router({
   //   )
   //   .mutation(async ({ input, ctx }) => {
   //     await updateUserSettings({ userId: ctx.userLite.id, ...input })
-  //     eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-  //       type: SERVER_NOTIFY.USER_SETTINGS_UPDATE,
+  //     sendNotification(PusherChannelName.USER_NOTIFY(ctx.userLite.id), {
+  //       type: SERVER_EVENT.USER_SETTINGS_UPDATE,
   //     })
   //   }),
   updateToken: userProcedure
@@ -239,8 +171,8 @@ export const UserRouter = router({
         ...input,
       })
 
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-        type: SERVER_NOTIFY.USER_TOKEN_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
+        type: PUSHER_EVENT.USER_TOKEN_UPDATE,
         skipNotify: true,
       })
 
@@ -277,8 +209,8 @@ export const UserRouter = router({
     })
 
     const count = result.filter((r) => r.success)
-    eventEmitter.emit(ServerChannelName.USER_NOTIFY(ctx.userLite.id), {
-      type: SERVER_NOTIFY.USER_TEST_PUSH_NOTIFICATION,
+    emitPusherEvent(PUSHER_CHANNEL.USER(ctx.userLite.id), {
+      type: PUSHER_EVENT.USER_TEST_PUSH_NOTIFICATION,
       message: `送出 ${count.length} 個推送通知，成功 ${count.length} 個`,
     })
   }),
@@ -309,16 +241,13 @@ export const UserRouter = router({
         input.enabled ? '啟用' : '停用'
       }`
 
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.USER_AUTHORIY_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.USER_AUTHORIY_UPDATE,
         message: `用戶 ${user.name} ${updateMessage}`,
       })
-      eventEmitter.emit(ServerChannelName.USER_NOTIFY(input.userId), {
-        type: SERVER_NOTIFY.USER_AUTHORIY_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.USER(input.userId), {
+        type: PUSHER_EVENT.USER_AUTHORIY_UPDATE,
         message: `您${updateMessage}`,
       })
     }),
-  getConnectedUsers: adminProcedure.query(async () => {
-    return getConnectedUsers()
-  }),
 })

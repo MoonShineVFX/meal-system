@@ -10,8 +10,8 @@ import {
   updateSubCategoriesRoot,
   updateCategoryCommodities,
 } from '@/lib/server/database'
-import { SERVER_NOTIFY } from '@/lib/common'
-import { ServerChannelName, eventEmitter } from '@/lib/server/event'
+import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
+import { emitPusherEvent } from '@/lib/server/pusher'
 
 export const CategoryRouter = router({
   get: staffProcedure.query(async () => {
@@ -27,8 +27,8 @@ export const CategoryRouter = router({
     )
     .mutation(async ({ input }) => {
       await createCategory(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.CATEGORY_ADD,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.CATEGORY_ADD,
         skipNotify: true,
       })
     }),
@@ -42,8 +42,8 @@ export const CategoryRouter = router({
     )
     .mutation(async ({ input }) => {
       await updateCategory(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.CATEGORY_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.CATEGORY_UPDATE,
         skipNotify: true,
       })
     }),
@@ -66,8 +66,8 @@ export const CategoryRouter = router({
     )
     .mutation(async ({ input }) => {
       await updateSubCategoriesRoot(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.CATEGORY_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.CATEGORY_UPDATE,
         skipNotify: true,
       })
     }),
@@ -80,8 +80,8 @@ export const CategoryRouter = router({
     )
     .mutation(async ({ input }) => {
       await deleteCategories(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.CATEGORY_DELETE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.CATEGORY_DELETE,
         skipNotify: true,
       })
     }),
@@ -94,12 +94,12 @@ export const CategoryRouter = router({
     )
     .mutation(async ({ input }) => {
       await updateCategoryCommodities(input)
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.CATEGORY_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.CATEGORY_UPDATE,
         skipNotify: true,
       })
-      eventEmitter.emit(ServerChannelName.STAFF_NOTIFY, {
-        type: SERVER_NOTIFY.COMMODITY_UPDATE,
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.COMMODITY_UPDATE,
         skipNotify: true,
       })
     }),
