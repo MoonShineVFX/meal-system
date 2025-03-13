@@ -1,5 +1,5 @@
 import { generateCookie, settings, UserAuthorityName } from '@/lib/common'
-import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
+import { PUSHER_CHANNEL, PUSHER_EVENT } from '@/lib/common/pusher'
 import {
   createUserToken,
   deleteSubscription,
@@ -13,19 +13,13 @@ import {
   updateUserToken,
   validateUserPassword,
 } from '@/lib/server/database'
-import { getConnectedUsers, emitPusherEvent } from '@/lib/server/pusher'
+import { emitPusherEvent } from '@/lib/server/pusher'
 import webPusher from '@/lib/server/webpush'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 import { UserAuthority } from '@prisma/client'
-import {
-  adminProcedure,
-  publicProcedure,
-  router,
-  staffProcedure,
-  userProcedure,
-} from '../trpc'
+import { publicProcedure, router, staffProcedure, userProcedure } from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -256,7 +250,4 @@ export const UserRouter = router({
         message: `您${updateMessage}`,
       })
     }),
-  getConnectedUsers: adminProcedure.query(async () => {
-    return getConnectedUsers()
-  }),
 })

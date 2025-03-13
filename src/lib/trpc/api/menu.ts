@@ -161,6 +161,11 @@ export const MenuRouter = router({
         type: input.isEdit ? PUSHER_EVENT.MENU_UPDATE : PUSHER_EVENT.MENU_ADD,
         skipNotify: false,
       })
+
+      emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
+        type: PUSHER_EVENT.MENU_LIVE_UPDATE,
+        skipNotify: true,
+      })
     }),
   deleteMany: staffProcedure
     .input(

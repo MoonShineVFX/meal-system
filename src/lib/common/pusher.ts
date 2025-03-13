@@ -4,6 +4,10 @@ import type { NotificationType } from '@/lib/client/store'
 // Pusher event name for all notifications
 export const PUSHER_EVENT_NOTIFY = 'notify'
 
+// Environment variables
+export const PUSHER_APP_KEY = process.env.NEXT_PUBLIC_PUSHER_APP_KEY || ''
+export const PUSHER_WS_HOST = process.env.NEXT_PUBLIC_PUSHER_WS_HOST || ''
+
 // Channel names
 export const PUSHER_CHANNEL_USER_PREFIX = 'private-user-message-' as const
 export const PUSHER_CHANNEL_STAFF = 'private-staff-message' as const
@@ -19,7 +23,7 @@ export const PUSHER_CHANNEL = {
   STAFF: PUSHER_CHANNEL_STAFF,
 } as const
 
-// Server event types
+// Pusher event types
 export type PusherEventPayload = {
   type: PUSHER_EVENT
   message?: string
@@ -51,6 +55,7 @@ export enum PUSHER_EVENT {
   MENU_ADD = '菜單已新增',
   MENU_UPDATE = '菜單編輯成功',
   MENU_DELETE = '菜單已刪除',
+  MENU_LIVE_UPDATE = '即時點餐已更動',
   DEPOSIT_RECHARGE = '儲值成功',
   DEPOSIT_REFUND = '退款成功',
   DEPOSIT_FAILED = '儲值失敗',
@@ -66,5 +71,4 @@ export enum PUSHER_EVENT {
   USER_TEST_PUSH_NOTIFICATION = '測試推送通知',
   USER_TOKEN_UPDATE = '用戶裝置設定已更改',
   USER_AUTHORIY_UPDATE = '用戶權限已更改',
-  SERVER_CONNECTED_USERS_UPDATE = '在線用戶數已更新',
 }

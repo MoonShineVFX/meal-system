@@ -1,29 +1,29 @@
 import {
-  PUSHER_CHANNEL,
-  PUSHER_EVENT,
+  PUSHER_APP_KEY,
   PUSHER_EVENT_NOTIFY,
+  PUSHER_WS_HOST,
   PusherChannel,
   PusherEventPayload,
 } from '@/lib/common/pusher'
 import Pusher from 'pusher'
-import { getLogger } from './logger'
+import { getDebugLogger } from './logger'
 
-const log = getLogger('pusher')
+const log = getDebugLogger('pusher')
 
 // Pusher configuration
-const pusherConfig = {
-  appId: process.env.PUSHER_APP_ID || '',
-  key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY || '',
-  secret: process.env.PUSHER_SECRET || '',
-  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'ap1',
-  useTLS: true,
-}
-
 let pusherInstance: Pusher | null = null
 
 export const getPusherServer = () => {
   if (!pusherInstance) {
-    pusherInstance = new Pusher(pusherConfig)
+    pusherInstance = new Pusher({
+      host: PUSHER_WS_HOST,
+      port: '443',
+      appId: `${PUSHER_APP_KEY}-id`,
+      key: PUSHER_APP_KEY,
+      secret: process.env.PUSHER_SECRET || '',
+      useTLS: true,
+      cluster: '',
+    })
   }
   return pusherInstance
 }
@@ -43,38 +43,5 @@ export const emitPusherEvent = async (
     return false
   }
 }
-
-// Track connected users (migrated from event.ts)
-let connectedUsers = 0
-
-export const incrementConnectedUsers = (userId?: string) => {
-  connectedUsers++
-  log(`Connected users: ${connectedUsers}`)
-  if (userId) {
-    log(`User ${userId} connected`)
-  }
-
-  // Use direct Pusher method
-  emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
-    type: PUSHER_EVENT.SERVER_CONNECTED_USERS_UPDATE,
-    skipNotify: true,
-  })
-}
-
-export const decrementConnectedUsers = (userId?: string) => {
-  connectedUsers--
-  log(`Connected users: ${connectedUsers}`)
-  if (userId) {
-    log(`User ${userId} disconnected`)
-  }
-
-  // Use direct Pusher method
-  emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
-    type: PUSHER_EVENT.SERVER_CONNECTED_USERS_UPDATE,
-    skipNotify: true,
-  })
-}
-
-export const getConnectedUsers = () => connectedUsers
 
 export default getPusherServer

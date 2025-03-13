@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import {
-  PusherUnsubscribeFunction,
-  getPusherClient,
+  createPusherClient,
   subscribeToPusherChannel,
 } from '@/lib/client/pusher'
 import { NotificationType, useStore } from '@/lib/client/store'
@@ -10,10 +9,12 @@ import ServiceWorkerHandler from '@/lib/client/sw'
 import trpc from '@/lib/client/trpc'
 import { getResourceUrl, settings } from '@/lib/common'
 import {
-  PUSHER_EVENT,
   PUSHER_CHANNEL,
+  PUSHER_EVENT,
   PUSHER_EVENT_NOTIFY,
+  PusherEventPayload,
 } from '@/lib/common/pusher'
+import { twMerge } from 'tailwind-merge'
 import { WithAuth } from './AuthValidator'
 
 export default function EventListener() {
@@ -45,8 +46,8 @@ export function EventListenerBase() {
 
   // Connection status state
   const [connectionStatus, setConnectionStatus] = useState<
-    'connected' | 'connecting' | 'error'
-  >('connecting')
+    'connected' | 'connecting' | 'error' | 'disconnected'
+  >('disconnected')
 
   /* Pusher Push Notifications Initialize */
   useEffect(() => {
@@ -104,49 +105,43 @@ export function EventListenerBase() {
   /* Pusher Event Subscription */
   useEffect(() => {
     // Don't subscribe until user info is loaded
-    if (!userInfoQuery.isSuccess) {
-      return
-    }
+    if (!userInfoQuery.isSuccess || !userInfoQuery.data) return
 
     // Get the Pusher client
-    const pusher = getPusherClient()
-    const unsubscribeFunctions: PusherUnsubscribeFunction[] = []
+    const pusher = createPusherClient()
 
     // Setup error and connection handlers
     pusher.connection.bind('error', (err: any) => {
       console.error('[Pusher] Connection error', err)
       setConnectionStatus('error')
-      addNotification({
-        type: NotificationType.ERROR,
-        message: `伺服器連線錯誤`,
-      })
     })
 
     pusher.connection.bind('connected', () => {
+      console.debug('[Pusher] Connected')
       setConnectionStatus('connected')
-      // When connected, invalidate connected users count
-      utils.user.getConnectedUsers.invalidate()
     })
 
     pusher.connection.bind('disconnected', () => {
-      setConnectionStatus('connecting')
+      console.debug('[Pusher] Disconnected')
+      setConnectionStatus('disconnected')
     })
 
     pusher.connection.bind('connecting', () => {
+      console.debug('[Pusher] Connecting...')
       setConnectionStatus('connecting')
     })
 
-    // Handle notification events
-    const handleNotify = (notifyPayload: any) => {
-      if (!notifyPayload.skipNotify) {
+    // Handle pusher events
+    const handleEvent = (eventPayload: PusherEventPayload) => {
+      if (!eventPayload.skipNotify) {
         addNotification({
-          type: notifyPayload.notificationType ?? NotificationType.SUCCESS,
-          message: notifyPayload.message ?? notifyPayload.type,
-          link: notifyPayload.link,
+          type: eventPayload.notificationType ?? NotificationType.SUCCESS,
+          message: eventPayload.message ?? eventPayload.type,
+          link: eventPayload.link,
         })
       }
 
-      switch (notifyPayload.type) {
+      switch (eventPayload.type) {
         // User
         case PUSHER_EVENT.CART_ADD:
         case PUSHER_EVENT.CART_DELETE:
@@ -182,6 +177,10 @@ export function EventListenerBase() {
           break
         case PUSHER_EVENT.USER_SETTINGS_UPDATE:
           utils.user.get.invalidate()
+        case PUSHER_EVENT.MENU_LIVE_UPDATE:
+          utils.menu.get.invalidate({
+            type: 'LIVE',
+          })
           break
 
         // Staff & Admin
@@ -191,8 +190,8 @@ export function EventListenerBase() {
           utils.commodity.getList.invalidate()
           // Check if order is live, 這判斷有點勉強，之後可能需要改
           if (
-            notifyPayload.link &&
-            notifyPayload.link.startsWith('/pos/live') &&
+            eventPayload.link &&
+            eventPayload.link.startsWith('/pos/live') &&
             posNotificationSound
           ) {
             const audio = new Audio(
@@ -245,48 +244,42 @@ export function EventListenerBase() {
         case PUSHER_EVENT.BONUS_UPDATE:
         case PUSHER_EVENT.BONUS_DELETE:
           utils.bonus.getList.invalidate()
-        case PUSHER_EVENT.SERVER_CONNECTED_USERS_UPDATE:
-          utils.user.getConnectedUsers.invalidate()
           break
       }
     }
 
     // Subscribe to public channel
-    const publicUnsubscribe = subscribeToPusherChannel(
+    subscribeToPusherChannel(
+      pusher,
       PUSHER_CHANNEL.PUBLIC,
       PUSHER_EVENT_NOTIFY,
-      handleNotify,
+      handleEvent,
     )
-    unsubscribeFunctions.push(publicUnsubscribe)
 
     // Subscribe to user-specific channel if user is authenticated
-    if (userInfoQuery.data && userInfoQuery.data.id) {
-      const userUnsubscribe = subscribeToPusherChannel(
-        PUSHER_CHANNEL.USER(userInfoQuery.data.id),
-        PUSHER_EVENT_NOTIFY,
-        handleNotify,
-      )
-      unsubscribeFunctions.push(userUnsubscribe)
-    }
+    subscribeToPusherChannel(
+      pusher,
+      PUSHER_CHANNEL.USER(userInfoQuery.data.id),
+      PUSHER_EVENT_NOTIFY,
+      handleEvent,
+    )
 
     // Subscribe to staff channel if user is staff
-    if (
-      userInfoQuery.data &&
-      ['STAFF', 'ADMIN'].includes(userInfoQuery.data.role)
-    ) {
-      const staffUnsubscribe = subscribeToPusherChannel(
+    if (['STAFF', 'ADMIN'].includes(userInfoQuery.data.role)) {
+      subscribeToPusherChannel(
+        pusher,
         PUSHER_CHANNEL.STAFF,
         PUSHER_EVENT_NOTIFY,
-        handleNotify,
+        handleEvent,
       )
-      unsubscribeFunctions.push(staffUnsubscribe)
     }
 
     // Cleanup all subscriptions on unmount
     return () => {
-      unsubscribeFunctions.forEach((unsubscribe) => unsubscribe())
+      pusher.disconnect()
+      pusher.unbind_all()
     }
-  }, [userInfoQuery.isSuccess, userInfoQuery.data])
+  }, [userInfoQuery.data?.id, userInfoQuery.data?.role])
 
   if (!userInfoQuery.isSuccess) {
     return null
@@ -296,14 +289,22 @@ export function EventListenerBase() {
   if (connectionStatus !== 'connected') {
     return (
       <div className='fixed inset-x-6 bottom-20 z-50 flex items-center justify-center sm:left-auto sm:right-6 sm:bottom-6'>
-        <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white p-3 shadow-lg'>
-          <div className='h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-stone-700' />
+        <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white px-4 py-3 shadow-lg'>
+          <div
+            className={twMerge(
+              'mx-1 h-4 w-4 rounded-full border-t-2 border-b-2 border-stone-700',
+              connectionStatus === 'connecting' && 'animate-spin',
+            )}
+          />
           <div>
             <p className='text-stone-700'>
-              {connectionStatus === 'error' && '連線錯誤'}
+              {(connectionStatus === 'error' ||
+                connectionStatus === 'disconnected') &&
+                '頻道連線錯誤'}
               {connectionStatus === 'connecting' && '連線中...'}
             </p>
-            {connectionStatus === 'error' && (
+            {(connectionStatus === 'error' ||
+              connectionStatus === 'disconnected') && (
               <p className='text-sm text-stone-500'>網頁狀態目前不會更新</p>
             )}
           </div>
