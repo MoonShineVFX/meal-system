@@ -138,7 +138,7 @@ function Navigation() {
         </>
       )}
       {/* spacer */}
-      <div className='mt-auto' />
+      <div className='mt-auto hidden sm:block' />
       {/* 如果需要使用 sm-block 顯示 */}
       <div className='mt-auto hidden w-full'>
         <DropdownMenu
