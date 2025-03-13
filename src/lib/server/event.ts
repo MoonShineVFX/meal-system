@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 
-import { ServerNotifyPayload } from '@/lib/common'
+import { SERVER_NOTIFY, ServerNotifyPayload } from '@/lib/common'
 import { getLogger } from './logger'
 
 const log = getLogger('event')
@@ -15,29 +15,10 @@ export const ServerChannelName = {
   STAFF_NOTIFY: 'staff-message',
 }
 
-// Track connected users
-let connectedUsers = 0
-
-export const incrementConnectedUsers = (userId?: string) => {
-  connectedUsers++
-  log(`Connected users: ${connectedUsers}`)
-  if (userId) {
-    log(`User ${userId} connected`)
-  }
-}
-
-export const decrementConnectedUsers = (userId?: string) => {
-  connectedUsers--
-  log(`Connected users: ${connectedUsers}`)
-  if (userId) {
-    log(`User ${userId} disconnected`)
-  }
-}
-
 /**
  * Converts an EventEmitter event to an async iterable
  */
-export function on<T>(
+export function onServerEvent<T>(
   emitter: EventEmitter,
   eventName: string,
   options?: { signal?: AbortSignal },
@@ -115,3 +96,34 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 eventEmitter.setMaxListeners(1024)
+
+// Track connected users
+let connectedUsers = 0
+
+export const incrementConnectedUsers = (userId?: string) => {
+  connectedUsers++
+  log(`Connected users: ${connectedUsers}`)
+  if (userId) {
+    log(`User ${userId} connected`)
+  }
+
+  eventEmitter.emit(ServerChannelName.PUBLIC_NOTIFY, {
+    type: SERVER_NOTIFY.SERVER_CONNECTED_USERS_UPDATE,
+    skipNotify: true,
+  })
+}
+
+export const decrementConnectedUsers = (userId?: string) => {
+  connectedUsers--
+  log(`Connected users: ${connectedUsers}`)
+  if (userId) {
+    log(`User ${userId} disconnected`)
+  }
+
+  eventEmitter.emit(ServerChannelName.PUBLIC_NOTIFY, {
+    type: SERVER_NOTIFY.SERVER_CONNECTED_USERS_UPDATE,
+    skipNotify: true,
+  })
+}
+
+export const getConnectedUsers = () => connectedUsers

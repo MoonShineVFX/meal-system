@@ -27,12 +27,19 @@ import {
   ServerChannelName,
   incrementConnectedUsers,
   decrementConnectedUsers,
-  on,
+  onServerEvent,
+  getConnectedUsers,
 } from '@/lib/server/event'
 import webPusher from '@/lib/server/webpush'
 
 import { UserAuthority } from '@prisma/client'
-import { publicProcedure, router, staffProcedure, userProcedure } from '../trpc'
+import {
+  adminProcedure,
+  publicProcedure,
+  router,
+  staffProcedure,
+  userProcedure,
+} from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -99,7 +106,7 @@ export const UserRouter = router({
       })
 
       // Use the on() utility with the merged emitter
-      for await (const [payload] of on<ServerNotifyPayload>(
+      for await (const [payload] of onServerEvent<ServerNotifyPayload>(
         mergedEmitter,
         mergedEventName,
         { signal },
@@ -311,4 +318,7 @@ export const UserRouter = router({
         message: `您${updateMessage}`,
       })
     }),
+  getConnectedUsers: adminProcedure.query(async () => {
+    return getConnectedUsers()
+  }),
 })

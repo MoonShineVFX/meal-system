@@ -213,6 +213,8 @@ export default function EventListener() {
         case SERVER_NOTIFY.BONUS_UPDATE:
         case SERVER_NOTIFY.BONUS_DELETE:
           utils.bonus.getList.invalidate()
+        case SERVER_NOTIFY.SERVER_CONNECTED_USERS_UPDATE:
+          utils.user.getConnectedUsers.invalidate()
           break
       }
     },
@@ -231,7 +233,7 @@ export default function EventListener() {
 
   if (isDisconnected) {
     return (
-      <div className='fixed inset-x-6 bottom-20 z-50 flex items-center justify-center md:left-auto md:right-6 md:bottom-6'>
+      <div className='fixed inset-x-6 bottom-20 z-50 flex items-center justify-center sm:left-auto sm:right-6 sm:bottom-6'>
         <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white p-3 shadow-lg'>
           <div className='h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-stone-700' />
           <div>

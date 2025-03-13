@@ -36,6 +36,7 @@ import Image from '@/components/core/Image'
 import Logo from '@/components/core/Logo'
 import PriceNumber from '@/components/core/PriceNumber'
 import Spinner from '@/components/core/Spinner'
+import LiveConnections from '@/components/admin/LiveConnections'
 import trpc from '@/lib/client/trpc'
 import { generateCookie, settings, twData } from '@/lib/common'
 import { twMerge } from 'tailwind-merge'
@@ -110,11 +111,12 @@ function Navigation() {
           />
         </>
       )}
-
+      {/* spacer */}
+      <div className='mt-auto' />
       {/* 如果需要使用 sm-block 顯示 */}
       <div className='mt-auto hidden w-full'>
         <DropdownMenu
-          className='flex w-full items-center justify-start gap-0 rounded-2xl py-2 px-3 text-base font-bold tracking-widest text-stone-500 hover:cursor-pointer hover:bg-stone-200 active:scale-95'
+          className='hidden w-full items-center justify-start gap-0 rounded-2xl py-2 px-3 text-base font-bold tracking-widest text-stone-500 hover:cursor-pointer hover:bg-stone-200 active:scale-95'
           label={
             <>
               <PhoneIcon className='h-5 w-5' />
@@ -148,9 +150,15 @@ function Navigation() {
           />
         </DropdownMenu>
       </div>
+      {/* 在線用戶數 - 僅管理員可見 */}
+      {data?.role === 'ADMIN' && (
+        <div className='hidden w-full px-3 py-2 sm:block'>
+          <LiveConnections />
+        </div>
+      )}
       {/* 登出 */}
       <div
-        className='mt-auto hidden w-full cursor-pointer items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 hover:bg-stone-200 active:scale-95 sm:flex'
+        className='hidden w-full cursor-pointer items-center rounded-2xl py-2 px-3 font-bold tracking-widest text-stone-500 hover:bg-stone-200 active:scale-95 sm:flex'
         onClick={() => handleLogout(logoutMutation)}
       >
         <ArrowRightOnRectangleIcon className='h-5 w-5' />
@@ -258,6 +266,11 @@ function ProfileButton(props: { className?: string }) {
             <div onClick={() => close()}>
               {user && ['ADMIN', 'STAFF'].includes(user.role) && (
                 <>
+                  {user.role === 'ADMIN' && (
+                    <div className='flex flex-col gap-2 border-b border-stone-200 px-4 pt-1 pb-2'>
+                      <LiveConnections />
+                    </div>
+                  )}
                   <Link
                     href='/pos'
                     className='block w-full cursor-pointer border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'

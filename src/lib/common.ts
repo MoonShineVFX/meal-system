@@ -72,6 +72,7 @@ export enum SERVER_NOTIFY {
   USER_TEST_PUSH_NOTIFICATION = '測試推送通知',
   USER_TOKEN_UPDATE = '用戶裝置設定已更改',
   USER_AUTHORIY_UPDATE = '用戶權限已更改',
+  SERVER_CONNECTED_USERS_UPDATE = '在線用戶數已更新',
 }
 
 export enum CurrencyType {
