@@ -112,7 +112,7 @@ export default async function menuPublishNotify(
             type: PUSHER_EVENT.MENU_RESERVATION_UPDATE,
             message: `${MenuTypeName[menu.type]}已開放訂購`,
             link: `/reserve?m=${menu.id}`,
-            skipNotify: true,
+            skipNotify: false,
           }),
           webPusher.pushNotificationToUser({
             userId: user.id,
