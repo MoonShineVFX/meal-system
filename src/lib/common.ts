@@ -171,6 +171,11 @@ export const settings = {
   R2_ENDPOINT: process.env.R2_ENDPOINT!,
   R2_BUCKET_NAME: process.env.R2_BUCKET_NAME!,
 
+  /* Cronicle */
+  CRONICLE_API_URL: process.env.CRONICLE_API_URL!,
+  CRONICLE_API_KEY: process.env.CRONICLE_API_KEY!,
+  CRONICLE_CATEGORY_ID: process.env.CRONICLE_CATEGORY_ID!,
+
   /* UI */
   ORDER_TAKE_PER_QUERY: 20,
   TRANSACTIONS_PER_QUERY: 20,

@@ -43,7 +43,7 @@ importers:
         version: 11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3)
       '@trpc/next':
         specifier: 11.0.0-rc.808
-        version: 11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/react-query@11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(next@14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)
+        version: 11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/react-query@11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(next@14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)
       '@trpc/react-query':
         specifier: 11.0.0-rc.808
         version: 11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)
@@ -88,16 +88,16 @@ importers:
         version: 1.5.0
       next:
         specifier: ^14.2.24
-        version: 14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        version: 14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       next-superjson-plugin:
         specifier: ^0.6.3
-        version: 0.6.3(next@14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(superjson@1.12.0)
+        version: 0.6.3(next@14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(superjson@1.12.0)
       nprogress:
         specifier: ^0.2.0
         version: 0.2.0
       nuqs:
         specifier: ^2.4.0
-        version: 2.4.0(next@14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
+        version: 2.4.0(next@14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
       p-queue:
         specifier: ^8.0.0
         version: 8.0.0
@@ -627,6 +627,10 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@opentelemetry/api@1.9.0':
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
 
   '@prisma/client@6.4.1':
     resolution: {integrity: sha512-A7Mwx44+GVZVexT5e2GF/WcKkEkNNKbgr059xpr5mn+oUm2ZW1svhe+0TRNBwCdzhfIZ+q23jEgsNPvKD9u+6g==}
@@ -2751,6 +2755,9 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.14.0
 
+  '@opentelemetry/api@1.9.0':
+    optional: true
+
   '@prisma/client@6.4.1(prisma@6.4.1(typescript@5.7.3))(typescript@5.7.3)':
     optionalDependencies:
       prisma: 6.4.1(typescript@5.7.3)
@@ -3119,11 +3126,11 @@ snapshots:
       '@trpc/server': 11.0.0-rc.808(typescript@5.7.3)
       typescript: 5.7.3
 
-  '@trpc/next@11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/react-query@11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(next@14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)':
+  '@trpc/next@11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/react-query@11.0.0-rc.808(@tanstack/react-query@5.62.8(react@18.2.0))(@trpc/client@11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3))(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(next@14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(typescript@5.7.3)':
     dependencies:
       '@trpc/client': 11.0.0-rc.808(@trpc/server@11.0.0-rc.808(typescript@5.7.3))(typescript@5.7.3)
       '@trpc/server': 11.0.0-rc.808(typescript@5.7.3)
-      next: 14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      next: 14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       typescript: 5.7.3
@@ -3742,13 +3749,13 @@ snapshots:
 
   nanoid@3.3.6: {}
 
-  next-superjson-plugin@0.6.3(next@14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(superjson@1.12.0):
+  next-superjson-plugin@0.6.3(next@14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(superjson@1.12.0):
     dependencies:
       hoist-non-react-statics: 3.3.2
-      next: 14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      next: 14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       superjson: 1.12.0
 
-  next@14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+  next@14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       '@next/env': 14.2.24
       '@swc/helpers': 0.5.5
@@ -3769,6 +3776,7 @@ snapshots:
       '@next/swc-win32-arm64-msvc': 14.2.24
       '@next/swc-win32-ia32-msvc': 14.2.24
       '@next/swc-win32-x64-msvc': 14.2.24
+      '@opentelemetry/api': 1.9.0
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
@@ -3785,12 +3793,12 @@ snapshots:
 
   nprogress@0.2.0: {}
 
-  nuqs@2.4.0(next@14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0):
+  nuqs@2.4.0(next@14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0):
     dependencies:
       mitt: 3.0.1
       react: 18.2.0
     optionalDependencies:
-      next: 14.2.24(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      next: 14.2.24(@opentelemetry/api@1.9.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
 
   object-hash@3.0.0: {}
 

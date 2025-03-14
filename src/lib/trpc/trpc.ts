@@ -33,7 +33,10 @@ export type Context = inferAsyncReturnType<typeof createContext>
 /* Procedures */
 const t = initTRPC
   .meta<{
-    rateLimitPoints: number
+    rateLimit?: {
+      perSecond?: number
+      perMinute?: number
+    }
   }>()
   .context<Context>()
   .create({
@@ -44,7 +47,7 @@ export const router = t.router
 export const commonProcedure = t.procedure.use(
   t.middleware(async ({ next, ctx, meta }) => {
     // Rate Limiter
-    if (meta?.rateLimitPoints) {
+    if (meta?.rateLimit) {
       if (!ctx.userLite) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -53,7 +56,20 @@ export const commonProcedure = t.procedure.use(
       }
 
       try {
-        await rateLimiter.consume(ctx.userLite.id, meta.rateLimitPoints)
+        if (meta.rateLimit.perSecond) {
+          await rateLimiter.consume(
+            ctx.userLite.id,
+            meta.rateLimit.perSecond,
+            'perSecond',
+          )
+        }
+        if (meta.rateLimit.perMinute) {
+          await rateLimiter.consume(
+            ctx.userLite.id,
+            meta.rateLimit.perMinute,
+            'perMinute',
+          )
+        }
       } catch (e) {
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',

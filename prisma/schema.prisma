@@ -68,7 +68,7 @@ model User {
   bonus              Bonus[]       @relation("bonusUsers")
   bonusRedeem        Bonus[]       @relation("bonusRedeem")
 
-  @@index([isDeactivated])
+  @@index([isDeactivated, optMenuNotify])
 }
 
 // Transaction
@@ -333,7 +333,6 @@ model Menu {
   @@index([date, type, isDeleted, createdAt(sort: Desc)])
   @@index([isDeleted, createdAt(sort: Desc)])
   @@index([type, isDeleted])
-  @@index([publishedDate, type, isDeleted])
 }
 
 model Supplier {

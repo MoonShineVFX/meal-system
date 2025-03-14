@@ -19,7 +19,9 @@ import { emitPusherEvent } from '@/lib/server/pusher'
 export const OrderRouter = router({
   addFromCart: userProcedure
     .meta({
-      rateLimitPoints: 10,
+      rateLimit: {
+        perSecond: 100,
+      },
     })
     .input(
       z.object({
@@ -71,7 +73,9 @@ export const OrderRouter = router({
     }),
   addFromRetail: userProcedure
     .meta({
-      rateLimitPoints: 10,
+      rateLimit: {
+        perSecond: 100,
+      },
     })
     .input(z.object({ cipher: z.string() }))
     .mutation(async ({ ctx, input }) => {
