@@ -48,6 +48,28 @@ export function EventListenerBase() {
   const [connectionStatus, setConnectionStatus] = useState<
     'connected' | 'connecting' | 'error' | 'disconnected'
   >('connecting')
+  // Add state to track whether to show the warning
+  const [showWarning, setShowWarning] = useState(false)
+
+  // Effect to handle delayed showing of warning
+  useEffect(() => {
+    let warningTimer: NodeJS.Timeout | null = null
+
+    if (connectionStatus !== 'connected') {
+      // Set timer to show warning after 2 seconds
+      warningTimer = setTimeout(() => {
+        setShowWarning(true)
+      }, 2000)
+    } else {
+      // Immediately hide warning when connected
+      setShowWarning(false)
+    }
+
+    // Cleanup timeout on unmount or when status changes
+    return () => {
+      if (warningTimer) clearTimeout(warningTimer)
+    }
+  }, [connectionStatus])
 
   /* Pusher Push Notifications Initialize */
   useEffect(() => {
@@ -266,7 +288,7 @@ export function EventListenerBase() {
   }
 
   // Show connection status indicator when not connected
-  if (connectionStatus !== 'connected') {
+  if (connectionStatus !== 'connected' && showWarning) {
     return (
       <div className='fixed bottom-20 right-6 z-50 flex items-center justify-center sm:bottom-6'>
         <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white px-4 py-3 shadow-lg'>
