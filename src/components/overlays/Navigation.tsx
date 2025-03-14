@@ -87,6 +87,7 @@ function Navigation() {
         label='預訂'
         path='/reserve'
         icons={[CalendarDaysIcon, CalendarDaysIconSolid]}
+        numberBadge={<ReservationNumberBadge />}
         rememberQuery={true}
       />
       <NavButton
@@ -285,6 +286,7 @@ function ProfileButton(props: { className?: string }) {
                         isEdit: true,
                         type: 'LIVE',
                         closedDate: isLiveMenuClosed ? null : new Date(),
+                        liveMenuNotify: true,
                       })
                     }
                     className='block w-full cursor-pointer border-b border-stone-100 py-2 px-4 hover:bg-stone-100 active:bg-stone-100 sm:hidden'
@@ -474,6 +476,18 @@ function CartNumberBadge() {
 function OrderNumberBadge() {
   const { data, isLoading, isError } = trpc.order.getBadgeCount.useQuery()
   return <NumberBadge number={data} isLoading={isLoading} isError={isError} />
+}
+
+function ReservationNumberBadge() {
+  const { data, isLoading, isError } =
+    trpc.menu.getReservationsForUser.useQuery()
+  return (
+    <NumberBadge
+      number={data?.length}
+      isLoading={isLoading}
+      isError={isError}
+    />
+  )
 }
 
 function POSNumberBadge() {

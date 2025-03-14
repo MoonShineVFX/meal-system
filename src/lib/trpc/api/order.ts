@@ -12,17 +12,15 @@ import { queue } from '@/lib/server/queue'
 import webPusher from '@/lib/server/webpush'
 import { UserAuthority } from '@prisma/client'
 
-import {
-  rateLimitUserProcedure,
-  router,
-  staffProcedure,
-  userProcedure,
-} from '../trpc'
+import { router, staffProcedure, userProcedure } from '../trpc'
 import { PUSHER_CHANNEL, PUSHER_EVENT } from '@/lib/common/pusher'
 import { emitPusherEvent } from '@/lib/server/pusher'
 
 export const OrderRouter = router({
-  addFromCart: rateLimitUserProcedure
+  addFromCart: userProcedure
+    .meta({
+      rateLimitPoints: 10,
+    })
     .input(
       z.object({
         clientOrder: z.boolean().optional(),
@@ -71,7 +69,10 @@ export const OrderRouter = router({
 
       return orders
     }),
-  addFromRetail: rateLimitUserProcedure
+  addFromRetail: userProcedure
+    .meta({
+      rateLimitPoints: 10,
+    })
     .input(z.object({ cipher: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.userLite) throw new Error('未登入')

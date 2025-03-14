@@ -10,6 +10,7 @@ import {
   getUsersStatistics,
   getUserToken,
   updateUserAuthority,
+  updateUserSettings,
   updateUserToken,
   validateUserPassword,
 } from '@/lib/server/database'
@@ -19,7 +20,7 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 import { UserAuthority } from '@prisma/client'
-import { publicProcedure, router, staffProcedure, userProcedure } from '../trpc'
+import { commonProcedure, router, staffProcedure, userProcedure } from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -53,7 +54,7 @@ export const UserRouter = router({
   getList: staffProcedure.query(async () => {
     return await getUserList()
   }),
-  login: publicProcedure
+  login: commonProcedure
     .input(
       z.object({
         // AD username is case insensitive
@@ -142,19 +143,15 @@ export const UserRouter = router({
   getToken: userProcedure.query(async ({ ctx }) => {
     return await getUserToken(ctx.userLite.token)
   }),
-  // updateSettings: userProcedure
-  //   .input(
-  //     z.object({
-  //       qrcodeAutoCheckout: z.boolean().optional(),
-  //       notificationSound: z.boolean().optional(),
-  //     }),
-  //   )
-  //   .mutation(async ({ input, ctx }) => {
-  //     await updateUserSettings({ userId: ctx.userLite.id, ...input })
-  //     sendNotification(PusherChannelName.USER_NOTIFY(ctx.userLite.id), {
-  //       type: SERVER_EVENT.USER_SETTINGS_UPDATE,
-  //     })
-  //   }),
+  updateSettings: userProcedure
+    .input(
+      z.object({
+        optMenuNotify: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await updateUserSettings({ userId: ctx.userLite.id, ...input })
+    }),
   updateToken: userProcedure
     .input(
       z.object({
@@ -178,7 +175,7 @@ export const UserRouter = router({
         })
       }
     }),
-  deleteSubscription: publicProcedure
+  deleteSubscription: commonProcedure
     .input(
       z.object({
         endpoint: z.string(),

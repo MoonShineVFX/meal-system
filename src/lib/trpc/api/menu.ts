@@ -16,6 +16,7 @@ import {
   deleteMenu,
   getRetailCOM,
   createOrUpdateSupplier,
+  getReservationStartToday,
 } from '@/lib/server/database'
 import { optionValueSchema } from '@/lib/common'
 import { emitPusherEvent } from '@/lib/server/pusher'
@@ -59,6 +60,8 @@ export const MenuRouter = router({
         createSupplier: z.boolean().optional(),
         supplierId: z.number().optional(),
         id: z.number().optional(),
+        // XXX: 即時點餐開關通知，先這樣
+        liveMenuNotify: z.boolean().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -162,10 +165,24 @@ export const MenuRouter = router({
         skipNotify: false,
       })
 
-      emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
-        type: PUSHER_EVENT.MENU_LIVE_UPDATE,
-        skipNotify: true,
-      })
+      // Public channel notification
+      if (input.type === 'LIVE') {
+        emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
+          type: PUSHER_EVENT.MENU_LIVE_UPDATE,
+          skipNotify: !input.liveMenuNotify,
+          message:
+            input.closedDate !== null
+              ? '即時點餐已關閉'
+              : input.closedDate === null
+              ? '即時點餐已開啟'
+              : '即時點餐已更新',
+        })
+      } else if (input.type !== 'RETAIL') {
+        emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
+          type: PUSHER_EVENT.MENU_RESERVATION_UPDATE,
+          skipNotify: true,
+        })
+      }
     }),
   deleteMany: staffProcedure
     .input(
@@ -222,9 +239,13 @@ export const MenuRouter = router({
         userId: ctx.userLite.id,
       })
     }),
-  getReservationsForUser: userProcedure.query(async ({ ctx }) => {
-    return await getReservationMenusForUser({ userId: ctx.userLite.id })
-  }),
+  getReservationsForUser: userProcedure
+    .meta({
+      rateLimitPoints: 5,
+    })
+    .query(async ({ ctx }) => {
+      return await getReservationMenusForUser({ userId: ctx.userLite.id })
+    }),
   getReservationsSince: staffProcedure
     .input(
       z.object({
@@ -237,6 +258,9 @@ export const MenuRouter = router({
         month: input.date.getMonth() + 1,
       })
     }),
+  getReservationStartToday: userProcedure.query(async () => {
+    return await getReservationStartToday()
+  }),
   getActives: userProcedure
     .input(
       z.object({

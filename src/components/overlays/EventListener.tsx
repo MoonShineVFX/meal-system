@@ -16,6 +16,7 @@ import {
 } from '@/lib/common/pusher'
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { WithAuth } from './AuthValidator'
+import { SpinnerBlock } from '../core/Spinner'
 
 export default function EventListener() {
   return (
@@ -156,6 +157,13 @@ export function EventListenerBase() {
 
     // Handle pusher events
     const handleEvent = (eventPayload: PusherEventPayload) => {
+      // Transform skipNotify on live update
+      if (eventPayload.type === PUSHER_EVENT.MENU_LIVE_UPDATE) {
+        if (!userInfoQuery.data?.optMenuNotify) {
+          eventPayload.skipNotify = true
+        }
+      }
+
       if (!eventPayload.skipNotify) {
         addNotification({
           type: eventPayload.notificationType ?? NotificationType.SUCCESS,
@@ -183,6 +191,9 @@ export function EventListenerBase() {
           utils.menu.get.invalidate({
             type: 'LIVE',
           })
+        case PUSHER_EVENT.MENU_RESERVATION_UPDATE:
+          utils.menu.getReservationsForUser.invalidate()
+          utils.menu.getReservationStartToday.invalidate()
           break
 
         // Staff & Admin
@@ -281,7 +292,11 @@ export function EventListenerBase() {
       pusher.disconnect()
       pusher.unbind_all()
     }
-  }, [userInfoQuery.data?.id, userInfoQuery.data?.role])
+  }, [
+    userInfoQuery.data?.id,
+    userInfoQuery.data?.role,
+    userInfoQuery.data?.optMenuNotify,
+  ])
 
   if (!userInfoQuery.isSuccess) {
     return null
@@ -293,7 +308,7 @@ export function EventListenerBase() {
       <div className='fixed bottom-20 right-6 z-50 flex items-center justify-center sm:bottom-6'>
         <div className='flex items-center gap-2 rounded-2xl border border-stone-300 bg-white px-4 py-3 shadow-lg'>
           {connectionStatus === 'connecting' ? (
-            <div className='h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-stone-700 sm:mx-1' />
+            <SpinnerBlock text='' className='h-8 w-8' />
           ) : (
             <ExclamationCircleIcon className='h-8 w-8 font-bold text-red-400' />
           )}

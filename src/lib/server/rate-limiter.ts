@@ -8,7 +8,7 @@ declare global {
 export const rateLimiter: RateLimiterMemory =
   global.rateLimiter ??
   new RateLimiterMemory({
-    points: 1,
+    points: 10,
     duration: 1,
   })
 

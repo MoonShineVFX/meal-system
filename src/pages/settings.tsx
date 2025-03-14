@@ -2,6 +2,7 @@ import { UserRole } from '@prisma/client'
 import { useEffect, useState } from 'react'
 
 import Button from '@/components/core/Button'
+import Divider from '@/components/core/Divider'
 import { useDialog } from '@/components/core/Dialog'
 import { SpinnerBlock } from '@/components/core/Spinner'
 import TextInput from '@/components/form/base/TextInput'
@@ -11,6 +12,7 @@ import trpc from '@/lib/client/trpc'
 import { validateRole } from '@/lib/common'
 
 export default function Settings() {
+  // TRPC
   const utils = trpc.useUtils()
   const userQuery = trpc.user.get.useQuery(undefined)
   const userTokenQuery = trpc.user.getToken.useQuery(undefined)
@@ -19,7 +21,14 @@ export default function Settings() {
       utils.user.getToken.invalidate()
     },
   })
+  const updateUserSettingsMutation = trpc.user.updateSettings.useMutation({
+    onSuccess: () => {
+      utils.user.get.invalidate()
+    },
+  })
   const testPushMutation = trpc.user.testPushNotification.useMutation()
+
+  // State
   const {
     printerApi,
     setPrinterApi,
@@ -55,6 +64,7 @@ export default function Settings() {
         <div className='h-min min-h-full max-w-lg grow p-4 lg:p-8'>
           <h1 className='mb-4 text-xl font-bold lg:mb-8'>設定</h1>
           <div className='flex flex-col gap-4 lg:gap-6'>
+            <Divider text='通知' />
             {/* 開啟通知 */}
             {isPushApiSupported &&
               typeof window !== 'undefined' &&
@@ -62,7 +72,7 @@ export default function Settings() {
               Notification.permission !== 'granted' && (
                 <OptionField
                   title='開啟通知權限'
-                  description='允許通知權限，當您訂單有更新時，會收到通知，以及顯示即時數字在圖示上。'
+                  description='允許通知權限，當您的訂單或菜單有更新時，會收到通知，以及顯示即時數字在圖示上。'
                   loading={false}
                   checked={false}
                   onChange={(checked) => {
@@ -100,7 +110,7 @@ export default function Settings() {
                 <>
                   <OptionField
                     title='背景通知'
-                    description='當您訂單有更新時，就算 App 不在前景也會收到通知。'
+                    description='當您的訂單或菜單有更新時，就算 App 不在前景也會收到通知。'
                     loading={updateUserTokenMutation.isPending}
                     checked={userTokenQuery.data.notificationEnabled}
                     onChange={(checked) => {
@@ -143,7 +153,22 @@ export default function Settings() {
                   )}
                 </>
               )}
+            {/* 菜單更新通知 */}
+            <OptionField
+              title='菜單更新通知'
+              description='當即時點餐狀態變更時，會收到通知。'
+              checked={userQuery.data?.optMenuNotify ?? false}
+              loading={
+                updateUserSettingsMutation.isPending || userQuery.isLoading
+              }
+              onChange={(checked) => {
+                updateUserSettingsMutation.mutate({
+                  optMenuNotify: checked,
+                })
+              }}
+            />
             {/* 自動結帳 */}
+            <Divider text='結帳' />
             <OptionField
               title='QRCode 自動結帳'
               description='當您掃描 QRCode 付款時，系統會自動結帳，無需再按結帳按鈕。'
@@ -155,6 +180,7 @@ export default function Settings() {
             {userQuery.data?.role &&
               validateRole(userQuery.data.role, UserRole.STAFF) && (
                 <>
+                  <Divider text='管理員設定' />
                   {/* 訂單通知音效 */}
                   <OptionField
                     title='訂單通知音效'
@@ -163,7 +189,6 @@ export default function Settings() {
                     checked={posNotificationSound}
                     onChange={setPOSNotificationSound}
                   />
-                  <div className='my-4 h-[2px] bg-stone-200'></div>
                   {/* 標籤機設定 */}
                   <OptionField
                     title='自訂標籤機 API 網址'
@@ -210,23 +235,26 @@ function OptionField(props: {
   children?: JSX.Element | JSX.Element[] | null
   checked: boolean
   onChange: (checked: boolean) => void
+  className?: string
 }) {
   return (
-    <section>
+    <section className={props.className}>
       <div className='flex'>
         <div className='grow'>
           <h2 className='mb-1 text-lg font-bold'>{props.title}</h2>
           <p className='text-xs text-stone-400'>{props.description}</p>
         </div>
-        <div className='w-16 pl-4 text-right'>
-          {props.loading ? (
-            <SpinnerBlock text='' className='h-6 w-6' />
-          ) : (
-            <Toggle
-              checked={props.checked}
-              onChange={(event) => props.onChange(event.target.checked)}
-            />
+        <div className='relative ml-4 h-fit w-fit text-right'>
+          {props.loading && (
+            <div className='absolute inset-0 z-[1] bg-white/70'>
+              <SpinnerBlock text='' className='h-6 w-6' />
+            </div>
           )}
+          <Toggle
+            checked={props.checked}
+            onChange={(event) => props.onChange(event.target.checked)}
+            disabled={props.loading}
+          />
         </div>
       </div>
       {props.children}

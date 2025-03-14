@@ -51,6 +51,7 @@ export enum PUSHER_EVENT {
   MENU_UPDATE = '菜單編輯成功',
   MENU_DELETE = '菜單已刪除',
   MENU_LIVE_UPDATE = '即時點餐已更動',
+  MENU_RESERVATION_UPDATE = '預約點餐已更動',
   DEPOSIT_RECHARGE = '儲值成功',
   DEPOSIT_REFUND = '退款成功',
   DEPOSIT_FAILED = '儲值失敗',

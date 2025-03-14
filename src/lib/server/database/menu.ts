@@ -702,3 +702,41 @@ export async function removeCommoditiesFromMenu(args: {
     },
   })
 }
+
+/**
+ * Get the nearest reservation menu publish time for today
+ * Returns null if no reservation is published today
+ */
+export async function getReservationStartToday() {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  const nearestReservation = await prisma.menu.findFirst({
+    where: {
+      isDeleted: false,
+      publishedDate: {
+        gte: today,
+        lt: tomorrow,
+      },
+      type: {
+        notIn: ['LIVE', 'RETAIL'],
+      },
+    },
+    orderBy: {
+      publishedDate: 'asc',
+    },
+    select: {
+      publishedDate: true,
+    },
+  })
+
+  if (!nearestReservation || !nearestReservation.publishedDate) {
+    return null
+  }
+
+  // Return the full Date object since superjson handles it
+  return nearestReservation.publishedDate
+}
