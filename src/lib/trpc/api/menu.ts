@@ -1,7 +1,7 @@
 import { Menu, MenuType } from '@prisma/client'
 import lzString from 'lz-string'
 import z from 'zod'
-import { optionValueSchema } from '@/lib/common'
+import { optionValueSchema, settings } from '@/lib/common'
 import { PUSHER_CHANNEL, PUSHER_EVENT } from '@/lib/common/pusher'
 import {
   addCommodityToMenu,
@@ -21,6 +21,7 @@ import { emitPusherEvent } from '@/lib/server/pusher'
 import { updateMenuPublishNotifyEvent } from '@/lib/server/cronicle'
 import { router, staffProcedure, userProcedure } from '../trpc'
 import { getLogger } from '@/lib/server/logger'
+import webPusher from '@/lib/server/webpush'
 
 const log = getLogger('trpc.api.menu')
 
@@ -180,16 +181,43 @@ export const MenuRouter = router({
 
       // Public channel notification
       if (input.type === 'LIVE') {
+        const message =
+          input.closedDate === null ? '即時點餐已開放' : '即時點餐已關閉'
+
         emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
           type: PUSHER_EVENT.MENU_LIVE_UPDATE,
           skipNotify: !input.liveMenuNotify,
-          message:
-            input.closedDate !== null
-              ? '即時點餐已關閉'
-              : input.closedDate === null
-              ? '即時點餐已開啟'
-              : '即時點餐已更新',
+          message,
         })
+
+        console.log('input.liveMenuNotify', input.liveMenuNotify)
+        if (input.liveMenuNotify) {
+          const users = await prismaCient.user.findMany({
+            where: {
+              isDeactivated: false,
+              optMenuNotify: true,
+            },
+            select: {
+              id: true,
+            },
+          })
+          await Promise.all(
+            users.map(
+              async (user) =>
+                await webPusher.pushNotificationToUser({
+                  userId: user.id,
+                  title: message,
+                  message:
+                    input.closedDate === null
+                      ? '快來看看有什麼好吃的 🍜🍖🍱'
+                      : '感謝您的捧場 🙏✨',
+                  url: `${settings.WEBSITE_URL}/live`,
+                  ignoreIfFocused: true,
+                }),
+            ),
+          )
+          log(`Sent ${users.length} notifications to users`)
+        }
       }
 
       // Trigger task when date changed and is reservation menu
