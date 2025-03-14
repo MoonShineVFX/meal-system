@@ -333,6 +333,7 @@ model Menu {
   @@index([date, type, isDeleted, createdAt(sort: Desc)])
   @@index([isDeleted, createdAt(sort: Desc)])
   @@index([type, isDeleted])
+  @@index([isDeleted, type, publishedDate])
 }
 
 model Supplier {

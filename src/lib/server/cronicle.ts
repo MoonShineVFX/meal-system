@@ -102,10 +102,9 @@ export interface CreateEventResponse extends ApiResponse {
 }
 
 // 4. update_event API endpoint types
-export interface UpdateEventParams {
+export type UpdateEventParams = {
   id: string
-  event: Partial<EventData>
-}
+} & Partial<Omit<EventData, 'id'>>
 
 export interface UpdateEventResponse extends ApiResponse {
   id: string
@@ -120,107 +119,107 @@ export interface DeleteEventResponse extends ApiResponse {
   id: string
 }
 
-class CronicleApi {
-  public constructor() {}
+async function request<T>(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  data?: any,
+): Promise<T> {
+  const url = `${settings.CRONICLE_API_URL}/api/app/${endpoint}/v1`
 
-  private async request<T>(
-    endpoint: string,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
-    data?: any,
-  ): Promise<T> {
-    const url = `${settings.CRONICLE_API_URL}/api/app/${endpoint}/v1`
-
-    const options: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': settings.CRONICLE_API_KEY,
-      },
-    }
-
-    if (data) {
-      options.body = JSON.stringify({
-        ...data,
-        api_key: settings.CRONICLE_API_KEY,
-      })
-    }
-
-    const response = await fetch(url, options)
-    const result = await response.json()
-
-    if (result.code !== 0) {
-      throw new Error(result.description || 'Unknown API error')
-    }
-
-    return result as T
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': settings.CRONICLE_API_KEY,
+    },
   }
 
-  // 1. get_schedule API endpoint
-  async getSchedule(
-    params: GetScheduleParams = {},
-  ): Promise<GetScheduleResponse> {
-    return this.request<GetScheduleResponse>('get_schedule', 'POST', params)
+  if (data) {
+    options.body = JSON.stringify({
+      ...data,
+      api_key: settings.CRONICLE_API_KEY,
+    })
   }
 
-  // 2. get_event API endpoint
-  async getEvent(params: GetEventParams): Promise<GetEventResponse> {
-    return this.request<GetEventResponse>('get_event', 'POST', params)
+  const response = await fetch(url, options)
+  const result = await response.json()
+
+  if (result.code !== 0) {
+    throw new Error(result.description || 'Unknown API error')
   }
 
-  // 3. create_event API endpoint
-  async createEvent(event: CreateEventInput): Promise<CreateEventResponse> {
-    return this.request<CreateEventResponse>('create_event', 'POST', { event })
-  }
-
-  // 4. update_event API endpoint
-  async updateEvent(params: UpdateEventParams): Promise<UpdateEventResponse> {
-    return this.request<UpdateEventResponse>('update_event', 'POST', params)
-  }
-
-  // 5. delete_event API endpoint
-  async deleteEvent(params: DeleteEventParams): Promise<DeleteEventResponse> {
-    return this.request<DeleteEventResponse>('delete_event', 'POST', params)
-  }
+  return result as T
 }
 
-/* Global */
-declare global {
-  var cronicleApi: CronicleApi | undefined
+// get_schedule API endpoint
+export async function getSchedule(
+  params: GetScheduleParams = {},
+): Promise<GetScheduleResponse> {
+  return request<GetScheduleResponse>('get_schedule', 'POST', params)
 }
 
-export const cronicleApi: CronicleApi = global.cronicleApi ?? new CronicleApi()
+// get_event API endpoint
+export async function getEvent(
+  params: GetEventParams,
+): Promise<GetEventResponse> {
+  return request<GetEventResponse>('get_event', 'POST', params)
+}
 
-if (process.env.NODE_ENV !== 'production') {
-  global.cronicleApi = cronicleApi
+// create_event API endpoint
+export async function createEvent(
+  params: CreateEventInput,
+): Promise<CreateEventResponse> {
+  return request<CreateEventResponse>('create_event', 'POST', params)
+}
+
+// update_event API endpoint
+export async function updateEvent(
+  params: UpdateEventParams,
+): Promise<UpdateEventResponse> {
+  return request<UpdateEventResponse>('update_event', 'POST', params)
+}
+
+// delete_event API endpoint
+export async function deleteEvent(
+  params: DeleteEventParams,
+): Promise<DeleteEventResponse> {
+  return request<DeleteEventResponse>('delete_event', 'POST', params)
 }
 
 /* Functions */
-export async function addMenuNotifyEvent(props: {
-  menuId: number
-  date: Date
-}) {
-  const { menuId, date } = props
-
-  return await cronicleApi.createEvent({
-    title: `Menu Notify (${menuId})`,
-    enabled: 1,
-    category: settings.CRONICLE_CATEGORY_ID,
-    plugin: 'urlplug',
-    target: 'allgrp',
-    timing: {
-      years: [date.getFullYear()],
-      months: [date.getMonth() + 1],
-      days: [date.getDate()],
-      hours: [date.getHours()],
-      minutes: [date.getMinutes()],
-    },
-    params: {
-      method: 'POST',
-      url: `${settings.WEBSITE_URL}/api/utils/menu-publish-notify`,
-      headers: `User-Agent: Google-Cloud-Scheduler\nContent-Type: application/json`,
-      data: JSON.stringify({
-        menuId,
-      }),
-    },
+export async function updateMenuPublishNotifyEvent(
+  props:
+    | {
+        menuId: number
+        date: Date
+      }
+    | {
+        enabled: false
+      },
+) {
+  return await updateEvent({
+    // title: `menu notify [${menuId}]`,
+    // category: settings.CRONICLE_CATEGORY_ID,
+    // plugin: 'urlplug',
+    // target: 'allgrp',
+    id: settings.CRONICLE_EVENT_MENU_NOTIFY,
+    enabled: 'enabled' in props ? (props.enabled ? 1 : 0) : 1,
+    ...('menuId' in props && {
+      timing: {
+        years: [props.date.getFullYear()],
+        months: [props.date.getMonth() + 1],
+        days: [props.date.getDate()],
+        hours: [props.date.getHours()],
+        minutes: [props.date.getMinutes()],
+      },
+      params: {
+        method: 'POST',
+        url: `${settings.WEBSITE_URL}/api/utils/menu-publish-notify`,
+        headers: `User-Agent: Google-Cloud-Scheduler\nContent-Type: application/json\nAuthorization: Bearer ${settings.AUTH_API_TOKEN}`,
+        data: JSON.stringify({
+          menuId: props.menuId,
+        }),
+      },
+    }),
   })
 }

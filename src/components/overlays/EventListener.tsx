@@ -193,7 +193,6 @@ export function EventListenerBase() {
           })
         case PUSHER_EVENT.MENU_RESERVATION_UPDATE:
           utils.menu.getReservationsForUser.invalidate()
-          utils.menu.getReservationStartToday.invalidate()
           break
 
         // Staff & Admin

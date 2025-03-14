@@ -7,6 +7,7 @@ import { prisma } from '@/lib/server/database/define'
 import { emitPusherEvent } from '@/lib/server/pusher'
 import webPusher from '@/lib/server/webpush'
 import { getLogger } from '@/lib/server/logger'
+import { updateMenuPublishNotifyEventToLatest } from '@/lib/trpc/api/menu'
 
 const log = getLogger('api/utils/menu-publish-notify')
 
@@ -92,8 +93,6 @@ export default async function menuPublishNotify(
       return
     }
 
-    log('Menu', menu)
-
     // Gather users
     const users = await prisma.user.findMany({
       where: {
@@ -112,14 +111,14 @@ export default async function menuPublishNotify(
           emitPusherEvent(PUSHER_CHANNEL.USER(user.id), {
             type: PUSHER_EVENT.MENU_RESERVATION_UPDATE,
             message: `${MenuTypeName[menu.type]}已開放訂購`,
-            link: `/reserve/${menu.id}`,
+            link: `/reserve?m=${menu.id}`,
             skipNotify: true,
           }),
           webPusher.pushNotificationToUser({
             userId: user.id,
             title: `${MenuTypeName[menu.type]}已開放訂購`,
             message: `請點擊連結前往`,
-            url: `${settings.WEBSITE_URL}/reserve/${menu.id}`,
+            url: `${settings.WEBSITE_URL}/reserve?m=${menu.id}`,
             ignoreIfFocused: true,
           }),
         ])
@@ -135,5 +134,7 @@ export default async function menuPublishNotify(
     res.status(500).json({
       error: error instanceof Error ? error.message : 'Unknown error',
     })
+  } finally {
+    await updateMenuPublishNotifyEventToLatest()
   }
 }

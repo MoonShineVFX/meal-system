@@ -1,4 +1,4 @@
-import { MenuType } from '@prisma/client'
+import { Menu, MenuType } from '@prisma/client'
 import lzString from 'lz-string'
 import z from 'zod'
 import { optionValueSchema } from '@/lib/common'
@@ -18,8 +18,11 @@ import {
   upsertMenu,
 } from '@/lib/server/database'
 import { emitPusherEvent } from '@/lib/server/pusher'
-import { addMenuNotifyEvent } from '@/lib/server/cronicle'
+import { updateMenuPublishNotifyEvent } from '@/lib/server/cronicle'
 import { router, staffProcedure, userProcedure } from '../trpc'
+import { getLogger } from '@/lib/server/logger'
+
+const log = getLogger('trpc.api.menu')
 
 export const MenuRouter = router({
   createOrEdit: staffProcedure
@@ -78,6 +81,15 @@ export const MenuRouter = router({
 
       if (input.supplierId && input.createSupplier) {
         throw new Error('不可同時指定店家與新增店家')
+      }
+
+      let originalMenu: Menu | null = null
+      if (input.id) {
+        originalMenu = await prismaCient.menu.findUnique({
+          where: {
+            id: input.id,
+          },
+        })
       }
 
       const menu = await prismaCient.$transaction(async (client) => {
@@ -180,15 +192,15 @@ export const MenuRouter = router({
         })
       }
 
-      // Trigger task
-      if (isReservation) {
-        // No trigger run
-        if (menu.publishedDate) {
-          addMenuNotifyEvent({
-            menuId: menu.id,
-            date: menu.publishedDate,
-          })
-        }
+      // Trigger task when date changed and is reservation menu
+      if (
+        isReservation &&
+        (!originalMenu ||
+          (originalMenu &&
+            (originalMenu.publishedDate !== menu.publishedDate ||
+              originalMenu.closedDate !== menu.closedDate)))
+      ) {
+        await updateMenuPublishNotifyEventToLatest()
       }
     }),
   deleteMany: staffProcedure
@@ -207,6 +219,7 @@ export const MenuRouter = router({
         type: PUSHER_EVENT.MENU_DELETE,
         skipNotify: false,
       })
+      await updateMenuPublishNotifyEventToLatest()
     }),
   get: userProcedure
     .input(
@@ -306,3 +319,37 @@ export const MenuRouter = router({
       })
     }),
 })
+
+export async function updateMenuPublishNotifyEventToLatest() {
+  const now = new Date()
+  const menus = await prismaCient.menu.findMany({
+    where: {
+      isDeleted: false,
+      type: {
+        notIn: ['LIVE', 'RETAIL'],
+      },
+      publishedDate: {
+        gt: now,
+      },
+    },
+    orderBy: {
+      publishedDate: 'asc',
+    },
+    take: 1,
+  })
+  if (menus.length === 0) {
+    await updateMenuPublishNotifyEvent({
+      enabled: false,
+    })
+    log('No menus to update menu publish notify event to latest')
+    return
+  }
+
+  const menu = menus[0]
+  await updateMenuPublishNotifyEvent({
+    menuId: menu.id,
+    date: menu.publishedDate!,
+  })
+
+  log(`Updated menu publish notify event to latest for menu ${menu.id}`)
+}

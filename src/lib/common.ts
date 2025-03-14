@@ -174,7 +174,7 @@ export const settings = {
   /* Cronicle */
   CRONICLE_API_URL: process.env.CRONICLE_API_URL!,
   CRONICLE_API_KEY: process.env.CRONICLE_API_KEY!,
-  CRONICLE_CATEGORY_ID: process.env.CRONICLE_CATEGORY_ID!,
+  CRONICLE_EVENT_MENU_NOTIFY: process.env.CRONICLE_EVENT_MENU_NOTIFY!,
 
   /* UI */
   ORDER_TAKE_PER_QUERY: 20,
