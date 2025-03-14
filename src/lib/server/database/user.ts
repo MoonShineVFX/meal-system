@@ -1,4 +1,4 @@
-import { Prisma, UserAuthority, UserRole, UserSettings } from '@prisma/client'
+import { Prisma, User, UserAuthority, UserRole } from '@prisma/client'
 import CryptoJS from 'crypto-js'
 
 import { prisma, log } from './define'
@@ -45,19 +45,7 @@ export async function ensureUser({
       id: userId,
       name: name ?? userId,
     },
-    include: {
-      settings: true,
-    },
   })
-
-  // If user does not have a user settings, create one
-  if (!user.settings) {
-    await prisma.userSettings.create({
-      data: {
-        userId: user.id,
-      },
-    })
-  }
 
   // If user profile image exists, create one
   if (!user.profileImageId) {
@@ -201,8 +189,9 @@ const userInfoSelect = Prisma.validator<Prisma.UserSelect>()({
       path: true,
     },
   },
-  settings: true,
   isIntern: true,
+  // Settings
+  optMenuNotify: true,
 })
 
 export async function getUserInfo(userId: string) {
@@ -388,12 +377,12 @@ export async function rechargeUserToday(props: {
 }
 
 export async function updateUserSettings(
-  props: { userId: string } & Partial<UserSettings>,
+  props: { userId: string } & Partial<Pick<User, 'optMenuNotify'>>,
 ) {
   const { userId, ...data } = props
-  await prisma.userSettings.update({
+  await prisma.user.update({
     where: {
-      userId,
+      id: userId,
     },
     data,
   })

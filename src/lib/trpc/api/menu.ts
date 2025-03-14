@@ -1,25 +1,28 @@
-import z from 'zod'
-import { MenuType } from '@prisma/client'
+import { Menu, MenuType } from '@prisma/client'
 import lzString from 'lz-string'
-
-import { userProcedure, staffProcedure, router } from '../trpc'
+import z from 'zod'
+import { optionValueSchema } from '@/lib/common'
+import { PUSHER_CHANNEL, PUSHER_EVENT } from '@/lib/common/pusher'
 import {
+  addCommodityToMenu,
+  createCommodity,
+  createOrUpdateSupplier,
+  deleteMenu,
+  getActiveMenus,
   getMenuWithComs,
   getReservationMenusForUser,
   getReservationMenusSince,
-  getActiveMenus,
-  prismaCient,
-  upsertMenu,
-  createCommodity,
-  addCommodityToMenu,
-  removeCommoditiesFromMenu,
-  deleteMenu,
   getRetailCOM,
-  createOrUpdateSupplier,
+  prismaCient,
+  removeCommoditiesFromMenu,
+  upsertMenu,
 } from '@/lib/server/database'
-import { optionValueSchema } from '@/lib/common'
 import { emitPusherEvent } from '@/lib/server/pusher'
-import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
+import { updateMenuPublishNotifyEvent } from '@/lib/server/cronicle'
+import { router, staffProcedure, userProcedure } from '../trpc'
+import { getLogger } from '@/lib/server/logger'
+
+const log = getLogger('trpc.api.menu')
 
 export const MenuRouter = router({
   createOrEdit: staffProcedure
@@ -59,6 +62,8 @@ export const MenuRouter = router({
         createSupplier: z.boolean().optional(),
         supplierId: z.number().optional(),
         id: z.number().optional(),
+        // XXX: 即時點餐開關通知，先這樣
+        liveMenuNotify: z.boolean().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -78,7 +83,16 @@ export const MenuRouter = router({
         throw new Error('不可同時指定店家與新增店家')
       }
 
-      await prismaCient.$transaction(async (client) => {
+      let originalMenu: Menu | null = null
+      if (input.id) {
+        originalMenu = await prismaCient.menu.findUnique({
+          where: {
+            id: input.id,
+          },
+        })
+      }
+
+      const menu = await prismaCient.$transaction(async (client) => {
         let supplierId: number | undefined = input.supplierId
         // create supplier
         if (input.createSupplier) {
@@ -146,6 +160,8 @@ export const MenuRouter = router({
             excludeCommodityIds: coms.map((com) => com.commodityId),
           })
         }
+
+        return menu
       })
 
       const hasCreateCommodity =
@@ -162,10 +178,30 @@ export const MenuRouter = router({
         skipNotify: false,
       })
 
-      emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
-        type: PUSHER_EVENT.MENU_LIVE_UPDATE,
-        skipNotify: true,
-      })
+      // Public channel notification
+      if (input.type === 'LIVE') {
+        emitPusherEvent(PUSHER_CHANNEL.PUBLIC, {
+          type: PUSHER_EVENT.MENU_LIVE_UPDATE,
+          skipNotify: !input.liveMenuNotify,
+          message:
+            input.closedDate !== null
+              ? '即時點餐已關閉'
+              : input.closedDate === null
+              ? '即時點餐已開啟'
+              : '即時點餐已更新',
+        })
+      }
+
+      // Trigger task when date changed and is reservation menu
+      if (
+        isReservation &&
+        (!originalMenu ||
+          (originalMenu &&
+            (originalMenu.publishedDate !== menu.publishedDate ||
+              originalMenu.closedDate !== menu.closedDate)))
+      ) {
+        await updateMenuPublishNotifyEventToLatest()
+      }
     }),
   deleteMany: staffProcedure
     .input(
@@ -183,6 +219,7 @@ export const MenuRouter = router({
         type: PUSHER_EVENT.MENU_DELETE,
         skipNotify: false,
       })
+      await updateMenuPublishNotifyEventToLatest()
     }),
   get: userProcedure
     .input(
@@ -222,9 +259,16 @@ export const MenuRouter = router({
         userId: ctx.userLite.id,
       })
     }),
-  getReservationsForUser: userProcedure.query(async ({ ctx }) => {
-    return await getReservationMenusForUser({ userId: ctx.userLite.id })
-  }),
+  getReservationsForUser: userProcedure
+    .meta({
+      rateLimit: {
+        perSecond: 50,
+        perMinute: 5,
+      },
+    })
+    .query(async ({ ctx }) => {
+      return await getReservationMenusForUser({ userId: ctx.userLite.id })
+    }),
   getReservationsSince: staffProcedure
     .input(
       z.object({
@@ -275,3 +319,37 @@ export const MenuRouter = router({
       })
     }),
 })
+
+export async function updateMenuPublishNotifyEventToLatest() {
+  const now = new Date()
+  const menus = await prismaCient.menu.findMany({
+    where: {
+      isDeleted: false,
+      type: {
+        notIn: ['LIVE', 'RETAIL'],
+      },
+      publishedDate: {
+        gt: now,
+      },
+    },
+    orderBy: {
+      publishedDate: 'asc',
+    },
+    take: 1,
+  })
+  if (menus.length === 0) {
+    await updateMenuPublishNotifyEvent({
+      enabled: false,
+    })
+    log('No menus to update menu publish notify event to latest')
+    return
+  }
+
+  const menu = menus[0]
+  await updateMenuPublishNotifyEvent({
+    menuId: menu.id,
+    date: menu.publishedDate!,
+  })
+
+  log(`Updated menu publish notify event to latest for menu ${menu.id}`)
+}

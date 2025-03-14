@@ -267,6 +267,7 @@ export default function Menus() {
                             isEdit: true,
                             type: row.type,
                             closedDate: isMenuClosed ? null : new Date(),
+                            liveMenuNotify: true,
                           })
                         }
                       />

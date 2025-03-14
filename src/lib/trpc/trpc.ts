@@ -7,8 +7,6 @@ import { settings, validateRole } from '@/lib/common'
 import { getUserLite } from '@/lib/server/database'
 import { rateLimiter } from '@/lib/server/rate-limiter'
 
-type UserLite = Awaited<ReturnType<typeof getUserLite>>
-
 /* Context */
 export async function createContext(opts: trpcNext.CreateNextContextOptions) {
   let userLite = null
@@ -33,59 +31,77 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 export type Context = inferAsyncReturnType<typeof createContext>
 
 /* Procedures */
-const t = initTRPC.context<Context>().create({
-  transformer: superjson,
-})
+const t = initTRPC
+  .meta<{
+    rateLimit?: {
+      perSecond?: number
+      perMinute?: number
+    }
+  }>()
+  .context<Context>()
+  .create({
+    transformer: superjson,
+  })
 export const router = t.router
 
-async function validateUserLite(
-  userLite: UserLite,
-  targetRole: UserRole,
-  path?: string | string[],
-) {
-  if (!userLite || !validateRole(userLite.role, targetRole)) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: `Only ${targetRole} can access ${path}`,
-    })
-  }
-}
+export const commonProcedure = t.procedure.use(
+  t.middleware(async ({ next, ctx, meta }) => {
+    // Rate Limiter
+    if (meta?.rateLimit) {
+      if (!ctx.userLite) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: '未登入',
+        })
+      }
 
-export const adminProcedure = t.procedure.use(
-  t.middleware(async ({ next, ctx, path }) => {
-    await validateUserLite(ctx.userLite, UserRole.ADMIN, path)
-    return next({ ctx: { userLite: ctx.userLite! } })
-  }),
-)
-
-export const staffProcedure = t.procedure.use(
-  t.middleware(async ({ next, ctx, path }) => {
-    await validateUserLite(ctx.userLite, UserRole.STAFF, path)
-    return next({ ctx: { userLite: ctx.userLite! } })
-  }),
-)
-
-export const userProcedure = t.procedure.use(
-  t.middleware(async ({ next, ctx, path }) => {
-    await validateUserLite(ctx.userLite, UserRole.USER, path)
-    return next({ ctx: { userLite: ctx.userLite! } })
-  }),
-)
-
-export const publicProcedure = t.procedure
-
-/* Rate Limiter */
-export const rateLimitUserProcedure = userProcedure.use(
-  async ({ next, ctx }) => {
-    try {
-      await rateLimiter.consume(ctx.userLite.id, 1)
-    } catch (e) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: '交易過於頻繁，請稍後重試',
-      })
+      try {
+        if (meta.rateLimit.perSecond) {
+          await rateLimiter.consume(
+            ctx.userLite.id,
+            meta.rateLimit.perSecond,
+            'perSecond',
+          )
+        }
+        if (meta.rateLimit.perMinute) {
+          await rateLimiter.consume(
+            ctx.userLite.id,
+            meta.rateLimit.perMinute,
+            'perMinute',
+          )
+        }
+      } catch (e) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: '請求過於頻繁，請稍後重試',
+        })
+      }
     }
 
+    return next()
+  }),
+)
+
+export const userProcedure = commonProcedure.use(
+  t.middleware(async ({ next, ctx }) => {
+    if (!ctx.userLite) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: '未登入',
+      })
+    }
     return next({ ctx: { userLite: ctx.userLite! } })
-  },
+  }),
+)
+
+export const staffProcedure = userProcedure.use(
+  t.middleware(async ({ next, ctx }) => {
+    if (!ctx.userLite || !validateRole(ctx.userLite.role, UserRole.STAFF)) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: '未授權',
+      })
+    }
+    return next({ ctx: { userLite: ctx.userLite! } })
+  }),
 )

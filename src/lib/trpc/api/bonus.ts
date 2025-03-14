@@ -1,13 +1,14 @@
 import { z } from 'zod'
 
+import { PUSHER_CHANNEL, PUSHER_EVENT } from '@/lib/common/pusher'
 import {
   createOrUpdateBonus,
   deleteBonus,
   getBonus,
 } from '@/lib/server/database'
-import { PUSHER_EVENT, PUSHER_CHANNEL } from '@/lib/common/pusher'
 import { emitPusherEvent } from '@/lib/server/pusher'
 
+import { webPusher } from '@/lib/server/webpush'
 import { router, staffProcedure } from '../trpc'
 
 export const BonusRouter = router({
@@ -34,6 +35,12 @@ export const BonusRouter = router({
           type: PUSHER_EVENT.BONUS_APPLY,
           skipNotify: true,
         })
+
+        webPusher.pushNotificationToUser({
+          userId,
+          title: '獲得獎勵點數',
+          message: `您已收到 ${input.amount} 點`,
+        })
       }
     }),
   delete: staffProcedure
@@ -57,7 +64,7 @@ export const BonusRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      return await await getBonus({
+      return await getBonus({
         cursor: input.cursor,
       })
     }),
