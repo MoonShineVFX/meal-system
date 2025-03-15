@@ -117,7 +117,7 @@ export default async function menuPublishNotify(
           webPusher.pushNotificationToUser({
             userId: user.id,
             title: `${MenuTypeName[menu.type]}已開放訂購`,
-            message: `請點擊連結前往`,
+            message: `請點擊前往🍽️`,
             url: `${settings.WEBSITE_URL}/reserve?m=${menu.id}`,
             ignoreIfFocused: true,
           }),
