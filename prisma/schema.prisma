@@ -201,6 +201,7 @@ model OrderItem {
   imageId         String?
 
   @@index([orderId])
+  @@index([createdAt])
 }
 
 model CartItem {
