@@ -105,6 +105,7 @@ model Transaction {
 
   @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
   @@index([depositId, bonusId])
+  @@index([createdAt])
 }
 
 // Deposit
