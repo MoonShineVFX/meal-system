@@ -397,6 +397,7 @@ export function ImageCropEditor(props: {
         setCrop(percentCrop)
         handleCropChange(percentCrop)
       }}
+      className='max-h-[60vh]'
     >
       {/* Circle */}
       {crop && (
