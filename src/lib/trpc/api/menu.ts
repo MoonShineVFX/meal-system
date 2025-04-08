@@ -165,6 +165,7 @@ export const MenuRouter = router({
         return menu
       })
 
+      // Emit events
       const hasCreateCommodity =
         input.coms && input.coms.some((com) => 'commodity' in com)
       if (hasCreateCommodity) {
@@ -190,7 +191,6 @@ export const MenuRouter = router({
           message,
         })
 
-        console.log('input.liveMenuNotify', input.liveMenuNotify)
         if (input.liveMenuNotify) {
           const users = await prismaCient.user.findMany({
             where: {

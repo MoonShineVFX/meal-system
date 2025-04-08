@@ -15,6 +15,7 @@ RUN pnpm install --frozen-lockfile --prod
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_TLS_REJECT_UNAUTHORIZED 0
 ENV PORT 3000
 
 RUN pnpm run db-generate

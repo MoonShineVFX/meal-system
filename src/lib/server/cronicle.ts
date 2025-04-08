@@ -197,29 +197,34 @@ export async function updateMenuPublishNotifyEvent(
         enabled: false
       },
 ) {
-  return await updateEvent({
-    // title: `menu notify [${menuId}]`,
-    // category: settings.CRONICLE_CATEGORY_ID,
-    // plugin: 'urlplug',
-    // target: 'allgrp',
-    id: settings.CRONICLE_EVENT_MENU_NOTIFY,
-    enabled: 'enabled' in props ? (props.enabled ? 1 : 0) : 1,
-    ...('menuId' in props && {
-      timing: {
-        years: [props.date.getFullYear()],
-        months: [props.date.getMonth() + 1],
-        days: [props.date.getDate()],
-        hours: [props.date.getHours()],
-        minutes: [props.date.getMinutes()],
-      },
-      params: {
-        method: 'POST',
-        url: `${settings.WEBSITE_URL}/api/utils/menu-publish-notify`,
-        headers: `User-Agent: Google-Cloud-Scheduler\nContent-Type: application/json\nAuthorization: Bearer ${settings.AUTH_API_TOKEN}`,
-        data: JSON.stringify({
-          menuId: props.menuId,
-        }),
-      },
-    }),
-  })
+  try {
+    const response = await updateEvent({
+      // title: `menu notify [${menuId}]`,
+      // category: settings.CRONICLE_CATEGORY_ID,
+      // plugin: 'urlplug',
+      // target: 'allgrp',
+      id: settings.CRONICLE_EVENT_MENU_NOTIFY,
+      enabled: 'enabled' in props ? (props.enabled ? 1 : 0) : 1,
+      ...('menuId' in props && {
+        timing: {
+          years: [props.date.getFullYear()],
+          months: [props.date.getMonth() + 1],
+          days: [props.date.getDate()],
+          hours: [props.date.getHours()],
+          minutes: [props.date.getMinutes()],
+        },
+        params: {
+          method: 'POST',
+          url: `${settings.WEBSITE_URL}/api/utils/menu-publish-notify`,
+          headers: `User-Agent: Google-Cloud-Scheduler\nContent-Type: application/json\nAuthorization: Bearer ${settings.AUTH_API_TOKEN}`,
+          data: JSON.stringify({
+            menuId: props.menuId,
+          }),
+        },
+      }),
+    })
+    return response
+  } catch (error) {
+    console.error(`Error updating menu publish notify event:`, error)
+  }
 }
