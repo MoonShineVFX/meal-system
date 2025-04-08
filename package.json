@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev -p 8085",
+    "dev": "next dev -p 8086",
     "build": "next build",
     "start": "next start",
     "db-studio": "prisma studio",

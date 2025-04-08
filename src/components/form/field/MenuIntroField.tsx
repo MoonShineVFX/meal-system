@@ -137,6 +137,7 @@ export default function MenuIntroField<T extends FieldValues>(
         !props.formInput.data.disableCreateSupplier) && (
         <label className='ml-auto flex cursor-pointer items-center gap-2'>
           <CheckBox
+            className='peer/checkbox'
             onChange={(e) => {
               const hasSelectedSupplier = introData.supplierId !== undefined
               setIntroData((prev) => ({
@@ -147,8 +148,11 @@ export default function MenuIntroField<T extends FieldValues>(
                 createSupplier: e.target.checked,
               }))
             }}
+            disabled={introData.supplierId !== undefined}
           />
-          <span className='text-sm font-bold text-stone-500'>新增為店家</span>
+          <span className='text-sm font-bold text-stone-500 peer-disabled/checkbox:opacity-50'>
+            新增為店家
+          </span>
         </label>
       )}
     </div>

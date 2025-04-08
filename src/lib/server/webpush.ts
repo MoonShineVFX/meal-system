@@ -115,17 +115,22 @@ class WebPusher {
     const { userId, ...data } = props
     const userSubs = await this.getUserSubs(userId)
 
-    const promises = userSubs
-      .filter((sub) => sub.notificationEnabled)
-      .map((sub) => {
-        return this.push({
-          sub,
-          type: 'notification',
-          data,
+    try {
+      const promises = userSubs
+        .filter((sub) => sub.notificationEnabled)
+        .map((sub) => {
+          return this.push({
+            sub,
+            type: 'notification',
+            data,
+          })
         })
-      })
 
-    return await Promise.all(promises)
+      return await Promise.all(promises)
+    } catch (error) {
+      console.error(`Error pushing notification to user:`, error)
+      return []
+    }
   }
 
   async getUserSubs(userId: string) {

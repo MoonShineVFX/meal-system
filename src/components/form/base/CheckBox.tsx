@@ -12,7 +12,7 @@ const CheckBox = forwardRef<
       type='checkbox'
       ref={ref}
       className={twMerge(
-        'focus:ring-none h-5 w-5 cursor-pointer rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent hover:bg-stone-100',
+        'focus:ring-none h-5 w-5 cursor-pointer rounded-lg border-stone-300 text-yellow-500 focus:ring-transparent disabled:opacity-50 hover:bg-stone-100',
         className,
       )}
       {...rest}
