@@ -50,6 +50,7 @@ export default function COMField<T extends FieldValues>(
         .map((comData) => (comData as ExistCOMData).commodityId) ?? undefined,
     onlyFromSupplierId: supplier?.id,
   })
+  const utils = trpc.useUtils()
   const data = dataQuery ?? []
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [newComDataId, setNewComDataId] = useState(Number.MAX_SAFE_INTEGER)
@@ -78,24 +79,37 @@ export default function COMField<T extends FieldValues>(
 
   // set default value if supplier is changed
   useEffect(() => {
-    if (!data) return
-    if (!supplier && !props.formInput.data?.isEdit) {
-      setComDatas(props.formInput.defaultValue ?? [])
-      return
+    async function onSupplierChange() {
+      const ensuredNewSupplierData = await utils.commodity.getList.ensureData({
+        includeIds:
+          props.formInput.defaultValue
+            ?.filter((comData) => 'commodityId' in comData)
+            .map((comData) => (comData as ExistCOMData).commodityId) ??
+          undefined,
+        onlyFromSupplierId: supplier?.id,
+      })
+
+      if (!supplier && !props.formInput.data?.isEdit) {
+        setComDatas(props.formInput.defaultValue ?? [])
+        return
+      }
+
+      // set comdatas to default value if isEdit
+      if (props.formInput.data?.isEdit) {
+        setComDatas(props.formInput.defaultValue ?? [])
+        return
+      }
+
+      setComDatas(
+        ensuredNewSupplierData.map((com) => ({
+          commodityId: com.id,
+          limitPerUser: 0,
+          stock: 0,
+        })),
+      )
     }
 
-    // set comdatas to default value if isEdit
-    if (props.formInput.data?.isEdit) {
-      setComDatas(props.formInput.defaultValue ?? [])
-      return
-    }
-    setComDatas(
-      data.map((com) => ({
-        commodityId: com.id,
-        limitPerUser: 0,
-        stock: 0,
-      })),
-    )
+    onSupplierChange()
   }, [supplier])
 
   const handleSelectFromExist = useCallback(() => {
