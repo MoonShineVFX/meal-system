@@ -559,6 +559,7 @@ export async function syncAdUsers(existUserIds: string[]) {
     data: {
       isDeactivated: false,
       pointBalance: 0,
+      creditBalance: 0,
     },
   })
 
