@@ -981,26 +981,45 @@ export async function updateOrderStatus({
       throw new Error('Order already canceled')
     }
 
-    const updatedOrder = await client.order.update({
-      where: {
-        id: orderId,
-      },
-      data: {
-        [status]: new Date(),
-        status: ORDER_STATUS_MAP[status],
-      },
-      include: {
-        items: {
-          select: {
-            image: {
-              select: {
-                path: true,
+    if (status === 'timePreparing' && order.status !== 'PREPARING') {
+      throw new Error('Order status is not preparing')
+    }
+
+    const updatedOrder = await client.order
+      .update({
+        where: {
+          id: orderId,
+          // update lock
+          status: order.status,
+          timeCanceled: order.timeCanceled,
+          timeCompleted: order.timeCompleted,
+          timeDishedUp: order.timeDishedUp,
+          timePreparing: order.timePreparing,
+        },
+        data: {
+          [status]: new Date(),
+          status: ORDER_STATUS_MAP[status],
+        },
+        include: {
+          items: {
+            select: {
+              image: {
+                select: {
+                  path: true,
+                },
               },
             },
           },
         },
-      },
-    })
+      })
+      .catch((error) => {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === 'P2025') {
+            throw new Error('訂單已被其他操作更新')
+          }
+        }
+        throw error
+      })
 
     if (status !== 'timeCanceled') return { order: updatedOrder }
 

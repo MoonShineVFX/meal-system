@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 
 import Image from '@/components/core/Image'
 import trpc, { POSLiveDatas } from '@/lib/client/trpc'
-import { OrderTimeStatus, getOptionName, settings } from '@/lib/common'
+import { getOptionName, OrderTimeStatus, settings } from '@/lib/common'
 import POSCard from './POSCard'
 
 export default function POSLiveCard(props: {
@@ -17,7 +17,7 @@ export default function POSLiveCard(props: {
       if (order === undefined) return
       updateOrderMutation.mutate({ orderId: order.id, status })
     },
-    [order],
+    [order, updateOrderMutation],
   )
 
   // split order id to 3 digits
