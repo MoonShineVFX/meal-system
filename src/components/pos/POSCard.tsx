@@ -106,7 +106,7 @@ export default function POSCard(props: {
       default:
         break
     }
-  }, [step])
+  }, [step, order, props.onStatusModify])
 
   const handlePrintClick = useCallback(() => {
     if (!props.print) return

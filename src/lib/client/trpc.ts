@@ -1,10 +1,12 @@
-import { httpBatchLink, loggerLink } from '@trpc/client'
+import { httpBatchLink, loggerLink, TRPCLink } from '@trpc/client'
 import { createTRPCNext } from '@trpc/next'
 import type { UseTRPCMutationResult } from '@trpc/react-query/shared'
 import type { inferRouterOutputs } from '@trpc/server'
 import superjson from 'superjson'
 
 import type { AppRouter } from '@/lib/trpc'
+import { addNotification, NotificationType } from './store'
+import { observable } from '@trpc/server/observable'
 
 /* Types */
 type RouterOutput = inferRouterOutputs<AppRouter>
@@ -51,11 +53,35 @@ export type DepositDatas = RouterOutput['deposit']['getList']['deposits']
 export type SupplierDatas = RouterOutput['supplier']['getList']
 export type BonusDatas = RouterOutput['bonus']['getList']['bonus']
 
+const errorMessageLink: TRPCLink<AppRouter> = () => {
+  return ({ next, op }) => {
+    return observable((observer) => {
+      const unsubscribe = next(op).subscribe({
+        next(value) {
+          observer.next(value)
+        },
+        error(err) {
+          observer.error(err)
+          addNotification({
+            type: NotificationType.ERROR,
+            message: err.message,
+          })
+        },
+        complete() {
+          observer.complete()
+        },
+      })
+      return unsubscribe
+    })
+  }
+}
+
 /* TRPC */
 const trpc = createTRPCNext<AppRouter>({
   config() {
     return {
       links: [
+        errorMessageLink,
         loggerLink({
           enabled: (opts) =>
             process.env.NODE_ENV !== 'production' ||
