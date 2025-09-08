@@ -92,9 +92,10 @@ export const MenuComponent = React.forwardRef<
       middleware: [
         offset({ mainAxis: 6, alignmentAxis: nested ? -8 : 0 }),
         size({
-          apply({ rects, elements }) {
+          apply({ rects, elements, availableHeight }) {
             Object.assign(elements.floating.style, {
               minWidth: `${rects.reference.width}px`,
+              maxHeight: `${availableHeight - 16}px`,
             })
           },
         }),
@@ -277,7 +278,7 @@ export const MenuComponent = React.forwardRef<
                 ref={refs.setFloating}
                 // Menu div styles
                 className={twMerge(
-                  'relative z-[1000] flex w-max origin-top-right flex-col overflow-hidden rounded-2xl border bg-white py-2 shadow-lg',
+                  'relative z-[1000] flex w-max origin-top-right flex-col overflow-y-auto rounded-2xl border bg-white py-2 shadow-lg',
                   nested && 'origin-top-left',
                   (placement === 'top-start' || placement === 'top') &&
                     'origin-bottom-right',
