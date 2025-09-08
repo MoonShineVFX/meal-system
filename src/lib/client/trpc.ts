@@ -62,10 +62,12 @@ const errorMessageLink: TRPCLink<AppRouter> = () => {
         },
         error(err) {
           observer.error(err)
-          addNotification({
-            type: NotificationType.ERROR,
-            message: err.message,
-          })
+          if (err.message !== '未登入') {
+            addNotification({
+              type: NotificationType.ERROR,
+              message: err.message,
+            })
+          }
         },
         complete() {
           observer.complete()
