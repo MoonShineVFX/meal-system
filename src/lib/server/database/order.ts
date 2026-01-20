@@ -63,7 +63,7 @@ export async function createOrderFromCart({
           cur.commodityOnMenu.commodity.optionSets,
           cur.commodityOnMenu.commodity.price,
         ) *
-          cur.quantity,
+        cur.quantity,
       0,
     )
 
@@ -116,7 +116,7 @@ export async function createOrderFromCart({
             acc.set(cartItem.menuId, [])
           }
 
-          ;(
+          ; (
             acc.get(cartItem.menuId) as Prisma.OrderItemCreateManyOrderInput[]
           ).push({
             name: cartItem.commodityOnMenu.commodity.name,
@@ -246,6 +246,7 @@ export async function createOrderFromRetail(args: {
         timePreparing: now,
         timeDishedUp: now,
         timeCompleted: now,
+        status: 'COMPLETED',
       },
       select: {
         id: true,
@@ -378,9 +379,9 @@ export async function getOrders({
   cursor?: number
   onlyClientOrder?: boolean
 } & (
-  | { type: 'live' | 'reservation' | 'archived'; keyword?: never }
-  | { type: 'search'; keyword: string }
-)) {
+    | { type: 'live' | 'reservation' | 'archived'; keyword?: never }
+    | { type: 'search'; keyword: string }
+  )) {
   // Check if keyword is empty and search by user UI and return empty
   if (type === 'search' && !keyword && userId) return []
 
@@ -405,7 +406,7 @@ export async function getOrders({
           notIn: ['CANCELED', 'COMPLETED'],
         },
         menu: {
-          type: { not: 'LIVE' },
+          type: { notIn: ['LIVE', 'RETAIL'] },
         },
       }
       orderBys = [
@@ -597,9 +598,11 @@ export async function getOrders({
     },
     cursor: cursor ? { id: cursor } : undefined,
     take: settings.ORDER_TAKE_PER_QUERY + 1,
-    orderBy: orderBys ?? {
+    orderBy: orderBys ?? [{
       createdAt: 'desc',
-    },
+    }, {
+      id: 'desc',
+    }],
   })
 
   const injectedCanCancelOrders = rawOrders.map((order) => {
@@ -696,15 +699,15 @@ export async function getReservationOrdersForPOS({
   const whereInput: Prisma.MenuWhereInput =
     type === 'today'
       ? {
-          date: todayDate,
-        }
+        date: todayDate,
+      }
       : type === 'future'
-      ? {
+        ? {
           date: {
             gt: todayDate,
           },
         }
-      : {
+        : {
           date: {
             lt: todayDate,
           },

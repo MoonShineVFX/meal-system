@@ -9,15 +9,17 @@ import Table from '@/components/core/Table'
 import CheckBox from '@/components/form/base/CheckBox'
 import trpc, { OrderDatas } from '@/lib/client/trpc'
 import { getMenuName } from '@/lib/common'
+import { useDebounce } from 'usehooks-ts'
 
 export default function Orders() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
+  const debouncedSearchKeyword = useDebounce(searchKeyword, 500)
   const [showClientOrderOnly, setShowClientOrderOnly] = useState<boolean>(false)
   const [orders, setOrders] = useState<OrderDatas>([])
 
-  const { data, isError, error, isLoading, fetchNextPage, hasNextPage } =
+  const { data, isError, error, isLoading, fetchNextPage, hasNextPage,  } =
     trpc.order.getList.useInfiniteQuery(
-      { keyword: searchKeyword, onlyClientOrder: showClientOrderOnly },
+      { keyword: debouncedSearchKeyword, onlyClientOrder: showClientOrderOnly },
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
       },
@@ -30,6 +32,7 @@ export default function Orders() {
       )
     }
   }, [data])
+
 
   if (isError) return <Error description={error.message} />
 

@@ -433,9 +433,11 @@ export async function getTransactions({
         whereInput,
       ],
     },
-    orderBy: {
+    orderBy: [{
       createdAt: 'desc',
-    },
+    }, {
+      id: 'desc',
+    }],
     take: settings.TRANSACTIONS_PER_QUERY + 1,
     cursor: cursor ? { id: cursor } : undefined,
     include: {

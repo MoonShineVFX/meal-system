@@ -67,8 +67,6 @@ model User {
   targetTransactions Transaction[] @relation("target")
   bonus              Bonus[]       @relation("bonusUsers")
   bonusRedeem        Bonus[]       @relation("bonusRedeem")
-
-  @@index([isDeactivated, optMenuNotify])
 }
 
 // Transaction
@@ -103,7 +101,8 @@ model Transaction {
   bonus            Bonus?   @relation(fields: [bonusId], references: [id])
   bonusId          Int?
 
-  @@index([sourceUserId, targetUserId, type, createdAt(sort: Desc)])
+  @@index([sourceUserId, type, createdAt(sort: Desc)])
+  @@index([targetUserId, type, createdAt(sort: Desc)])
   @@index([depositId, bonusId])
   @@index([createdAt])
 }
@@ -144,7 +143,7 @@ model Bonus {
   redeemUsers  User[]        @relation("bonusRedeem")
   transactions Transaction[]
 
-  @@index([id, createdAt, isDeleted])
+  @@index([createdAt, isDeleted])
 }
 
 // Order
@@ -182,6 +181,7 @@ model Order {
   @@index([menuId, status, timeCompleted, timeCanceled, createdAt])
   @@index([forClient, createdAt(sort: Desc)])
   @@index([status, menuId, createdAt])
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
 }
 
 model OrderItem {
@@ -280,8 +280,6 @@ model Commodity {
   onMenus    CommodityOnMenu[]
   supplier   Supplier?           @relation(fields: [supplierId], references: [id])
   supplierId Int?
-
-  @@index([isDeleted])
 }
 
 // Menu
@@ -301,7 +299,6 @@ model CommodityOnMenu {
   orderItems  OrderItem[]
 
   @@id([menuId, commodityId])
-  @@index([isDeleted])
 }
 
 enum MenuType {
@@ -349,8 +346,6 @@ model Supplier {
 
   commodities Commodity[]
   menus       Menu[]
-
-  @@index([isDeleted])
 }
 
 // Resource

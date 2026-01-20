@@ -198,9 +198,11 @@ export async function getReservationMenusForUser({
       closedDate: true,
       commodities: {
         take: 6, // take 6 commodities for reservation ui width
-        orderBy: {
+        orderBy: [{
           createdAt: 'asc',
-        },
+        }, {
+          commodityId: 'asc',
+        }],
         where: {
           isDeleted: false,
         },

@@ -107,7 +107,7 @@ export const settings = {
 
   /* Server */
   MENU_MAX_QUANTITY_PER_ORDER: 10,
-  TOKEN_COUNT_PER_USER: 2,
+  TOKEN_COUNT_PER_USER: 10,
   SERVER_USER_ID: '_server',
   SERVER_CLIENTORDER_ID: '_client',
   MENU_LIVE_ID: 1,

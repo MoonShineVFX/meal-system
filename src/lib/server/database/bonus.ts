@@ -69,13 +69,15 @@ export async function getBonus({ cursor }: { cursor?: number }) {
       isDeleted: false,
     },
     take: settings.TRANSACTIONS_PER_QUERY + 1,
-    orderBy: {
+    orderBy: [{
       createdAt: 'desc',
-    },
+    }, {
+      id: 'desc',
+    }],
     cursor: cursor
       ? {
-          id: cursor,
-        }
+        id: cursor,
+      }
       : undefined,
     include: {
       redeemUsers: {
