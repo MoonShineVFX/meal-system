@@ -203,9 +203,11 @@ export async function getDeposits({
 
   const deposits = await prisma.deposit.findMany({
     where: whereInput,
-    orderBy: {
+    orderBy: [{
       createdAt: 'desc',
-    },
+    }, {
+      id: 'desc',
+    }],
     take: settings.DEPOSITS_PER_QUERY + 1,
     cursor: cursor ? { id: cursor } : undefined,
     include: {

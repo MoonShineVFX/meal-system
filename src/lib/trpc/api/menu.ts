@@ -360,9 +360,11 @@ export async function updateMenuPublishNotifyEventToLatest() {
         gt: now,
       },
     },
-    orderBy: {
+    orderBy: [{
       publishedDate: 'asc',
-    },
+    }, {
+      id: 'asc',
+    }],
     take: 1,
   })
   if (menus.length === 0) {
