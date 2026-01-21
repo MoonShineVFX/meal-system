@@ -72,6 +72,7 @@ const errorMessageLink: TRPCLink<AppRouter> = () => {
             addNotification({
               type: NotificationType.ERROR,
               message: errorMessage,
+              tag: 'trpc-error',
             })
           }
         },

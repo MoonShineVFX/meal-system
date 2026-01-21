@@ -63,6 +63,13 @@ export const OrderRouter = router({
             skipNotify: true,
           })
         }
+
+        // notify webhook
+        emitPusherEvent(PUSHER_CHANNEL.WEBHOOK, {
+          type: PUSHER_EVENT.ORDER_ADD,
+          skipNotify: true,
+          message: JSON.stringify(order),
+        })
       }
 
       webPusher.pushBadgeCountToUser({
@@ -77,14 +84,29 @@ export const OrderRouter = router({
         perSecond: 100,
       },
     })
-    .input(z.object({ cipher: z.string() }))
+    .input(
+      z.object({
+        cipher: z.string(),
+        quantity: z.number().min(1).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.userLite) throw new Error('未登入')
 
-      return await createOrderFromRetail({
+      const order = await createOrderFromRetail({
         userId: ctx.userLite.id,
         cipher: input.cipher,
+        quantity: input.quantity,
       })
+
+      // notify webhook
+      emitPusherEvent(PUSHER_CHANNEL.WEBHOOK, {
+        type: PUSHER_EVENT.ORDER_ADD,
+        skipNotify: true,
+        message: JSON.stringify(order),
+      })
+
+      return order
     }),
   get: userProcedure
     .input(
