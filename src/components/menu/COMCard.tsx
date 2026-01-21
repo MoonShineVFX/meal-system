@@ -55,13 +55,15 @@ export default function COMCard(props: {
         </section>
         {/* Description */}
         <section className='flex w-full flex-col items-center gap-1 p-2'>
-          <p className='text-sm text-stone-400'>
-            {com ? (
-              props.category
-            ) : (
-              <span className='skeleton rounded-xl'>分類</span>
-            )}
-          </p>
+          {props.category !== settings.RECENT_PURCHASE_CATEGORY && (
+            <p className='text-sm text-stone-400'>
+              {com ? (
+                props.category
+              ) : (
+                <span className='skeleton rounded-xl'>分類</span>
+              )}
+            </p>
+          )}
           <h2 className='text text-center indent-[0.1em] font-bold tracking-widest'>
             {com ? (
               com?.commodity.name

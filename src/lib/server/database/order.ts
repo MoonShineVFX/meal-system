@@ -15,6 +15,7 @@ import {
 import { getCartItemsBase } from './cart'
 import { prisma } from './define'
 import { getRetailCOM } from './menu'
+import { createOrUpdateOrderRecord } from './orderRecord'
 import { chargeUserBalanceBase, rechargeUserBalanceBase } from './transaction'
 
 /* Validate and create orders by menu with transaction */
@@ -209,6 +210,20 @@ export async function createOrderFromCart({
           },
         })
         orders.push(order as ConvertPrismaJson<typeof order>)
+      }
+    }
+
+    // Record OrderRecords for LIVE orders
+    for (const order of orders) {
+      if (order.menu.type === 'LIVE') {
+        for (const item of order.items) {
+          await createOrUpdateOrderRecord({
+            userId: userId,
+            commodityId: item.commodityId,
+            menuType: 'LIVE',
+            client,
+          })
+        }
       }
     }
 
