@@ -16,6 +16,7 @@ import {
   prismaCient,
   removeCommoditiesFromMenu,
   upsertMenu,
+  getOrderRecordsByUser,
 } from '@/lib/server/database'
 import { emitPusherEvent } from '@/lib/server/pusher'
 import { updateMenuPublishNotifyEvent } from '@/lib/server/cronicle'
@@ -348,6 +349,18 @@ export const MenuRouter = router({
         quantity: input.quantity,
       })
     }),
+  getOrderRecords: userProcedure
+    .input(
+      z.object({
+        menuType: z.enum(['LIVE']),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await getOrderRecordsByUser({
+        userId: ctx.userLite.id,
+        menuType: input.menuType,
+      })
+    }),
 })
 
 export async function updateMenuPublishNotifyEventToLatest() {
@@ -362,11 +375,14 @@ export async function updateMenuPublishNotifyEventToLatest() {
         gt: now,
       },
     },
-    orderBy: [{
-      publishedDate: 'asc',
-    }, {
-      id: 'asc',
-    }],
+    orderBy: [
+      {
+        publishedDate: 'asc',
+      },
+      {
+        id: 'asc',
+      },
+    ],
     take: 1,
   })
   if (menus.length === 0) {

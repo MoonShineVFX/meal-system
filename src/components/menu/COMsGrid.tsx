@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge'
 
 import type { CommoditiesOnMenuByCategory } from '@/lib/client/trpc'
 import COMCard from './COMCard'
+import { settings } from '@/lib/common'
 
 const comsByCategoryPlaceHolder: CommoditiesOnMenuByCategory = new Map([
   [
@@ -82,29 +83,41 @@ function COMsGrid(props: {
           {[...mainCategoryData.subCategories].map(
             ([subCategory, subCategoryData]) => (
               <Fragment key={subCategory}>
-                {subCategoryData.coms.map((com, index) => {
-                  if (
-                    props.fromReserve &&
-                    com &&
-                    existComIds.includes(com?.commodity.id)
-                  ) {
-                    return null
-                  }
-                  if (com) existComIds.push(com?.commodity.id)
-                  return (
-                    <COMCard
-                      key={com?.commodity.id ?? index}
-                      com={com}
-                      category={
-                        props.fromReserve && com
-                          ? subCategoriesFromComs
-                              .get(com.commodity.id.toString())!
-                              .join(' / ')
-                          : subCategory
+                {subCategoryData.coms
+                  .sort((a, b) => {
+                    // Sort by name for non-recent purchases
+                    if (subCategory !== settings.RECENT_PURCHASE_CATEGORY) {
+                      if (a && b) {
+                        return a.commodity.name.localeCompare(b.commodity.name)
                       }
-                    />
-                  )
-                })}
+                    }
+
+                    // Sort by updatedAt for recent purchases
+                    return 0
+                  })
+                  .map((com, index) => {
+                    if (
+                      props.fromReserve &&
+                      com &&
+                      existComIds.includes(com?.commodity.id)
+                    ) {
+                      return null
+                    }
+                    if (com) existComIds.push(com?.commodity.id)
+                    return (
+                      <COMCard
+                        key={com?.commodity.id ?? index}
+                        com={com}
+                        category={
+                          props.fromReserve && com
+                            ? subCategoriesFromComs
+                                .get(com.commodity.id.toString())!
+                                .join(' / ')
+                            : subCategory
+                        }
+                      />
+                    )
+                  })}
               </Fragment>
             ),
           )}

@@ -62,6 +62,7 @@ model User {
   cartItems          CartItem[]
   tokens             UserToken[]
   orders             Order[]
+  orderRecords       OrderRecord[]
   Deposit            Deposit[]
   sourceTransactions Transaction[] @relation("source")
   targetTransactions Transaction[] @relation("target")
@@ -274,12 +275,13 @@ model Commodity {
   optionSets Json    @db.Json // { "name": string, "multiSelect": boolean, "options": string[], "order": number }[]
   isDeleted  Boolean @default(false)
 
-  categories CommodityCategory[]
-  image      Image?              @relation(fields: [imageId], references: [id], onDelete: SetNull)
-  imageId    String?
-  onMenus    CommodityOnMenu[]
-  supplier   Supplier?           @relation(fields: [supplierId], references: [id])
-  supplierId Int?
+  categories   CommodityCategory[]
+  image        Image?              @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  imageId      String?
+  onMenus      CommodityOnMenu[]
+  orderRecords OrderRecord[]
+  supplier     Supplier?           @relation(fields: [supplierId], references: [id])
+  supplierId   Int?
 }
 
 // Menu
@@ -360,4 +362,21 @@ model Image {
   Commodity Commodity[]
   OrderItem OrderItem[]
   User      User?
+}
+
+// Order Record
+model OrderRecord {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId      String
+  commodityId Int
+  menuType    String // Reserved field (currently "LIVE")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commodity Commodity @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commodityId, menuType])
+  @@index([userId, menuType, updatedAt(sort: Desc)])
 }

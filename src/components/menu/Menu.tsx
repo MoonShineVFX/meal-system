@@ -37,6 +37,10 @@ export default function Menu(props: {
     type: props.type,
     menuId: props.menuId,
   })
+  const { data: orderRecordsData } = trpc.menu.getOrderRecords.useQuery(
+    { menuType: 'LIVE' },
+    { enabled: props.type === 'LIVE' },
+  )
   const { comId, setComId } = useMenuNavigation()
 
   const [selectedCom, setSelectedCom] = useState<CommoditiesOnMenu[0] | null>(
@@ -170,6 +174,51 @@ export default function Menu(props: {
       }
     }
 
+    // Process recent purchases for LIVE menu
+    if (
+      props.type === 'LIVE' &&
+      orderRecordsData &&
+      orderRecordsData.length > 0
+    ) {
+      // Get available commodity IDs in current menu
+      const availableCommodityIds = new Set(
+        data.commodities
+          .filter((com) => com.unavailableReasons.length === 0)
+          .map((com) => com.commodity.id),
+      )
+
+      // Filter orderRecords to only show available items and remove duplicates
+      const recentComs = orderRecordsData
+        .map((record) =>
+          data.commodities.find(
+            (com) => com.commodity.id === record.commodityId,
+          ),
+        )
+        .filter(
+          (com): com is NonNullable<typeof com> =>
+            com !== undefined && availableCommodityIds.has(com.commodity.id),
+        )
+        .slice(0, settings.RECENT_PURCHASE_COUNT)
+
+      // Only show category if > 0 item
+      if (recentComs.length > 0) {
+        const categoryName = settings.RECENT_PURCHASE_CATEGORY
+
+        comsByCategory.set(categoryName, {
+          subCategories: new Map([
+            [
+              categoryName,
+              {
+                coms: recentComs,
+                order: -1,
+              },
+            ],
+          ]),
+          order: -1, // Ensure it appears first
+        })
+      }
+    }
+
     // Sort categories
     const result = new Map(
       [...comsByCategory]
@@ -200,7 +249,7 @@ export default function Menu(props: {
     } else {
       removeUnavailableConfirm(idKey)
     }
-  }, [data])
+  }, [data, orderRecordsData])
 
   // Check is all commodities unavailable
   const isAllComsUnavailable = useMemo(() => {
