@@ -12,15 +12,18 @@ export const PUSHER_WS_HOST = process.env.NEXT_PUBLIC_PUSHER_WS_HOST || ''
 export const PUSHER_CHANNEL_USER_PREFIX = 'private-user-message-' as const
 export const PUSHER_CHANNEL_STAFF = 'private-staff-message' as const
 export const PUSHER_CHANNEL_PUBLIC = 'public-message' as const
+export const PUSHER_CHANNEL_WEBHOOK = 'webhook' as const
 export type PusherChannel =
   | `${typeof PUSHER_CHANNEL_USER_PREFIX}${string}`
   | typeof PUSHER_CHANNEL_STAFF
   | typeof PUSHER_CHANNEL_PUBLIC
+  | typeof PUSHER_CHANNEL_WEBHOOK
 
 export const PUSHER_CHANNEL = {
   PUBLIC: 'public-message',
   USER: (userId: string) => `${PUSHER_CHANNEL_USER_PREFIX}${userId}` as const,
   STAFF: PUSHER_CHANNEL_STAFF,
+  WEBHOOK: PUSHER_CHANNEL_WEBHOOK,
 } as const
 
 // Pusher event types
@@ -33,6 +36,7 @@ export type PusherEventPayload = {
 }
 
 export enum PUSHER_EVENT {
+  ORDER_ADD = '訂單新增',
   ORDER_UPDATE = '訂單狀態更新',
   ORDER_CANCEL = '訂單取消',
   BONUS_REDEEMED = '已取得贈送點數',

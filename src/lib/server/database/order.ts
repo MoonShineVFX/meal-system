@@ -63,7 +63,7 @@ export async function createOrderFromCart({
           cur.commodityOnMenu.commodity.optionSets,
           cur.commodityOnMenu.commodity.price,
         ) *
-        cur.quantity,
+          cur.quantity,
       0,
     )
 
@@ -116,7 +116,7 @@ export async function createOrderFromCart({
             acc.set(cartItem.menuId, [])
           }
 
-          ; (
+          ;(
             acc.get(cartItem.menuId) as Prisma.OrderItemCreateManyOrderInput[]
           ).push({
             name: cartItem.commodityOnMenu.commodity.name,
@@ -140,13 +140,24 @@ export async function createOrderFromCart({
     // Create orders
     let orders: {
       id: number
+      createdAt: Date
       user: {
+        id: string
         name: string
       }
       menu: {
+        id: number
+        name?: string
         date: Date | null
         type: MenuType
       }
+      items: {
+        commodityId: number
+        quantity: number
+        name: string
+        options: OrderOptions
+        price: number
+      }[]
     }[] = []
     for (const [menuId, value] of orderItemCreates) {
       // Reservation menu will separate orders by commodity
@@ -171,20 +182,33 @@ export async function createOrderFromCart({
           },
           select: {
             id: true,
+            createdAt: true,
             menu: {
               select: {
+                name: true,
+                id: true,
                 type: true,
                 date: true,
               },
             },
+            items: {
+              select: {
+                commodityId: true,
+                quantity: true,
+                name: true,
+                options: true,
+                price: true,
+              },
+            },
             user: {
               select: {
+                id: true,
                 name: true,
               },
             },
           },
         })
-        orders.push(order)
+        orders.push(order as ConvertPrismaJson<typeof order>)
       }
     }
 
@@ -201,23 +225,31 @@ export async function createOrderFromCart({
 export async function createOrderFromRetail(args: {
   userId: string
   cipher: string
+  quantity?: number
 }) {
-  const { userId, cipher } = args
+  const { userId, cipher, quantity = 1 } = args
 
   const { order } = await prisma.$transaction(async (client) => {
-    const com = await getRetailCOM({ cipher, userId, client: client })
+    const com = await getRetailCOM({
+      cipher,
+      userId,
+      quantity,
+      client: client,
+    })
 
     if (!com) {
       throw new Error('Invalid cipher')
     }
 
+    const unitPrice = getOrderOptionsPrice(
+      com.options,
+      com.commodity.optionSets,
+      com.commodity.price,
+    )
+
     const { transaction } = await chargeUserBalanceBase({
       userId,
-      amount: getOrderOptionsPrice(
-        com.options,
-        com.commodity.optionSets,
-        com.commodity.price,
-      ),
+      amount: unitPrice * quantity,
       client,
     })
 
@@ -230,12 +262,8 @@ export async function createOrderFromRetail(args: {
         items: {
           create: {
             name: com.commodity.name,
-            price: getOrderOptionsPrice(
-              com.options,
-              com.commodity.optionSets,
-              com.commodity.price,
-            ),
-            quantity: 1,
+            price: unitPrice,
+            quantity: quantity,
             options: com.options,
             menuId: com.menuId,
             commodityId: com.commodityId,
@@ -250,14 +278,27 @@ export async function createOrderFromRetail(args: {
       },
       select: {
         id: true,
+        createdAt: true,
         menu: {
           select: {
+            name: true,
+            id: true,
             type: true,
             date: true,
           },
         },
+        items: {
+          select: {
+            commodityId: true,
+            quantity: true,
+            name: true,
+            options: true,
+            price: true,
+          },
+        },
         user: {
           select: {
+            id: true,
             name: true,
           },
         },
@@ -265,7 +306,7 @@ export async function createOrderFromRetail(args: {
     })
 
     return {
-      order,
+      order: order as ConvertPrismaJson<typeof order>,
       transaction,
     }
   })
@@ -379,9 +420,9 @@ export async function getOrders({
   cursor?: number
   onlyClientOrder?: boolean
 } & (
-    | { type: 'live' | 'reservation' | 'archived'; keyword?: never }
-    | { type: 'search'; keyword: string }
-  )) {
+  | { type: 'live' | 'reservation' | 'archived'; keyword?: never }
+  | { type: 'search'; keyword: string }
+)) {
   // Check if keyword is empty and search by user UI and return empty
   if (type === 'search' && !keyword && userId) return []
 
@@ -598,11 +639,14 @@ export async function getOrders({
     },
     cursor: cursor ? { id: cursor } : undefined,
     take: settings.ORDER_TAKE_PER_QUERY + 1,
-    orderBy: orderBys ?? [{
-      createdAt: 'desc',
-    }, {
-      id: 'desc',
-    }],
+    orderBy: orderBys ?? [
+      {
+        createdAt: 'desc',
+      },
+      {
+        id: 'desc',
+      },
+    ],
   })
 
   const injectedCanCancelOrders = rawOrders.map((order) => {
@@ -699,15 +743,15 @@ export async function getReservationOrdersForPOS({
   const whereInput: Prisma.MenuWhereInput =
     type === 'today'
       ? {
-        date: todayDate,
-      }
+          date: todayDate,
+        }
       : type === 'future'
-        ? {
+      ? {
           date: {
             gt: todayDate,
           },
         }
-        : {
+      : {
           date: {
             lt: todayDate,
           },

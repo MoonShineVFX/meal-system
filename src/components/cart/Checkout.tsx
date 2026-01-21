@@ -25,6 +25,7 @@ export default function Checkout(props: {
   totalPrice: number
   isLoading: boolean
   retailCipher?: string
+  retailQuantity?: number
   onDeposit?: () => void
   autoCheckout?: boolean
   isDisabled?: boolean
@@ -54,7 +55,10 @@ export default function Checkout(props: {
   const handleCheckout = () => {
     if (props.retailCipher) {
       createOrderFromRetailMutation.mutate(
-        { cipher: props.retailCipher },
+        {
+          cipher: props.retailCipher,
+          quantity: props.retailQuantity,
+        },
         {
           onSuccess: () => {
             router.push('/order/archived')

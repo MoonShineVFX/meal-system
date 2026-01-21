@@ -338,12 +338,14 @@ export const MenuRouter = router({
     .input(
       z.object({
         cipher: z.string(),
+        quantity: z.number().min(1).optional(),
       }),
     )
     .query(async ({ input, ctx }) => {
       return await getRetailCOM({
         userId: ctx.userLite.id,
         cipher: input.cipher,
+        quantity: input.quantity,
       })
     }),
 })

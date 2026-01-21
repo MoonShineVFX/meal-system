@@ -596,9 +596,11 @@ export async function addCommodityToMenu({
 export async function getRetailCOM(args: {
   userId: string
   cipher: string
+  quantity?: number
   client?: Prisma.TransactionClient | PrismaClient
 }) {
   const thisClient = args.client ?? prisma
+  const quantity = args.quantity ?? 1
 
   const jsonString = lzString.decompressFromEncodedURIComponent(args.cipher)
 
@@ -607,6 +609,32 @@ export async function getRetailCOM(args: {
     menuId: number
     options?: OrderOptions
   } = JSON.parse(jsonString)
+
+  // Get menu with commodities to calculate maxQuantity
+  const menu = await getMenuWithComs({
+    menuId: result.menuId,
+    userId: args.userId,
+    limitCommodityIds: [result.commodityId],
+    excludeCartItems: false,
+    client: thisClient,
+  })
+
+  const comFromMenu = menu.commodities.find(
+    (com) => com.commodity.id === result.commodityId,
+  )
+
+  if (!comFromMenu) {
+    throw new Error('Commodity not found')
+  }
+
+  const sortedOptions = await validateCartItemCreatable({
+    commodityId: result.commodityId,
+    menuId: result.menuId,
+    options: result.options ?? {},
+    quantity: quantity,
+    userId: args.userId,
+    client: thisClient,
+  })
 
   const com = await getCommodityOnMenu({
     commodityId: result.commodityId,
@@ -618,20 +646,12 @@ export async function getRetailCOM(args: {
     throw new Error('Commodity not found')
   }
 
-  const sortedOptions = await validateCartItemCreatable({
-    commodityId: result.commodityId,
-    menuId: result.menuId,
-    options: result.options ?? {},
-    quantity: 1,
-    userId: args.userId,
-    client: thisClient,
-  })
-
   const parsedCom = com as ConvertPrismaJson<typeof com>
 
   return {
     ...parsedCom,
     options: sortedOptions,
+    maxQuantity: Math.min(comFromMenu.maxQuantity, menu.maxQuantity),
   }
 }
 
