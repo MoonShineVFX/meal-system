@@ -12,9 +12,9 @@ import { queue } from '@/lib/server/queue'
 import webPusher from '@/lib/server/webpush'
 import { UserAuthority } from '@prisma/client'
 
-import { router, staffProcedure, userProcedure } from '../trpc'
 import { PUSHER_CHANNEL, PUSHER_EVENT } from '@/lib/common/pusher'
-import { emitPusherEvent } from '@/lib/server/pusher'
+import { emitPusherEvent, emitPusherWebhook } from '@/lib/server/pusher'
+import { router, staffProcedure, userProcedure } from '../trpc'
 
 export const OrderRouter = router({
   addFromCart: userProcedure
@@ -65,11 +65,7 @@ export const OrderRouter = router({
         }
 
         // notify webhook
-        emitPusherEvent(PUSHER_CHANNEL.WEBHOOK, {
-          type: PUSHER_EVENT.ORDER_ADD,
-          skipNotify: true,
-          message: JSON.stringify(order),
-        })
+        emitPusherWebhook('ORDER_ADD', order)
       }
 
       webPusher.pushBadgeCountToUser({
@@ -100,11 +96,7 @@ export const OrderRouter = router({
       })
 
       // notify webhook
-      emitPusherEvent(PUSHER_CHANNEL.WEBHOOK, {
-        type: PUSHER_EVENT.ORDER_ADD,
-        skipNotify: true,
-        message: JSON.stringify(order),
-      })
+      emitPusherWebhook('ORDER_ADD', order)
 
       return order
     }),
