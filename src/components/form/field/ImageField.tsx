@@ -222,12 +222,16 @@ export default function ImageField<T extends FieldValues>(
           props.useFormReturns.setValue(
             props.formInput.name,
             imageId as Parameters<typeof props.useFormReturns.setValue>[1],
+            { shouldDirty: true },
           )
         } else {
           addNotification({
             type: NotificationType.ERROR,
             message: '上傳失敗: ' + message,
           })
+          if (inputFileRef.current) {
+            inputFileRef.current.value = ''
+          }
         }
         setIsUploading(false)
       }

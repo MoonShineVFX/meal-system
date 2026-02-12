@@ -4,17 +4,24 @@ import {
   PlusIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { FieldValues } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import Spinner from '@/components/core/Spinner'
-import Table from '@/components/core/Table'
+import Table, { Layout } from '@/components/core/Table'
 import type { FormInput } from '@/components/form/field'
 import { useFormDialog } from '@/components/form/FormDialog'
 import { useStore } from '@/lib/client/store'
-import trpc from '@/lib/client/trpc'
+import trpc, { CommodityDatas } from '@/lib/client/trpc'
 import { OptionSet } from '@/lib/common'
 import NumberInput from '../base/NumberInput'
 import TextInput from '../base/TextInput'
@@ -25,33 +32,62 @@ type NewCOMData = Extract<COMData, { commodity: { name: string } }>
 
 const BatchEditProps = ['價錢', '選項', '每人限購', '總數'] as const
 
-export default function COMField<T extends FieldValues>(
-  props: InputFieldProps<'com', T>,
-) {
+function COMFieldBase<T extends FieldValues>(props: InputFieldProps<'com', T>) {
   const supplier = useStore((state) => state.formMenuSupplier)
   const isCreateSupplier = useStore((state) => state.formMenuCreateSupplier)
   const [comDatas, setComDatas] = useState<COMData[]>(
     props.formInput.defaultValue ?? [],
   )
   const { showFormDialog, formDialog } = useFormDialog()
+
   const existCOMIds = useMemo(() => {
     return comDatas
       .filter((comData) => !('commodity' in comData))
       .map((comData) => (comData as ExistCOMData).commodityId)
   }, [comDatas])
-  const {
-    data: dataQuery,
-    isError,
-    isLoading,
-  } = trpc.commodity.getList.useQuery({
-    includeIds:
+
+  const includeIds = useMemo(() => {
+    return (
       props.formInput.defaultValue
         ?.filter((comData) => 'commodityId' in comData)
-        .map((comData) => (comData as ExistCOMData).commodityId) ?? undefined,
-    onlyFromSupplierId: supplier?.id,
-  })
+        .map((comData) => (comData as ExistCOMData).commodityId) ?? undefined
+    )
+  }, [props.formInput.defaultValue])
+
+  // one time fetch for data
+  const [data, setData] = useState<CommodityDatas>([])
+  const [isLoading, setIsLoading] = useState(false)
   const utils = trpc.useUtils()
-  const data = dataQuery ?? []
+
+  const fetchDependency = useMemo(() => {
+    return JSON.stringify({
+      includeIds,
+      supplierId: supplier?.id,
+    })
+  }, [includeIds, supplier?.id])
+
+  const fetchData = useCallback(
+    async (dependency: string) => {
+      const fetchArgs = JSON.parse(dependency) as {
+        includeIds: number[]
+        supplierId: number | undefined
+      }
+      const { includeIds, supplierId } = fetchArgs
+      setIsLoading(true)
+      const data = await utils.commodity.getList.fetch({
+        includeIds,
+        onlyFromSupplierId: supplierId,
+      })
+      setData(data)
+      setIsLoading(false)
+    },
+    [utils.commodity.getList.ensureData],
+  )
+
+  useEffect(() => {
+    fetchData(fetchDependency)
+  }, [fetchDependency])
+
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [newComDataId, setNewComDataId] = useState(Number.MAX_SAFE_INTEGER)
 
@@ -89,7 +125,7 @@ export default function COMField<T extends FieldValues>(
         onlyFromSupplierId: supplier?.id,
       })
 
-      if (!supplier && !props.formInput.data?.isEdit) {
+      if (!supplier?.id && !props.formInput.data?.isEdit) {
         setComDatas(props.formInput.defaultValue ?? [])
         return
       }
@@ -110,7 +146,7 @@ export default function COMField<T extends FieldValues>(
     }
 
     onSupplierChange()
-  }, [supplier])
+  }, [supplier?.id])
 
   const handleSelectFromExist = useCallback(() => {
     showFormDialog({
@@ -345,7 +381,271 @@ export default function COMField<T extends FieldValues>(
     [comDatas, selectedIds, setComDatas],
   )
 
-  if (isError || isLoading) return <Spinner className='h-12 w-12' />
+  const columns: Layout<COMData[]> = useMemo(() => {
+    return [
+      {
+        name: '名稱',
+        align: 'left',
+        unhidable: true,
+        colClassName: 'text-sm p-3',
+        cellClassName: 'text-sm p-3',
+        render: (row) => {
+          const isExist = !('commodity' in row)
+          if (isExist) {
+            return (
+              <span className='flex items-center'>
+                <LinkIcon className='mr-2 h-4 w-4 text-stone-400' />
+                {data.find((com) => com.id === row.commodityId)?.name}
+              </span>
+            )
+          }
+          return (
+            <EditableField
+              isEditInit={row.commodity.name.length === 0}
+              nonEditClassName='hover:bg-yellow-100'
+              editClassName='bg-yellow-100'
+              onChange={(value) => {
+                if (
+                  value.length === 0 &&
+                  comDatas.indexOf(row) === comDatas.length - 1
+                ) {
+                  const newComDatas = [...comDatas]
+                  newComDatas.pop()
+                  setComDatas(newComDatas)
+                  return
+                }
+                setComDatas((prev) =>
+                  prev.map((comData) => {
+                    if (comData.commodityId === row.commodityId) {
+                      return {
+                        ...comData,
+                        commodity: {
+                          ...(comData as NewCOMData).commodity,
+                          name: value,
+                        },
+                      }
+                    }
+                    return comData
+                  }),
+                )
+              }}
+            >
+              <TextInput
+                className='max-w-[12ch] overflow-hidden text-ellipsis text-sm disabled:pointer-events-auto disabled:opacity-100'
+                defaultValue={row.commodity.name}
+                title={row.commodity.name}
+              />
+            </EditableField>
+          )
+        },
+      },
+      {
+        name: '價錢',
+        align: 'right',
+        unhidable: true,
+        colClassName: 'text-sm p-3',
+        cellClassName: 'text-sm p-3',
+        render: (row) => {
+          const isExist = !('commodity' in row)
+          if (isExist) {
+            return data.find((com) => com.id === row.commodityId)?.price ?? -1
+          }
+          return (
+            <EditableField
+              nonEditClassName='hover:bg-yellow-100'
+              editClassName='bg-yellow-100'
+              onChange={(value) => {
+                const numberValue = parseInt(value)
+                setComDatas((prev) =>
+                  prev.map((comData) => {
+                    if (comData.commodityId === row.commodityId) {
+                      return {
+                        ...comData,
+                        commodity: {
+                          ...(comData as NewCOMData).commodity,
+                          price: isNaN(numberValue)
+                            ? 0
+                            : Math.max(Math.min(numberValue, 9999), 0),
+                        },
+                      }
+                    }
+                    return comData
+                  }),
+                )
+              }}
+            >
+              <NumberInput
+                hideSpinner
+                className='mx-0 w-[5ch] p-0 text-right text-sm'
+                defaultValue={row.commodity.price}
+              />
+            </EditableField>
+          )
+        },
+      },
+      {
+        name: '選項',
+        colClassName: 'text-sm p-3',
+        cellClassName: 'text-sm p-3',
+        render: (row) => {
+          const isExist = !('commodity' in row)
+          let optionSets: OptionSet[] | undefined
+          if (isExist) {
+            optionSets = data.find(
+              (com) => com.id === row.commodityId,
+            )?.optionSets
+          } else {
+            optionSets = row.commodity.optionSets
+          }
+
+          const text =
+            optionSets && optionSets.length > 0
+              ? optionSets
+                  .map((o) => `${o.name}(${o.options.length})`)
+                  .join(', ')
+              : '無選項'
+
+          if (isExist) return text
+          return (
+            <button
+              className='-m-2 cursor-pointer rounded-2xl p-2 hover:bg-yellow-100 active:scale-95'
+              onClick={() => handleEditOptionSets(row.commodityId)}
+            >
+              {text}
+            </button>
+          )
+        },
+      },
+      {
+        name: '限購',
+        align: 'right',
+        unhidable: true,
+        colClassName: 'text-sm p-3',
+        cellClassName: 'text-sm p-3',
+        render: (row) => (
+          <EditableField
+            nonEditClassName='hover:bg-yellow-100'
+            editClassName='bg-yellow-100'
+            onChange={(value) => {
+              const numberValue = parseInt(value)
+              setComDatas((prev) =>
+                prev.map((comData) => {
+                  if (comData.commodityId === row.commodityId) {
+                    return {
+                      ...comData,
+                      limitPerUser: isNaN(numberValue)
+                        ? 0
+                        : Math.max(Math.min(numberValue, 999), 0),
+                    }
+                  }
+                  return comData
+                }),
+              )
+            }}
+          >
+            <NumberInput
+              hideSpinner
+              className='mx-0 w-[4ch] p-0 text-right text-sm'
+              defaultValue={row.limitPerUser}
+            />
+          </EditableField>
+        ),
+      },
+      {
+        name: '總數',
+        align: 'right',
+        unhidable: true,
+        colClassName: 'text-sm p-3',
+        cellClassName: 'text-sm p-3',
+        render: (row) => (
+          <EditableField
+            nonEditClassName='hover:bg-yellow-100'
+            editClassName='bg-yellow-100'
+            onChange={(value) => {
+              const numberValue = parseInt(value)
+              setComDatas((prev) =>
+                prev.map((comData) => {
+                  if (comData.commodityId === row.commodityId) {
+                    return {
+                      ...comData,
+                      stock: isNaN(numberValue)
+                        ? 0
+                        : Math.max(Math.min(numberValue, 999), 0),
+                    }
+                  }
+                  return comData
+                }),
+              )
+            }}
+          >
+            <NumberInput
+              hideSpinner
+              className='mx-0 w-[4ch] p-0 text-right text-sm'
+              defaultValue={row.stock}
+            />
+          </EditableField>
+        ),
+      },
+      {
+        name: '', // duplicate button
+        unhidable: true,
+        colClassName: 'text-sm p-3',
+        cellClassName: 'text-sm p-3',
+        render: (row) => (
+          <button
+            className='rounded-full p-1 hover:bg-stone-200 active:scale-90'
+            onClick={() => {
+              const isExist = !('commodity' in row)
+              let commodity: NewCOMData['commodity']
+              if (isExist) {
+                commodity = data.find((com) => com.id === row.commodityId)!
+              } else {
+                commodity = row.commodity
+              }
+              setComDatas([
+                ...comDatas,
+                {
+                  commodityId: newComDataId,
+                  commodity: {
+                    name: commodity.name + '-複製',
+                    price: commodity.price,
+                    optionSets: commodity.optionSets,
+                  },
+                  limitPerUser: row.limitPerUser,
+                  stock: row.stock,
+                },
+              ])
+              setNewComDataId(newComDataId - 1)
+            }}
+          >
+            <DocumentDuplicateIcon className='h-4 w-4 text-stone-400' />
+          </button>
+        ),
+      },
+      {
+        name: '', // delete button
+        unhidable: true,
+        colClassName: 'text-sm p-3',
+        cellClassName: 'text-sm p-3',
+        render: (row) => (
+          <button
+            className='rounded-full p-1 hover:bg-red-100 active:scale-90'
+            onClick={() => {
+              setComDatas((prev) =>
+                prev.filter(
+                  (comData) => comData.commodityId !== row.commodityId,
+                ),
+              )
+            }}
+          >
+            <XMarkIcon className='h-4 w-4 text-red-400' />
+          </button>
+        ),
+      },
+    ]
+  }, [data])
+
+  if (isLoading) return <Spinner className='h-12 w-12' />
 
   return (
     <>
@@ -401,271 +701,7 @@ export default function COMField<T extends FieldValues>(
           size='sm'
           onSelectedIdsChange={setSelectedIds}
           emptyIndicator={<></>}
-          columns={[
-            {
-              name: '名稱',
-              align: 'left',
-              unhidable: true,
-              colClassName: 'text-sm p-3',
-              cellClassName: 'text-sm p-3',
-              render: (row) => {
-                const isExist = !('commodity' in row)
-                if (isExist) {
-                  return (
-                    <span className='flex items-center'>
-                      <LinkIcon className='mr-2 h-4 w-4 text-stone-400' />
-                      {data.find((com) => com.id === row.commodityId)?.name}
-                    </span>
-                  )
-                }
-                return (
-                  <EditableField
-                    isEditInit={row.commodity.name.length === 0}
-                    nonEditClassName='hover:bg-yellow-100'
-                    editClassName='bg-yellow-100'
-                    onChange={(value) => {
-                      if (
-                        value.length === 0 &&
-                        comDatas.indexOf(row) === comDatas.length - 1
-                      ) {
-                        const newComDatas = [...comDatas]
-                        newComDatas.pop()
-                        setComDatas(newComDatas)
-                        return
-                      }
-                      setComDatas((prev) =>
-                        prev.map((comData) => {
-                          if (comData.commodityId === row.commodityId) {
-                            return {
-                              ...comData,
-                              commodity: {
-                                ...(comData as NewCOMData).commodity,
-                                name: value,
-                              },
-                            }
-                          }
-                          return comData
-                        }),
-                      )
-                    }}
-                  >
-                    <TextInput
-                      className='max-w-[12ch] overflow-hidden text-ellipsis text-sm disabled:pointer-events-auto disabled:opacity-100'
-                      defaultValue={row.commodity.name}
-                      title={row.commodity.name}
-                    />
-                  </EditableField>
-                )
-              },
-            },
-            {
-              name: '價錢',
-              align: 'right',
-              unhidable: true,
-              colClassName: 'text-sm p-3',
-              cellClassName: 'text-sm p-3',
-              render: (row) => {
-                const isExist = !('commodity' in row)
-                if (isExist) {
-                  return (
-                    data.find((com) => com.id === row.commodityId)?.price ?? -1
-                  )
-                }
-                return (
-                  <EditableField
-                    nonEditClassName='hover:bg-yellow-100'
-                    editClassName='bg-yellow-100'
-                    onChange={(value) => {
-                      const numberValue = parseInt(value)
-                      setComDatas((prev) =>
-                        prev.map((comData) => {
-                          if (comData.commodityId === row.commodityId) {
-                            return {
-                              ...comData,
-                              commodity: {
-                                ...(comData as NewCOMData).commodity,
-                                price: isNaN(numberValue)
-                                  ? 0
-                                  : Math.max(Math.min(numberValue, 9999), 0),
-                              },
-                            }
-                          }
-                          return comData
-                        }),
-                      )
-                    }}
-                  >
-                    <NumberInput
-                      hideSpinner
-                      className='mx-0 w-[5ch] p-0 text-right text-sm'
-                      defaultValue={row.commodity.price}
-                    />
-                  </EditableField>
-                )
-              },
-            },
-            {
-              name: '選項',
-              colClassName: 'text-sm p-3',
-              cellClassName: 'text-sm p-3',
-              render: (row) => {
-                const isExist = !('commodity' in row)
-                let optionSets: OptionSet[] | undefined
-                if (isExist) {
-                  optionSets = data.find(
-                    (com) => com.id === row.commodityId,
-                  )?.optionSets
-                } else {
-                  optionSets = row.commodity.optionSets
-                }
-
-                const text =
-                  optionSets && optionSets.length > 0
-                    ? optionSets
-                        .map((o) => `${o.name}(${o.options.length})`)
-                        .join(', ')
-                    : '無選項'
-
-                if (isExist) return text
-                return (
-                  <button
-                    className='-m-2 cursor-pointer rounded-2xl p-2 hover:bg-yellow-100 active:scale-95'
-                    onClick={() => handleEditOptionSets(row.commodityId)}
-                  >
-                    {text}
-                  </button>
-                )
-              },
-            },
-            {
-              name: '限購',
-              align: 'right',
-              unhidable: true,
-              colClassName: 'text-sm p-3',
-              cellClassName: 'text-sm p-3',
-              render: (row) => (
-                <EditableField
-                  nonEditClassName='hover:bg-yellow-100'
-                  editClassName='bg-yellow-100'
-                  onChange={(value) => {
-                    const numberValue = parseInt(value)
-                    setComDatas((prev) =>
-                      prev.map((comData) => {
-                        if (comData.commodityId === row.commodityId) {
-                          return {
-                            ...comData,
-                            limitPerUser: isNaN(numberValue)
-                              ? 0
-                              : Math.max(Math.min(numberValue, 999), 0),
-                          }
-                        }
-                        return comData
-                      }),
-                    )
-                  }}
-                >
-                  <NumberInput
-                    hideSpinner
-                    className='mx-0 w-[4ch] p-0 text-right text-sm'
-                    defaultValue={row.limitPerUser}
-                  />
-                </EditableField>
-              ),
-            },
-            {
-              name: '總數',
-              align: 'right',
-              unhidable: true,
-              colClassName: 'text-sm p-3',
-              cellClassName: 'text-sm p-3',
-              render: (row) => (
-                <EditableField
-                  nonEditClassName='hover:bg-yellow-100'
-                  editClassName='bg-yellow-100'
-                  onChange={(value) => {
-                    const numberValue = parseInt(value)
-                    setComDatas((prev) =>
-                      prev.map((comData) => {
-                        if (comData.commodityId === row.commodityId) {
-                          return {
-                            ...comData,
-                            stock: isNaN(numberValue)
-                              ? 0
-                              : Math.max(Math.min(numberValue, 999), 0),
-                          }
-                        }
-                        return comData
-                      }),
-                    )
-                  }}
-                >
-                  <NumberInput
-                    hideSpinner
-                    className='mx-0 w-[4ch] p-0 text-right text-sm'
-                    defaultValue={row.stock}
-                  />
-                </EditableField>
-              ),
-            },
-            {
-              name: '', // duplicate button
-              unhidable: true,
-              colClassName: 'text-sm p-3',
-              cellClassName: 'text-sm p-3',
-              render: (row) => (
-                <button
-                  className='rounded-full p-1 hover:bg-stone-200 active:scale-90'
-                  onClick={() => {
-                    const isExist = !('commodity' in row)
-                    let commodity: NewCOMData['commodity']
-                    if (isExist) {
-                      commodity = data.find(
-                        (com) => com.id === row.commodityId,
-                      )!
-                    } else {
-                      commodity = row.commodity
-                    }
-                    setComDatas([
-                      ...comDatas,
-                      {
-                        commodityId: newComDataId,
-                        commodity: {
-                          name: commodity.name + '-複製',
-                          price: commodity.price,
-                          optionSets: commodity.optionSets,
-                        },
-                        limitPerUser: row.limitPerUser,
-                        stock: row.stock,
-                      },
-                    ])
-                    setNewComDataId(newComDataId - 1)
-                  }}
-                >
-                  <DocumentDuplicateIcon className='h-4 w-4 text-stone-400' />
-                </button>
-              ),
-            },
-            {
-              name: '', // delete button
-              unhidable: true,
-              colClassName: 'text-sm p-3',
-              cellClassName: 'text-sm p-3',
-              render: (row) => (
-                <button
-                  className='rounded-full p-1 hover:bg-red-100 active:scale-90'
-                  onClick={() => {
-                    setComDatas((prev) =>
-                      prev.filter(
-                        (comData) => comData.commodityId !== row.commodityId,
-                      ),
-                    )
-                  }}
-                >
-                  <XMarkIcon className='h-4 w-4 text-red-400' />
-                </button>
-              ),
-            },
-          ]}
+          columns={columns}
           footer={
             <td className='absolute inset-x-0 flex h-16 w-full items-center justify-center p-4'>
               <button
@@ -767,3 +803,5 @@ function EditableField(props: {
     </div>
   )
 }
+
+export default memo(COMFieldBase) as typeof COMFieldBase

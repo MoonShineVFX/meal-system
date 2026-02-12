@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react'
-import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment, memo, useCallback, useEffect, useState } from 'react'
 import { DeepPartial, Path, SubmitHandler, useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 
@@ -31,6 +31,7 @@ type FormDialogProps<
   className?: string
   style?: React.CSSProperties | ((columns: number) => React.CSSProperties)
   inputs: U
+  uniqueKey: string
   useMutation: T
   onSubmit: (
     formData: ExpandRecursively<FormData<U>>,
@@ -40,7 +41,7 @@ type FormDialogProps<
 }
 
 /* Main */
-export default function FormDialog<
+function FormDialogBase<
   T extends (() => UseMutationResult) | undefined,
   U extends FormInputsProps,
 >(props: FormDialogProps<T, U>) {
@@ -236,6 +237,16 @@ export default function FormDialog<
   )
 }
 
+const FormDialog = memo(FormDialogBase, (prevProps, nextProps) => {
+  // Fixed with unique key
+  // This is dirty patch for the ancient code
+  return (
+    prevProps.uniqueKey === nextProps.uniqueKey &&
+    prevProps.open === nextProps.open
+  )
+}) as typeof FormDialogBase
+export default FormDialog
+
 /* Show command */
 type ShowFormDialogProps<
   T extends (() => UseMutationResult) | undefined,
@@ -253,8 +264,13 @@ export function useFormDialog<
   const [iterCount, setIterCount] = useState(0)
 
   const showFormDialog = useCallback(
-    <TT extends T, UU extends U>(thisProps: ShowFormDialogProps<TT, UU>) => {
-      setProps(thisProps as ShowFormDialogProps<T, U>)
+    <TT extends T, UU extends U>(
+      thisProps: Omit<ShowFormDialogProps<TT, UU>, 'uniqueKey'>,
+    ) => {
+      // give a unique key to the dialog
+      const uniqueKey = Math.random().toString(36).substring(2, 15)
+
+      setProps({ uniqueKey, ...thisProps } as ShowFormDialogProps<T, U>)
       setIsOpenDialog(true)
       setIterCount((prev) => prev + 1)
     },
