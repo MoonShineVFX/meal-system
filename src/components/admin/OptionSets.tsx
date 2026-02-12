@@ -22,6 +22,7 @@ export default function OptionSets() {
   const updateTemplateOrdersMutation = trpc.optionSet.updateOrders.useMutation()
   const updateOptionSetOrdersMutation = trpc.optionSet.update.useMutation()
   const updateOptionOrdersMutation = trpc.optionSet.update.useMutation()
+  const utils = trpc.useUtils()
 
   // Selected template on data change
   useEffect(() => {
@@ -84,10 +85,17 @@ export default function OptionSets() {
         },
         useMutation: trpc.optionSet.update.useMutation,
         onSubmit(formData, mutation) {
-          mutation.mutate({
-            id: template.id,
-            name: formData.templateName,
-          })
+          mutation.mutate(
+            {
+              id: template.id,
+              name: formData.templateName,
+            },
+            {
+              onSuccess: () => {
+                utils.optionSet.get.invalidate()
+              },
+            },
+          )
         },
       })
     },
@@ -136,10 +144,17 @@ export default function OptionSets() {
             }
             return o
           })
-          mutation.mutate({
-            id: selectedTemplate.id,
-            optionSets: newOptionSets,
-          })
+          mutation.mutate(
+            {
+              id: selectedTemplate.id,
+              optionSets: newOptionSets,
+            },
+            {
+              onSuccess: () => {
+                utils.optionSet.get.invalidate()
+              },
+            },
+          )
         },
       })
     },
@@ -193,10 +208,17 @@ export default function OptionSets() {
             }
             return o
           })
-          mutation.mutate({
-            id: selectedTemplate.id,
-            optionSets: newOptionSets,
-          })
+          mutation.mutate(
+            {
+              id: selectedTemplate.id,
+              optionSets: newOptionSets,
+            },
+            {
+              onSuccess: () => {
+                utils.optionSet.get.invalidate()
+              },
+            },
+          )
         },
       })
     },
@@ -222,10 +244,17 @@ export default function OptionSets() {
       },
       useMutation: trpc.optionSet.create.useMutation,
       onSubmit(formData, mutation) {
-        mutation.mutate({
-          name: formData.templateName,
-          order: data.length,
-        })
+        mutation.mutate(
+          {
+            name: formData.templateName,
+            order: data.length,
+          },
+          {
+            onSuccess: () => {
+              utils.optionSet.get.invalidate()
+            },
+          },
+        )
       },
     })
   }, [data])
@@ -266,10 +295,17 @@ export default function OptionSets() {
             options: [],
           },
         ]
-        mutation.mutate({
-          id: selectedTemplate.id,
-          optionSets: newOptionSets,
-        })
+        mutation.mutate(
+          {
+            id: selectedTemplate.id,
+            optionSets: newOptionSets,
+          },
+          {
+            onSuccess: () => {
+              utils.optionSet.get.invalidate()
+            },
+          },
+        )
       },
     })
   }, [selectedTemplate])
@@ -315,10 +351,17 @@ export default function OptionSets() {
           }
           return optionSet
         })
-        mutation.mutate({
-          id: selectedTemplate.id,
-          optionSets: newOptionSets,
-        })
+        mutation.mutate(
+          {
+            id: selectedTemplate.id,
+            optionSets: newOptionSets,
+          },
+          {
+            onSuccess: () => {
+              utils.optionSet.get.invalidate()
+            },
+          },
+        )
       },
     })
   }, [selectedTemplate, selectedOptionSet])
@@ -374,6 +417,9 @@ export default function OptionSets() {
       mutationOptions: {
         ids: selectedIds,
       },
+      mutationOnSuccess: () => {
+        utils.optionSet.get.invalidate()
+      },
       cancel: true,
       confirmButtonTheme: 'danger',
     })
@@ -393,6 +439,9 @@ export default function OptionSets() {
         mutationOptions: {
           id: selectedTemplate.id,
           optionSets: newOptionSets,
+        },
+        mutationOnSuccess: () => {
+          utils.optionSet.get.invalidate()
         },
         cancel: true,
         confirmButtonTheme: 'danger',
@@ -424,6 +473,9 @@ export default function OptionSets() {
         mutationOptions: {
           id: selectedTemplate.id,
           optionSets: newOptionSets,
+        },
+        mutationOnSuccess: () => {
+          utils.optionSet.get.invalidate()
         },
         cancel: true,
         confirmButtonTheme: 'danger',

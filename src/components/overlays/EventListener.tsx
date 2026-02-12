@@ -220,7 +220,8 @@ export function EventListenerBase() {
         case PUSHER_EVENT.CATEGORY_ADD:
         case PUSHER_EVENT.CATEGORY_UPDATE:
         case PUSHER_EVENT.CATEGORY_DELETE:
-          utils.category.get.invalidate()
+          // Disable to prevent refresh on editing
+          // utils.category.get.invalidate()
           break
         case PUSHER_EVENT.COMMODITY_ADD:
         case PUSHER_EVENT.COMMODITY_UPDATE:
@@ -230,7 +231,8 @@ export function EventListenerBase() {
         case PUSHER_EVENT.OPTION_SETS_ADD:
         case PUSHER_EVENT.OPTION_SETS_UPDATE:
         case PUSHER_EVENT.OPTION_SETS_DELETE:
-          utils.optionSet.get.invalidate()
+          // Disable to prevent refresh on editing
+          // utils.optionSet.get.invalidate()
           break
         case PUSHER_EVENT.MENU_ADD:
         case PUSHER_EVENT.MENU_UPDATE:
