@@ -12,7 +12,7 @@ import {
 import { ContextMenu, ContextMenuItem } from './ContextMenu'
 import CheckBox from '@/components/form/base/CheckBox'
 
-type Layout<T extends object[]> = {
+export type Layout<T extends object[]> = {
   name: string
   unhidable?: boolean
   hideByDefault?: boolean
