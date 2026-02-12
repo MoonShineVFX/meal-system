@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { PencilIcon } from '@heroicons/react/24/outline'
 
 import trpc, { SupplierDatas } from '@/lib/client/trpc'
@@ -10,15 +10,29 @@ import { useFormDialog } from '@/components/form/FormDialog'
 import { useDialog } from '@/components/core/Dialog'
 import Button from '@/components/core/Button'
 import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
+import isEqual from 'react-fast-compare'
 
 export default function Suppliers() {
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
-  const { data, isError, error, isLoading } = trpc.supplier.getList.useQuery({
+  const {
+    data: queryData,
+    isError,
+    error,
+    isLoading,
+  } = trpc.supplier.getList.useQuery({
     countCOMs: true,
   })
+  const [data, setData] = useState<SupplierDatas>([])
+
   const { showFormDialog, formDialog } = useFormDialog()
   const { showDialog, dialog } = useDialog()
+
+  useEffect(() => {
+    if (queryData && !isEqual(data, queryData)) {
+      setData(queryData)
+    }
+  }, [queryData, data])
 
   const handleSupplierCreateOrEdit = useCallback(
     (supplier?: SupplierDatas[number]) => {

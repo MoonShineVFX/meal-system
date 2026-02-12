@@ -19,6 +19,7 @@ function CATEGORY_STRING(isRoot: boolean) {
 
 export default function Categories() {
   const categoryQuery = trpc.category.get.useQuery()
+  const utils = trpc.useUtils()
   const [selectedRootCategory, setSelectedRootCategory] = useState<
     CategoryDatas[number] | null
   >(null)
@@ -51,10 +52,17 @@ export default function Categories() {
       if (reorderedCategories.length === 0) return
       const isRoot = 'childCategories' in reorderedCategories[0]
       const mutation = isRoot ? rootOrdersMutation : subOrdersMutation
-      mutation.mutate({
-        ids: reorderedCategories.map((category) => category.id),
-        type: isRoot ? 'root' : 'sub',
-      })
+      mutation.mutate(
+        {
+          ids: reorderedCategories.map((category) => category.id),
+          type: isRoot ? 'root' : 'sub',
+        },
+        {
+          onSuccess: () => {
+            utils.category.get.invalidate()
+          },
+        },
+      )
     },
     [],
   )
@@ -76,10 +84,17 @@ export default function Categories() {
         },
         useMutation: trpc.category.updateCommodities.useMutation,
         onSubmit(formData, mutation) {
-          mutation.mutate({
-            commodityIds: formData.commodityIds,
-            id: category.id,
-          })
+          mutation.mutate(
+            {
+              commodityIds: formData.commodityIds,
+              id: category.id,
+            },
+            {
+              onSuccess: () => {
+                utils.category.get.invalidate()
+              },
+            },
+          )
         },
         closeConfirm: {
           title: `取消編輯屬於 ${category.name} 的餐點`,
@@ -111,11 +126,18 @@ export default function Categories() {
         },
         useMutation: trpc.category.update.useMutation,
         onSubmit(formData, mutation) {
-          mutation.mutate({
-            id: category.id,
-            name: formData.categoryName,
-            type: isRoot ? 'root' : 'sub',
-          })
+          mutation.mutate(
+            {
+              id: category.id,
+              name: formData.categoryName,
+              type: isRoot ? 'root' : 'sub',
+            },
+            {
+              onSuccess: () => {
+                utils.category.get.invalidate()
+              },
+            },
+          )
         },
       })
     },
@@ -140,11 +162,18 @@ export default function Categories() {
         },
         useMutation: trpc.category.create.useMutation,
         onSubmit(formData, mutation) {
-          mutation.mutate({
-            name: formData.categoryName,
-            order: order,
-            rootId: isRoot ? undefined : selectedRootCategory!.id,
-          })
+          mutation.mutate(
+            {
+              name: formData.categoryName,
+              order: order,
+              rootId: isRoot ? undefined : selectedRootCategory!.id,
+            },
+            {
+              onSuccess: () => {
+                utils.category.get.invalidate()
+              },
+            },
+          )
         },
       })
     },
@@ -174,10 +203,17 @@ export default function Categories() {
         useMutation: trpc.category.updateRoot.useMutation,
         onSubmit(formData, mutation) {
           const rootCategoryId = formData.rootCategoryId
-          mutation.mutate({
-            ids: selectedIds,
-            rootId: Number(rootCategoryId),
-          })
+          mutation.mutate(
+            {
+              ids: selectedIds,
+              rootId: Number(rootCategoryId),
+            },
+            {
+              onSuccess: () => {
+                utils.category.get.invalidate()
+              },
+            },
+          )
         },
       })
     },
@@ -196,6 +232,9 @@ export default function Categories() {
         mutationOptions: {
           ids: selectedIds,
           type: isRoot ? 'root' : 'sub',
+        },
+        mutationOnSuccess: () => {
+          utils.category.get.invalidate()
         },
         cancel: true,
         confirmButtonTheme: 'danger',

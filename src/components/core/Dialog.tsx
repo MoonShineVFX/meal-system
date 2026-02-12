@@ -24,6 +24,7 @@ type DialogProps<T extends UseMutationResult> = {
   icon?: 'info' | 'warning' | 'success' | null
   useMutation?: () => T
   mutationOptions?: Parameters<T['mutate']>[0]
+  mutationOnSuccess?: () => void
   onConfirm?: () => void | Promise<void>
   onCancel?: () => void
   as?: 'form' | 'div'
@@ -43,6 +44,7 @@ export default function DialogCore<T extends UseMutationResult>(
     if (mutation && props.mutationOptions) {
       mutation.mutate(props.mutationOptions, {
         onSuccess: () => {
+          props.mutationOnSuccess?.()
           props.onClose()
         },
       })

@@ -1,5 +1,5 @@
-import React, { useCallback, useState, useEffect } from 'react'
-import { TableVirtuoso } from 'react-virtuoso'
+import React, { useCallback, useState, useEffect, useMemo, memo } from 'react'
+import { TableVirtuoso, TableComponents } from 'react-virtuoso'
 import { twMerge } from 'tailwind-merge'
 import {
   ChevronUpDownIcon,
@@ -23,6 +23,14 @@ export type Layout<T extends object[]> = {
   sort?: ((a: T[number], b: T[number]) => number) | boolean
   align?: 'left' | 'center' | 'right'
 }[]
+
+// Memoized table components to prevent re-renders
+const MemoizedTable = memo(
+  ({ style, ...props }: React.ComponentProps<'table'>) => (
+    <table {...props} className='divide-y divide-stone-200' style={style} />
+  ),
+)
+MemoizedTable.displayName = 'MemoizedTable'
 
 export default function Table<
   T extends object[],
@@ -122,273 +130,298 @@ export default function Table<
     tableData.length > 0 &&
     tableData.every((row) => selectedIds.includes(row[props.idField!]))
 
+  // Memoize filtered columns to avoid recalculating on every render
+  const visibleColumns = useMemo(
+    () => props.columns.filter((col) => !filterColumns.includes(col.name)),
+    [props.columns, filterColumns],
+  )
+
+  // Memoize computeItemKey callback
+  const computeItemKey = useCallback(
+    (index: number, row: T[number]) =>
+      props.idField ? `${row[props.idField!]}` : index,
+    [props.idField],
+  )
+
+  // Memoize TableRow component
+  const MemoizedTableRow = useMemo(
+    () =>
+      memo(({ style, ...rest }: React.ComponentProps<'tr'> & { 'data-item-index': number }) => (
+        <tr
+          {...rest}
+          className={twMerge(
+            'group/row hover:bg-yellow-50',
+            props.idField &&
+              selectedIds.includes(
+                tableData[rest['data-item-index']]?.[props.idField!],
+              ) &&
+              'bg-yellow-100 hover:bg-yellow-100',
+          )}
+          style={style}
+        />
+      )),
+    [props.idField, selectedIds, tableData],
+  )
+
+  // Memoize TableBody component
+  const MemoizedTableBody = useMemo(
+    () =>
+      React.forwardRef<HTMLTableSectionElement, React.ComponentProps<'tbody'>>(
+        ({ style, children, ...rest }, ref) => (
+          <tbody
+            className='divide-y divide-stone-200'
+            {...rest}
+            ref={ref}
+            style={style}
+          >
+            {children}
+            {tableData.length === 0 &&
+              (props.emptyIndicator ?? (
+                <tr className='relative w-full'>
+                  <td className='absolute inset-x-0 py-8 text-center tracking-widest text-stone-400'>
+                    沒有資料
+                  </td>
+                </tr>
+              ))}
+            {props.footer && <tr>{props.footer}</tr>}
+          </tbody>
+        ),
+      ),
+    [tableData.length, props.emptyIndicator, props.footer],
+  )
+
+  // Memoize components object
+  const tableComponents = useMemo<TableComponents<T[number]>>(
+    () => ({
+      Table: MemoizedTable,
+      TableRow: MemoizedTableRow,
+      TableBody: MemoizedTableBody,
+    }),
+    [MemoizedTableRow, MemoizedTableBody],
+  )
+
+  // Memoize header content renderer
+  const fixedHeaderContent = useCallback(
+    () => (
+      <tr className='bg-stone-100 shadow' ref={tableHeaderRef}>
+        <ContextMenu parentRef={tableHeaderRef}>
+          {props.columns.map((col, index) => {
+            if (col.unhidable) return null
+            const isFiltered = filterColumns.includes(col.name)
+            return (
+              <ContextMenuItem
+                key={col.name + index}
+                label={
+                  <span
+                    className={twMerge(
+                      'flex items-center gap-2',
+                      isFiltered && 'text-stone-400',
+                    )}
+                  >
+                    {isFiltered ? (
+                      <EyeSlashIcon className='h-4 w-4' />
+                    ) : (
+                      <EyeIcon className='h-4 w-4' />
+                    )}
+                    {col.name}
+                  </span>
+                }
+                onClick={() => {
+                  if (isFiltered) {
+                    setFilterColumns(
+                      filterColumns.filter((name) => name !== col.name),
+                    )
+                  } else {
+                    setFilterColumns([...filterColumns, col.name])
+                  }
+                }}
+              />
+            )
+          })}
+        </ContextMenu>
+        {props.idField && (
+          <th
+            key='select'
+            role='col'
+            className={'whitespace-nowrap p-4 hover:bg-stone-200'}
+          >
+            <label className='flex cursor-pointer items-center'>
+              <CheckBox
+                ref={(input) => {
+                  if (input) {
+                    input.indeterminate =
+                      selectedIds.length > 0 && !isAllTableDataSelected
+                  }
+                }}
+                className={twMerge(
+                  'peer/checkbox mr-1 h-5 w-5 disabled:opacity-50',
+                  props.size === 'sm' && 'h-4 w-4',
+                )}
+                checked={isAllTableDataSelected}
+                disabled={tableData.length === 0}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedIds(
+                      tableData.map((row: T[number]) => row[props.idField!]),
+                    )
+                  } else {
+                    setSelectedIds([])
+                  }
+                }}
+              />
+              <span
+                className={twMerge(
+                  'text-sm font-normal peer-disabled/checkbox:opacity-50',
+                  props.size === 'sm' && 'hidden',
+                )}
+              >
+                全選
+              </span>
+            </label>
+          </th>
+        )}
+        {visibleColumns.map((col, index) => {
+          const renderType = tableData[0]
+            ? typeof col.render(tableData[0])
+            : 'string'
+          let sortType: 'asc' | 'desc' | 'none' | undefined
+          if (col.sort) {
+            if (sortColumn?.name === col.name) {
+              sortType = sortColumn.type
+            } else {
+              sortType = 'none'
+            }
+          } else {
+            sortType = undefined
+          }
+
+          return (
+            <th
+              key={col.name + index}
+              role='col'
+              className={twMerge(
+                'whitespace-nowrap p-4 hover:bg-stone-200',
+                col.colClassName,
+              )}
+            >
+              <div
+                className={twMerge(
+                  'flex items-center font-normal',
+                  renderType === 'string' && 'justify-start',
+                  renderType === 'number' && 'justify-end',
+                  renderType === 'object' && 'justify-center',
+                  col.align === 'center' && 'justify-center',
+                  col.align === 'right' && 'justify-end',
+                  col.align === 'left' && 'justify-start',
+                  col.sort && 'cursor-pointer',
+                  sortType && sortType !== 'none' && 'font-bold',
+                )}
+                onClick={() => handleSortColumn(col.name)}
+              >
+                {col.name}
+                {sortType === 'asc' && <ChevronDownIcon className='h-4 w-4' />}
+                {sortType === 'desc' && <ChevronUpIcon className='h-4 w-4' />}
+                {sortType === 'none' && (
+                  <ChevronUpDownIcon className='h-4 w-4' />
+                )}
+              </div>
+            </th>
+          )
+        })}
+        <th className='w-full hover:bg-stone-200'></th>
+      </tr>
+    ),
+    [
+      props.columns,
+      props.idField,
+      props.size,
+      filterColumns,
+      selectedIds,
+      isAllTableDataSelected,
+      tableData,
+      visibleColumns,
+      sortColumn,
+      handleSortColumn,
+    ],
+  )
+
+  // Memoize item content renderer
+  const itemContent = useCallback(
+    (_: number, row: T[number]) => (
+      <>
+        {props.idField && (
+          <td
+            key='select'
+            className={twMerge(
+              'p-4 text-center',
+              props.size === 'sm' && 'p-1',
+            )}
+          >
+            <CheckBox
+              className={twMerge(
+                'h-6 w-6',
+                props.size === 'sm' && 'h-4 w-4',
+              )}
+              checked={selectedIds.includes(row[props.idField])}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedIds([...selectedIds, row[props.idField!]])
+                } else {
+                  setSelectedIds(
+                    selectedIds.filter((id) => id !== row[props.idField!]),
+                  )
+                }
+              }}
+            />
+          </td>
+        )}
+        {visibleColumns.map((col, index) => {
+          const content = col.render(row)
+          const hint = col.hint
+            ? col.hint(row)
+            : typeof content === 'string'
+              ? content
+              : typeof content === 'number'
+                ? content.toString()
+                : undefined
+          return (
+            <td
+              key={col.name + index}
+              className={twMerge(
+                'whitespace-nowrap p-4',
+                'even:bg-stone-50 group-hover/row:bg-yellow-50',
+                props.idField &&
+                  selectedIds.includes(row[props.idField!]) &&
+                  'bg-yellow-100 even:bg-yellow-100 group-hover/row:bg-yellow-100',
+                typeof content === 'string' && 'text-left',
+                typeof content === 'number' && 'text-right',
+                col.align === 'center' && 'text-center',
+                col.align === 'right' && 'text-right',
+                col.align === 'left' && 'text-left',
+                col.cellClassName,
+              )}
+              title={hint}
+            >
+              {content}
+            </td>
+          )
+        })}
+        <td className='w-full'></td>
+      </>
+    ),
+    [props.idField, props.size, selectedIds, visibleColumns],
+  )
+
   return (
     <div className='h-full w-fit min-w-full select-text overflow-hidden rounded-2xl border'>
       <TableVirtuoso
         className='ms-scroll'
         data={tableData}
         increaseViewportBy={4}
-        fixedHeaderContent={() => (
-          // Header
-          <tr className='bg-stone-100 shadow' ref={tableHeaderRef}>
-            {/* ContextMenu */}
-            <ContextMenu parentRef={tableHeaderRef}>
-              {props.columns.map((col, index) => {
-                if (col.unhidable) return null
-                const isFiltered = filterColumns.includes(col.name)
-                return (
-                  <ContextMenuItem
-                    key={col.name + index}
-                    label={
-                      <span
-                        className={twMerge(
-                          'flex items-center gap-2',
-                          isFiltered && 'text-stone-400',
-                        )}
-                      >
-                        {isFiltered ? (
-                          <EyeSlashIcon className='h-4 w-4' />
-                        ) : (
-                          <EyeIcon className='h-4 w-4' />
-                        )}
-                        {col.name}
-                      </span>
-                    }
-                    onClick={() => {
-                      if (isFiltered) {
-                        setFilterColumns(
-                          filterColumns.filter((name) => name !== col.name),
-                        )
-                      } else {
-                        setFilterColumns([...filterColumns, col.name])
-                      }
-                    }}
-                  />
-                )
-              })}
-            </ContextMenu>
-            {/* Select field */}
-            {props.idField && (
-              <th
-                key='select'
-                role='col'
-                className={'whitespace-nowrap p-4 hover:bg-stone-200'}
-              >
-                <label className='flex cursor-pointer items-center'>
-                  <CheckBox
-                    ref={(input) => {
-                      if (input) {
-                        input.indeterminate =
-                          selectedIds.length > 0 && !isAllTableDataSelected
-                      }
-                    }}
-                    className={twMerge(
-                      'peer/checkbox mr-1 h-5 w-5 disabled:opacity-50',
-                      props.size === 'sm' && 'h-4 w-4',
-                    )}
-                    checked={isAllTableDataSelected}
-                    disabled={tableData.length === 0}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedIds(
-                          tableData.map(
-                            (row: T[number]) => row[props.idField!],
-                          ),
-                        )
-                      } else {
-                        setSelectedIds([])
-                      }
-                    }}
-                  />
-                  <span
-                    className={twMerge(
-                      'text-sm font-normal peer-disabled/checkbox:opacity-50',
-                      props.size === 'sm' && 'hidden',
-                    )}
-                  >
-                    全選
-                  </span>
-                </label>
-              </th>
-            )}
-            {props.columns
-              .filter((col) => !filterColumns.includes(col.name))
-              .map((col, index) => {
-                const renderType = tableData[0]
-                  ? typeof col.render(tableData[0])
-                  : 'string'
-                let sortType: 'asc' | 'desc' | 'none' | undefined
-                if (col.sort) {
-                  if (sortColumn?.name === col.name) {
-                    sortType = sortColumn.type
-                  } else {
-                    sortType = 'none'
-                  }
-                } else {
-                  sortType = undefined
-                }
-
-                return (
-                  <th
-                    key={col.name + index}
-                    role='col'
-                    className={twMerge(
-                      'whitespace-nowrap p-4 hover:bg-stone-200',
-                      col.colClassName,
-                    )}
-                  >
-                    <div
-                      className={twMerge(
-                        'flex items-center font-normal',
-                        renderType === 'string' && 'justify-start',
-                        renderType === 'number' && 'justify-end',
-                        renderType === 'object' && 'justify-center',
-                        col.align === 'center' && 'justify-center',
-                        col.align === 'right' && 'justify-end',
-                        col.align === 'left' && 'justify-start',
-                        col.sort && 'cursor-pointer',
-                        sortType && sortType !== 'none' && 'font-bold',
-                      )}
-                      onClick={() => handleSortColumn(col.name)}
-                    >
-                      {col.name}
-                      {/* Sort icon */}
-                      {sortType === 'asc' && (
-                        <ChevronDownIcon className='h-4 w-4' />
-                      )}
-                      {sortType === 'desc' && (
-                        <ChevronUpIcon className='h-4 w-4' />
-                      )}
-                      {sortType === 'none' && (
-                        <ChevronUpDownIcon className='h-4 w-4' />
-                      )}
-                    </div>
-                  </th>
-                )
-              })}
-            <th className='w-full hover:bg-stone-200'></th>
-          </tr>
-        )}
-        itemContent={(_, row: T[number]) => (
-          <>
-            {/* Row */}
-            {/* select */}
-            {props.idField && (
-              <td
-                key='select'
-                className={twMerge(
-                  'p-4 text-center',
-                  props.size === 'sm' && 'p-1',
-                )}
-              >
-                <CheckBox
-                  className={twMerge(
-                    'h-6 w-6',
-                    props.size === 'sm' && 'h-4 w-4',
-                  )}
-                  checked={selectedIds.includes(row[props.idField])}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedIds([...selectedIds, row[props.idField!]])
-                    } else {
-                      setSelectedIds(
-                        selectedIds.filter((id) => id !== row[props.idField!]),
-                      )
-                    }
-                  }}
-                />
-              </td>
-            )}
-            {/* content */}
-            {props.columns
-              .filter((col) => !filterColumns.includes(col.name))
-              .map((col, index) => {
-                const content = col.render(row)
-                const hint = col.hint
-                  ? col.hint(row)
-                  : typeof content === 'string'
-                  ? content
-                  : typeof content === 'number'
-                  ? content.toString()
-                  : undefined
-                return (
-                  <td
-                    key={col.name + index}
-                    className={twMerge(
-                      'whitespace-nowrap p-4',
-                      'even:bg-stone-50 group-hover/row:bg-yellow-50',
-                      props.idField &&
-                        selectedIds.includes(row[props.idField!]) &&
-                        'bg-yellow-100 even:bg-yellow-100 group-hover/row:bg-yellow-100',
-                      typeof content === 'string' && 'text-left',
-                      typeof content === 'number' && 'text-right',
-                      col.align === 'center' && 'text-center',
-                      col.align === 'right' && 'text-right',
-                      col.align === 'left' && 'text-left',
-                      col.cellClassName,
-                    )}
-                    title={hint}
-                  >
-                    {col.render(row)}
-                  </td>
-                )
-              })}
-            {/* filler */}
-            <td className='w-full'></td>
-          </>
-        )}
-        components={{
-          // Table
-          Table: ({ style, ...props }) => (
-            <table
-              {...props}
-              className='divide-y divide-stone-200'
-              style={style}
-            />
-          ),
-          TableRow: ({ style, ...rest }) => (
-            <>
-              <tr
-                {...rest}
-                className={twMerge(
-                  'group/row hover:bg-yellow-50',
-                  props.idField &&
-                    selectedIds.includes(
-                      tableData[rest['data-item-index']][props.idField!],
-                    ) &&
-                    'bg-yellow-100 hover:bg-yellow-100',
-                )}
-                style={style}
-              />
-            </>
-          ),
-          // Body
-          TableBody: React.forwardRef(({ style, children, ...rest }, ref) => (
-            <tbody
-              className='divide-y divide-stone-200'
-              {...rest}
-              ref={ref}
-              style={style}
-              children={
-                <>
-                  {/* Content */}
-                  {children}
-                  {/* Empty */}
-                  {tableData.length === 0 &&
-                    (props.emptyIndicator ?? (
-                      <tr className='relative w-full'>
-                        <td className='absolute inset-x-0 py-8 text-center tracking-widest text-stone-400'>
-                          沒有資料
-                        </td>
-                      </tr>
-                    ))}
-                  {/* Footer */}
-                  {props.footer && <tr>{props.footer}</tr>}
-                </>
-              }
-            />
-          )),
-        }}
+        computeItemKey={computeItemKey}
+        fixedHeaderContent={fixedHeaderContent}
+        itemContent={itemContent}
+        components={tableComponents}
       />
     </div>
   )
