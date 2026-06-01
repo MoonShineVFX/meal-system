@@ -105,3 +105,15 @@ export const staffProcedure = userProcedure.use(
     return next({ ctx: { userLite: ctx.userLite! } })
   }),
 )
+
+export const adminProcedure = userProcedure.use(
+  t.middleware(async ({ next, ctx }) => {
+    if (!ctx.userLite || !validateRole(ctx.userLite.role, UserRole.ADMIN)) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: '未授權',
+      })
+    }
+    return next({ ctx: { userLite: ctx.userLite! } })
+  }),
+)

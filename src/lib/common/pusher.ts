@@ -66,6 +66,7 @@ export enum PUSHER_EVENT {
   USER_TEST_PUSH_NOTIFICATION = '測試推送通知',
   USER_TOKEN_UPDATE = '用戶裝置設定已更改',
   USER_AUTHORIY_UPDATE = '用戶權限已更改',
+  USER_UPDATE = '用戶資料已更改',
 }
 
 // Webhook event types

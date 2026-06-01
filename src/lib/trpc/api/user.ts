@@ -10,6 +10,7 @@ import {
   getUsersStatistics,
   getUserToken,
   updateUserAuthority,
+  updateUserName,
   updateUserSettings,
   updateUserToken,
   validateUserPassword,
@@ -20,7 +21,13 @@ import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 import { UserAuthority } from '@prisma/client'
-import { commonProcedure, router, staffProcedure, userProcedure } from '../trpc'
+import {
+  adminProcedure,
+  commonProcedure,
+  router,
+  staffProcedure,
+  userProcedure,
+} from '../trpc'
 
 type UserAdData = {
   group: string[]
@@ -240,6 +247,25 @@ export const UserRouter = router({
       emitPusherEvent(PUSHER_CHANNEL.USER(input.userId), {
         type: PUSHER_EVENT.USER_AUTHORIY_UPDATE,
         message: `您${updateMessage}`,
+      })
+    }),
+  updateName: adminProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        name: z.string().trim().min(1, '名稱不可為空').max(100, '名稱過長'),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const user = await updateUserName(input)
+
+      emitPusherEvent(PUSHER_CHANNEL.STAFF, {
+        type: PUSHER_EVENT.USER_UPDATE,
+        message: `用戶名稱已更改為 ${user.name}`,
+      })
+      emitPusherEvent(PUSHER_CHANNEL.USER(input.userId), {
+        type: PUSHER_EVENT.USER_UPDATE,
+        message: `您的名稱已更改為 ${user.name}`,
       })
     }),
 })

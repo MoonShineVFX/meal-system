@@ -251,6 +251,7 @@ export function EventListenerBase() {
           utils.commodity.getList.invalidate()
           break
         case PUSHER_EVENT.USER_AUTHORIY_UPDATE:
+        case PUSHER_EVENT.USER_UPDATE:
           utils.user.get.invalidate()
           utils.user.getStatistics.invalidate()
           break
