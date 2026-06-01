@@ -4,7 +4,9 @@ import Error from '@/components/core/Error'
 import Image from '@/components/core/Image'
 import SearchBar from '@/components/core/SearchBar'
 import Table from '@/components/core/Table'
+import { DropdownMenu, DropdownMenuItem } from '@/components/core/DropdownMenu'
 import CheckBox from '@/components/form/base/CheckBox'
+import { useFormDialog } from '@/components/form/FormDialog'
 import trpc from '@/lib/client/trpc'
 import { settings } from '@/lib/common'
 import { twMerge } from 'tailwind-merge'
@@ -14,12 +16,17 @@ export default function Members() {
   // State
   const [searchKeyword, setSearchKeyword] = useState<string>('')
   const [showDeactivated, setShowDeactivated] = useState<boolean>(false)
+  const { showFormDialog, formDialog } = useFormDialog()
 
   // Trpc
   const { data, isError, error } = trpc.user.getStatistics.useQuery({
     showDeactivated,
   })
+  const currentUserQuery = trpc.user.get.useQuery(undefined)
+  const utils = trpc.useUtils()
   const updateUserAuthority = trpc.user.updateAuthority.useMutation()
+  const isAdmin = currentUserQuery.data?.role === 'ADMIN'
+  type Member = NonNullable<typeof data>[number]
 
   const filteredMembers = useMemo(() => {
     if (!data) return []
@@ -39,6 +46,44 @@ export default function Members() {
       })
     },
     [updateUserAuthority],
+  )
+
+  const handleMemberNameUpdate = useCallback(
+    (user: Member) => {
+      showFormDialog({
+        title: '更改名稱',
+        inputs: {
+          name: {
+            label: '名稱',
+            type: 'text',
+            defaultValue: user.name,
+            attributes: {
+              autoFocus: true,
+              maxLength: 100,
+            },
+            options: {
+              required: '名稱不可為空',
+              validate: (value) => value.trim() !== '' || '名稱不可為空',
+            },
+          },
+        },
+        useMutation: trpc.user.updateName.useMutation,
+        onSubmit(formData, mutation) {
+          mutation.mutate(
+            {
+              userId: user.id,
+              name: formData.name,
+            },
+            {
+              onSuccess: () => {
+                utils.user.getStatistics.invalidate()
+              },
+            },
+          )
+        },
+      })
+    },
+    [showFormDialog, utils.user.getStatistics],
   )
 
   if (isError) return <Error description={error.message} />
@@ -168,8 +213,29 @@ export default function Members() {
                   '啟用中'
                 ),
             },
+            ...(isAdmin
+              ? [
+                  {
+                    name: '動作',
+                    align: 'left' as const,
+                    cellClassName: 'text-sm',
+                    render: (user: Member) => (
+                      <DropdownMenu
+                        className='rounded-2xl bg-stone-100 px-3 py-1 text-sm text-stone-600 hover:bg-stone-200 active:scale-90'
+                        label='動作'
+                      >
+                        <DropdownMenuItem
+                          label='更改名稱'
+                          onClick={() => handleMemberNameUpdate(user)}
+                        />
+                      </DropdownMenu>
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
+        {formDialog}
       </div>
     </div>
   )

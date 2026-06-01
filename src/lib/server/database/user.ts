@@ -611,3 +611,32 @@ export async function updateUserAuthority(props: {
     },
   })
 }
+
+export async function updateUserName(props: { userId: string; name: string }) {
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      id: props.userId,
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (!existingUser) {
+    throw new Error('使用者不存在')
+  }
+
+  const user = await prisma.user.update({
+    where: {
+      id: props.userId,
+    },
+    data: {
+      name: props.name,
+    },
+    select: {
+      name: true,
+    },
+  })
+
+  return user
+}
