@@ -10,7 +10,7 @@
     "db-studio": "prisma studio",
     "db-migrate": "prisma migrate dev",
     "db-generate": "prisma generate",
-    "db-seed": "tsx prisma/scripts/seed/seed.ts",
+    "db-seed": "tsx prisma/helpers/seed/seed.ts",
     "cmd": "tsx prisma/cmd.ts",
     "test:signal": "tsx scripts/staff-signal-trigger.ts"
   },

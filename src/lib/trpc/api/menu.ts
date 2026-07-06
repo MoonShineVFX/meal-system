@@ -13,7 +13,7 @@ import {
   getReservationMenusForUser,
   getReservationMenusSince,
   getRetailCOM,
-  prismaCient,
+  prismaClient,
   removeCommoditiesFromMenu,
   upsertMenu,
   getOrderRecordsByUser,
@@ -87,14 +87,14 @@ export const MenuRouter = router({
 
       let originalMenu: Menu | null = null
       if (input.id) {
-        originalMenu = await prismaCient.menu.findUnique({
+        originalMenu = await prismaClient.menu.findUnique({
           where: {
             id: input.id,
           },
         })
       }
 
-      const menu = await prismaCient.$transaction(async (client) => {
+      const menu = await prismaClient.$transaction(async (client) => {
         let supplierId: number | undefined = input.supplierId
         // create supplier
         if (input.createSupplier) {
@@ -193,7 +193,7 @@ export const MenuRouter = router({
         })
 
         if (input.liveMenuNotify) {
-          const users = await prismaCient.user.findMany({
+          const users = await prismaClient.user.findMany({
             where: {
               isDeactivated: false,
               optMenuNotify: true,
@@ -268,7 +268,7 @@ export const MenuRouter = router({
         ['LIVE', 'RETAIL'].includes(input.type) &&
         !input.menuId
       ) {
-        const menu = await prismaCient.menu.findFirst({
+        const menu = await prismaClient.menu.findFirst({
           where: {
             type: input.type,
             isDeleted: false,
@@ -365,7 +365,7 @@ export const MenuRouter = router({
 
 export async function updateMenuPublishNotifyEventToLatest() {
   const now = new Date()
-  const menus = await prismaCient.menu.findMany({
+  const menus = await prismaClient.menu.findMany({
     where: {
       isDeleted: false,
       type: {

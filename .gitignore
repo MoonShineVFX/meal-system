@@ -183,3 +183,5 @@ dist
 prisma/dbml/
 temp/
 .trigger
+
+.claude/settings.local.json
